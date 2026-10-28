@@ -143,7 +143,11 @@ describe('DocsPageComponent', () => {
     await setup();
 
     expect(fixture?.nativeElement.querySelector('.historical-notice')).toBeNull();
-    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe('9');
+    // why: test:showcase-examples guards the count itself; this checks the page shows the registry value.
+    const buttonPage = DOC_PAGES.find(page => page.category === 'components' && page.slug === 'button');
+    expect(fixture?.nativeElement.querySelector('.examples-summary strong')?.textContent?.trim()).toBe(
+      String(buttonPage?.demoSectionCount)
+    );
     expect(fixture?.nativeElement.querySelector('.examples-summary span')?.textContent?.trim()).toBe('interactive examples');
     expect(fixture?.nativeElement.textContent).not.toContain('preserved');
     expect(fixture?.nativeElement.querySelector('.page-header > a')?.textContent?.trim()).toBe('View demo source');

@@ -174,6 +174,79 @@ test('parses nested subsections and nested Markdown list items', () => {
   assert.match(added.markdown, /#### Search/);
 });
 
+test('parses the release template: summary callouts, component groups and code under a bullet', () => {
+  const fixture = `# Changelog
+
+<!--
+    ## [x.y] - YYYY-MM-DD
+
+    ### Changed (BREAKING for consumers)
+-->
+
+## [Unreleased]
+
+## [3.2] - 2026-10-23
+
+Packages \`19.3.2\` · \`20.3.2\` · \`21.3.2\` · \`22.3.2\`, validated against \`*.3.1\`.
+
+> [!IMPORTANT]
+> **Before upgrading:** custom i18n catalogs need new keys.
+
+**Highlights**
+
+- Sidebar V4
+
+### Changed (BREAKING for consumers)
+
+#### Form generic
+
+- Exhaustive switches need the \`time\` case.
+  - Let the compiler list them.
+
+  \`\`\`diff
+  - old usage
+  + new usage
+  \`\`\`
+
+#### Layout
+
+- Sidebar \`version\` needs case 4.
+`;
+  const changelog = parseChangelog(fixture, { startSuffix: '3.2' });
+  assert.deepEqual(changelog.releases.map(release => release.suffix), [null, '3.2']);
+
+  const release = changelog.releases[1];
+  assert.match(release.summaryMarkdown, /^Packages `19\.3\.2`/);
+  assert.match(release.summaryMarkdown, /^> \[!IMPORTANT\]$/m);
+  assert.match(release.summaryMarkdown, /^\*\*Highlights\*\*$/m);
+
+  const breaking = release.sections[0];
+  assert.equal(breaking.key, 'changed');
+  assert.deepEqual(
+    breaking.children.map(child => [child.title, child.level, child.anchor]),
+    [
+      ['Form generic', 4, 'release-3-2-changed-breaking-for-consumers-form-generic'],
+      ['Layout', 4, 'release-3-2-changed-breaking-for-consumers-layout'],
+    ],
+  );
+  const [formGeneric] = breaking.children;
+  assert.deepEqual(formGeneric.items.map(item => item.text), ['Exhaustive switches need the `time` case.']);
+  assert.deepEqual(formGeneric.items[0].children.map(item => item.text), ['Let the compiler list them.']);
+  assert.match(formGeneric.markdown, /^ {2}- old usage$/m);
+});
+
+test('parses every release heading of the root CHANGELOG.md', () => {
+  const markdown = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  const headings = markdown.match(/^## \[[^\]]+\].*$/gm) ?? [];
+  const changelog = parseChangelog(markdown, { startSuffix: '0.0' });
+
+  assert.ok(headings.length > 1);
+  assert.equal(changelog.releases.length, headings.length);
+  for (const release of changelog.releases.filter(item => !item.unreleased)) {
+    assert.match(release.date ?? '', /^\d{4}-\d{2}-\d{2}$/, `release ${release.suffix} keeps "## [x.y] - YYYY-MM-DD"`);
+  }
+});
+
 test('keeps future releases and tolerates missing optional sections', () => {
   const changelog = parseChangelog(CHANGELOG_FIXTURE, { startSuffix: '1.2' });
   const future = changelog.releases.find(item => item.suffix === '1.3');

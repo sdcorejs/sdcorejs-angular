@@ -49,11 +49,19 @@ export interface ParsedMarkdownDocument {
   raw: string;
 }
 
+export type MarkdownAlertType = 'note' | 'tip' | 'important' | 'warning' | 'caution';
+
+export interface MarkdownListItem {
+  text: string;
+  blocks: MarkdownBlock[];
+}
+
 export type MarkdownBlock =
   | { kind: 'heading'; level: number; text: string; id: string }
   | { kind: 'paragraph'; text: string }
   | { kind: 'quote'; text: string }
-  | { kind: 'list'; ordered: boolean; items: string[] }
+  | { kind: 'alert'; alertType: MarkdownAlertType; paragraphs: string[] }
+  | { kind: 'list'; ordered: boolean; items: MarkdownListItem[] }
   | { kind: 'code'; language: string; code: string }
   | { kind: 'table'; headers: string[]; rows: string[][] };
 
