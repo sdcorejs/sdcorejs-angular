@@ -144,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `filter.externalFilterCollapsed` sets the initial collapsed state of the external filter.
 - `option.loading` and `SD_TABLE_CONFIGURATION.loading` (`SdTableOptionLoading`, merged field by field, option first) tune the loading layer: `skeleton` (default `true`), `skeletonRows` (5, or enough to fill a fixed-height table; 1–20), `showDelay` (300 ms), `minDuration` (400 ms) and `dim` (`true`).
   - The host attribute `data-loading-view` is `none`, `skeleton` or `refresh`; `data-loading` keeps following `loading()` at once.
-  - New i18n keys `core.component.table.loaded` (“Đã tải xong {count} dòng”) and `core.component.table.loaded-one` in the five locales.
+  - New i18n keys `core.component.table.loaded` (“Đã tải xong {count} dòng”), `core.component.table.loaded-one` and `core.component.table.tree-toggle` (“Mở/đóng dòng con”) in the five locales.
 
 #### Theme
 
@@ -203,6 +203,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - No rows yet (first read, after an empty result or an error, before the configuration is ready): skeleton rows under the real header at once, aligned with the columns; mobile cards show up to 3 skeleton cards.
   - Rows on screen: they stay; a read longer than 300 ms dims the table body to 55% (pointer input off, buttons in cells included) and shows a 2px progress bar under the last header row, kept at least 400 ms. Faster reads show nothing.
   - A hidden status region (`.sd-table-live`) reads “Đang tải dữ liệu bảng” when that layer shows for a running read and “Đã tải xong {count} dòng” (rows on screen, expanded tree rows included) when the read ends; the overlay's own status role is gone.
+  - The same region reads the title of the empty block (“Không có kết quả phù hợp”, “Vui lòng chọn bộ lọc để bắt đầu” or “Chưa có dữ liệu”) when a read ends without rows, fast reads included, also under a custom `sdDataStateTemplate`. The empty block itself loses `role="status"` / `aria-live`: its text was inserted together with the role, which screen readers often skip.
   - A tree toggle or expand button that is loading stays in place, so keyboard focus no longer falls back to the page and the row keeps its height: the tree chevron becomes a 16px spinner (`aria-busy`, `aria-disabled`), the expand `sd-button` shows its own loading spinner (`aria-busy` on `<sd-button>`). Mobile tree and expand buttons swap `hourglass_empty` for the 16px spinner.
 - A failed local read shows the same `sd-data-state` error block as a server table (title, message, “Thử lại” calling `reload()`, `sdDataStateTemplate`) instead of a line of text and a “Tải lại” button. The warning toast stays.
 
@@ -308,6 +309,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - The outlet read the router state when the queued activation ran, so the tab of an earlier URL got the component, route and name of the later one; it now captures the route when `NavigationEnd` is emitted.
 - The tab being dragged keeps its rounded shadow on all four corners.
   - CDK opens the drag preview as a popover, whose default style has `overflow: auto`, so the shadow was clipped to the square host and showed only as grey patches outside the rounded corners. The preview host now has `overflow: visible`.
+
+#### Table
+
+- The desktop tree toggle has an accessible name (“Mở/đóng dòng con”) and `aria-expanded`, like the mobile one; screen readers announced it as an unnamed button.
 
 #### Upload file
 

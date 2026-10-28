@@ -110,6 +110,8 @@
             type="button"
             class="sd-tree-toggle-btn"
             [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
+            [attr.aria-label]="'core.component.table.tree-toggle' | sdTranslate"
+            [attr.aria-expanded]="!!_tree.isExpanded"
             [attr.aria-busy]="_expanding ? 'true' : null"
             [attr.aria-disabled]="_expanding ? 'true' : null"
             (click)="onTreeToggle(row); $event.stopPropagation()">
@@ -681,8 +683,9 @@
           </sd-data-state>
         } @else if (_noRows && !loadError()) {
           <!-- why: empty mặc định giữ 3 trạng thái (filter không có kết quả / chưa chọn filter bắt buộc / chưa có dữ liệu)
-               cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). -->
-          <div class="c-no-data-row" role="status" aria-live="polite">
+               cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). Không có role live:
+               vùng .sd-table-live (luôn có trong DOM) đọc tiêu đề của khối này. -->
+          <div class="c-no-data-row">
             @if (_isFiltered) {
               @if (tableConfiguration?.images?.filterEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />

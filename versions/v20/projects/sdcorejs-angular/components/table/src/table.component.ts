@@ -473,6 +473,17 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /** Text of the `.sd-table-live` status region: "loading" once the loading layer shows, then the result. */
   protected readonly liveMessage = this.#liveMessage.asReadonly();
   #liveLoading = false;
+  /**
+   * i18n key of the empty block on screen, for the status region: the title of the default block, also under a
+   * custom `sdDataStateTemplate`; `undefined` while rows, a read, the loading layer or an error region show.
+   */
+  readonly #emptyKey = computed(() => {
+    const status = this.readState().status;
+    const noRows = status !== 'error' && !this.loading() && !this.total() && !this.items().length && this.loadingView() === 'none';
+    if (!noRows || (this.loadError() && !(status === 'empty' && this.dataStateTemplate()))) return undefined;
+    if (this.isFiltered()) return 'core.component.table.no-results';
+    return this.requireFiltered() ? 'core.component.table.choose-filter-hint' : 'core.component.table.no-data';
+  });
   /** Rows that fill a table with a fixed height, measured when the skeleton shows. */
   readonly #skeletonFill = signal<number | undefined>(undefined);
   /** Skeleton rows of the desktop table (`matNoDataRow`) while `loadingView()` is `skeleton`; empty otherwise. */
@@ -836,6 +847,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       });
     });
 
+    // why: the empty block has no live role (content inserted together with its region is not read reliably), so
+    // the status region says it, also after a read too fast to show the loading layer. Defined after the loading
+    // effect, which clears the region when a read starts, so the same text is read again for the next empty result.
+    effect(() => {
+      const key = this.#emptyKey();
+      if (key) untracked(() => this.#liveMessage.set(this.#i18n.t(key)));
+    });
+
     // why: the progress bar sits in .c-container (so it does not scroll sideways with the table) right under the
     // last header row; that row's bottom depends on grouped headers, the filter row and wrapping titles. Only
     // measured while the bar shows.
@@ -1010,9 +1029,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * "Loading" when the loading layer shows; once the read ends, the row count. An empty result or a default
-   * error region announces itself, so the region is cleared; a custom `sdDataStateTemplate` may have no role,
-   * so the region reads the error. Reads faster than `showDelay` show nothing and announce nothing.
+   * "Loading" when the loading layer shows; once the read ends, the row count, or the text of the empty block.
+   * The default error region announces itself (`role="alert"`), so the region is cleared; a custom
+   * `sdDataStateTemplate` may have no role, so the region reads the error. Reads faster than `showDelay` announce
+   * only an empty result (see the empty effect).
    */
   #announceLoading(active: boolean): void {
     if (active === this.#liveLoading) return;
@@ -1028,7 +1048,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       this.#liveMessage.set(this.#i18n.t(count === 1 ? 'core.component.table.loaded-one' : 'core.component.table.loaded', { count }));
     else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
       this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
-    else this.#liveMessage.set('');
+    else {
+      const empty = this.#emptyKey();
+      this.#liveMessage.set(empty ? this.#i18n.t(empty) : '');
+    }
   }
 
   /** Skeleton rows that fill a table with a fixed height (fill mode, `style.maxHeight`); `undefined` otherwise. */

@@ -9,6 +9,7 @@ import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 describe('buildColumnWidthMap', () => {
   it('trả map field → width cho mọi field có width', () => {
@@ -174,7 +175,8 @@ describe('E2E attributes', () => {
     flush();
   }));
 
-  it('announces the empty state through a polite live region', fakeAsync(() => {
+  // why: a live role on the block itself is inserted together with its text, which screen readers skip.
+  it('announces the empty state through the status region, not through the empty block', fakeAsync(() => {
     settleWith({
       type: 'local',
       items: () => [],
@@ -183,8 +185,11 @@ describe('E2E attributes', () => {
 
     const empty = sdTableEl.querySelector('.c-no-data-row') as HTMLElement;
     expect(empty).not.toBeNull();
-    expect(empty.getAttribute('role')).toBe('status');
-    expect(empty.getAttribute('aria-live')).toBe('polite');
+    expect(empty.hasAttribute('role')).toBeFalse();
+    expect(empty.hasAttribute('aria-live')).toBeFalse();
+    const region = sdTableEl.querySelector('.sd-table-live') as HTMLElement;
+    expect(region.getAttribute('role')).toBe('status');
+    expect(region.textContent?.trim()).toBe(TestBed.inject(I18nService).t('core.component.table.no-data'));
     flush();
   }));
 

@@ -350,13 +350,64 @@ describe('SdTable loading view', () => {
       answer(page(3));
       expect(live()).toBe(t('core.component.table.loaded', { count: 3 }));
 
-      // The empty block announces itself; the region is cleared instead of repeating it.
+      // An empty result: the region reads the title of the empty block, which has no live role of its own.
       reload();
       tick(300);
       f.detectChanges();
       answer(page(0, 0));
-      expect(live()).toBe('');
+      expect(live()).toBe(t('core.component.table.no-data'));
+      const empty = f.nativeElement.querySelector('.c-no-data-row') as HTMLElement;
+      expect(empty.hasAttribute('role')).toBeFalse();
+      expect(empty.hasAttribute('aria-live')).toBeFalse();
       flush();
+    }));
+
+    it('announces an empty result after a read faster than showDelay, and again after the next read', fakeAsync(() => {
+      createWithRows(5);
+      reload();
+      tick(100);
+      answer(page(0, 0));
+      expect(view()).toBe('none');
+      expect(f.nativeElement.querySelector('.c-no-data-row')).not.toBeNull();
+      expect(live()).toBe(t('core.component.table.no-data'));
+
+      // Without rows the next read shows the skeleton at once and says so; its empty result is read again.
+      reload();
+      expect(live()).toBe(t('core.component.table.loading'));
+      tick(100);
+      answer(page(0, 0));
+      expect(live()).toBe(t('core.component.table.no-data'));
+      flush();
+    }));
+
+    it('reads "no results" for an empty page of a filtered read', fakeAsync(() => {
+      createWithRows(10);
+      table.paginator()!.nextPage();
+      tick(200);
+      expect(table.loading()).toBeTrue();
+      answer(page(0, 0));
+      expect(table.isFiltered()).toBeTrue();
+      expect(live()).toBe(t('core.component.table.no-results'));
+      flush();
+    }));
+
+    it('reads the empty text under a custom sdDataStateTemplate, which has no role of its own', fakeAsync(() => {
+      const host = TestBed.createComponent(CustomStateHost);
+      host.componentInstance.option = {
+        type: 'server',
+        items: () => Promise.resolve(page(0, 0)),
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+      };
+      host.detectChanges();
+      tick(800);
+      flush();
+      host.detectChanges();
+      expect(host.nativeElement.querySelector('sd-data-state .custom-retry')?.textContent?.trim()).toBe('custom empty');
+      expect(host.nativeElement.querySelector('.c-no-data-row')).toBeNull();
+      expect((host.nativeElement.querySelector('.sd-table-live') as HTMLElement).textContent?.trim()).toBe(
+        t('core.component.table.no-data')
+      );
+      host.destroy();
     }));
 
     it('stops its timers on destroy', fakeAsync(() => {
@@ -762,6 +813,30 @@ describe('SdTable loading view', () => {
       expect(toggle.getAttribute('aria-busy')).toBeNull();
       expect(toggle.querySelector('.sd-table-spinner')).toBeNull();
       expect(toggle.querySelector('sd-icon')).not.toBeNull();
+    }));
+
+    it('names the tree toggle and tells whether its child rows show', fakeAsync(() => {
+      createLocal({
+        tree: { loadType: 'lazy', hasChildren: () => true, onExpandChildren: () => Promise.resolve([{ id: 11, name: 'Child' }]) },
+      });
+      const toggle = f.nativeElement.querySelector('button.sd-tree-toggle-btn') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-label')).toBe(t('core.component.table.tree-toggle'));
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+      toggle.click();
+      flushMicrotasks();
+      f.detectChanges();
+      flush();
+      f.detectChanges();
+      expect(f.nativeElement.querySelectorAll('tr.c-row').length).toBe(2);
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+      toggle.click();
+      flushMicrotasks();
+      f.detectChanges();
+      flush();
+      f.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
     }));
 
     it('keeps the expand button focused and busy while its details load', fakeAsync(() => {

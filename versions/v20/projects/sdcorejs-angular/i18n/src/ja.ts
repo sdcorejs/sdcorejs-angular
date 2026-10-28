@@ -1003,6 +1003,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.loading': 'テーブルデータを読み込み中',
   'core.component.table.loaded': '{count} 行を読み込みました',
   'core.component.table.loaded-one': '1 行を読み込みました',
+  'core.component.table.tree-toggle': '子行を開閉',
   'core.component.upload-file.loading': 'ファイルをアップロード中',
   'core.component.import-excel.loading': 'データを読み込み中',
   'core.component.upload-file.remove': 'ファイルを削除',
