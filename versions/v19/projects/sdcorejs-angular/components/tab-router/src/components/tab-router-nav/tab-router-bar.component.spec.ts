@@ -677,6 +677,17 @@ describe('SdTabRouterNav bar (wave 3 · 3a)', () => {
       expect(getComputedStyle(second.querySelector('.tab-router__name')!).visibility).toBe('hidden');
     });
 
+    // why: CDK mở bản kéo bằng popover (`popover="manual"`), mà style mặc định của popover có `overflow: auto`: bóng của
+    // tab bị cắt theo khung vuông của host, chỉ còn vệt xám ở bốn góc ngoài phần bo tròn.
+    it('lets the shadow of the dragged tab show around its corners when CDK opens it as a popover', () => {
+      const [first] = hosts();
+      first.classList.add('cdk-drag-preview');
+      first.setAttribute('popover', 'manual');
+      fixture.detectChanges();
+
+      expect(getComputedStyle(first).overflow).toBe('visible');
+    });
+
     it('locks dragging to the x axis', () => {
       const list = fixture.nativeElement.querySelector('.tab-router__scroller') as HTMLElement;
       expect(list.classList).toContain('cdk-drop-list');
