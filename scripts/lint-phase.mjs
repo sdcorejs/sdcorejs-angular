@@ -34,7 +34,6 @@ const phasePaths = {
   'components-editor': [
     'projects/sdcorejs-angular/components/ckeditor-styles',
     'projects/sdcorejs-angular/components/code-editor',
-    'projects/sdcorejs-angular/components/document-builder',
     'projects/sdcorejs-angular/components/editor',
     'projects/sdcorejs-angular/components/mini-editor',
   ],

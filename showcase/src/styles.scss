@@ -222,8 +222,9 @@ h3 {
 }
 
 // Inline code inside rendered Markdown. The renderer writes this HTML through [innerHTML], so component styles
-// cannot reach it; these rules are global and scoped by the renderer's classes.
-.docs-markdown :is(p, li, td, th, blockquote, h3, h4) code,
+// cannot reach it; these rules are global and scoped by the renderer's classes. A code block nested in a list
+// item keeps its plain look.
+.docs-markdown :is(p, li, td, th, blockquote, h3, h4) code:not(pre code),
 .api-row__description code {
   border-radius: var(--docs-radius-chip);
   background: var(--docs-bg-3);

@@ -50,9 +50,9 @@
 
 ## ✨ Features
 
-* ✅ 30+ standalone components (table, modal, query-builder, document-builder, …)
+* ✅ 30+ standalone components (table, modal, query-builder, …)
 * ✅ 14 form controls with `[(model)]` + FormGroup support, async validators, custom templates
-* ✅ 9 services (notify, confirm, excel, docx, api interceptor, storage, …)
+* ✅ 9 services (notify, confirm, excel, api interceptor, storage, …)
 * ✅ Auth + Keycloak + permission modules ready out-of-the-box
 * ✅ Signal-first reactivity, OnPush default
 * ✅ i18n bilingual (Vietnamese / English) — extensible to any locale
@@ -180,7 +180,7 @@ Mỗi component / form control / service / module là 1 entry point độc lập
 | Action | `button` · `quick-action` · `operator` |
 | Layout | `splitter` · `side-drawer` · `tab` · `tab-router` · `stepper` · `modal` · `anchor` |
 | Data | `table` · `tree` · `org-chart` · `query-bar` · `query-builder` · `preview` · `history` |
-| Editor | `editor` · `mini-editor` · `code-editor` · `document-builder` |
+| Editor | `editor` · `mini-editor` · `code-editor` |
 | Workflow | `form-generic` · `upload-file` · `import-excel` · `file-explorer` · `image-editor` |
 
 **Table highlights**: server/local mode · paginate · sort · column filter · external filter · row selection (single/multi/preserve cross-page) · row reorder · row group (collapsible, select-all-in-group, sdTableGroupDef template) · tree rows (hierarchical STT 1/1.1/1.2.1) · expandable sub-info · custom cell template · footer aggregation · export Excel/CSV.
@@ -201,11 +201,9 @@ Tất cả hỗ trợ `[(model)]` + `[form]` (FormGroup) + `required`/`pattern`/
 | `confirm` | Confirm/prompt dialogs (with input / radio variants) |
 | `loading` | Full-page / target / manual loading overlay |
 | `excel` | Export, import, parse, generate-template (no exceljs in consumer bundle) |
-| `docx` | DOCX render + convert to HTML |
 | `storage` | Typed local/session storage with prefix + default + observer |
 | `cache` | Reactive in-memory cache with TTL |
 | `api` | HTTP client wrapper + interceptors |
-| `license` | License/feature flag gate |
 
 ### Modules
 

@@ -1,11 +1,12 @@
-import { pageIdForEntry } from '../../core/docs-release-badges';
+import { changelogSectionItems, pageIdForEntry } from '../../core/docs-release-badges';
 import { compareReleases } from '../../core/docs-release.utils';
 import { DocPageDefinition } from '../../core/documentation.models';
 import type { ShowcaseChangelogListItem, ShowcaseChangelogRelease } from '../../generated/changelog.generated';
 
 export type ChangeType = 'added' | 'changed' | 'breaking' | 'fixed' | 'tooling' | 'other';
 
-export const CHANGE_TYPE_ORDER: readonly ChangeType[] = ['added', 'changed', 'breaking', 'fixed', 'tooling', 'other'];
+// why: CHANGELOG.md lists consumer-breaking sections first; the page and its filters keep that order.
+export const CHANGE_TYPE_ORDER: readonly ChangeType[] = ['breaking', 'added', 'changed', 'fixed', 'tooling', 'other'];
 
 export interface ChangelogEntry {
   /** Lead before the first colon ("Kanban"), shown as a tag; null when the entry has none. */
@@ -64,12 +65,12 @@ export function changelogGroups(release: ShowcaseChangelogRelease, pages: readon
   for (const section of release.sections) {
     const type = changeTypeOf(section.title);
     const group = groups.get(type) ?? { entries: [], migrations: [] };
-    for (const item of section.items) {
-      const tagMatch = /^\s*([^:\n`]{2,60}?):\s/.exec(item.text);
-      const markdown = itemMarkdown(item);
+    for (const entry of changelogSectionItems(section)) {
+      const tagMatch = entry.heading ? null : /^\s*([^:\n`]{2,60}?):\s/.exec(entry.item.text);
+      const markdown = itemMarkdown(entry.item);
       group.entries.push({
-        tag: tagMatch ? tagMatch[1].trim() : null,
-        pageId: pageIdForEntry(item.text, pages),
+        tag: entry.heading ?? (tagMatch ? tagMatch[1].trim() : null),
+        pageId: pageIdForEntry(entry, pages),
         markdown: tagMatch ? capitalize(markdown.slice(tagMatch[0].length)) : markdown,
       });
     }

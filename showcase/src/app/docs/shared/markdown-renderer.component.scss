@@ -30,6 +30,15 @@
     font-weight: 600;
     line-height: 1.4;
   }
+
+  // why: nested bullets, paragraphs and code inside a list item sit closer than top-level blocks.
+  li > :is(ul, ol, p) {
+    margin: 4px 0 8px;
+  }
+
+  li > .docs-code {
+    margin: 8px 0 12px;
+  }
 }
 
 .docs-callout {
@@ -65,6 +74,51 @@
     .docs-callout__icon {
       color: var(--docs-warn);
     }
+  }
+}
+
+// why: GitHub alerts ("> [!IMPORTANT]") read as callouts, coloured by the docs palette in light and dark.
+.docs-alert {
+  --docs-alert-color: var(--docs-acc);
+
+  margin: 18px 0;
+  border-radius: var(--docs-radius-code);
+  background: var(--docs-acc-soft);
+  padding: 14px 16px;
+  color: var(--docs-fg-2);
+  font-size: 14.5px;
+  line-height: 1.6;
+
+  p {
+    max-width: none;
+    margin: 0 0 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__title {
+    color: var(--docs-alert-color);
+    font-weight: 600;
+  }
+
+  &[data-alert='tip'] {
+    --docs-alert-color: var(--docs-ok);
+
+    background: var(--docs-ok-soft);
+  }
+
+  &[data-alert='warning'] {
+    --docs-alert-color: var(--docs-warn);
+
+    background: var(--docs-warn-soft);
+  }
+
+  &[data-alert='caution'] {
+    --docs-alert-color: var(--docs-err);
+
+    background: var(--docs-err-soft);
   }
 }
 

@@ -1,4 +1,4 @@
-import { DOCUMENT, Location } from '@angular/common';
+import { DOCUMENT, Location, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { Params, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,6 +7,7 @@ import { ApiTypeChip, booleanAttributeNames, isApiTable, matchesApiQuery, parseA
 import { DocsI18nService } from '../core/docs-i18n.service';
 import { toMarkdownAnchor, toMarkdownBlocks } from '../core/markdown-parser';
 import { DOC_PAGES } from '../core/documentation.registry';
+import { MarkdownAlertType, MarkdownBlock } from '../core/published-docs.models';
 import { buildDocsFragmentHref } from './docs-fragment-link.directive';
 
 interface ApiRowView {
@@ -19,19 +20,35 @@ interface ApiRowView {
   readonly descriptionHtml: string;
 }
 
+interface MarkdownListItemView {
+  readonly html: string;
+  readonly blocks: readonly MarkdownBlockView[];
+}
+
 interface MarkdownBlockView {
-  readonly kind: 'heading' | 'paragraph' | 'quote' | 'list' | 'code' | 'table' | 'api';
+  readonly kind: 'heading' | 'paragraph' | 'quote' | 'alert' | 'list' | 'code' | 'table' | 'api';
   readonly apiRows?: readonly ApiRowView[];
   readonly level?: number;
   readonly id?: string;
   readonly html?: string;
+  readonly alertType?: MarkdownAlertType;
+  readonly title?: string;
+  readonly paragraphs?: readonly string[];
   readonly ordered?: boolean;
-  readonly items?: readonly string[];
+  readonly items?: readonly MarkdownListItemView[];
   readonly language?: string;
   readonly code?: string;
   readonly headers?: readonly string[];
   readonly rows?: readonly (readonly string[])[];
 }
+
+const ALERT_TITLES: Readonly<Record<MarkdownAlertType, string>> = {
+  note: 'Note',
+  tip: 'Tip',
+  important: 'Important',
+  warning: 'Warning',
+  caution: 'Caution',
+};
 
 interface InternalDocsLink {
   readonly href: string;
@@ -122,11 +139,16 @@ export function highlightCode(code: string, language: string): string {
 @Component({
   selector: 'docs-markdown-renderer',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [NgTemplateOutlet, MatIconModule],
   template: `
     <div class="docs-markdown" [attr.lang]="language()" (click)="onMarkdownClick($event)">
       <span class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ copyAnnouncement() }}</span>
-      @for (block of blocks(); track $index) {
+      <ng-container *ngTemplateOutlet="blockList; context: { $implicit: blocks() }"></ng-container>
+    </div>
+
+    <!-- why: list items hold nested lists, code and paragraphs, so the blocks render recursively. -->
+    <ng-template #blockList let-blocks>
+      @for (block of blocks; track $index) {
         @switch (block.kind) {
           @case ('heading') {
             @if ((block.level ?? 3) <= 3) {
@@ -144,17 +166,35 @@ export function highlightCode(code: string, language: string): string {
               <div [innerHTML]="block.html"></div>
             </blockquote>
           }
+          @case ('alert') {
+            <div class="docs-alert" [attr.data-alert]="block.alertType" role="note" [attr.aria-label]="block.title">
+              <p class="docs-alert__title" aria-hidden="true">{{ block.title }}</p>
+              @for (paragraph of block.paragraphs; track $index) {
+                <p [innerHTML]="paragraph"></p>
+              }
+            </div>
+          }
           @case ('list') {
             @if (block.ordered) {
               <ol>
                 @for (item of block.items; track $index) {
-                  <li [innerHTML]="item"></li>
+                  <li>
+                    <span [innerHTML]="item.html"></span>
+                    @if (item.blocks.length) {
+                      <ng-container *ngTemplateOutlet="blockList; context: { $implicit: item.blocks }"></ng-container>
+                    }
+                  </li>
                 }
               </ol>
             } @else {
               <ul>
                 @for (item of block.items; track $index) {
-                  <li [innerHTML]="item"></li>
+                  <li>
+                    <span [innerHTML]="item.html"></span>
+                    @if (item.blocks.length) {
+                      <ng-container *ngTemplateOutlet="blockList; context: { $implicit: item.blocks }"></ng-container>
+                    }
+                  </li>
                 }
               </ul>
             }
@@ -221,7 +261,7 @@ export function highlightCode(code: string, language: string): string {
           }
         }
       }
-    </div>
+    </ng-template>
   `,
   styleUrl: './markdown-renderer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -236,6 +276,8 @@ export class MarkdownRendererComponent {
   readonly version = input<string | null>(null);
   readonly sourcePublishedDocId = input<string | null>(null);
   readonly language = input<string | null>(null);
+  /** Prepended to heading ids, so a page that renders several documents keeps them unique. */
+  readonly headingIdPrefix = input('');
   /** When set, member tables (Name / Type / Default / Notes…) render as API rows with ids api-<group>-<name>. */
   readonly apiGroupId = input<string | null>(null);
   /** API filter; rows that do not match are left out. */
@@ -254,9 +296,10 @@ export class MarkdownRendererComponent {
     const apiQuery = this.apiQuery();
     const booleanAttributes = apiGroupId ? booleanAttributeNames(markdown) : new Set<string>();
     const { pathname, search } = this.#document.location;
-    return toMarkdownBlocks(markdown).map((block): MarkdownBlockView => {
-      const renderInline = (value: string): string =>
-        renderInlineMarkdown(value, this.linkBaseUrl(), pathname, search, target => this.#resolveInternalDocsLink(target));
+    const renderInline = (value: string): string =>
+      renderInlineMarkdown(value, this.linkBaseUrl(), pathname, search, target => this.#resolveInternalDocsLink(target));
+    const idPrefix = this.headingIdPrefix();
+    const toView = (block: MarkdownBlock): MarkdownBlockView => {
       if (block.kind === 'table' && apiGroupId && isApiTable(block.headers)) {
         return {
           kind: 'api',
@@ -275,12 +318,23 @@ export class MarkdownRendererComponent {
       }
       switch (block.kind) {
         case 'heading':
-          return { kind: block.kind, level: block.level, id: block.id, html: renderInline(block.text) };
+          return { kind: block.kind, level: block.level, id: `${idPrefix}${block.id}`, html: renderInline(block.text) };
         case 'paragraph':
         case 'quote':
           return { kind: block.kind, html: renderInline(block.text) };
+        case 'alert':
+          return {
+            kind: block.kind,
+            alertType: block.alertType,
+            title: ALERT_TITLES[block.alertType],
+            paragraphs: block.paragraphs.map(renderInline),
+          };
         case 'list':
-          return { kind: block.kind, ordered: block.ordered, items: block.items.map(renderInline) };
+          return {
+            kind: block.kind,
+            ordered: block.ordered,
+            items: block.items.map(item => ({ html: renderInline(item.text), blocks: item.blocks.map(toView) })),
+          };
         case 'code':
           return { ...block, html: highlightCode(block.code, block.language) };
         case 'table':
@@ -290,7 +344,8 @@ export class MarkdownRendererComponent {
             rows: block.rows.map(row => row.map(renderInline)),
           };
       }
-    });
+    };
+    return toMarkdownBlocks(markdown).map(toView);
   });
   #copyRequestId = 0;
   #copyResetTimeout: number | undefined;

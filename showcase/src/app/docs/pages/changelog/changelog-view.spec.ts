@@ -2,7 +2,12 @@ import { DOC_PAGES } from '../../core/documentation.registry';
 import type { ShowcaseChangelogRelease, ShowcaseChangelogSection } from '../../generated/changelog.generated';
 import { changeTypeOf, changelogGroups, compareUrl, migrationsOf, releaseRail } from './changelog-view';
 
-function section(title: string, texts: readonly string[], markdown = ''): ShowcaseChangelogSection {
+function section(
+  title: string,
+  texts: readonly string[],
+  markdown = '',
+  children: readonly ShowcaseChangelogSection[] = []
+): ShowcaseChangelogSection {
   return {
     key: title.toLowerCase(),
     title,
@@ -10,7 +15,7 @@ function section(title: string, texts: readonly string[], markdown = ''): Showca
     anchor: title.toLowerCase(),
     markdown,
     items: texts.map(text => ({ text, ordered: false, children: [] })),
-    children: [],
+    children,
   };
 }
 
@@ -50,11 +55,26 @@ describe('changelog view', () => {
       DOC_PAGES
     );
 
-    expect(groups.map(group => group.type)).toEqual(['added', 'breaking', 'fixed']);
-    expect(groups[0].entries[0]).toEqual({ tag: 'Kanban', pageId: DOC_PAGES.find(page => page.title === 'Kanban')?.id ?? null, markdown: 'Generic status columns' });
-    expect(groups[0].entries[1].tag).toBeNull();
-    expect(groups[1].entries[0].pageId).toBe(DOC_PAGES.find(page => page.slug === 'button')?.id ?? null);
-    expect(groups[1].migrations).toEqual([{ before: ['selector: {}'], after: ['selector: { mode: "picker" }'] }]);
+    expect(groups.map(group => group.type)).toEqual(['breaking', 'added', 'fixed']);
+    expect(groups[1].entries[0]).toEqual({ tag: 'Kanban', pageId: DOC_PAGES.find(page => page.title === 'Kanban')?.id ?? null, markdown: 'Generic status columns' });
+    expect(groups[1].entries[1].tag).toBeNull();
+    expect(groups[0].entries[0].pageId).toBe(DOC_PAGES.find(page => page.slug === 'button')?.id ?? null);
+    expect(groups[0].migrations).toEqual([{ before: ['selector: {}'], after: ['selector: { mode: "picker" }'] }]);
+  });
+
+  it('tags entries with their "#### Name" subsection in the newer changelog format', () => {
+    const groups = changelogGroups(
+      release(null, [
+        section('Added', [], '#### Kanban\n\n- Generic status columns: one per status.', [
+          section('Kanban', ['Generic status columns: one per status.']),
+        ]),
+      ]),
+      DOC_PAGES
+    );
+
+    expect(groups[0].entries).toEqual([
+      { tag: 'Kanban', pageId: DOC_PAGES.find(page => page.title === 'Kanban')?.id ?? null, markdown: 'Generic status columns: one per status.' },
+    ]);
   });
 
   it('reads before/after rows from diff blocks', () => {

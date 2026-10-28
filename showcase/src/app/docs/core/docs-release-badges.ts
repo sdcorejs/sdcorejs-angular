@@ -1,4 +1,4 @@
-import type { ShowcaseChangelogRelease, ShowcaseChangelogSection } from '../generated/changelog.generated';
+import type { ShowcaseChangelogListItem, ShowcaseChangelogRelease, ShowcaseChangelogSection } from '../generated/changelog.generated';
 import { foldSearchText } from './docs-search.utils';
 
 export type DocsReleaseBadge = 'new' | 'updated';
@@ -8,11 +8,36 @@ interface BadgeTarget {
   readonly title: string;
 }
 
+/** A changelog item and the "#### Name" subsection it sits under; heading is null for an item directly in the section. */
+export interface ChangelogSectionItem {
+  readonly heading: string | null;
+  readonly item: ShowcaseChangelogListItem;
+}
+
+/**
+ * Items of a "### Added"-style section. Older releases lead each item with "Name:"; newer ones group items under
+ * "#### Name" subsections, whose title then names the page.
+ */
+export function changelogSectionItems(section: ShowcaseChangelogSection): ChangelogSectionItem[] {
+  return [
+    ...section.items.map(item => ({ heading: null, item })),
+    ...section.children.flatMap(child => changelogSectionItems(child).map(({ item }) => ({ heading: child.title, item }))),
+  ];
+}
+
+function toTag(lead: string): string | null {
+  return foldSearchText(lead.replace(/\s*\(.*\)\s*$/, '')).replace(/[^a-z0-9]+/g, ' ').trim() || null;
+}
+
 /** "Avatar: `sd-avatar-group` …" → "avatar"; entries without a "Name:" lead are not tied to a page. */
 export function changelogEntryTag(text: string): string | null {
   const match = /^\s*([^:\n]{2,80}?):\s/.exec(text);
   if (!match || match[1].trimStart().startsWith('`')) return null;
-  return foldSearchText(match[1].replace(/\s*\(.*\)\s*$/, '')).replace(/[^a-z0-9]+/g, ' ').trim() || null;
+  return toTag(match[1]);
+}
+
+function entryTag({ heading, item }: ChangelogSectionItem): string | null {
+  return heading ? toTag(heading) : changelogEntryTag(item.text);
 }
 
 function badgeForSection(section: ShowcaseChangelogSection): DocsReleaseBadge | null {
@@ -41,8 +66,8 @@ export function deriveReleaseBadges(
   for (const section of release.sections) {
     const badge = badgeForSection(section);
     if (!badge) continue;
-    for (const item of section.items) {
-      const tag = changelogEntryTag(item.text);
+    for (const entry of changelogSectionItems(section)) {
+      const tag = entryTag(entry);
       for (const id of (tag && byTag.get(matchPageTag(tag, byTag))) || []) {
         if (badges.get(id) !== 'new') badges.set(id, badge);
       }
@@ -66,19 +91,19 @@ export function changelogEntriesForPage(
   const entries: string[] = [];
   for (const section of release.sections) {
     if (!badgeForSection(section)) continue;
-    for (const item of section.items) {
-      const tag = changelogEntryTag(item.text);
+    for (const entry of changelogSectionItems(section)) {
+      const tag = entryTag(entry);
       if (tag && byTag.get(matchPageTag(tag, byTag))?.includes(page.id)) {
-        entries.push(item.text.replace(/^\s*[^:\n]{2,80}?:\s+/, ''));
+        entries.push(entry.heading ? entry.item.text : entry.item.text.replace(/^\s*[^:\n]{2,80}?:\s+/, ''));
       }
     }
   }
   return entries;
 }
 
-/** Page id for an entry's "Name:" lead (longest title match), or null. */
-export function pageIdForEntry(text: string, pages: readonly BadgeTarget[]): string | null {
-  const tag = changelogEntryTag(text);
+/** Page id for an entry's "#### Name" subsection or "Name:" lead (longest title match), or null. */
+export function pageIdForEntry(entry: ChangelogSectionItem, pages: readonly BadgeTarget[]): string | null {
+  const tag = entryTag(entry);
   if (!tag) return null;
   const byTag = new Map<string, string[]>();
   for (const page of pages) {

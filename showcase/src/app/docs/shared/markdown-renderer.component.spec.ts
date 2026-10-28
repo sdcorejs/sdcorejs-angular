@@ -57,6 +57,37 @@ describe('MarkdownRendererComponent', () => {
     expect(fixture.nativeElement.querySelector('code')?.textContent).toContain('const ok = true');
   });
 
+  it('renders a GitHub alert as a titled note instead of the raw [!IMPORTANT] marker', () => {
+    fixture.componentRef.setInput('markdown', '> [!IMPORTANT]\n> **Before upgrading:** add the new keys.\n>\n> Second paragraph.');
+    fixture.detectChanges();
+
+    const alert = fixture.nativeElement.querySelector('.docs-alert') as HTMLElement;
+    expect(alert.getAttribute('role')).toBe('note');
+    expect(alert.getAttribute('data-alert')).toBe('important');
+    expect(alert.getAttribute('aria-label')).toBe('Important');
+    expect(alert.querySelector('strong')?.textContent).toBe('Before upgrading:');
+    expect(alert.querySelectorAll('p')).toHaveSize(3);
+    expect(fixture.nativeElement.textContent).not.toContain('[!IMPORTANT]');
+    expect(fixture.nativeElement.querySelector('blockquote')).toBeNull();
+  });
+
+  it('nests sub-bullets and indented code blocks inside their list item', () => {
+    fixture.componentRef.setInput('headingIdPrefix', 'release-3-2-fixed-');
+    fixture.componentRef.setInput(
+      'markdown',
+      '#### Chip\n\n- First sentence.\n  - The rest.\n\n  ```diff\n  - old\n  + new\n  ```\n\n- Next bullet.'
+    );
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const items = host.querySelectorAll(':scope .docs-markdown > ul > li');
+    expect(host.querySelector('h4')?.id).toBe('release-3-2-fixed-chip');
+    expect(items).toHaveSize(2);
+    expect(items[0]?.querySelector(':scope > ul > li')?.textContent?.trim()).toBe('The rest.');
+    expect(items[0]?.querySelector(':scope > .docs-code code')?.textContent).toBe('- old\n+ new');
+    expect(items[1]?.textContent?.trim()).toBe('Next bullet.');
+  });
+
   it('sanitizes raw script markup instead of executing arbitrary HTML', () => {
     fixture.componentRef.setInput('markdown', '<script>window.hacked = true</script>Safe content');
     fixture.detectChanges();

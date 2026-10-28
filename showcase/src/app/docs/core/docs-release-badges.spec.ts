@@ -1,15 +1,20 @@
 import type { ShowcaseChangelogRelease, ShowcaseChangelogSection } from '../generated/changelog.generated';
-import { changelogEntryTag, deriveReleaseBadges } from './docs-release-badges';
+import { changelogEntriesForPage, changelogEntryTag, deriveReleaseBadges } from './docs-release-badges';
 
-function section(title: string, texts: readonly string[]): ShowcaseChangelogSection {
+function section(
+  title: string,
+  texts: readonly string[],
+  children: readonly ShowcaseChangelogSection[] = [],
+  level = 3
+): ShowcaseChangelogSection {
   return {
     key: title.toLowerCase(),
     title,
-    level: 3,
+    level,
     anchor: title.toLowerCase(),
     markdown: '',
     items: texts.map(text => ({ text, ordered: false, children: [] })),
-    children: [],
+    children,
   };
 }
 
@@ -72,6 +77,19 @@ describe('release badges', () => {
     expect(badges.get('chip-calendar')).toBe('updated');
     expect(badges.has('chip')).toBeFalse();
     expect(badges.size).toBe(2);
+  });
+
+  it('reads the page from "#### Name" subsections of the newer changelog format', () => {
+    const current = release([
+      section('Added', [], [section('Kanban', ['Generic status columns.'], [], 4)]),
+      section('Changed (BREAKING for consumers)', [], [section('Button', ['Outline: neutral border.'], [], 4)]),
+    ]);
+
+    const badges = deriveReleaseBadges(current, pages);
+
+    expect(badges.get('kanban')).toBe('new');
+    expect(badges.get('button')).toBe('updated');
+    expect(changelogEntriesForPage(current, pages[1], pages)).toEqual(['Outline: neutral border.']);
   });
 
   it('returns no badges without a release', () => {

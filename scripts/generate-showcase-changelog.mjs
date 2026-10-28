@@ -134,8 +134,16 @@ export function compareReleaseSuffix(left, right) {
 export function parseMarkdownListItems(lines) {
   const roots = [];
   const stack = [];
+  let fenced = false;
 
   for (const line of lines) {
+    // A diff line inside a fenced block ("- old usage") is code, not a list item.
+    if (/^\s*```/.test(line)) {
+      fenced = !fenced;
+      continue;
+    }
+    if (fenced) continue;
+
     const match = line.match(LIST_ITEM);
     if (!match) continue;
 
