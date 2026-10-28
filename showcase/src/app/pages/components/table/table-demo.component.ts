@@ -667,8 +667,8 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading-empty-error') {
       <demo-section heading="Loading / empty / error"
         data-example-typescript="./examples/table-states.example.ts" data-example-template="./examples/table-states.example.html" data-example-style="./examples/table-pattern-example.scss"
-        [props]="[{ name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
-        note="Dùng luồng tải của SdTable: loading khi chờ request, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
+        [props]="[{ name: 'loading', value: 'showDelay / minDuration' }, { name: 'sdDataStateTemplate', value: 'template' }, { name: 'filter.quickSearch', value: 'containFields' }, { name: 'retry', value: 'keeps query' }]"
+        note="Dùng luồng tải của SdTable: khung xương khi chưa có dòng, thanh tiến trình và dòng mờ khi tải lại quá 300ms, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.">
         <app-table-states-example />
       </demo-section>
       }

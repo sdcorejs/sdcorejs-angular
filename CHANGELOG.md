@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `SdChip` drops its unused autocomplete path (`onSelect()`, `selectable`, `separatorKeysCodes`), stops exporting `SdRemovableChipPipe`, and `isFocused` becomes a signal. Upload file `upload()` now rejects unless the handler returns one non-empty string ID per file, in order. Defaults that change: chips are added on blur, one-line table rows are 36px, and upload previews are 72px.
+> **Before upgrading:** `SdChip` drops its unused autocomplete path (`onSelect()`, `selectable`, `separatorKeysCodes`), stops exporting `SdRemovableChipPipe`, and `isFocused` becomes a signal. Upload file `upload()` now rejects unless the handler returns one non-empty string ID per file, in order. Defaults that change: chips are added on blur, one-line table rows are 36px, upload previews are 72px, and `<sd-table>` no longer covers itself with a dark overlay while loading (skeleton rows, or a progress bar after 300 ms); apps that styled `.c-loading` or `.lds-ring` inside the table must drop those overrides.
 
 **Highlights**
 
@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Chip limits, paste, validation and clear-all
 - Tab router keyboard support, context menu and unsaved-tab dot
 - Upload file dark viewer and `variant="inline"`
+- Table loading without an overlay: skeleton rows, a delayed progress bar over dimmed rows, and an announced result
 
 ### Changed (BREAKING for consumers)
 
@@ -141,10 +142,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `reloadFirstPage()` reads the first page again with the current filters, for a condition outside the table (a status tab, a score card); `reload()` keeps the current page.
 - `SD_TABLE_LAYOUT` lets a page frame put one table in fill mode (`sd-table--fill`): it takes the height left in a flex column, keeps the header and five rows, and gives the footer at least 48px.
   - `filter.externalFilterCollapsed` sets the initial collapsed state of the external filter.
+- `option.loading` and `SD_TABLE_CONFIGURATION.loading` (`SdTableOptionLoading`, merged field by field, option first) tune the loading layer: `skeleton` (default `true`), `skeletonRows` (5, or enough to fill a fixed-height table; 1–20), `showDelay` (300 ms), `minDuration` (400 ms) and `dim` (`true`).
+  - The host attribute `data-loading-view` is `none`, `skeleton` or `refresh`; `data-loading` keeps following `loading()` at once.
+  - New i18n key `core.component.table.loaded` (“Đã tải xong {count} dòng”) in the five locales.
 
 #### Theme
 
 - The component tokens `--sd-chip-locked-bg` and `--sd-chip-more-hover-bg`, shared by `<sd-chip>` and `<sd-chip-calendar>`. `--sd-chip-calendar-chip-locked-bg` and `--sd-chip-calendar-more-hover-bg` keep their names and now default to them.
+- Component tokens `--sd-table-skeleton-bg`, `--sd-table-skeleton-highlight` and `--sd-table-progress-track` for the table loading layer, one `color-mix()` expression for light and dark.
 - Component tokens `--sd-upload-file-viewer-*` (bg, fg, fg-muted, divider, control-bg, thumb-bg, accent, on-accent, error, ext-pdf / -word / -excel) for the dark viewer, and `--sd-upload-file-scrim` / `--sd-upload-file-empty-text` for the field.
   - New i18n keys `core.component.upload-file.viewer.*`, `retry`, `add-image`, `upload-tile`, `drop-hint`, `choose-file`, `drop-to-upload`, `remove-named` and `no-files` in the five locales.
 
@@ -193,6 +198,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The page-size dropdown of the paginator looks like `<sd-select>`: 14px text and a `keyboard_arrow_down` chevron instead of Material's 12px text and triangle, centred in a 32px field, and its list opens in the `<sd-select>` panel (rounded, bordered, 36px options). Same for the pager of `paginate.total: 'unknown'`.
 - A one-line row is 36px high instead of Material's 52px (`--mat-table-row-item-container-height: 36px` on `<sd-table>`), as the table's dense design intended.
+- Loading no longer covers the table with a dark overlay and a 100px spinner (which also blocked the header, filters and scrollbars, and stopped 56px above the bottom whatever the footer). The header, filters, sort, paginator and scrolling stay usable, and the keyboard is never blocked.
+  - No rows yet (first read, after an empty result or an error, before the configuration is ready): skeleton rows under the real header at once, aligned with the columns; mobile cards show up to 3 skeleton cards.
+  - Rows on screen: they stay; a read longer than 300 ms dims them to 55% (pointer input off) and shows a 2px progress bar under the last header row, kept at least 400 ms. Faster reads show nothing.
+  - A hidden status region (`.sd-table-live`) reads “Đang tải dữ liệu bảng” when that layer shows and “Đã tải xong {count} dòng” when the read ends; the overlay's own status role is gone.
+  - A tree toggle or expand button that is loading stays in place with a 16px spinner (`aria-busy`), so keyboard focus no longer falls back to the page and the row keeps its height; mobile buttons swap `hourglass_empty` for the same spinner.
+- A failed local read shows the same `sd-data-state` error block as a server table (title, message, “Thử lại” calling `reload()`, `sdDataStateTemplate`) instead of a line of text and a “Tải lại” button. The warning toast stays.
   - Rows with longer text or buttons still grow. A screen that relied on 52px rows can set the token back with a selector more specific than the component's own, for example `.orders sd-table { --mat-table-row-item-container-height: 52px; }`.
 
 #### Upload file
@@ -224,6 +235,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The component token `--sd-tab-router-badge-bg`, deprecated in 3.2.
   - Its only reader filled the icon of the old tab, which had not been rendered since the tabs moved to `sd-badge`, so no tab used it. Code that set or read it can drop it. `--sd-tab-router-item-muted-bg` stays deprecated.
+
+#### Table
+
+- The internal loading markup and its styles: the `.c-loading` overlay with its `<mat-spinner>`, `.lds-ring`, `@keyframes lds-ring` and `.sd-tree-spinner`.
+  - They were never public API, but an app may have restyled them with `::ng-deep`; those rules now match nothing. Use `option.loading`, `--sd-table-loading-dim` and the `--sd-table-skeleton-*` / `--sd-table-progress-track` tokens instead.
 
 #### Upload file
 

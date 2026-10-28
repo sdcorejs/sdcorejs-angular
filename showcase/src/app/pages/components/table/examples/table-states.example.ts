@@ -43,23 +43,31 @@ const normalize = (value: string): string =>
 export class TableStatesExampleComponent {
   readonly table = viewChild.required(SdTable<Order>);
   readonly scenario = signal<Scenario>('ready');
-  // Only the first read after choosing "error" fails, so Retry succeeds and keeps the query.
-  #failNextRead = false;
+  /** Fake API delay. 150 ms stays under `loading.showDelay` (nothing shows); 600 ms shows the bar and its hold. */
+  readonly delays = [0, 150, 600, 3000] as const;
+  readonly delay = signal<number>(600);
+  // Only the next read fails, so Retry succeeds and keeps the query.
+  readonly failNext = signal(false);
 
   readonly option: SdTableOption<Order> = {
     type: 'server',
     rowKey: 'id',
-    items: async ({ quickSearch, pageNumber, pageSize }) => {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      if (this.#failNextRead) {
-        this.#failNextRead = false;
+    items: async ({ quickSearch, pageNumber, pageSize, orderBy, orderDirection }) => {
+      await new Promise(resolve => setTimeout(resolve, this.delay()));
+      if (this.failNext()) {
+        this.failNext.set(false);
         throw new Error('Không thể tải đơn hàng mẫu.');
       }
       const term = normalize(quickSearch?.term ?? '');
       const rows = this.scenario() === 'empty' ? [] : ORDERS.filter(row => normalize(`${row.code} ${row.name}`).includes(term));
+      if (orderBy === 'code' || orderBy === 'amount') {
+        const direction = orderDirection === 'DESC' ? -1 : 1;
+        rows.sort((a, b) => direction * (orderBy === 'amount' ? a.amount - b.amount : a.code.localeCompare(b.code)));
+      }
       return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
     },
     selector: { visible: false },
+    sort: { enable: true },
     paginate: { pageSize: 6, pages: [6, 12] },
     filter: {
       cacheable: false,
@@ -67,16 +75,16 @@ export class TableStatesExampleComponent {
       quickSearch: { containFields: ['code', 'name'], placeholder: 'Tìm mã hoặc tên khách hàng' },
     },
     columns: [
-      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px' },
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', sortable: true },
       { field: 'name', title: 'Khách hàng', type: 'string', width: '180px' },
       { field: 'region', title: 'Khu vực', type: 'string', width: '120px' },
-      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px' },
+      { field: 'amount', title: 'Giá trị (VND)', type: 'number', align: 'right', width: '150px', sortable: true },
     ],
   };
 
   show(scenario: Scenario): void {
     this.scenario.set(scenario);
-    this.#failNextRead = scenario === 'error';
+    this.failNext.set(scenario === 'error');
     void this.table().reload(true);
   }
 
