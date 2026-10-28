@@ -59,6 +59,6 @@ export interface SdUploadFileDetail {
   /** Đuôi file: png, jpg, pdf... */
   extension?: string;
 
-  /** Dung lượng file tính theo MB (nếu backend có trả về). */
+  /** Dung lượng file tính theo byte (nếu backend có trả về), như `File.size`. */
   size?: number;
 }

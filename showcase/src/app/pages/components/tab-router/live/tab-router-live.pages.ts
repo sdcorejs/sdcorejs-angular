@@ -1,8 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, Routes } from '@angular/router';
-import { SdTabComponent } from '@sdcorejs/angular/components/tab-router';
+import { SD_TAB, SdTabComponent } from '@sdcorejs/angular/components/tab-router';
+import { Color } from '@sdcorejs/utils/models';
 
-/** Phần thân dùng chung của các màn trong demo: tiêu đề + một ô nhập để thấy tab giữ state khi chuyển qua lại. */
+/**
+ * Phần thân dùng chung của các màn trong demo: tiêu đề + một ô nhập để thấy tab giữ state khi chuyển qua lại, và một ô
+ * đánh dấu "chưa lưu" (`SdTabInfo.dirty`, đợt 3 · 3d) gửi qua `tabInfoChanges` của chính tab.
+ */
 @Component({
   selector: 'app-tab-live-page',
   standalone: true,
@@ -14,6 +18,12 @@ import { SdTabComponent } from '@sdcorejs/angular/components/tab-router';
         <span>Ghi chú của tab này</span>
         <input type="text" placeholder="Gõ gì đó rồi chuyển sang tab khác" />
       </label>
+      @if (tab) {
+        <label class="tab-live-page__dirty">
+          <input type="checkbox" data-tab-live="dirty" [checked]="dirty()" (change)="toggleDirty()" />
+          <span>Có thay đổi chưa lưu (chấm trên tab)</span>
+        </label>
+      }
     </section>
   `,
   styles: [
@@ -42,7 +52,13 @@ import { SdTabComponent } from '@sdcorejs/angular/components/tab-router';
         font-size: 13px;
         color: var(--sd-text-secondary);
       }
-      input {
+      .tab-live-page__dirty {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        color: var(--sd-text);
+      }
+      input[type='text'] {
         height: 36px;
         padding: 0 10px;
         border: 1px solid var(--sd-control-border);
@@ -58,6 +74,16 @@ import { SdTabComponent } from '@sdcorejs/angular/components/tab-router';
 export class TabLivePageComponent {
   readonly heading = input.required<string>();
   readonly description = input('Nội dung trong tab còn nguyên khi bạn chuyển sang tab khác rồi quay lại.');
+  readonly icon = input<string>();
+  readonly color = input<Color>();
+  readonly tab = inject(SD_TAB, { optional: true });
+  readonly dirty = signal(false);
+
+  // why: tab info gửi qua `tabInfoChanges` thay cả bộ thông tin của builder, nên gửi lại tên, icon và màu cùng `dirty`.
+  toggleDirty = (): void => {
+    this.dirty.update(dirty => !dirty);
+    this.tab?.tabInfoChanges.next({ name: this.heading(), icon: this.icon(), color: this.color(), dirty: this.dirty() });
+  };
 }
 
 @SdTabComponent({ component: TabLiveOverviewComponent, name: 'Tổng quan', icon: 'dashboard' })
@@ -65,7 +91,7 @@ export class TabLivePageComponent {
   selector: 'app-tab-live-overview',
   standalone: true,
   imports: [TabLivePageComponent],
-  template: `<app-tab-live-page heading="Tổng quan" />`,
+  template: `<app-tab-live-page heading="Tổng quan" icon="dashboard" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabLiveOverviewComponent {}
@@ -80,7 +106,7 @@ export class TabLiveOverviewComponent {}
   selector: 'app-tab-live-order',
   standalone: true,
   imports: [TabLivePageComponent],
-  template: `<app-tab-live-page [heading]="'Đơn hàng #DH-' + id" />`,
+  template: `<app-tab-live-page [heading]="'Đơn hàng #DH-' + id" icon="receipt_long" color="success" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabLiveOrderComponent {
@@ -92,7 +118,7 @@ export class TabLiveOrderComponent {
   selector: 'app-tab-live-customers',
   standalone: true,
   imports: [TabLivePageComponent],
-  template: `<app-tab-live-page heading="Danh sách khách hàng" />`,
+  template: `<app-tab-live-page heading="Danh sách khách hàng" icon="group" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabLiveCustomersComponent {}
@@ -107,7 +133,7 @@ export class TabLiveCustomersComponent {}
   selector: 'app-tab-live-contract',
   standalone: true,
   imports: [TabLivePageComponent],
-  template: `<app-tab-live-page [heading]="'Hợp đồng ' + id" />`,
+  template: `<app-tab-live-page [heading]="'Hợp đồng ' + id" icon="description" color="warning" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabLiveContractComponent {

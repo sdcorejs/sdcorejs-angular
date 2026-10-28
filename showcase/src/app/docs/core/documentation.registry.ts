@@ -733,7 +733,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/upload-file/sd-upload-file',
     keywords: ['file', 'drag drop', 'validation', 'preview'],
     status: 'stable',
-    demoSectionCount: 3,
+    demoSectionCount: 5,
     loadComponent: () => import('../../pages/components/upload-file/upload-file-demo.component').then(m => m.UploadFileDemoComponent),
   }),
   defineDocPage({

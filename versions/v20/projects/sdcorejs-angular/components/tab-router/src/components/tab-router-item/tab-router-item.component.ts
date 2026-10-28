@@ -7,6 +7,7 @@ import {
   OnDestroy,
   OnInit,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -40,6 +41,8 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   @Input({ required: true }) tab!: SdTabRouterTab;
+  /** Tab này là điểm dừng Tab duy nhất của thanh (roving tabindex do nav chọn). */
+  readonly focusable = input(false);
 
   #subscription: Subscription = new Subscription();
   tabInfo?: SdTabInfo;
@@ -88,6 +91,13 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
     });
   };
 
+  // why: Enter/Space mở tab như bấm chuột. Chỉ khi chính tab nhận phím — Enter trên nút đóng (focus được bằng chuột) đã là
+  // click của nút đó.
+  onTabKeydown = (event: Event) => {
+    if (event.target !== event.currentTarget) return;
+    this.onTabClick(event);
+  };
+
   close = (event: Event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -105,15 +115,6 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
       event.preventDefault();
       event.stopPropagation();
       this.#closeTab();
-    }
-  };
-
-  // why: trình duyệt mở link ở tab mới khi xử lý `auxclick` của chuột giữa, nên chỉ huỷ ở đây mới chặn được.
-  // Tab đã đóng ở `mouseup`; trước đây không mở tab mới chỉ vì <a> bị gỡ khỏi DOM trước `auxclick`, điều không
-  // còn đúng khi app bật `eventCoalescing`, chạy zoneless hay `beforeClose` chạy async.
-  onAuxclick = (event: MouseEvent) => {
-    if (event.button === 1) {
-      event.preventDefault();
     }
   };
 

@@ -276,6 +276,24 @@ $component-tokens: (
   'upload-file-badge-text': (#000000, #e3e2e6),
   'upload-file-badge-border': (#ffffff, #1d1f23),
   'upload-file-muted-bg': (#f9f9f9, #25272c),
+  // upload-file — design handoff wave 3 · 4b/4c/4d. The scrim over an image tile and the "Chưa có tệp" text of the inline
+  // variant derive from the palette. The viewer is dark in both modes: its background and text are fixed, the other
+  // viewer roles mix from those two, and the accent, the text on it and the error colour come from the palette ramps
+  // (the light-mode base colours are too dark for a dark surface).
+  'upload-file-scrim': (color-mix(in srgb, black 24%, transparent), color-mix(in srgb, black 24%, transparent)),
+  'upload-file-empty-text': (color-mix(in srgb, var(--sd-text) 70%, var(--sd-surface)), color-mix(in srgb, var(--sd-text) 70%, var(--sd-surface))),
+  'upload-file-viewer-bg': (#141518, #141518),
+  'upload-file-viewer-fg': (#e3e3e8, #e3e3e8),
+  'upload-file-viewer-fg-muted': (color-mix(in srgb, var(--sd-upload-file-viewer-fg) 70%, var(--sd-upload-file-viewer-bg)), color-mix(in srgb, var(--sd-upload-file-viewer-fg) 70%, var(--sd-upload-file-viewer-bg))),
+  'upload-file-viewer-divider': (color-mix(in srgb, var(--sd-upload-file-viewer-fg) 8%, transparent), color-mix(in srgb, var(--sd-upload-file-viewer-fg) 8%, transparent)),
+  'upload-file-viewer-control-bg': (color-mix(in srgb, var(--sd-upload-file-viewer-fg) 10%, transparent), color-mix(in srgb, var(--sd-upload-file-viewer-fg) 10%, transparent)),
+  'upload-file-viewer-thumb-bg': (color-mix(in srgb, var(--sd-upload-file-viewer-fg) 10%, var(--sd-upload-file-viewer-bg)), color-mix(in srgb, var(--sd-upload-file-viewer-fg) 10%, var(--sd-upload-file-viewer-bg))),
+  'upload-file-viewer-accent': (var(--sd-primary-200), var(--sd-primary)),
+  'upload-file-viewer-on-accent': (var(--sd-primary-900), var(--sd-primary-contrast)),
+  'upload-file-viewer-error': (var(--sd-error-200), var(--sd-error)),
+  'upload-file-viewer-ext-pdf': (var(--sd-error-300), var(--sd-error-300)),
+  'upload-file-viewer-ext-word': (var(--sd-primary-300), var(--sd-primary-300)),
+  'upload-file-viewer-ext-excel': (var(--sd-success-300), var(--sd-success-300)),
   // view — read-only label/value pair of <sd-view> and of every form control in `viewed` mode (classes
   // .sd-view-label / .sd-view-value). The label is the text colour mixed 70% into the surface: clearly
   // lighter than the value, still >= 4.5:1 on surface and surface-muted, and it follows custom palettes.

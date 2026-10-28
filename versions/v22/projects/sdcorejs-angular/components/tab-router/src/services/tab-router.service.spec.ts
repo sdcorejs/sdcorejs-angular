@@ -144,6 +144,24 @@ describe('SdTabRouterService', () => {
     });
   });
 
+  describe('closeOthers', () => {
+    it('emits a close-others action for the given tab', () => {
+      const tab = makeTab({ key: 'keep' });
+      service.closeOthers(tab);
+      expect(service.actions.getValue()).toEqual({ type: 'close-others', tab });
+    });
+
+    it('keeps the current tab when no tab argument is supplied, and is a no-op without one', () => {
+      service.closeOthers();
+      expect(service.actions.getValue()).toBeUndefined();
+
+      const tab = makeTab({ key: 'cur' });
+      service.setCurrentTab(tab);
+      service.closeOthers();
+      expect(service.actions.getValue()).toEqual({ type: 'close-others', tab });
+    });
+  });
+
   it('setOptions and updateTab are callable (currently no-ops)', () => {
     expect(() => service.setOptions()).not.toThrow();
     expect(() => service.updateTab(makeTab())).not.toThrow();

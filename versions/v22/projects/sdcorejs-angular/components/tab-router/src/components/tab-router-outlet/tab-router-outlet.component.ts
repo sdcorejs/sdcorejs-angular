@@ -3,6 +3,7 @@ import {
   afterNextRender,
   booleanAttribute,
   Component,
+  effect,
   ErrorHandler,
   Injector,
   OnDestroy,
@@ -10,6 +11,7 @@ import {
   inject,
   input,
   signal,
+  untracked,
   viewChild,
   createNgModule,
   NgModuleFactory,
@@ -27,9 +29,10 @@ import {
   RoutesRecognized,
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { defer, EMPTY, ReplaySubject, Subscription, isObservable, lastValueFrom } from 'rxjs';
-import { catchError, concatMap, filter, map } from 'rxjs/operators';
+import { catchError, concatMap, filter, map, startWith } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -38,6 +41,7 @@ import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event'
 import { ɵsdConnectTabComponentBuilders } from '../../decorators/tab.decorator';
 import { SdTabAction } from '../../actions/tab-router.action';
 import { SdTabInfo, SdTabRouterTab, SD_TAB } from '../../models';
+import { sdTabInfoFromBuilders } from '../../pipes/tab-info.pipe';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
@@ -62,6 +66,11 @@ interface TabRouterNavigationContext {
 })
 export class SdTabRouterOutletComponent implements OnDestroy {
   disabled = input(false, { transform: booleanAttribute });
+  /**
+   * Đặt tiêu đề trình duyệt theo tab đang mở: `{tên tab} – {tên app}`, thêm "● " ở đầu khi tab `dirty`. Tên app là
+   * tiêu đề lúc outlet khởi tạo; tắt, `disabled` hay huỷ outlet thì trả lại tiêu đề đó. Mặc định tắt.
+   */
+  syncBrowserTitle = input(false, { transform: booleanAttribute });
 
   tabRouterNav = viewChild<SdTabRouterNavComponent>('tabRouterNav');
 
@@ -73,6 +82,9 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
   readonly #i18n = inject(I18nService);
+  readonly #title = inject(Title);
+  readonly #appTitle = this.#title.getTitle();
+  #titleChanged = false;
   // why: @SdTabComponent KHÔNG còn đọc BehaviorSubject tĩnh này nữa (đã chuyển sang collection
   // tĩnh + drain ở constructor bên dưới). Vẫn inject để `SdTabDecoratorService.tabRouterService`
   // tiếp tục phát instance service ra cho consumer cũ. Không dùng trực tiếp ở đây.
@@ -143,6 +155,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
         if (event?.type === 'close') {
           this.#closeTab(event.tab);
+        } else if (event?.type === 'close-others') {
+          void this.#closeOthers(event.tab);
         }
       })
     );
@@ -152,6 +166,21 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     // drain collection đó vào service khi khởi tạo, và ngắt kết nối khi destroy.
     this.#disconnectTabBuilders = ɵsdConnectTabComponentBuilders(builder => this.#tabRouterService.addBuilder(builder));
 
+    // Đợt 3 · 3d: tiêu đề trình duyệt theo tab đang mở (tên từ `tabInfoChanges`, trước đó từ `@SdTabComponent`).
+    effect(onCleanup => {
+      const active = this.syncBrowserTitle() && !this.disabled() ? this.tabs().find(tab => tab.isActive) : undefined;
+      if (!active) {
+        untracked(() => this.#restoreTitle());
+        return;
+      }
+      const subscription = untracked(() =>
+        active.tabInfoChanges
+          .pipe(startWith(null))
+          .subscribe(info => this.#showTitle(info ?? sdTabInfoFromBuilders(this.#tabRouterService.builders.getValue(), active), active))
+      );
+      onCleanup(() => subscription.unsubscribe());
+    });
+
     // Initial navigation có thể hoàn tất trước khi outlet subscribe router.events
     // (blocking init hoặc outlet mount muộn). Catch-up sau first render.
     afterNextRender(() => {
@@ -160,6 +189,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.#restoreTitle();
     this.#subscription.unsubscribe();
     this.#pendingNavigationStates.clear();
     this.#disconnectTabBuilders?.();
@@ -240,19 +270,32 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
   tabTrackBy = (index: number, tab: SdTabRouterTab) => tab.key;
 
+  #showTitle = (info: SdTabInfo, tab: SdTabRouterTab): void => {
+    const name = info.name || sdTabInfoFromBuilders(this.#tabRouterService.builders.getValue(), tab).name;
+    this.#title.setTitle(`${info.dirty ? '● ' : ''}${name} – ${this.#appTitle}`);
+    this.#titleChanged = true;
+  };
+
+  #restoreTitle = (): void => {
+    if (!this.#titleChanged) return;
+    this.#title.setTitle(this.#appTitle);
+    this.#titleChanged = false;
+  };
+
+  // `beforeClose` chỉ cho đóng khi trả về true; false, throw hay reject đều giữ tab lại.
+  #canClose = async (tab: SdTabRouterTab): Promise<boolean> => {
+    try {
+      const result = tab.beforeClose ? tab.beforeClose() : true;
+      return typeof result === 'boolean' ? result : await result;
+    } catch {
+      return false;
+    }
+  };
+
   #closeTab = async (tab: SdTabRouterTab): Promise<void> => {
     if (this.disabled()) return;
-
-    if (tab.beforeClose) {
-      let canClose: boolean;
-      try {
-        const result = tab.beforeClose();
-        canClose = typeof result === 'boolean' ? result : await result;
-      } catch {
-        canClose = false;
-      }
-      if (!canClose) return;
-    }
+    // why: không có `beforeClose` thì đóng ngay trong cùng lượt (không await), như trước.
+    if (tab.beforeClose && !(await this.#canClose(tab))) return;
 
     const currentTabs = this.tabs();
     const { isActive, key: activeKey } = tab;
@@ -273,6 +316,30 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       }
     } else {
       this.tabs.set(currentTabs.filter(({ key }) => key !== tab.key));
+    }
+  };
+
+  // Menu chuột phải "Đóng các tab khác" (đợt 3 · 3c). Hỏi `beforeClose` lần lượt từng tab (mỗi tab có thể mở hộp xác
+  // nhận riêng), rồi gỡ một lần những tab cho đóng. Tab đang mở nằm trong số đó thì mở `keep`.
+  #closeOthers = async (keep: SdTabRouterTab): Promise<void> => {
+    if (this.disabled()) return;
+    const closing = new Set<string>();
+    for (const tab of this.tabs()) {
+      if (tab.key !== keep.key && (!tab.beforeClose || (await this.#canClose(tab)))) closing.add(tab.key);
+    }
+    if (!closing.size || this.disabled()) return;
+
+    // why: đọc lại sau các lần await — tab có thể đã đổi trong lúc chờ hộp xác nhận.
+    const currentTabs = this.tabs();
+    const kept = currentTabs.find(({ key }) => key === keep.key);
+    const closesActive = currentTabs.some(({ key, isActive }) => isActive && closing.has(key));
+    this.tabs.set(currentTabs.filter(({ key }) => !closing.has(key)));
+
+    if (closesActive && kept) {
+      this.#router.navigate([kept.url], {
+        queryParams: { ...(kept.queryParams || {}) },
+        state: { switchTab: true },
+      });
     }
   };
 

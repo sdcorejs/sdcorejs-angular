@@ -30,8 +30,8 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 | Layer  | Selector               | Role                                                                                                                                                                                                                                                                     |
 | ------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to raw router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close / explicit reload, and supports `replaceTab`, `switchTab`, and `forceReload` navigation states. |
-| Nav    | `sd-tab-router-nav`    | Renders the 40px tab bar on top, hidden while there is one tab or none. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis).                                                                      |
-| Item   | `sd-tab-router-item`   | One tab — a 16px icon, the name (ellipsis) and a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set).                                                 |
+| Nav    | `sd-tab-router-nav`    | Renders the 40px tab bar on top, hidden while there is one tab or none. A WAI-ARIA tablist with one tab stop (roving tabindex); drag-to-reorder (CDK Drag-Drop, locked to X-axis); a right-click menu.                                                                      |
+| Item   | `sd-tab-router-item`   | One `role="tab"` — a 16px icon, the name (ellipsis) and a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set).                                                 |
 
 > Tab metadata (name, icon, tooltip, color) is provided **per-component** via the `@SdTabComponent` decorator (see Decorator below). Routes don't declare the metadata — the destination component does.
 
@@ -42,6 +42,7 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 | Name       | Type                                       | Default | Notes                                                                                                                                                                                                                                       |
 | ---------- | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `disabled` | `boolean` (coerced via `booleanAttribute`) | `false` | When `true`, the outlet bypasses all tab management. Navigation falls through to a standard `<router-outlet>` instead. Useful for embedding the outlet in contexts where tab behaviour should be suppressed (e.g. print view, modal shell). |
+| `syncBrowserTitle` | `boolean` (coerced via `booleanAttribute`) | `false` | When `true`, the browser title follows the open tab: `{tab name} – {app name}`, with `● ` in front while the tab is `dirty`. The app name is `document.title` when the outlet is created. Turning it off, `disabled`, or destroying the outlet gives that title back. |
 
 ### Outputs
 
@@ -67,6 +68,10 @@ None.
 - Per-tab `Injector` overrides `ActivatedRoute` so each tab's component injects its OWN route, not the router's current one — avoids state-leak between tabs
 - Soft cap warning: if the user opens more than 30 tabs, `SdNotifyService.warning('Bạn đã mở quá nhiều tab.')` fires
 - Closing the active tab navigates to the neighbor (next, then previous, else `/`)
+- **Browser title (`syncBrowserTitle`):** set through Angular `Title`, updated when the open tab changes and whenever its `tabInfoChanges` sends a new name or `dirty`. Before the screen sends tab info, the name comes from `@SdTabComponent` (else the URL). With the input on, route `title`s set by the router are overwritten after each navigation
+- `SdTabRouterService.closeOthers(tab)` (right-click menu "Đóng các tab khác") asks `beforeClose` of every other tab in turn, keeps the tabs that refuse, and removes the rest at once. When the open tab is among them, `tab` is opened
+- Each pane is `role="tabpanel"`, keeps `id` = `tab.key` and is labelled by its tab (`aria-labelledby="sd-tab-router-tab-<key>"`)
+- The outlet binds the bar two-way (`[(tabs)]`): a drop in the bar sets the outlet `tabs` signal, so panes follow the new order
 
 ### Height
 
@@ -82,7 +87,7 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 
 | Name   | Type      | Default | Notes                                          |
 | ------ | --------- | ------- | ---------------------------------------------- |
-| `tabs` | `SdTabRouterTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
+| `tabs` | `SdTabRouterTab[]` (`model`) | `[]`    | Array of tab objects (provided by the outlet). A drop emits the reordered copy through `tabsChange`. |
 
 ### Behaviors
 
@@ -93,7 +98,9 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 - **Tab list button:** shown only while the tabs overflow, fixed at the end of the bar after a 1px `--sd-tab-router-item-divider` line. 30px tall, 8px corners, the tab count (tabular figures) and `expand_more`; `--sd-tab-router-item-hover-bg` on hover and while open. Accessible name `core.component.tab-router.tab-list` ("Danh sách tab"), `aria-haspopup="dialog"`, `aria-expanded`
 - **Tab list menu:** a 320px `role="dialog"` panel 4px under the bar, its right edge lined up with the button (panel surface, border, `--sd-panel-radius`, `--sd-shadow-md`, 6px padding). Title `core.component.tab-router.open-tabs` ("{count} tab đang mở"), also the dialog name. One 36px row per tab — icon, name (ellipsis) and a close button shown on hover or focus (always under `pointer: coarse`); the open tab's row is `--sd-primary` 8% at weight 500 with `aria-current="page"`. The list scrolls past 300px. Focus moves into the list when it opens; picking a tab closes the list, returns focus to the button and switches tabs like a click on the bar; a close button calls `SdTabRouterService.close(tab)` (named "Đóng tab" + the tab name through `aria-describedby`); Escape or a click outside closes it
 - The 1×16px divider on the right of each tab hides on both sides of the open tab and of the hovered tab
-- `cdkDropList` lockaxis x → user drags tabs left/right to reorder (mutates `tabs` in place via `moveItemInArray`)
+- **Keyboard (WAI-ARIA tabs, manual activation):** the scroll area is `role="tablist"`; the whole bar is one tab stop (roving tabindex). The stop is the tab that has focus while the user moves with the keys, otherwise the open tab — focus coming back into the bar lands on the open tab. ←/→ move focus (wrapping at the ends), Home/End go to the first/last tab, Enter/Space open the focused tab, Delete closes it, Shift+F10 or the Menu key opens the right-click menu under it. Moving focus scrolls the tab into view like the open tab. When the focused tab is closed (Delete, the menu, the close button), focus moves to the tab on its right, or on its left when it was the last one — the same tab the outlet opens when the closed tab was open
+- **Drag to reorder:** `cdkDropList` locked to the x axis. The dragged tab floats with `--sd-shadow-md`, four 8px corners and the open-tab colours; the drop spot is `--sd-primary` 12% with a 1px `--sd-primary` 35% inset ring and no content (a dashed `CanvasText` outline under forced colours). Other tabs slide in 250ms (no motion under `prefers-reduced-motion`). A drop emits a new array through `tabsChange` — the input array is not mutated; dropping a tab where it started emits nothing
+- **Right-click menu:** right-click on a tab (the browser menu is suppressed) opens a 224px `role="menu"` at the pointer, flipping at the screen edges; Shift+F10 or the Menu key opens it under the focused tab. Panel surface, border, `--sd-panel-radius`, `--sd-shadow-md`, 6px padding. Two 34px `role="menuitem"` buttons: "Đóng tab" (`core.component.tab-router.close-tab`, 18px `close` icon) and "Đóng các tab khác" (`core.component.tab-router.close-others`), text lined up at 38px. Focus moves to the first item; ↑/↓ (wrapping), Home/End move between items; Escape or Tab closes it and returns focus to the tab; a click outside closes it. "Đóng tab" calls `SdTabRouterService.close(tab)`, "Đóng các tab khác" calls `SdTabRouterService.closeOthers(tab)`
 - The old compact mode is gone: `mode`, `checkUI()` and the window `resize` listener were removed (the bar scrolls instead); the outlet no longer calls `checkUI()`
 
 ## `<sd-tab-router-item>`
@@ -103,17 +110,20 @@ The host is `height: 100vh` followed by `height: 100dvh`: browsers that support 
 | Name  | Type               | Default | Notes               |
 | ----- | ------------------ | ------- | ------------------- |
 | `tab` | `SdTabRouterTab` (REQUIRED) | —       | The tab descriptor. |
+| `focusable` | `boolean` | `false` | Set by the nav: this tab is the bar's only tab stop (`tabindex="0"`, otherwise `-1`). |
 
 ### Behaviors
 
-- Click → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
-- Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close; `auxclick` button 1 default-prevented so the browser does not also open the tab url in a new browser tab) → close tab
+- The tab is a `role="tab"` element without `href` (`id="sd-tab-router-tab-<key>"`, `aria-selected`, `aria-controls` = the pane id `tab.key`). With an `<a href>`, CDK drag cancelled the mousedown of the natively draggable link, so a click could not focus the tab, and the browser link menu took the place of the bar menu
+- Click, or Enter/Space on the tab itself → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
+- Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
-- Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename). The outlet creates it as a `ReplaySubject(1)`, so the tab list menu (built when it opens) and any later subscriber get the last info sent
+- Tab info (`name`, `icon`, `tooltip`, `color`, `dirty`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename). The outlet creates it as a `ReplaySubject(1)`, so the tab list menu (built when it opens) and any later subscriber get the last info sent
 - The tab shows the icon (16px, `--sd-<color>-dark` of `color`, primary when unset; nothing when there is no icon) and the name (13px/18px, one line, ellipsis). It does not use `<sd-badge>`
 - Tooltip (`[sdTooltip]`): the builder's `tooltip` when set; otherwise the full name, only when the name is cut. Whether the name is cut is measured on `mouseenter` / `focusin` (`measureTruncation()`, `truncated()`)
 - Not open: no background, `--sd-tab-router-item-text`. Hover: `--sd-tab-router-item-hover-bg`. Open (`tab-router__item--active`, and `sd-tab-router-item--active` on the host): `--sd-tab-router-item-active-bg`, `--sd-text`, weight 500
 - Close button: 20×20, 6px corners, 14px icon. Always shown on the open tab and under `pointer: coarse` (32px hit area); on other tabs only on hover or focus
+- **Unsaved dot (`SdTabInfo.dirty`):** an 8px `--sd-text-secondary` dot sits where the close button is (the slot is shown on every dirty tab). On hover or keyboard focus the dot turns into the close button; the open tab keeps the dot until hover. Under `forced-colors` the dot is `CanvasText`. Assistive technology hears `core.component.tab-router.unsaved` ("Chưa lưu") after the name; the dot itself is `aria-hidden`. Under `pointer: coarse` there is no hover, so the dot stays and a tap on it still closes the tab (`beforeClose` runs)
 - Focus: a 2px ring drawn inside the tab (`outline-offset: -2px`). Under `forced-colors` the open tab is outlined in `CanvasText`, because backgrounds are dropped
 
 ## Decorator: `@SdTabComponent`
@@ -147,10 +157,10 @@ The decorator writes the builder into a plain module-level collection at class-d
 | API                                 | Kind                    | Use it when                                                                                                                                                                                                                                   |
 | ----------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `<sd-tab-router-outlet [disabled]>` | Component               | Replacing the app shell's `<router-outlet>` with a persistent multi-tab router host.                                                                                                                                                          |
-| `<sd-tab-router-nav [tabs]>`        | Component               | Rendering the tab strip supplied by the outlet. Usually used internally, not by feature screens.                                                                                                                                              |
+| `<sd-tab-router-nav [(tabs)]>`      | Component               | Rendering the tab strip supplied by the outlet. Usually used internally, not by feature screens.                                                                                                                                              |
 | `<sd-tab-router-item [tab]>`        | Component               | Rendering one draggable/closable tab pill inside the nav. Usually used internally.                                                                                                                                                            |
 | `@SdTabComponent({...})`            | Decorator               | Supplying route-component tab metadata: name, icon, tooltip, and color.                                                                                                                                                                       |
-| `SdTabRouterService`                | Service                 | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first.                                                                                                    |
+| `SdTabRouterService`                | Service                 | Advanced programmatic tab operations such as setting the current tab, closing (`close(tab?)`, `closeOthers(tab?)`), or listening to tab events. Prefer router navigation first.                                                                                                    |
 | `SdTabRouterTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
 | `SD_TAB`                            | `InjectionToken<SdTabRouterTab>` | Inject `SdTabRouterTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
 
@@ -177,6 +187,7 @@ interface SdTabInfo {
   icon?: string;
   tooltip?: string;
   color?: Color;
+  dirty?: boolean; // unsaved changes: dot on the tab, "● " in the browser title
 }
 ```
 
@@ -191,7 +202,8 @@ Tokens (see `assets/THEME.md`, "Tab router tokens"): `--sd-tab-router-nav-bg`, `
   - Browser-style tab with 8px top corners, 34px tall, on a 40px grey bar; no bar at all while one tab is open
   - Coloured 16px icon on the left, name in the middle (ellipsis), close `×` (Material `close` icon) on the right
   - The open tab (`tab-router__item--active`) has the surface background and joins the content below; other tabs have no background
-  - Drag-handle: the whole tab is draggable horizontally
+  - Drag-handle: the whole tab is draggable horizontally; while dragging it floats with a shadow over a light-blue drop spot
+- Right-click on a tab: a small menu with "Đóng tab" and "Đóng các tab khác"
 - With many tabs the strip scrolls sideways, fades out on an edge that hides tabs, and ends with a "16 ⌄" button that opens a list of every open tab
 - Below the strip is `.tab-router__list`, a stack of `.tab-router__pane` divs — only the one with `.active` is visible (display toggled in CSS); others are kept in DOM (state preserved)
 - No tab: the list is empty (the page should render its own welcome content via a default route)
@@ -283,9 +295,16 @@ An explicit `forceReload` does not call this hook; use it only when the caller i
 ```ts
 this.tab.tabInfoChanges.next({
   name: this.employee.name, // tab name now matches the loaded record
-  icon: this.form.dirty ? 'edit' : 'person',
-  color: this.form.dirty ? 'warning' : 'primary',
+  icon: 'person',
+  dirty: this.form.dirty, // same source as beforeClose: dot on the tab while there are unsaved changes
 });
+```
+
+### 8. Browser title follows the open tab
+
+```html
+<!-- "Nhân viên #12 – Portal", "● Nhân viên #12 – Portal" while dirty -->
+<sd-tab-router-outlet syncBrowserTitle></sd-tab-router-outlet>
 ```
 
 ## Anti-patterns
@@ -299,10 +318,9 @@ this.tab.tabInfoChanges.next({
 
 ## Accessibility
 
-- Tabs are `<a>` anchors with `[href]` bound to the `tab.url` string → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
-- Close button is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It is keyboard reachable and Enter/Space close the tab. It previously carried `aria-hidden="true"` — which still let it take tab focus while announcing nothing, strictly worse than doing nothing.
+- WAI-ARIA tabs: the bar is `role="tablist"`, each tab `role="tab"` with `aria-selected` and `aria-controls`, each pane `role="tabpanel"` labelled by its tab. One tab stop for the whole bar (roving tabindex); see the nav keyboard behaviour. Tabs have no `href`, so there is no browser "open in new tab" — the right-click menu replaces it
+- Close button is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring, but `tabindex="-1"`: the keyboard closes a tab with Delete, so each tab adds no second tab stop. It previously carried `aria-hidden="true"` while still taking tab focus.
 - The icon is decorative (`aria-hidden`); the close button is the only interactive element inside a tab.
-- No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 
 ## Related
 
