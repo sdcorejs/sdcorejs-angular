@@ -116,6 +116,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - Upload file: the download button of the popup is labelled “Tải xuống”; it used the upload key (“Tải file”). The thumbnail rail followed the current file only by looking up ids that were never set; the filmstrip now scrolls to it.
 - Upload file: dragging an image to reorder moves it among the image positions of `model` only; the index of the image group used to be applied to the mixed array of images and documents. Documents can be reordered too.
 - Upload file: the remove badge is no longer clipped (the field had `overflow-y: hidden` and the badge sat at −8px of a 3px margin).
+- Chip: in a field narrower than a chip, the chip text is cut with “…” and the ✕ or the lock stays inside the chip. The text used to keep its width (up to 240px) while the chip shrank to the field, so the ✕ or the lock was pushed past the chip's edge, and past the field's edge in a narrow one. Chips that fit are unchanged.
 
 ### Removed
 
