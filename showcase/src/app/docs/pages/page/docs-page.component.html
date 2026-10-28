@@ -1,4 +1,4 @@
-@let currentPage = page();
+@let currentPage = localizedPage();
 @let t = i18n.t();
 @if (notFound()) {
   <docs-not-found></docs-not-found>
@@ -23,13 +23,13 @@
         @if (loading() && tab() !== 'examples') {
           <div class="content-state" role="status">
             <span class="spinner" aria-hidden="true"></span>
-            <p>Loading v{{ version() || '…' }} documentation…</p>
+            <p>{{ i18n.format('loadingDocs', { v: version() || '…' }) }}</p>
           </div>
         } @else if (errorMessage && tab() !== 'examples') {
           <div class="content-state content-state--error" role="alert">
-            <h2>Published documentation could not be loaded</h2>
+            <h2>{{ t.docsLoadFailed }}</h2>
             <p>{{ errorMessage }}</p>
-            <button type="button" (click)="retry()">Retry</button>
+            <button type="button" (click)="retry()">{{ t.retry }}</button>
           </div>
         } @else {
           @if (tab() === 'examples') {
@@ -40,7 +40,7 @@
               <!-- why: the tab pill already shows the count; the heading stays for screen readers. -->
               <h2 id="live-examples-title" class="examples-summary docs-visually-hidden">
                 <strong>{{ currentPage.demoSectionCount }}</strong>
-                <span>interactive examples</span>
+                <span>{{ t.interactiveExamples }}</span>
               </h2>
               <div class="examples-list">
                 @for (example of currentPage.examples; track example.id; let first = $first) {
@@ -51,22 +51,22 @@
             @if (loading()) {
               <div class="content-state" role="status">
                 <span class="spinner" aria-hidden="true"></span>
-                <p>Loading published examples for v{{ version() }}…</p>
+                <p>{{ i18n.format('loadingPublishedExamples', { v: version() }) }}</p>
               </div>
             } @else if (errorMessage) {
               <div class="content-state content-state--error" role="alert">
-                <h2>Published examples could not be loaded</h2>
+                <h2>{{ t.publishedExamplesFailed }}</h2>
                 <p>{{ errorMessage }}</p>
-                <button type="button" (click)="retry()">Retry published examples</button>
+                <button type="button" (click)="retry()">{{ t.retryPublishedExamples }}</button>
               </div>
             } @else if (notAvailable()) {
               <div class="content-state">
-                <h2>No published examples for this version</h2>
-                <p>The compiled live gallery above remains available.</p>
+                <h2>{{ t.noPublishedExamples }}</h2>
+                <p>{{ t.liveGalleryRemains }}</p>
               </div>
             } @else if (sections().length) {
               <section id="published-examples" class="published-examples">
-                <h2>Published examples for v{{ version() }}</h2>
+                <h2>{{ i18n.format('publishedExamplesFor', { v: version() }) }}</h2>
                 @for (section of sections(); track section.id) {
                   <section class="doc-section" [id]="section.id">
                     <h3>{{ section.heading }}</h3>
@@ -139,19 +139,14 @@
 
             @if (notAvailable()) {
               <div class="content-state">
-                <h2>Not available in this version</h2>
-                <p>The live gallery remains available, but this published API document is missing from v{{ version() }}.</p>
-                <a [routerLink]="['/v', versions.latestVersion(), currentPage.category, currentPage.slug, tab()]"
-                  >Try latest documentation</a
-                >
+                <h2>{{ t.notAvailableTitle }}</h2>
+                <p>{{ i18n.format('notAvailableLead', { v: version() }) }}</p>
+                <a [routerLink]="['/v', versions.latestVersion(), currentPage.category, currentPage.slug, tab()]">{{ t.tryLatest }}</a>
               </div>
             } @else if (!sections().length && tab() === 'styling') {
               <div class="content-state">
-                <h2>No component-specific styling API</h2>
-                <p>
-                  Compose this API with the supported theme tokens and utility classes below; private implementation selectors are not
-                  public customization contracts.
-                </p>
+                <h2>{{ t.noStylingTitle }}</h2>
+                <p>{{ t.noStylingLead }}</p>
               </div>
             }
 
@@ -205,7 +200,7 @@
             @if (tab() === 'styling' && styleGuideSections().length) {
               <section id="shared-style-guide" class="style-guide">
                 <header>
-                  <span>Version-aware shared reference</span>
+                  <span>{{ t.styleGuideKicker }}</span>
                   <h2>Public STYLE-GUIDE.md</h2>
                 </header>
                 @for (section of styleGuideSections(); track section.id) {

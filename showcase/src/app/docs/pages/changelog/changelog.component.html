@@ -1,7 +1,7 @@
 @let t = i18n.t();
 <main class="changelog">
   @if (versions.invalidVersion(); as invalid) {
-    <div class="changelog__notice" role="status">Version “{{ invalid }}” is unavailable. Showing v{{ versions.selectedVersion() }} instead.</div>
+    <div class="changelog__notice" role="status">{{ i18n.format('versionUnavailable', { x: invalid, v: versions.selectedVersion() ?? '' }) }}</div>
   }
   <h1>{{ t.changelogTitle }}</h1>
   <p class="changelog__lead">{{ t.changelogLead }}</p>

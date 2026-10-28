@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DocsI18nService } from '../../core/docs-i18n.service';
 import { closestPages } from '../../core/docs-search-index';
 import { DocsVersionService } from '../../core/docs-version.service';
-import { DOC_NAV_GROUPS, DOC_PAGES } from '../../core/documentation.registry';
+import { DOC_NAV_GROUPS } from '../../core/documentation.registry';
 
 const ICONS = new Map(DOC_NAV_GROUPS.map(group => [group.category, group.icon]));
 const DOC_TABS: ReadonlySet<string> = new Set(['overview', 'styling', 'api', 'examples']);
@@ -74,7 +74,7 @@ export class DocsNotFoundComponent {
     return tokens.at(-1) ?? this.slug();
   });
   readonly suggestions = computed(() =>
-    closestPages(this.slug(), DOC_PAGES).map(page => {
+    closestPages(this.slug(), this.i18n.pages()).map(page => {
       const commands = ['/v', this.version(), page.category, page.slug, 'overview'];
       return { id: page.id, title: page.title, icon: ICONS.get(page.category) ?? 'article', commands, path: commands.slice(0, 4).join('/') };
     })

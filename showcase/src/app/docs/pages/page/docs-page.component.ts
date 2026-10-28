@@ -136,6 +136,11 @@ export class DocsPageComponent {
   readonly clipboard = inject(DocsClipboardService);
   readonly versions = inject(DocsVersionService);
   readonly page = signal<DocPageDefinition | null>(null);
+  /** The page with title, description and examples in the current language. */
+  readonly localizedPage = computed(() => {
+    const page = this.page();
+    return page ? this.i18n.page(page) : null;
+  });
   readonly tab = signal<DocTabId>('overview');
   readonly version = signal('');
   readonly viewModel = signal<PublishedDocTabsViewModel | null>(null);
@@ -227,12 +232,12 @@ export class DocsPageComponent {
   });
   readonly tableOfContents = computed<readonly DocsTocItem[]>(() => {
     if (this.tab() === 'examples') {
-      const liveExamples = this.page()?.examples.map(example => ({ id: example.id, label: example.title, level: 2 })) ?? [];
+      const liveExamples = this.localizedPage()?.examples.map(example => ({ id: example.id, label: example.title, level: 2 })) ?? [];
       const publishedExamples = this.sections();
       return publishedExamples.length
         ? [
             ...liveExamples,
-            { id: 'published-examples', label: `Published examples · v${this.version()}`, level: 2 },
+            { id: 'published-examples', label: this.i18n.format('publishedExamplesToc', { v: this.version() }), level: 2 },
             ...publishedExamples.map(section => ({ id: section.id, label: section.heading, level: section.level + 1 })),
           ]
         : liveExamples;
@@ -252,7 +257,7 @@ export class DocsPageComponent {
     }
     if (this.tab() === 'styling' && this.styleGuideSections().length) {
       items.push(
-        { id: 'shared-style-guide', label: 'Shared style guide', level: 2 },
+        { id: 'shared-style-guide', label: this.i18n.t().sharedStyleGuide, level: 2 },
         ...this.styleGuideSections().map(section => ({ id: `style-guide-${section.id}`, label: section.heading, level: section.level + 1 }))
       );
     }
@@ -278,9 +283,7 @@ export class DocsPageComponent {
   });
   // why: every Angular line of the latest release is current; only an older release is archived.
   readonly isHistoricalVersion = computed(() => !!this.version() && !this.versions.isLatestRelease());
-  readonly liveExamplesNotice = computed(
-    () => `Archived documentation v${this.version()} is shown here. Live examples and demo source use the current showcase.`
-  );
+  readonly liveExamplesNotice = computed(() => this.i18n.format('archivedNotice', { v: this.version() }));
 
   constructor() {
     void this.#releaseNotes.load();
@@ -407,7 +410,7 @@ export class DocsPageComponent {
       }
     } catch (error: unknown) {
       if (sequence !== this.#loadSequence) return;
-      this.error.set(error instanceof Error ? error.message : 'Unable to load published documentation.');
+      this.error.set(error instanceof Error ? error.message : this.i18n.t().docsUnableToLoad);
     } finally {
       if (sequence === this.#loadSequence) {
         this.loading.set(false);
@@ -463,7 +466,7 @@ export class DocsPageComponent {
   #findAdjacentPage(direction: -1 | 1): DocPageDefinition | null {
     for (let index = this.pageIndex() + direction; index >= 0 && index < DOC_PAGES.length; index += direction) {
       const candidate = DOC_PAGES[index];
-      if (resolveDocsPageAvailability(candidate, this.publishedDocIds()) !== 'unavailable') return candidate;
+      if (resolveDocsPageAvailability(candidate, this.publishedDocIds()) !== 'unavailable') return this.i18n.page(candidate);
     }
     return null;
   }

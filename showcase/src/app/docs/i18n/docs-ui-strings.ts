@@ -1,6 +1,6 @@
 import type { DocCategory } from '../core/documentation.models';
 
-/** UI strings of the docs site chrome. Content (published Markdown, registry text) is not translated here. */
+/** UI strings of the docs site chrome. Registry text has its English overlay in content.en.ts; published Markdown is English only. */
 export interface DocsUiStrings {
   readonly docs: string;
   readonly changelog: string;
@@ -120,6 +120,67 @@ export interface DocsUiStrings {
   readonly maintained: string;
   readonly installCommand: string;
   readonly categoryDescriptions: Readonly<Record<DocCategory, string>>;
+  readonly documentationContent: string;
+  readonly versionUnavailable: string;
+  readonly searchDialog: string;
+  readonly searchDialogPlaceholder: string;
+  readonly closeSearch: string;
+  readonly searchResultsList: string;
+  readonly searchNoMatch: string;
+  readonly searchStatusNone: string;
+  readonly searchStatusOne: string;
+  readonly searchStatusMany: string;
+  readonly searchKeys: Readonly<Record<'navigate' | 'open' | 'close', string>>;
+  readonly searchMeta: Readonly<Record<'availability' | 'selector' | 'importPath' | 'keyword' | 'example' | 'publishedTitle', string>>;
+  readonly resetExample: string;
+  readonly reset: string;
+  readonly fullWidth: string;
+  readonly exitFullWidth: string;
+  readonly expandExample: string;
+  readonly collapseExample: string;
+  readonly examplePreview: string;
+  readonly loadPreview: string;
+  readonly loadingPreview: string;
+  readonly scrollHint: string;
+  readonly exampleSource: string;
+  readonly loadingSource: string;
+  readonly retrySource: string;
+  readonly sourceLanguage: string;
+  readonly copySource: string;
+  readonly scrollableSource: string;
+  readonly sourceUnavailable: string;
+  readonly sourceUnregistered: string;
+  readonly sourceLoadFailed: string;
+  readonly copyFailedShort: string;
+  readonly sourceCopied: string;
+  readonly sourceCopyFailed: string;
+  readonly loadingExample: string;
+  readonly exampleLoadFailed: string;
+  readonly copyCode: string;
+  readonly codeCopied: string;
+  readonly codeCopyFailed: string;
+  readonly scrollableCode: string;
+  readonly scrollableTable: string;
+  readonly loadingDocs: string;
+  readonly docsLoadFailed: string;
+  readonly docsUnableToLoad: string;
+  readonly retry: string;
+  readonly interactiveExamples: string;
+  readonly loadingPublishedExamples: string;
+  readonly publishedExamplesFailed: string;
+  readonly retryPublishedExamples: string;
+  readonly noPublishedExamples: string;
+  readonly liveGalleryRemains: string;
+  readonly publishedExamplesFor: string;
+  readonly publishedExamplesToc: string;
+  readonly archivedNotice: string;
+  readonly notAvailableTitle: string;
+  readonly notAvailableLead: string;
+  readonly tryLatest: string;
+  readonly noStylingTitle: string;
+  readonly noStylingLead: string;
+  readonly sharedStyleGuide: string;
+  readonly styleGuideKicker: string;
 }
 
 export type DocsLanguage = 'en' | 'vi';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { findDocNavigationGroup } from '../../core/documentation.registry';
+import { DocsI18nService } from '../../core/docs-i18n.service';
 import { PublishedDocsService } from '../../core/published-docs.service';
 import { resolveDocsPageAvailability } from '../../shared/docs-page-availability';
 
@@ -79,10 +79,11 @@ import { resolveDocsPageAvailability } from '../../shared/docs-page-availability
 export class DocsCategoryComponent {
   readonly #route = inject(ActivatedRoute);
   readonly #publishedDocs = inject(PublishedDocsService);
+  readonly #i18n = inject(DocsI18nService);
   #loadSequence = 0;
   readonly params = toSignal(this.#route.paramMap, { initialValue: this.#route.snapshot.paramMap });
   readonly version = computed(() => this.params().get('version') || 'latest');
-  readonly group = computed(() => findDocNavigationGroup(this.params().get('category')) ?? null);
+  readonly group = computed(() => this.#i18n.navGroups().find(group => group.category === this.params().get('category')) ?? null);
   readonly publishedDocIds = signal<ReadonlySet<string> | null>(null);
   readonly pageCards = computed(() =>
     (this.group()?.pages ?? []).map(page => {

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
+import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocsVersionService } from '../core/docs-version.service';
 import { DOC_PAGES } from '../core/documentation.registry';
 import { PublishedDocsService } from '../core/published-docs.service';
@@ -32,6 +33,7 @@ describe('GlobalSearchComponent', () => {
   });
 
   afterEach(() => {
+    TestBed.inject(DocsI18nService).set('en');
     fixture.nativeElement.remove();
     fixture.destroy();
   });
@@ -212,10 +214,12 @@ describe('GlobalSearchComponent', () => {
       { query: 'bulk action', title: 'Quick Action', label: 'Keyword:', match: 'bulk action' },
       { query: 'secondary vs black', title: 'Button', label: 'Example:', match: 'secondary vs black' },
       { query: 'primitive reference', title: 'Button', label: 'Published title:', match: 'primitive reference' },
-      { query: 'kich thuoc', title: 'Button', label: 'Example:', match: 'kích thước' },
+      { query: 'icon only', title: 'Button', label: 'Example:', match: 'icon only' },
+      { language: 'vi', query: 'kich thuoc', title: 'Button', label: 'Ví dụ:', match: 'kích thước' },
     ] as const;
 
     for (const testCase of cases) {
+      TestBed.inject(DocsI18nService).set('language' in testCase ? testCase.language : 'en');
       fixture.componentInstance.query.set(testCase.query);
       fixture.detectChanges();
       const option = ([...fixture.nativeElement.querySelectorAll('[role="option"]')] as HTMLElement[]).find(
@@ -293,7 +297,16 @@ describe('GlobalSearchComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/v', '21.1.2', 'components', 'org-chart', 'examples'], { fragment: undefined });
   });
 
+  it('matches English example titles in EN mode', () => {
+    fixture.componentInstance.query.set('icon colors');
+    const result = fixture.componentInstance.flatResults().find(entry => entry.page.slug === 'badge');
+
+    expect(result?.matchedFields).toContain('examples');
+    expect(result?.page.examples.some(example => example.title === 'Icon colors')).toBeTrue();
+  });
+
   it('uses accent-insensitive matching when selecting the exact example anchor', () => {
+    TestBed.inject(DocsI18nService).set('vi');
     fixture.componentInstance.query.set('mau sac icon');
     const result = fixture.componentInstance.flatResults().find(entry => entry.page.slug === 'badge');
     const matchedExample = result?.page.examples.find(example => example.title === 'Màu sắc icon');

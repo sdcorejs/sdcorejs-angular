@@ -18,8 +18,8 @@ import { Router } from '@angular/router';
 import { DocsI18nService } from '../core/docs-i18n.service';
 import { DocsSearchResult, foldSearchText, groupSearchResults, searchDocumentation } from '../core/docs-search.utils';
 import { DocsVersionService } from '../core/docs-version.service';
-import { DOC_PAGES } from '../core/documentation.registry';
 import { PublishedDocsService } from '../core/published-docs.service';
+import { DocsUiStrings } from '../i18n/docs-ui-strings';
 import { DocsPageAvailability, resolveDocsPageAvailability } from './docs-page-availability';
 
 interface HighlightPart {
@@ -85,19 +85,21 @@ function resolveMetadata(
   result: DocsSearchResult,
   query: string,
   publishedTitles: ReadonlyMap<string, string>,
-  availability: DocsPageAvailability
+  availability: DocsPageAvailability,
+  t: DocsUiStrings
 ): SearchMetadata {
   const { page, matchedFields } = result;
+  const labels = t.searchMeta;
 
   if (availability === 'live-demo') {
-    return { kind: 'availability', label: 'Availability', value: 'Current live demo' };
+    return { kind: 'availability', label: labels.availability, value: t.liveDemo };
   }
 
   if (page.selector && matchedFields.includes('selector') && includesQuery(page.selector, query)) {
-    return { kind: 'selector', label: 'Selector', value: page.selector };
+    return { kind: 'selector', label: labels.selector, value: page.selector };
   }
   if (matchedFields.includes('importPath') && includesQuery(page.importPath, query)) {
-    return { kind: 'importPath', label: 'Import path', value: page.importPath };
+    return { kind: 'importPath', label: labels.importPath, value: page.importPath };
   }
 
   const generatedKeywords = new Set(
@@ -105,20 +107,20 @@ function resolveMetadata(
   );
   const keyword = page.keywords.find(value => !generatedKeywords.has(foldSearchText(value)) && includesQuery(value, query));
   if (matchedFields.includes('keywords') && keyword) {
-    return { kind: 'keyword', label: 'Keyword', value: keyword };
+    return { kind: 'keyword', label: labels.keyword, value: keyword };
   }
 
   const example = page.examples.find(value => includesQuery(value.title, query));
   if (!matchedFields.includes('title') && matchedFields.includes('examples') && example) {
-    return { kind: 'example', label: 'Example', value: example.title };
+    return { kind: 'example', label: labels.example, value: example.title };
   }
 
   const publishedTitle = page.publishedDocId ? publishedTitles.get(page.publishedDocId) : undefined;
   if (matchedFields.includes('publishedTitle') && publishedTitle && includesQuery(publishedTitle, query)) {
-    return { kind: 'publishedTitle', label: 'Published title', value: publishedTitle };
+    return { kind: 'publishedTitle', label: labels.publishedTitle, value: publishedTitle };
   }
 
-  return { kind: 'importPath', label: 'Import path', value: page.importPath };
+  return { kind: 'importPath', label: labels.importPath, value: page.importPath };
 }
 
 @Component({
@@ -140,32 +142,33 @@ function resolveMetadata(
 
     @if (opened()) {
       <div class="search-backdrop" aria-hidden="true" (click)="closeSearch()"></div>
-      <section #searchDialog class="search-dialog" role="dialog" aria-modal="true" aria-label="Search documentation">
+      @let t = i18n.t();
+      <section #searchDialog class="search-dialog" role="dialog" aria-modal="true" [attr.aria-label]="t.searchDialog">
         <div class="search-dialog__field">
           <mat-icon aria-hidden="true">search</mat-icon>
           <input
             #searchInput
             type="search"
             role="combobox"
-            aria-label="Search documentation"
+            [attr.aria-label]="t.searchDialog"
             aria-autocomplete="list"
             aria-controls="docs-search-results"
             [attr.aria-expanded]="opened()"
             [attr.aria-activedescendant]="activeOptionId()"
             autocomplete="off"
-            placeholder="Search components, forms, services…"
+            [placeholder]="t.searchDialogPlaceholder"
             [value]="query()"
             (input)="onInput($event)"
             (keydown.arrowDown)="moveActive(1, $event)"
             (keydown.arrowUp)="moveActive(-1, $event)"
             (keydown.enter)="openActive($event)" />
-          <button type="button" aria-label="Close search" (click)="closeSearch()">Esc</button>
+          <button type="button" [attr.aria-label]="t.closeSearch" (click)="closeSearch()">Esc</button>
         </div>
 
         <p class="search-status" role="status" aria-live="polite" aria-atomic="true">{{ resultStatus() }}</p>
-        <div id="docs-search-results" class="search-dialog__results" role="listbox" aria-label="Documentation results">
+        <div id="docs-search-results" class="search-dialog__results" role="listbox" [attr.aria-label]="t.searchResultsList">
           @if (query().trim() && !flatResults().length) {
-            <p class="search-empty">No documentation matched “{{ query() }}”.</p>
+            <p class="search-empty">{{ i18n.format('searchNoMatch', { q: query() }) }}</p>
           }
           @for (group of groupedResults(); track group.title) {
             <section class="search-group" role="group" [attr.aria-labelledby]="group.id">
@@ -205,8 +208,10 @@ function resolveMetadata(
           }
         </div>
         <footer>
-          <span>↑↓ Navigate</span><span>Enter Open</span><span>Esc Close</span>
-          <button class="search-dialog__all" type="button" (click)="openResultsPage()">{{ i18n.t().allResults }} →</button>
+          <span>↑↓ {{ t.searchKeys.navigate }}</span
+          ><span>Enter {{ t.searchKeys.open }}</span
+          ><span>Esc {{ t.searchKeys.close }}</span>
+          <button class="search-dialog__all" type="button" (click)="openResultsPage()">{{ t.allResults }} →</button>
         </footer>
       </section>
     }
@@ -236,25 +241,26 @@ export class GlobalSearchComponent {
   readonly publishedTitles = signal<ReadonlyMap<string, string>>(new Map());
   readonly publishedDocIds = signal<ReadonlySet<string> | null>(null);
   readonly searchablePages = computed(() =>
-    DOC_PAGES.filter(page => resolveDocsPageAvailability(page, this.publishedDocIds()) !== 'unavailable')
+    this.i18n.pages().filter(page => resolveDocsPageAvailability(page, this.publishedDocIds()) !== 'unavailable')
   );
   readonly flatResults = computed(() => searchDocumentation(this.query(), this.searchablePages(), this.publishedTitles()).slice(0, 24));
   readonly resultStatus = computed(() => {
     if (!this.query().trim()) return '';
     const count = this.flatResults().length;
-    if (!count) return 'No documentation results.';
-    return `${count} documentation ${count === 1 ? 'result' : 'results'}.`;
+    if (!count) return this.i18n.t().searchStatusNone;
+    return count === 1 ? this.i18n.t().searchStatusOne : this.i18n.format('searchStatusMany', { n: count });
   });
   readonly groupedResults = computed<readonly SearchGroupView[]>(() => {
     let index = 0;
     const query = this.query();
     const publishedTitles = this.publishedTitles();
+    const t = this.i18n.t();
     return groupSearchResults(this.flatResults()).map(group => ({
       id: `docs-search-group-${group.category}`,
-      title: group.title,
+      title: t.categories[group.category],
       results: group.results.map(result => {
         const availability = resolveDocsPageAvailability(result.page, this.publishedDocIds());
-        const metadata = resolveMetadata(result, query, publishedTitles, availability);
+        const metadata = resolveMetadata(result, query, publishedTitles, availability, t);
         return {
           result,
           index: index++,
@@ -376,7 +382,7 @@ export class GlobalSearchComponent {
   navigate(result: DocsSearchResult): void {
     const version = this.#versions.selectedVersion() ?? 'latest';
     const availability = resolveDocsPageAvailability(result.page, this.publishedDocIds());
-    const metadata = resolveMetadata(result, this.query(), this.publishedTitles(), availability);
+    const metadata = resolveMetadata(result, this.query(), this.publishedTitles(), availability, this.i18n.t());
     const exampleIsDestination = availability === 'live-demo' || metadata.kind === 'example';
     const tab = exampleIsDestination ? 'examples' : 'overview';
     const matchedExample =

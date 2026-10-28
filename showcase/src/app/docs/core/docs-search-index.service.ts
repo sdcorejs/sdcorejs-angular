@@ -26,7 +26,7 @@ export class DocsSearchIndexService {
   readonly entries = computed<readonly DocsSearchEntry[]>(() => {
     const version = this.#version();
     if (!version) return [];
-    return [...pageSearchEntries(DOC_PAGES, version, this.#i18n.t().categories), ...this.#documentEntries()];
+    return [...pageSearchEntries(this.#i18n.pages(), version, this.#i18n.t().categories), ...this.#documentEntries()];
   });
 
   ensure(version: string): void {
