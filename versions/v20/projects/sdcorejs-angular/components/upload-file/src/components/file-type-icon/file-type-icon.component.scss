@@ -1,0 +1,19 @@
+// Khớp `SD_FILE_TYPE_ICONS` trong `helpers/file-type.ts` (một file SVG mỗi đuôi trong `assets/file-types/`). Chuỗi có nháy
+// để `3ds` không bị đọc thành số 3 đơn vị `ds`.
+$icons: (
+  '3ds', 'ai', 'asp', 'avi', 'bin', 'com', 'css', 'csv', 'dbf', 'dll', 'doc', 'docx', 'dwg', 'eml', 'eps', 'exe', 'file',
+  'fla', 'gif', 'html', 'ico', 'ini', 'iso', 'jar', 'jpg', 'js', 'mkv', 'mov', 'mp3', 'mp4', 'nfo', 'obj', 'otf', 'pdf',
+  'pkg', 'png', 'ppt', 'pptx', 'psd', 'rtf', 'svg', 'tiff', 'ttf', 'txt', 'vcf', 'wav', 'wmv', 'xls', 'xlsx', 'xml', 'zip'
+);
+
+:host {
+  display: inline-block;
+  flex: 0 0 auto;
+  background: center / contain no-repeat;
+}
+
+@each $icon in $icons {
+  :host(.sd-upload-file-type-icon--#{$icon}) {
+    background-image: url('../../assets/file-types/#{$icon}.svg');
+  }
+}

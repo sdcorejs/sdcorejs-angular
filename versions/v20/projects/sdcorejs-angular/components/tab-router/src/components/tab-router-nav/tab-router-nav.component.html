@@ -1,16 +1,31 @@
 @let _tabs = tabs();
 @let _open = listOpen();
+@let _tabStop = tabStopKey();
+@let _menu = menu();
 <div class="tab-router__nav" [class.tab-router__nav--hidden]="_tabs.length <= 1">
   <div class="tab-router__tabs">
+    <!-- why: đợt 3 · 3c — ←/→/Home/End, Delete và menu chuột phải (cả Shift+F10 / phím Menu) xử lý tại đây cho mọi tab,
+         nên chỉ nav cần biết thứ tự tab. Enter/Space mở tab nằm trên chính tab. Bản thân tablist không nhận focus: sự
+         kiện đến từ các tab (role="tab", roving tabindex) bên trong. -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
     <div
       #scroller
       class="tab-router__scroller"
+      role="tablist"
       cdkDropList
       cdkDropListLockAxis="x"
       cdkDropListOrientation="horizontal"
-      (cdkDropListDropped)="onDrop($event)">
+      (cdkDropListDropped)="onDrop($event)"
+      (keydown)="onKeydown($event)"
+      (focusin)="onFocusin($event)"
+      (focusout)="onFocusout($event)"
+      (contextmenu)="onContextmenu($event)">
       @for (tab of _tabs; track tab.injector ?? tab.key) {
-        <sd-tab-router-item [tab]="tab" cdkDrag [cdkDragBoundary]="elementRef.nativeElement"></sd-tab-router-item>
+        <sd-tab-router-item
+          [tab]="tab"
+          [focusable]="tab.key === _tabStop"
+          cdkDrag
+          [cdkDragBoundary]="elementRef.nativeElement"></sd-tab-router-item>
       }
     </div>
     @if (fadeStart()) {
@@ -60,4 +75,29 @@
       </div>
     </ng-template>
   }
+
+  <!-- Menu chuột phải (đợt 3 · 3c): treo tại con trỏ, hoặc dưới tab khi mở bằng bàn phím. Không trap focus — Tab, Esc hay
+       bấm ra ngoài đều đóng menu. -->
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="_menu?.origin ?? elementRef"
+    [cdkConnectedOverlayOpen]="!!_menu"
+    [cdkConnectedOverlayPositions]="_menu?.positions ?? menuAtTab"
+    [cdkConnectedOverlayViewportMargin]="8"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayDisableClose]="true"
+    (attach)="focusMenu()"
+    (detach)="menu.set(null)"
+    (overlayOutsideClick)="closeMenu(false)"
+    (overlayKeydown)="onMenuKeydown($event)">
+    <div #contextMenu class="tab-router__context-menu" role="menu" (contextmenu)="$event.preventDefault()">
+      <button type="button" role="menuitem" class="tab-router__context-item" (click)="closeFromMenu()">
+        <sd-icon aria-hidden="true" size="18px" fontIcon="close"></sd-icon>
+        <span>{{ 'core.component.tab-router.close-tab' | sdTranslate }}</span>
+      </button>
+      <button type="button" role="menuitem" class="tab-router__context-item tab-router__context-item--plain" (click)="closeOthersFromMenu()">
+        {{ 'core.component.tab-router.close-others' | sdTranslate }}
+      </button>
+    </div>
+  </ng-template>
 </div>

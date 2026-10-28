@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Validators } from '@angular/forms';
@@ -549,13 +550,32 @@ describe('SdUploadFile', () => {
       component.previewFiles.set([makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf' })]);
       fixture.detectChanges();
 
-      const image = fixture.nativeElement.querySelector('.c-document-image') as HTMLElement;
-      const content = getComputedStyle(image).content;
+      const icon = fixture.nativeElement.querySelector('.c-document-image') as HTMLElement;
+      const image = getComputedStyle(icon).backgroundImage;
 
+      // Đợt 3 · 4a: một component icon dùng chung thay ba bảng `[class]` + `content: url(...)`.
       // Bộ icon là SVG: build có thể giữ nguyên đường dẫn hoặc inline thành data URI, cả hai đều
       // phải là svg — không được rơi lại về .png cũ.
-      expect(content).toMatch(/svg/);
-      expect(content).not.toMatch(/\.png/);
+      expect(icon.tagName).toBe('SD-UPLOAD-FILE-TYPE-ICON');
+      expect(icon.classList).toContain('sd-upload-file-type-icon--pdf');
+      expect(image).toMatch(/svg/);
+      expect(image).not.toMatch(/\.png/);
+    });
+
+    // why: dung lượng từng luôn tính KB (`fileSize / 1024`), kể cả file vài MB.
+    it('shows the extension and the size in KB or MB in the number format of the language', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.previewFiles.set([
+        makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf', fileSize: 2.4 * 1024 * 1024 }),
+        makePreviewFile({ fileName: 'bien-ban.docx', extension: 'docx', fileSize: 640 * 1024 }),
+      ]);
+      fixture.detectChanges();
+
+      const rows = Array.from(fixture.nativeElement.querySelectorAll('.c-document-container')) as HTMLElement[];
+      expect(rows[0].textContent).toContain('PDF · 2,4 MB');
+      expect(rows[1].textContent).toContain('DOCX · 640 KB');
     });
   });
 
@@ -637,15 +657,18 @@ describe('SdUploadFile', () => {
   // ─── onDrop (reorder) ────────────────────────────────────────────────────
 
   describe('onDrop (CDK drag-drop)', () => {
-    it('reorders model when items are dropped', fakeAsync(() => {
+    // why: đợt 3 · 4c — kéo trong lưới ảnh chỉ hoán vị vị trí của ảnh (bản cũ áp index của nhóm ảnh vào mảng trộn).
+    it('reorders the images of the model when an image is dropped', fakeAsync(() => {
       fixture.detectChanges();
-      component.model.set(['a', 'b', 'c']);
+      const [a, b, c] = ['http://x/a.jpg', 'http://x/b.jpg', 'http://x/c.jpg'];
+      component.model.set([a, b, c]);
+      fixture.detectChanges();
       tick(0);
 
       const fakeEvent = { previousIndex: 0, currentIndex: 2 } as any;
       component.onDrop(fakeEvent);
 
-      expect(component.model()).toEqual(['b', 'c', 'a']);
+      expect(component.model()).toEqual([b, c, a]);
     }));
   });
 
@@ -870,6 +893,8 @@ describe('SdUploadFilePreview', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => component.closeViewer());
+
   // ─── Creation & Rendering ─────────────────────────────────────────────────
 
   describe('creation & rendering', () => {
@@ -885,8 +910,11 @@ describe('SdUploadFilePreview', () => {
       expect(component.previewFiles).toEqual([]);
     });
 
-    it('starts with title = "Xem ảnh"', () => {
-      expect(component.title).toBe('Xem ảnh');
+    // why: đợt 3 · 4b bỏ `thumbnailPosition` (không export, không đọc ở đâu) và tiêu đề cố định "Xem ảnh" — top bar
+    // hiện tên file.
+    it('no longer has thumbnailPosition or a fixed title', () => {
+      expect('thumbnailPosition' in component).toBe(false);
+      expect('title' in component).toBe(false);
     });
   });
 
@@ -921,11 +949,9 @@ describe('SdUploadFilePreview', () => {
 
   // ─── Navigation: updateCurrentImage ──────────────────────────────────────
 
+  // why: đợt 3 · 4b — ở file đầu/cuối nút trước/sau bị tắt, không quay vòng như `updateCurrentImage` cũ.
   describe('updateCurrentImage()', () => {
-    beforeEach(() => {
-      component.previewFiles = [...mockPreviewFiles];
-      component.activeIndex = 0;
-    });
+    beforeEach(() => component.open([...mockPreviewFiles]));
 
     it('moves forward by 1', () => {
       component.updateCurrentImage(1);
@@ -933,21 +959,20 @@ describe('SdUploadFilePreview', () => {
     });
 
     it('moves backward by 1', () => {
-      component.activeIndex = 1;
+      component.select(1);
       component.updateCurrentImage(-1);
       expect(component.activeIndex).toBe(0);
     });
 
-    it('wraps around from last to first when moving forward', () => {
-      component.activeIndex = mockPreviewFiles.length - 1;
+    it('stays on the last file when moving forward', () => {
+      component.select(mockPreviewFiles.length - 1);
       component.updateCurrentImage(1);
-      expect(component.activeIndex).toBe(0);
+      expect(component.activeIndex).toBe(mockPreviewFiles.length - 1);
     });
 
-    it('wraps around from first to last when moving backward', () => {
-      component.activeIndex = 0;
+    it('stays on the first file when moving backward', () => {
       component.updateCurrentImage(-1);
-      expect(component.activeIndex).toBe(mockPreviewFiles.length - 1);
+      expect(component.activeIndex).toBe(0);
     });
   });
 
@@ -955,7 +980,7 @@ describe('SdUploadFilePreview', () => {
 
   describe('onClickThumbnailImage()', () => {
     it('sets activeIndex to clicked thumbnail index', () => {
-      component.previewFiles = [...mockPreviewFiles];
+      component.open([...mockPreviewFiles]);
       component.onClickThumbnailImage(2);
       expect(component.activeIndex).toBe(2);
     });
@@ -979,63 +1004,40 @@ describe('SdUploadFilePreview', () => {
   // ─── Close output ─────────────────────────────────────────────────────────
 
   describe('output: close', () => {
-    it('emits close event when onClose is called', () => {
+    it('emits close once the open viewer closes through onClose', async () => {
       let emitted = 0;
       component.close.subscribe(() => emitted++);
 
       component.onClose();
+      expect(emitted).withContext('nothing open').toBe(0);
+
+      await component.open(mockPreviewFiles);
+      component.onClose();
+      await fixture.whenStable();
 
       expect(emitted).toBe(1);
     });
   });
 
-  // ─── Centralized state-image classes ─────────────────────────────────────
-  // why: PreviewComponent toggles `c-image-error` on the parent button + renders
-  // the central `sd-image-image-error` class on the failed thumbnail; main view
-  // shows a `<div class="c-image-error">` with a mat-icon warning. Tests guard
-  // the contract with the central image.scss (renamed from c-img-error).
-  // The component template is projected through SdModal, so we open the modal
-  // via the public `open(files, index)` method before querying the DOM.
+  // ─── Image errors ─────────────────────────────────────────────────────────
 
-  describe('centralized image classes', () => {
-    async function openWith(files: PreviewFile[], index = 0) {
-      await component.open(files, index);
+  describe('image errors', () => {
+    const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+
+    it('shows broken_image in the filmstrip and the error state for a file the field already failed to load', async () => {
+      await component.open([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile, mockPreviewFiles[1]], 0);
       fixture.detectChanges();
-      await fixture.whenStable();
+
+      const thumb = overlay().querySelector('.sd-upload-file-viewer__thumb') as HTMLElement;
+      expect(thumb.querySelector('sd-icon')!.textContent).toContain('broken_image');
+      expect(overlay().querySelector('.sd-upload-file-viewer__state[role="alert"]')).not.toBeNull();
+    });
+
+    it('shows no error marker for a healthy file', async () => {
+      await component.open([mockPreviewFiles[2], mockPreviewFiles[1]], 0);
       fixture.detectChanges();
-    }
 
-    it('toggles c-image-error on the thumbnail button when file.isImgError=true', async () => {
-      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile]);
-
-      const btn = document.querySelector('button.thumbnail-wrapper.c-image-error');
-      expect(btn).not.toBeNull();
-      // legacy class is gone
-      expect(document.querySelector('.thumbnail-wrapper.c-img-error')).toBeNull();
-    });
-
-    it('renders the sd-image-image-error class on the failed thumbnail <img>', async () => {
-      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile]);
-
-      const img = document.querySelector('img.thumbnail-img.sd-image-image-error');
-      expect(img).not.toBeNull();
-    });
-
-    it('renders the c-image-error main view with a warning mat-icon when active file is errored', async () => {
-      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile], 0);
-
-      const mainErr = document.querySelector('.main-image-container .c-image-error');
-      expect(mainErr).not.toBeNull();
-      const icon = mainErr!.querySelector('mat-icon');
-      expect(icon?.textContent?.trim()).toBe('warning_amber');
-    });
-
-    it('does not render image-error markers when file is healthy', async () => {
-      await openWith([{ ...mockPreviewFiles[0], isImgError: false } as PreviewFile], 0);
-
-      expect(document.querySelector('button.thumbnail-wrapper.c-image-error')).toBeNull();
-      expect(document.querySelector('img.thumbnail-img.sd-image-image-error')).toBeNull();
-      expect(document.querySelector('.main-image-container .c-image-error')).toBeNull();
+      expect(overlay().querySelector('.sd-upload-file-viewer__state[role="alert"]')).toBeNull();
     });
   });
 });
@@ -1050,8 +1052,12 @@ describe('SdUploadFilePreview', () => {
 describe('SdUploadFile drag & drop listener teardown', () => {
   let fixture: ComponentFixture<SdUploadFile>;
 
+  // why: đợt 3 · 4c — listener nằm trên host (Angular gỡ khi huỷ), nhận sự kiện nổi bọt từ ô tải lên; chỉ xử lý khi
+  // đang kéo tệp.
   function dispatchDrag(target: HTMLElement, type: string): boolean {
-    const event = new DragEvent(type, { cancelable: true });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new File(['x'], 'a.txt', { type: 'text/plain' }));
+    const event = new DragEvent(type, { cancelable: true, bubbles: true, dataTransfer });
     target.dispatchEvent(event);
     return event.defaultPrevented;
   }
@@ -1077,13 +1083,15 @@ describe('SdUploadFile drag & drop listener teardown', () => {
   it('binds the drag listeners while the component is alive', () => {
     const zone = dropZone();
 
-    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
-    expect(zone.style.border).toBe('2px solid grey');
-
     expect(dispatchDrag(zone, 'dragenter')).toBeTrue();
+    fixture.detectChanges();
+    expect(dropZone().classList).toContain('sd-upload-file__add--dragging');
+    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
 
     dispatchDrag(zone, 'dragleave');
-    expect(zone.style.border).toBe('2px dashed grey');
+    fixture.detectChanges();
+    expect(dropZone().classList).not.toContain('sd-upload-file__add--dragging');
+    expect(zone.style.border).withContext('no inline styles any more').toBe('');
   });
 
   it('stops invoking the drag listeners once the component is destroyed', () => {

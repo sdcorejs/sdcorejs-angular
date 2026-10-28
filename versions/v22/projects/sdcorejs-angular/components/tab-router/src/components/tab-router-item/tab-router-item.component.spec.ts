@@ -1,6 +1,5 @@
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
@@ -69,58 +68,62 @@ describe('SdTabRouterItemComponent close delegation', () => {
     expect(beforeCloseSpy).not.toHaveBeenCalled();
   });
 
-  // why: Chrome mở link ở tab mới khi xử lý `auxclick` của chuột giữa; chặn ở `mousedown`/`mouseup`
-  // không huỷ được. Trước đây chỉ "chạy" khi thẻ <a> bị gỡ khỏi DOM ngay trong `mouseup` — với
-  // `eventCoalescing`, zoneless hay `beforeClose` async thì tab vừa đóng vừa mở trong trình duyệt.
-  it('cancels the middle-click auxclick so the browser does not open the tab url in a new tab', () => {
-    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
-    const auxclick = new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true });
-
-    anchor.dispatchEvent(auxclick);
-
-    expect(auxclick.defaultPrevented).toBe(true);
-  });
-
-  it('keeps the auxclick of other buttons, so the context menu still works', () => {
-    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
-    const auxclick = new MouseEvent('auxclick', { button: 2, bubbles: true, cancelable: true });
-
-    anchor.dispatchEvent(auxclick);
-
-    expect(auxclick.defaultPrevented).toBe(false);
-  });
-
   it('closes the tab once for a full middle click (mousedown, mouseup, auxclick)', () => {
-    const anchor = fixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+    const tab = fixture.nativeElement.querySelector('[role="tab"]') as HTMLElement;
 
     for (const type of ['mousedown', 'mouseup', 'auxclick']) {
-      anchor.dispatchEvent(new MouseEvent(type, { button: 1, bubbles: true, cancelable: true }));
+      tab.dispatchEvent(new MouseEvent(type, { button: 1, bubbles: true, cancelable: true }));
     }
 
     expect(tabRouterServiceSpy.close).toHaveBeenCalledOnceWith(component.tab);
   });
 
-  // why: bản cũ bind `[href]="[tab.url]"` — một MẢNG vào thuộc tính DOM kiểu chuỗi, chỉ "chạy
-  // được" nhờ mảng 1 phần tử tự stringify. `properties['href']` đọc thẳng giá trị đã bind (chưa
-  // qua stringify) nên phân biệt được hai cách bind.
-  it('binds the url string itself instead of a single-element array', () => {
-    const anchorDe = fixture.debugElement.query(By.css('a'));
-    const anchor = anchorDe.nativeElement as HTMLAnchorElement;
+  // why: đợt 3 · 3c (QĐ 11) — với <a href>, CDK drag chặn mousedown (thẻ link kéo được theo kiểu native) nên bấm chuột
+  // không focus được tab, và menu chuột phải của trình duyệt ("mở trong tab mới") chiếm chỗ menu của thanh tab.
+  it('is a role="tab" element without href', () => {
+    const tab = fixture.nativeElement.querySelector('.tab-router__item') as HTMLElement;
 
-    expect(anchorDe.properties['href']).toBe('/test');
-    expect(anchor.getAttribute('href')).toBe('/test');
+    expect(tab.tagName).not.toBe('A');
+    expect(tab.getAttribute('role')).toBe('tab');
+    expect(tab.hasAttribute('href')).toBe(false);
+    expect(fixture.nativeElement.querySelector('a')).toBeNull();
   });
 
-  it('keeps the href in sync when the tab url changes', () => {
-    component.tab = { ...component.tab, url: '/next' };
-    // the component is OnPush and `tab` is a plain @Input field, so its own view has to be
-    // marked dirty (the real tab-router service does this through its `events` stream)
+  it('marks the open tab with aria-selected and points aria-controls at its pane', () => {
+    const tab = () => fixture.nativeElement.querySelector('[role="tab"]') as HTMLElement;
+    expect(tab().getAttribute('aria-selected')).toBe('false');
+    expect(tab().getAttribute('aria-controls')).toBe('test-key');
+    expect(tab().id).toBe('sd-tab-router-tab-test-key');
+
+    component.tab = { ...component.tab, isActive: true };
     fixture.debugElement.injector.get(ChangeDetectorRef).markForCheck();
     fixture.detectChanges();
+    expect(tab().getAttribute('aria-selected')).toBe('true');
+  });
 
-    const anchorDe = fixture.debugElement.query(By.css('a'));
-    expect(anchorDe.properties['href']).toBe('/next');
-    expect((anchorDe.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/next');
+  // why: roving tabindex — cả thanh chỉ có một điểm dừng Tab, do nav chọn; nút đóng không bao giờ là điểm dừng (đóng
+  // bằng phím Delete).
+  it('is a tab stop only when the bar picks it, and the close button never is', () => {
+    const tab = () => fixture.nativeElement.querySelector('[role="tab"]') as HTMLElement;
+    expect(tab().getAttribute('tabindex')).toBe('-1');
+
+    fixture.componentRef.setInput('focusable', true);
+    fixture.detectChanges();
+    expect(tab().getAttribute('tabindex')).toBe('0');
+    expect((fixture.nativeElement.querySelector('button.tab-router__close') as HTMLElement).getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('opens the tab with Enter and Space', () => {
+    const navigate = TestBed.inject(Router).navigate as jasmine.Spy;
+    const tab = fixture.nativeElement.querySelector('[role="tab"]') as HTMLElement;
+
+    tab.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    tab.dispatchEvent(space);
+
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenCalledWith(['/test'], { queryParams: undefined, state: { switchTab: true } });
+    expect(space.defaultPrevented).withContext('Space does not scroll the page').toBe(true);
   });
 
   // ── A11y ────────────────────────────────────────────────────────────────
@@ -146,8 +149,8 @@ describe('SdTabRouterItemComponent close delegation', () => {
 
   // why: tab không còn bọc sd-badge (đợt 3 · 3a), nên trong tab chỉ còn đúng một phần tử tương tác lồng: nút đóng.
   it('nests no interactive element other than the close button', () => {
-    const anchor = fixture.nativeElement.querySelector('a') as HTMLElement;
-    const nested = anchor.querySelectorAll('a, button, [role="button"], [tabindex]');
+    const tab = fixture.nativeElement.querySelector('[role="tab"]') as HTMLElement;
+    const nested = tab.querySelectorAll('a, button, [role="button"], [tabindex]');
 
     expect(Array.from(nested)).toEqual([fixture.nativeElement.querySelector('button.tab-router__close')]);
   });

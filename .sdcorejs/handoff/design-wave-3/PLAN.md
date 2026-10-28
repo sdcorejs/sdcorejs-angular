@@ -108,9 +108,12 @@ Mới (đủ 5 locale vi/en/ja/ko/zh):
 | 2b `sd-avatar-group` | xong | Ảnh: `wave3-2b-avatar-group.png`. Trang showcase mới `components/avatar-group`. Thêm input `tooltip` cho sd-avatar |
 | 3a thanh tab, bỏ badge, điều kiện ẩn, dọn code, token, route showcase sống | xong | Ảnh: `wave3-3a-tab-bar.png` (chỉ bản sau — bản cũ không có route sống để chụp). Route mới `/demo/tab-router` |
 | 3b cuộn, lớp mờ, nút + menu danh sách | xong | Ảnh: `wave3-3b-many-tabs.png` (light, dark, graphite, forced colors, phone 390px). Làm trên `chore/release-3.2` (2026-10-23) |
-| 3c tablist, roving, kéo thả, menu chuột phải | chưa | |
-| 3d `dirty`, `syncBrowserTitle` | chưa | |
-| 4a–4d upload-file | chưa | |
+| 3c tablist, roving, kéo thả, menu chuột phải | xong | Nhánh `feat/wave3-tab-router-upload-file` (cắt từ `main` a35ba11e, 2026-10-27). Ảnh chung với 3d: `wave3-3cd-*.png` |
+| 3d `dirty`, `syncBrowserTitle` | xong | Ảnh chung với 3c: `wave3-3cd-*.png`. Demo `/demo/tab-router`: ô "Có thay đổi chưa lưu" trong màn, công tắc `syncBrowserTitle` |
+| 4a H1 icon theo đuôi file, dung lượng | xong | Ảnh chung: `wave3-4-upload-file.png` |
+| 4b H2 popup phương án A (CDK Dialog) | xong | Token `--sd-upload-file-viewer-*`, i18n của cả 4b–4d |
+| 4c H3 field variant default | xong | Showcase: ví dụ "Ảnh và tài liệu, xem trước" (dữ liệu mẫu, mô phỏng tải lên / lỗi) |
+| 4d H4 variant inline | xong | Showcase: ví dụ "Inline trong bảng" |
 
 Lệch khỏi thông số ở bước 1a (đã báo user):
 - **Type icon to hơn một bậc** (user chọn 2026-10-21, theo HTML thay vì bảng `badge.md`): chữ sm 13/18, md 14/20,
@@ -175,6 +178,62 @@ Ghi chú bước 3a:
   trong bước `map` của `router.events` (đồng bộ với NavigationEnd / NavigationSkipped) và truyền vào tác vụ kích hoạt;
   sau `await` vẫn thử tìm trong cây mới, không thấy thì dùng ActivatedRoute đã chụp. Spec tái hiện bằng route lazy
   NgModule giữ hàng đợi bận trong lúc điều hướng `/a` rồi `/b`.
+
+Ghi chú bước 4a–4d (2026-10-27):
+- **Spec RED:** 3c, 3d chạy RED trước (lỗi biên dịch vì thiếu API). 4a–4d: spec viết cùng lúc với code mới (module /
+  component mới), không có lần chạy RED riêng — ghi lại để user biết.
+- **4a:** `sdFileTypeIcon` trả tên icon; component nội bộ `sd-upload-file-type-icon` sinh class từ map SCSS 51 SVG (inline
+  một lần — QĐ 13). Dung lượng: `Intl.NumberFormat` theo `I18nService.locale()`; 0 / không phải số thì không hiện.
+  **Lệch:** popup dùng icon Material theo nhóm (`sdFileTypeSymbol`: picture_as_pdf, description, table_chart…) vì SVG có
+  nền trắng, không tô được màu `viewer-accent` / `viewer-fg-muted` như thiết kế; field dùng SVG.
+- **4b:** pane dialog phủ cả màn, khung viewer tự canh giữa và đổi full-screen ≤ 600px bằng CSS; bấm vùng tối quanh khung
+  thì đóng. Trong viewer `--sd-focus-ring-color` = accent của viewer (check:scss-hex bắt vòng focus phải dùng token).
+  PDF: `<iframe>` khi URL qua `sdIsSafeResourceUrl` hoặc file local (object URL); không dò được X-Frame-Options, lối
+  thoát là "Mở tab mới". Chrome headless shell không có trình xem PDF nên ảnh PDF trống. Ô ảnh field đã `isImgError` thì
+  mở thẳng trạng thái lỗi. Filmstrip căn giữa bằng margin auto (justify-content: center cắt mất đầu khi tràn).
+  i18n: thêm cả key của 4c/4d trong bước này; thêm `viewer.loading` ("Đang tải…", vì `loading` có nghĩa "đang tải lên") và
+  `viewer.position` (chữ cho screen reader). Accent = `primary-200` (light) / `primary` (dark).
+- **4c:** bộ đếm chỉ hiện khi có nhãn (hoặc `sdLabelDef`). **Lỗi tải lên theo #110:** file lỗi vẫn ở trong `model` (hợp đồng
+  `upload()` của #110), hiện là ô / hàng lỗi, "Thử lại" gọi lại `upload()` (cả các file đang chờ khác). Lỗi kiểm tra (đuôi,
+  dung lượng, không phải ảnh, kích thước ảnh) nằm trong `failures` — ngoài `model` — như §6.2. Picker chỉ lọc `accept`,
+  component kiểm từng file. Nút huỷ ở hàng đang tải lên bỏ file ngay, không hỏi. Lý do bỏ tiền tố "[tên] " của thông báo
+  cũ. Listener kéo tệp là host listener. Giữ class cũ (`c-area-upload`, `c-area c-view`, `c-img`, `c-document-container`,
+  `c-file-name`…) làm hook cho e2e. `selectedFile` / `onSelect` / `onSelectKeydown` Deprecated, không xoá.
+- **4d:** `maxOfImage` mục đầu (ảnh rồi tài liệu) hiện ra, còn lại vào "+N". File bị từ chối là chip lỗi. Lỗi bắt buộc:
+  viền error quanh ô tải lên + chữ ẩn `role="alert"`.
+- Showcase: 2 ví dụ mới (`demoSectionCount` 3 → 5), dữ liệu mẫu `upload-file-samples.ts` (ảnh SVG, một PDF blob).
+
+Ghi chú bước 3d (2026-10-27):
+- Chấm nằm trong nút đóng (ô nút đóng luôn hiện với tab dirty), icon `close` ẩn bằng opacity; hover tab / focus bàn phím
+  (tab hoặc nút) thì đổi. `pointer: coarse` không có hover nên vẫn thấy chấm; chạm chấm vẫn là đóng tab (`beforeClose`
+  chạy) — md không nói, ghi lại để user xác nhận.
+- Screen reader: thêm chữ ẩn "Chưa lưu" sau tên (key mới `core.component.tab-router.unsaved`, ngoài danh sách §7); chấm
+  `aria-hidden`. Menu danh sách tab (3b) không hiện chấm (md không yêu cầu).
+- `syncBrowserTitle`: effect theo tab đang mở + `tabInfoChanges` (ReplaySubject nên nhận tên đã gửi trước); trước khi màn
+  gửi tên thì lấy từ `@SdTabComponent` (tách `sdTabInfoFromBuilders` ra khỏi `SdTabInfoPipe`, dùng chung). Bật lên thì
+  `title` của route do Router đặt bị ghi đè sau mỗi lần điều hướng (ghi trong md).
+- Demo: `TabLivePageComponent` có input `icon` / `color` để gửi lại đủ tab info cùng `dirty` (tab info gửi qua
+  `tabInfoChanges` thay cả bộ của builder).
+
+Ghi chú bước 3c (2026-10-27):
+- Tab là `<div role="tab">` không href (QĐ 11), `id="sd-tab-router-tab-<key>"`, `aria-selected`, `aria-controls` = id pane.
+  **Id pane giữ `tab.key`** (không thêm tiền tố như dự tính ở §10): hash là id HTML hợp lệ (không khoảng trắng), giữ
+  nguyên DOM cho code đang tìm pane theo key. Pane có `role="tabpanel"` + `aria-labelledby`.
+- ←/→ **quay vòng** ở hai đầu (theo APG; md không nói). Tablist không có `aria-label` (không thêm key i18n).
+- Bàn phím và menu xử lý ở nav (uỷ quyền sự kiện trên vùng cuộn, `interactive-supports-focus` tắt có lý do như
+  tablist của form-builder inspector); Enter/Space nằm trên tab. Focus rời thanh thì điểm dừng Tab về tab đang mở.
+- Tab đang focus bị đóng (Delete, menu, nút đóng) thì focus sang tab bên phải, không có thì bên trái — cùng tab outlet
+  mở khi tab bị đóng là tab đang mở. Chỉ lấy lại focus khi nó đã rơi về body.
+- Menu chuột phải: `cdkConnectedOverlay` tại con trỏ (Point origin), Shift+F10 / phím Menu treo dưới tab; không backdrop,
+  không trap focus — Tab, Esc, bấm ra ngoài (kể cả chuột phải vào tab khác) đều đóng. `contextmenu` mà trình duyệt phát
+  ngay sau phím Menu không mở lại menu. Rộng 224px, mục 34px, mục không icon thụt 38px (theo HTML).
+- Kéo: bóng `--sd-shadow-md` (HTML: 0 6px 16px), viền chỗ thả primary 35% (HTML #9fbde6 ≈ 33%), forced-colors viền
+  đứt `CanvasText`. Tab khác trượt 250ms, tắt khi reduced-motion.
+- `tabs` của nav là `model`; outlet bind `[(tabs)]` lên signal `tabs`. Thả tại chỗ cũ không phát.
+- `closeOthers`: hỏi `beforeClose` lần lượt (không song song — mỗi tab có thể mở hộp xác nhận), đọc lại `tabs` sau các
+  lần await. Không có `beforeClose` thì đóng ngay trong cùng lượt (giữ hành vi đồng bộ của `close`).
+- Bỏ handler `auxclick` (không còn href để chặn mở tab mới). i18n mới: `core.component.tab-router.close-others`.
+- Showcase: spec `docs-page.component.spec.ts` (trang button chờ 9 ví dụ, nay 16) đỏ sẵn trên `main`, không do 3c.
 
 Ghi chú bước 3b (2026-10-23, sau khi đợt 1–3a đã merge vào `main` qua #95; user chọn làm đủ 3b trước release 3.2):
 - Cấu trúc thanh: `.tab-router__nav` (40px, nền, ẩn khi ≤ 1 tab) > `.tab-router__tabs` (relative) > `.tab-router__scroller`

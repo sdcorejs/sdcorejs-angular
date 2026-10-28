@@ -1,489 +1,714 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
+// Ô tải lên (đợt 3 · 4c, design handoff `upload-file.md` mục H3 — variant default). Màu lấy từ palette; component token
+// `--sd-upload-file-*` trong `_component-tokens.scss`. Hover chỉ là lớp hiển thị thêm: badge xoá luôn hiện khi
+// `pointer: coarse`, mọi hành động dùng được bằng bàn phím.
+
 :host {
-  width: 100%;
   display: block;
-  overflow-x: auto;
-  overflow-y: hidden;
+  width: 100%;
+  min-width: 0;
+}
 
-  .c-drag-preview {
-    border: 2px dashed map.get(color.$color_map, 'primary');
-    border-radius: var(--sd-radius-4, 4px);
-    vertical-align: middle;
-    display: table-cell;
+.sd-upload-file__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-    .c-container {
-      width: 100%;
-      height: 100%;
-      padding: 5px 10px 0px 10px;
-      display: table;
+// ─── Nhãn và bộ đếm ──────────────────────────────────────────────────────
+.sd-upload-file__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
 
-      sd-icon {
-        color: map.get(color.$color_map, 'secondary-light');
-        vertical-align: middle;
-        display: table-cell;
-      }
-    }
+.sd-upload-file__counter {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: 500;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
 
-    .c-image-error {
-      width: 100%;
-      height: 100%;
-      padding: 5px 10px 0px 10px;
-      display: table;
+// ─── Lưới ảnh ────────────────────────────────────────────────────────────
+// Padding trên/phải là chỗ cho badge xoá nhô ra ngoài ô (top/right −7px).
+.sd-upload-file__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+  padding-right: 8px;
+}
 
-      sd-icon {
-        color: map.get(color.$color_map, 'secondary-light');
-        vertical-align: middle;
-        display: table-cell;
-      }
-    }
-  }
+.sd-upload-file__grid--center {
+  justify-content: center;
+}
 
-  .c-area-upload {
-    border: 1px dashed map.get(color.$color_map, 'primary');
-    border-radius: var(--sd-radius-8, 8px);
-    display: table;
-    position: relative;
-    text-align: center;
-    margin: 3px;
-    opacity: 0.6;
-    &:hover {
-      opacity: 0.3;
-    }
-  }
-
-  .c-area {
-    border: 1px dashed map.get(color.$color_map, 'primary');
-    border-radius: var(--sd-radius-8, 8px);
-    display: table;
-    position: relative;
-    text-align: center;
-    margin: 3px;
-    opacity: 0.6;
-
-    &.c-view {
-      border: 1px solid map.get(color.$color_map, 'border');
-      opacity: 0.9;
-    }
-
-    &.c-area-error {
-      background-color: rgba(242, 243, 244, 1);
-    }
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.4);
-      // opacity: 0.5;
-    }
-
-    &.c-loading {
-      background-color: rgba(242, 243, 244, 1);
-    }
-
-    .c-icon {
-      vertical-align: middle;
-      display: table-cell;
-      margin: 16px;
-      font-size: 50px;
-      color: grey;
-      cursor: pointer;
-    }
-
-    .c-preview {
-      vertical-align: middle;
-      display: table-cell;
-
-      .c-img-container {
-        width: 100%;
-        display: table;
-
-        .c-action {
-          display: none;
-          position: absolute;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .c-img {
-          max-width: 100%;
-          max-height: calc(100% - 5px);
-        }
-
-        // why: đổi từ <div (click)> sang <button type="button"> để bàn phím mở được preview →
-        // reset chrome mặc định của button, giữ nguyên diện mạo overlay cũ.
-        .c-overlay-count {
-          border: 0;
-          display: flex;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          padding: 2px;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          gap: 10px;
-          position: absolute;
-          border-radius: var(--sd-radius-2, 2px);
-          width: 65%;
-          height: 65%;
-          background: rgba(0, 0, 0, 0.54);
-          cursor: pointer;
-          .c-overlay-text {
-            color: var(--sd-upload-file-overlay-fg, #ffffff);
-            font-family: Roboto;
-            font-size: var(--sd-font-size-16, 16px);
-            font-style: normal;
-            font-weight: var(--sd-font-weight-medium, 500);
-            line-height: 14px;
-          }
-        }
-
-        &:hover:not(.has-overlay),
-        &.c-selected:not(.has-overlay) {
-          .c-action {
-            display: flex;
-          }
-
-          .c-img {
-            opacity: 0.2;
-          }
-        }
-      }
-
-      .c-btn-remove {
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        background: transparent;
-        cursor: pointer;
-        color: white;
-        border: none;
-        z-index: 9;
-        border-radius: 50%;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        top: -8px;
-        right: -8px;
-        background-color: var(--sd-upload-file-badge-bg, #e6e6e6);
-        color: var(--sd-upload-file-badge-text, #000000);
-        border: 2px solid var(--sd-upload-file-badge-border, #ffffff);
-
-        sd-icon {
-          font-size: var(--sd-font-size-16, 16px);
-          width: 16px;
-          height: 16px;
-        }
-      }
-    }
-  }
-
-  .c-img-eror {
-    height: 18px;
-    width: 18px;
-    font-size: var(--sd-font-size-18, 18px);
-    cursor: pointer;
-    color: map.get(color.$color_map, 'text-secondary');
-  }
-
-  .c-upload {
-    height: 18px;
-    width: 18px;
-    font-size: var(--sd-font-size-18, 18px);
-    cursor: pointer;
-    color: map.get(color.$color_map, 'primary');
-  }
-
-  // why: .c-zoom đổi từ <sd-icon> sang <button> để nhận focus bàn phím → reset chrome mặc định
-  // của button (nền/viền/padding) để giữ nguyên diện mạo cũ.
-  .c-zoom {
-    height: 18px;
-    width: 18px;
-    font-size: var(--sd-font-size-18, 18px);
-    cursor: pointer;
-    color: var(--sd-upload-file-overlay-fg, #ffffff);
-    padding: 0;
-    border: 0;
-    background: transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+%focus-ring {
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
   }
 }
 
-:host ::ng-deep {
-  button {
-    // why: bỏ outline mặc định của Material nhưng PHẢI trả lại vòng focus cho bàn phím —
-    // :focus-visible chỉ hiện khi điều hướng bằng phím, chuột vẫn sạch như cũ.
-    &:focus {
-      outline: none;
+.sd-upload-file__add {
+  @extend %focus-ring;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 4px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: 8px;
+  color: var(--sd-primary);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+
+  &:hover,
+  &:focus-visible,
+  &.sd-upload-file__add--dragging {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__add--error {
+  border-color: var(--sd-error);
+}
+
+.sd-upload-file__add-label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-upload-file__tile {
+  position: relative;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: 8px;
+}
+
+// Nút phủ cả ô: bấm ô mở popup tại đúng ảnh đó.
+.sd-upload-file__open {
+  @extend %focus-ring;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: var(--sd-surface-muted);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 8%, transparent);
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // why: viền mảnh nằm trên ảnh (ảnh trắng vẫn có mép), phủ scrim 24% khi hover / focus.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 8%, transparent);
+    pointer-events: none;
+    transition: background-color 120ms ease-out;
+  }
+}
+
+.sd-upload-file__tile:hover .sd-upload-file__open::after,
+.sd-upload-file__tile:focus-within .sd-upload-file__open::after {
+  background: var(--sd-upload-file-scrim, rgba(0, 0, 0, 0.24));
+}
+
+// Ô cuối khi chỉ xem: phủ kín scrim 60% với "+N".
+.sd-upload-file__more {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--sd-upload-file-viewer-bg, #141518) 60%, transparent);
+  color: var(--sd-upload-file-overlay-fg, #ffffff);
+  font-size: var(--sd-font-size-16, 16px);
+  font-weight: 500;
+}
+
+// Ô đang tải lên / đang đọc ảnh: ảnh local hiện ngay, phủ surface 60% và spinner primary.
+.sd-upload-file__busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sd-surface) 60%, transparent);
+  --mdc-circular-progress-active-indicator-color: var(--sd-primary);
+  --mat-progress-spinner-active-indicator-color: var(--sd-primary);
+}
+
+// Ô lỗi: nền error-container, icon + "Thử lại".
+.sd-upload-file__retry-tile {
+  flex-direction: column;
+  gap: 2px;
+  background: var(--sd-status-error-bg);
+  box-shadow: none;
+  color: var(--sd-status-error-fg);
+
+  &::after {
+    content: none;
+  }
+}
+
+.sd-upload-file__retry-label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+}
+
+.sd-upload-file__placeholder {
+  box-sizing: border-box;
+  border: 1px dashed var(--sd-primary);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+}
+
+:host ::ng-deep .cdk-drag-preview.sd-upload-file__tile,
+.cdk-drag-preview.sd-upload-file__tile {
+  border-radius: 8px;
+  box-shadow: var(--sd-shadow-md, none);
+}
+
+.cdk-drop-list-dragging .sd-upload-file__tile:not(.cdk-drag-placeholder),
+.cdk-drop-list-dragging .sd-upload-file__row:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// ─── Badge xoá (ô ảnh và hàng tài liệu) ──────────────────────────────────
+// 20×20 tròn ở góc trên phải (−7px). Hiện khi hover hoặc focus trong ô/hàng; ẩn bằng opacity + visibility để giữ
+// transition. `pointer: coarse` luôn hiện, vùng chạm 44px.
+.sd-upload-file__remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--sd-border);
+  border-radius: 50%;
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-xs, none);
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease-out,
+    visibility 0s 120ms;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sd-error);
+    color: var(--sd-error);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
+  }
+}
+
+.sd-upload-file__tile:hover .sd-upload-file__remove,
+.sd-upload-file__tile:focus-within .sd-upload-file__remove,
+.sd-upload-file__row:hover .sd-upload-file__remove,
+.sd-upload-file__row:focus-within .sd-upload-file__remove,
+.sd-upload-file__remove--always {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
+}
+
+@media (pointer: coarse) {
+  .sd-upload-file__remove {
+    opacity: 1;
+    visibility: visible;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -12px;
     }
-    &:focus-visible {
+  }
+}
+
+// ─── Vùng thả (type document) ────────────────────────────────────────────
+.sd-upload-file__dropzone {
+  @extend %focus-ring;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 56px;
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: 8px;
+  color: var(--sd-primary);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__dropzone--dragging {
+  border-style: solid;
+  border-color: var(--sd-primary);
+  background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+}
+
+.sd-upload-file__dropzone--error {
+  border-color: var(--sd-error);
+}
+
+.sd-upload-file__drop-text {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: 20px;
+}
+
+.sd-upload-file__drop-text--active,
+.sd-upload-file__link {
+  color: var(--sd-primary);
+  font-weight: 500;
+}
+
+// ─── Danh sách tài liệu ──────────────────────────────────────────────────
+.sd-upload-file__docs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.sd-upload-file__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  background: var(--sd-surface);
+  transition: background-color 120ms ease-out;
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-primary) 5%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__row-placeholder {
+  min-height: 52px;
+  border: 1px dashed var(--sd-primary);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+}
+
+.sd-upload-file__row-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sd-upload-file__row-name {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: 20px;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// why: tên là nút duy nhất của hàng mở popup — trải vùng bấm ra cả hàng; nút tải xuống / xoá nằm trên lớp này.
+button.sd-upload-file__row-name {
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    &::after {
       outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
       outline-offset: 2px;
     }
   }
 }
 
-// why: drop zone + khung ảnh nay nhận tabindex nên cần vòng focus thấy được.
-:host [role='button']:focus-visible {
-  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-  outline-offset: 2px;
+.sd-upload-file__row-meta {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
 }
 
-.c-drag-placeholder {
-  border-radius: var(--sd-radius-4, 4px);
-  background: map.get(color.$color_map, 'primary-light');
-  border: 2px dashed map.get(color.$color_map, 'primary');
-  display: table-cell;
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-.file {
-  padding: 5px;
-  content: url('./assets/file-types/file.svg');
-
-  &.png {
-    content: url('./assets/file-types/png.svg');
-  }
-
-  &.jpg {
-    content: url('./assets/file-types/jpg.svg');
-  }
-
-  &.pdf {
-    content: url('./assets/file-types/pdf.svg');
-  }
-
-  &.doc {
-    content: url('./assets/file-types/doc.svg');
-  }
-
-  &.docx {
-    content: url('./assets/file-types/docx.svg');
-  }
-
-  &.xls {
-    content: url('./assets/file-types/xls.svg');
-  }
-
-  &.xlsx {
-    content: url('./assets/file-types/xlsx.svg');
-  }
-
-  &.ppt {
-    content: url('./assets/file-types/xls.svg');
-  }
-
-  &.pptx {
-    content: url('./assets/file-types/xlsx.svg');
-  }
-
-  &.csv {
-    content: url('./assets/file-types/csv.svg');
-  }
-
-  &.psd {
-    content: url('./assets/file-types/psd.svg');
-  }
-
-  &.xml {
-    content: url('./assets/file-types/xml.svg');
-  }
-
-  &.zip {
-    content: url('./assets/file-types/zip.svg');
-  }
-}
-
-.mat-icon-button {
-  width: 25px;
-  height: 25px;
-  line-height: 25px;
-
-  .material-icons {
-    font-size: 17px;
-  }
-}
-
-.c-document-container {
-  margin-top: 4px;
+.sd-upload-file__row-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 4px;
-  justify-content: left;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.sd-upload-file__row-button {
+  @extend %focus-ring;
+  display: flex;
   align-items: center;
-  padding: 4px;
-  border: 1px map.get(color.$color_map, 'border') dashed;
-  border-radius: var(--sd-radius-4, 4px);
+  justify-content: center;
+  width: 32px;
   height: 32px;
-  background-color: var(--sd-upload-file-muted-bg, #f9f9f9);
-  .c-document-image {
-    height: 24px;
-    max-width: 100%;
-    margin-right: 4px;
-    content: url('./assets/file-types/file.svg');
-    &.png {
-      content: url('./assets/file-types/png.svg');
-    }
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
 
-    &.jpg {
-      content: url('./assets/file-types/jpg.svg');
-    }
-
-    &.pdf {
-      content: url('./assets/file-types/pdf.svg');
-    }
-
-    &.doc {
-      content: url('./assets/file-types/doc.svg');
-    }
-
-    &.docx {
-      content: url('./assets/file-types/docx.svg');
-    }
-
-    &.xls {
-      content: url('./assets/file-types/xls.svg');
-    }
-
-    &.xlsx {
-      content: url('./assets/file-types/xlsx.svg');
-    }
-
-    &.ppt {
-      content: url('./assets/file-types/xls.svg');
-    }
-
-    &.pptx {
-      content: url('./assets/file-types/xlsx.svg');
-    }
-
-    &.csv {
-      content: url('./assets/file-types/csv.svg');
-    }
-
-    &.psd {
-      content: url('./assets/file-types/psd.svg');
-    }
-
-    &.xml {
-      content: url('./assets/file-types/xml.svg');
-    }
-
-    &.zip {
-      content: url('./assets/file-types/zip.svg');
-    }
-
-    &.tiff {
-      content: url('./assets/file-types/tiff.svg');
-    }
+  &:hover {
+    background: color-mix(in srgb, var(--sd-text) 8%, transparent);
   }
-  .c-file-name {
-    flex: 0 1 auto; // chiếm hết phần còn lại
-    min-width: 0; // bắt buộc để ellipsis hoạt động trong flex
-    overflow: hidden; // ẩn phần tràn
-    white-space: nowrap; // không xuống dòng
-    text-overflow: ellipsis; // hiển thị ...
-    // why: tên tài liệu đổi từ <a href="javascript:;"> sang <button type="button"> → bỏ chrome mặc định
-    // của button và giữ diện mạo link của rule `a` toàn cục (màu link, gạch chân khi hover).
-    // Cỡ chữ/độ đậm/line-height vẫn lấy từ class T14M.
-    appearance: none;
-    padding: 0;
-    border: 0;
-    background: none;
-    font-family: inherit;
-    color: var(--sd-link, var(--sd-primary));
-    text-align: start;
-    cursor: pointer;
+}
 
-    &:hover {
-      text-decoration: underline;
-    }
+// Hàng đang tải lên: thanh 2px ở đáy, chạy không xác định (không biết %). Đứng yên khi reduced-motion.
+.sd-upload-file__progress {
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  left: 8px;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--sd-primary) 16%, transparent);
 
-    &:focus-visible {
-      outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-      outline-offset: var(--sd-focus-ring-offset, 2px);
-    }
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 38%;
+    background: var(--sd-primary);
+    animation: sd-upload-file-progress 1.4s ease-in-out infinite;
   }
-  // why: .c-close đổi từ <sd-icon> sang <button> (bàn phím phải xoá được tài liệu) → reset
-  // chrome mặc định của button để giữ nguyên diện mạo cũ.
-  .c-close {
-    margin-left: auto;
-    font-size: var(--sd-font-size-16, 16px);
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    border-radius: 50%;
-    flex-shrink: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: map.get(color.$color_map, 'text-secondary');
-    &:hover {
-      background-color: map.get(color.$color_map, 'border'); // nền xám nhạt
+}
+
+@keyframes sd-upload-file-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(265%);
+  }
+}
+
+// Hàng lỗi: viền error nhạt, nền error 3%, icon và lý do màu error.
+.sd-upload-file__row--failed {
+  border-color: color-mix(in srgb, var(--sd-error) 30%, var(--sd-surface));
+  background: color-mix(in srgb, var(--sd-error) 3%, var(--sd-surface));
+
+  &:hover {
+    background: color-mix(in srgb, var(--sd-error) 3%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__row-error-icon,
+.sd-upload-file__row-meta--error {
+  color: var(--sd-error);
+}
+
+// ─── Lỗi bắt buộc ────────────────────────────────────────────────────────
+.sd-upload-file__error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-upload-file__add,
+  .sd-upload-file__dropzone,
+  .sd-upload-file__open::after,
+  .sd-upload-file__remove,
+  .sd-upload-file__row,
+  .cdk-drop-list-dragging .sd-upload-file__tile:not(.cdk-drag-placeholder),
+  .cdk-drop-list-dragging .sd-upload-file__row:not(.cdk-drag-placeholder) {
+    transition: none;
+  }
+
+  .sd-upload-file__progress::before {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .sd-upload-file__open,
+  .sd-upload-file__row {
+    border: 1px solid CanvasText;
+  }
+
+  .sd-upload-file__progress::before {
+    background: Highlight;
+  }
+}
+
+// ─── Variant inline (đợt 3 · 4d) ─────────────────────────────────────────
+// Một dòng cao 32px, không wrap: ô tải lên → ảnh → chip tài liệu → "+N". Padding trên 4px là chỗ cho badge xoá (−4px);
+// kéo tệp vào thì cả component đổi nền primary 6%.
+.sd-upload-file__inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  box-sizing: content-box;
+  height: 32px;
+  min-width: 0;
+  padding: 4px 4px 0 0;
+  border-radius: 6px;
+}
+
+.sd-upload-file__inline--dragging {
+  background: color-mix(in srgb, var(--sd-primary) 6%, transparent);
+}
+
+.sd-upload-file__inline-add {
+  @extend %focus-ring;
+  display: flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--sd-border-strong);
+  border-radius: 6px;
+  color: var(--sd-primary);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 6%, var(--sd-surface));
+  }
+}
+
+.sd-upload-file__inline-add--error {
+  border-color: var(--sd-error);
+}
+
+.sd-upload-file__inline-item {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.sd-upload-file__inline-item--image {
+  flex: 0 0 32px;
+}
+
+%inline-control {
+  @extend %focus-ring;
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sd-upload-file__inline-thumb {
+  @extend %inline-control;
+  justify-content: center;
+  width: 32px;
+  background: var(--sd-surface-muted);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-text) 8%, transparent);
+  color: var(--sd-text-secondary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.sd-upload-file__chip {
+  @extend %inline-control;
+  gap: 6px;
+  max-width: 140px;
+  padding: 0 8px;
+  background: var(--sd-surface-muted);
+  color: var(--sd-text);
+}
+
+.sd-upload-file__chip-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-upload-file__inline-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--sd-surface) 60%, transparent);
+  --mdc-circular-progress-active-indicator-color: var(--sd-primary);
+  --mat-progress-spinner-active-indicator-color: var(--sd-primary);
+}
+
+// Lỗi tải lên / file bị từ chối: viền error, icon error; bấm để thử lại (tải lên).
+.sd-upload-file__inline-item--failed .sd-upload-file__chip,
+.sd-upload-file__inline-item--failed .sd-upload-file__inline-thumb {
+  background: var(--sd-status-error-bg);
+  box-shadow: inset 0 0 0 1px var(--sd-error);
+}
+
+.sd-upload-file__inline-error-icon {
+  color: var(--sd-error);
+}
+
+.sd-upload-file__inline-more {
+  @extend %inline-control;
+  flex: 0 0 auto;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 6px;
+  background: var(--sd-surface-muted);
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-upload-file__empty {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sd-upload-file-empty-text, var(--sd-text-secondary));
+  font-size: var(--sd-font-size-13, 13px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Badge xoá inline: 16×16, icon 11px, góc trên phải −4px; hover / focus trong mục thì hiện, `pointer: coarse` luôn hiện.
+.sd-upload-file__inline-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--sd-border);
+  border-radius: 50%;
+  background: var(--sd-surface);
+  box-shadow: var(--sd-shadow-xs, none);
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease-out,
+    visibility 0s 120ms;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sd-error);
+    color: var(--sd-error);
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 1px;
+  }
+}
+
+.sd-upload-file__inline-item:hover .sd-upload-file__inline-remove,
+.sd-upload-file__inline-item:focus-within .sd-upload-file__inline-remove,
+.sd-upload-file__inline-item--failed .sd-upload-file__inline-remove {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
+}
+
+@media (pointer: coarse) {
+  .sd-upload-file__inline-remove {
+    opacity: 1;
+    visibility: visible;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -14px;
     }
   }
 }
 
-// why: retain keyboard access without expanding the compact upload tile.
-:host {
-  .c-img-container:focus-within .c-action {
-    display: flex;
-  }
-  .c-document-container {
-    max-width: 100%;
-    min-width: 0;
-    padding: 8px;
-    border-radius: var(--sd-radius-8, 8px);
-    background: var(--sd-surface, #fff);
-    gap: 8px;
-  }
-  .c-document-container .c-close,
-  .c-zoom {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    cursor: pointer;
-    background: transparent;
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--sd-radius-6, 6px);
-  }
-  .c-document-container .c-close {
-    color: var(--sd-text-secondary);
-  }
-  [role='button']:focus-visible,
-  button:focus-visible,
-  a:focus-visible {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
-    outline-offset: 2px;
-  }
-  @media (max-width: 600px) {
-    .c-document-container .c-close,
-    .c-zoom {
-      width: 44px;
-      height: 44px;
-    }
-    .c-area .c-preview .c-btn-remove {
-      width: 44px;
-      height: 44px;
-      top: -8px;
-      right: -8px;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .c-drag-placeholder {
-      transition: none;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .sd-upload-file__inline-remove {
+    transition: none;
   }
 }
