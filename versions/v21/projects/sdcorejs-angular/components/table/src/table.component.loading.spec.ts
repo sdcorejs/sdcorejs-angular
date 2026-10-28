@@ -5,6 +5,8 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTable } from './table.component';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from './configurations';
+import { SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { SdNotifyService } from '@sdcorejs/angular/services';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdTableOption } from './models/table-option.model';
@@ -28,6 +30,20 @@ function deferred<T>() {
     reject = rej;
   });
   return { promise, resolve, reject };
+}
+
+@Component({
+  imports: [SdTable, SdDataStateTemplateDirective],
+  template: `
+    <sd-table [option]="option">
+      <ng-template sdDataStateTemplate let-state let-retry="retry">
+        <button type="button" class="custom-retry" (click)="retry()">custom {{ state }}</button>
+      </ng-template>
+    </sd-table>
+  `,
+})
+class CustomStateHost {
+  option!: SdTableOption<Row>;
 }
 
 @Component({
@@ -640,6 +656,93 @@ describe('SdTable loading view', () => {
       expect(document.activeElement).toBe(button);
       expect(host!.getAttribute('aria-busy')).toBeNull();
       expect(button.getAttribute('data-loading')).toBe('false');
+    }));
+  });
+
+  describe('local read error', () => {
+    beforeEach(() => configure());
+
+    /** `items()` of a local table that fails until `fail` is cleared. */
+    function failingSource() {
+      const source = { fail: true, calls: 0 };
+      const items = () => {
+        source.calls++;
+        if (source.fail) throw new Error('offline');
+        return rows(2);
+      };
+      return { source, items };
+    }
+
+    const settle = (fixture: ComponentFixture<unknown>) => {
+      fixture.detectChanges();
+      tick(800);
+      flush();
+      fixture.detectChanges();
+    };
+
+    it('shows sd-data-state like a server table and retries with reload()', fakeAsync(() => {
+      spyOn(console, 'error');
+      const toast = spyOn(TestBed.inject(SdNotifyService), 'warning');
+      const { source, items } = failingSource();
+      f = TestBed.createComponent(SdTable<Row>);
+      table = f.componentInstance;
+      f.componentRef.setInput('option', {
+        type: 'local',
+        items,
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+      } as SdTableOption<Row>);
+      settle(f);
+
+      expect(table.loadError()).toBeTrue();
+      const state = f.nativeElement.querySelector('sd-data-state [role="alert"]') as HTMLElement;
+      expect(state?.getAttribute('data-state')).toBe('error');
+      expect(f.nativeElement.querySelector('.c-no-data-row')).toBeNull();
+      // Decision 4 of the plan: the toast stays in this batch.
+      expect(toast).toHaveBeenCalledTimes(1);
+
+      source.fail = false;
+      const reload = spyOn(table, 'reload').and.callThrough();
+      (f.nativeElement.querySelector('[data-state-retry] button') as HTMLButtonElement).click();
+      settle(f);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(source.calls).toBe(2);
+      expect(f.nativeElement.querySelector('sd-data-state')).toBeNull();
+      expect(f.nativeElement.querySelectorAll('tr.c-row').length).toBe(2);
+    }));
+
+    it('renders the consumer sdDataStateTemplate for a local error, and its retry reloads', fakeAsync(() => {
+      spyOn(console, 'error');
+      const { source, items } = failingSource();
+      const host = TestBed.createComponent(CustomStateHost);
+      host.componentInstance.option = { type: 'local', items, columns: [{ field: 'name', type: 'string', title: 'Name' }] };
+      settle(host);
+
+      const custom = host.nativeElement.querySelector('sd-data-state .custom-retry') as HTMLButtonElement;
+      expect(custom.textContent?.trim()).toBe('custom error');
+      expect(host.nativeElement.querySelector('.c-no-data-row')).toBeNull();
+      source.fail = false;
+      custom.click();
+      settle(host);
+      expect(source.calls).toBe(2);
+      expect(host.nativeElement.querySelectorAll('tr.c-row').length).toBe(2);
+      host.destroy();
+    }));
+
+    it('hides the local error region with hideReadError', fakeAsync(() => {
+      spyOn(console, 'error');
+      const { items } = failingSource();
+      f = TestBed.createComponent(SdTable<Row>);
+      table = f.componentInstance;
+      f.componentRef.setInput('hideReadError', true);
+      f.componentRef.setInput('option', {
+        type: 'local',
+        items,
+        columns: [{ field: 'name', type: 'string', title: 'Name' }],
+      } as SdTableOption<Row>);
+      settle(f);
+      expect(table.loadError()).toBeTrue();
+      expect(f.nativeElement.querySelector('sd-data-state')).toBeNull();
+      expect(f.nativeElement.querySelector('.c-no-data-row')).toBeNull();
     }));
   });
 

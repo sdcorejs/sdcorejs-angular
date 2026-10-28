@@ -668,10 +668,17 @@
             }
           </sd-data-state>
         } @else if (!_loading && loadError() && !_hideReadError) {
-          <div class="c-no-data-row" role="alert">
-            <p>{{ 'core.component.table.error-occurred' | sdTranslate }}</p>
-            <sd-button [title]="'core.component.table.reload' | sdTranslate" (click)="reload()"></sd-button>
-          </div>
+          <!-- why: bảng local lỗi dùng cùng giao diện lỗi với bảng server (sd-data-state, role="alert") và cùng
+               sdDataStateTemplate; thử lại = reload() vì local không có snapshot đọc để retryRead(). -->
+          <sd-data-state state="error" [retryable]="true" (sdRetry)="reload()">
+            @if (_dataStateTemplate; as custom) {
+              <ng-template sdDataStateTemplate let-current let-retry="retry" let-action="action">
+                <ng-container
+                  [ngTemplateOutlet]="custom.template"
+                  [ngTemplateOutletContext]="{ $implicit: current, state: current, retry: retry, action: action }"></ng-container>
+              </ng-template>
+            }
+          </sd-data-state>
         } @else if (_noRows && !loadError()) {
           <!-- why: empty mặc định giữ 3 trạng thái (filter không có kết quả / chưa chọn filter bắt buộc / chưa có dữ liệu)
                cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). -->
