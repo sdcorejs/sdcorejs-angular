@@ -44,4 +44,7 @@ export interface ISdStorageConfiguration {
   identityCanonicalizer?: SdPersistenceIdentityCanonicalizer;
 }
 
-export const SD_STORAGE_CONFIG = new InjectionToken<ISdStorageConfiguration>('storage.configuration');
+export const SD_STORAGE_CONFIGURATION = new InjectionToken<ISdStorageConfiguration>('storage.configuration');
+
+/** @deprecated Use `SD_STORAGE_CONFIGURATION`. This is the same injection token. */
+export const SD_STORAGE_CONFIG = SD_STORAGE_CONFIGURATION;

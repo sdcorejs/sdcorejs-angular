@@ -36,8 +36,8 @@ describe('SdApiService', () => {
     expect(service.http).toBeTruthy();
   });
 
-  it('keeps SD_API_CONFIGURATION as an alias of SD_API_CONFIG', () => {
-    expect(SD_API_CONFIGURATION).toBe(SD_API_CONFIG);
+  it('keeps SD_API_CONFIG as a deprecated alias of SD_API_CONFIGURATION', () => {
+    expect(SD_API_CONFIG).toBe(SD_API_CONFIGURATION);
   });
 
   // ─── GET ────────────────────────────────────────────────────────────────────
@@ -920,7 +920,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: [handler] } },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [handler] } },
       ],
     });
     service = TestBed.inject(SdApiService);
@@ -951,7 +951,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: config },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: config },
       ],
     });
     service = TestBed.inject(SdApiService);
@@ -981,7 +981,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: config },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: config },
       ],
     });
     service = TestBed.inject(SdApiService);
@@ -1007,7 +1007,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: config },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: config },
       ],
     });
     service = TestBed.inject(SdApiService);
@@ -1029,7 +1029,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: config },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: config },
       ],
     });
     service = TestBed.inject(SdApiService);
@@ -1049,7 +1049,7 @@ describe('SdApiService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         SdCacheService,
-        { provide: SD_API_CONFIG, multi: true, useValue: config },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: config },
       ],
     });
     service = TestBed.inject(SdApiService);
