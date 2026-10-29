@@ -753,6 +753,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   #barActive = false;
   #barPending = false;
   #barApplying = false;
+  /** The last bar apply left out the search text being typed (a chip change): keep that text in the box. */
+  #barKeepSearch = false;
   #barWarned = false;
 
   /** Cột bị ẩn qua cấu hình mà vẫn còn giá trị lọc: chip của nó ở lại thanh tới khi bị xoá. */
@@ -764,7 +766,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       if (!config || !value || !option || !this.queryBarMode()) return [] as string[];
       const shown = new Set(leafColumns([...config.firstColumns, ...config.secondColumns]).map(column => column.field));
       return leafColumns(option.columns)
-        .filter(column => !column.hidden && !shown.has(column.field) && isRawFilterSet(value.columnFilter?.[column.field]))
+        .filter(
+          column =>
+            !column.hidden &&
+            !shown.has(column.field) &&
+            (isRawFilterSet(value.columnFilter?.[column.field]) || isNoDataOperator(value.columnOperator?.[column.field]))
+        )
         .map(column => column.field);
     },
     { equal: (a, b) => a.length === b.length && a.every((field, index) => field === b[index]) }
@@ -858,6 +865,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     for (const item of this.quickSearchOption()?.filters ?? []) {
       const hidden = isSignal(item.hidden) ? item.hidden() : item.hidden;
       if (item.required && hidden && !hasQuickSearchValue(value.filters?.[item.field])) labels.push(item.title);
+    }
+    // why: external bắt buộc mà thanh không hiện được (custom, filterDef, exclude…) vẫn chặn đọc — phải nói ra.
+    const sources = this.queryBarModel()?.sources;
+    const external = this.#appliedFilter()?.externalFilter;
+    for (const item of this.tableOption()?.filter?.externalFilters ?? []) {
+      if (item.required && sources && !sources.has(`external:${item.field}`) && !isRawFilterSet(external?.[item.field])) {
+        labels.push(item.title);
+      }
     }
     return labels.length ? this.#i18n.t('core.component.query-bar.required', { label: labels.join(', ') }) : '';
   });
@@ -2152,7 +2167,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const ctx = this.queryBarModel();
     if (!ctx || !this.filterRegister) return;
     const current = this.filterRegister.value.get();
-    const { patch, changed } = queryToTableFilter(query, ctx, current);
+    // why: lần áp dụng do đổi chip bỏ qua chữ đang gõ dở trong ô tìm (thanh gửi từ khoá cũ) — giữ từ khoá đã áp dụng, như
+    // quick search ở mode mặc định, và để nguyên chữ đang gõ trong ô.
+    const typing = ctx.search && (query.search ?? '') !== untracked(() => this.barSearch());
+    const applied = typing ? { ...query, search: current.quickSearch?.term ?? '' } : query;
+    const { patch, changed } = queryToTableFilter(applied, ctx, current);
     const termChanged = (patch.quickSearch?.term ?? '') !== (current.quickSearch?.term ?? '');
     // why: như column-filter — đổi toán tử của cột đang trống (không phải NULL / NOT_NULL) chỉ lưu, không đọc lại.
     const silent =
@@ -2168,10 +2187,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         );
       });
     this.#barApplying = true;
+    this.#barKeepSearch = !!typing;
     try {
       this.filterRegister.value.set(silent ? { ...patch, notReload: true } : patch);
     } finally {
       this.#barApplying = false;
+      this.#barKeepSearch = false;
     }
     this.#runQueryBarCallbacks(changed, ctx);
   };
@@ -2226,7 +2247,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#barWritten = untracked(() => this.barFilters());
     const term = value.quickSearch?.term ?? '';
     // why: chỉ đẩy từ khoá khi từ khoá đã áp dụng đổi — không xoá phần đang gõ dở khi chip khác đổi.
-    if (rebuild || term !== this.#barTerm) {
+    if ((rebuild && !this.#barKeepSearch) || term !== this.#barTerm) {
       this.#barTerm = term;
       this.barSearch.set(term);
     }

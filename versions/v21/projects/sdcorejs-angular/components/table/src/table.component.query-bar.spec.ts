@@ -286,6 +286,20 @@ describe('SdTable filter.mode query-bar', () => {
       expect(table.getFilterRequest().rawColumnFilter['total' as never]).toBeNull();
     }));
 
+    it('does not send the text still being typed when a chip applies', fakeAsync(() => {
+      mount(buildOption());
+      const input = el().querySelector('.c-search-input') as HTMLInputElement;
+      input.value = 'DH';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      loader.calls.reset();
+      commit('column:total', { data: 5 });
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(table.getFilterRequest().quickSearch?.term).toBe('');
+      expect(JSON.stringify(pagingOf(loader.calls.mostRecent()).filters)).not.toContain('DH');
+      expect(input.value).withContext('the typed text stays in the box').toBe('DH');
+    }));
+
     it('reads once on Enter in the search box', fakeAsync(() => {
       mount(buildOption());
       loader.calls.reset();
@@ -367,6 +381,22 @@ describe('SdTable filter.mode query-bar', () => {
       expect(chipOf('column:total')).toEqual(jasmine.objectContaining({ data: 5 }));
     }));
 
+    it('keeps the chip of a hidden column that filters with NOT_NULL, and the clear button', fakeAsync(() => {
+      const option = buildOption();
+      option.columns[0] = {
+        ...option.columns[0],
+        invisible: true,
+        filter: { operator: { enable: true, default: 'CONTAIN', list: ['CONTAIN', 'EQUAL', 'NOT_NULL'] } },
+      } as (typeof option.columns)[number];
+      mount(option);
+      expect(indexOf('column:code')).toBe(-1);
+      table.filterRegister!.value.set({ columnOperator: { code: 'NOT_NULL' }, columnFilter: { code: null } });
+      settle();
+      expect(indexOf('column:code')).toBeGreaterThanOrEqual(0);
+      expect(chipOf('column:code').operator).toBe('NOT_NULL');
+      expect(table.queryBarOption()!.clearDisabled).toBe(false);
+    }));
+
     it('keeps the identity of unchanged chips across reads', fakeAsync(() => {
       mount(buildOption());
       const pinned = chipOf('quick:warehouseId');
@@ -396,6 +426,19 @@ describe('SdTable filter.mode query-bar', () => {
       commit('quick:warehouseId', { data: 'hn' });
       expect(loader).toHaveBeenCalledTimes(1);
       expect(el().querySelector('.sd-table-query-bar-hint')).toBeNull();
+    }));
+
+    it('names an empty required external filter the bar cannot show in the hint', fakeAsync(() => {
+      const option = buildOption({ queryBar: { exclude: ['note'] } });
+      option.filter!.externalFilters![1] = { ...option.filter!.externalFilters![1], required: true };
+      mount(option);
+      expect(loader).not.toHaveBeenCalled();
+      expect(indexOf('external:note')).toBe(-1);
+      const hint = el().querySelector('.sd-table-query-bar-hint') as HTMLElement;
+      expect(hint).not.toBeNull();
+      expect(hint.querySelector('span')!.textContent!.trim()).toBe(
+        TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Ghi chú' })
+      );
     }));
 
     it('reports an empty required external filter to onFilter and does not read', fakeAsync(() => {
@@ -539,7 +582,7 @@ describe('SdTable filter.mode query-bar', () => {
       expect(el().querySelectorAll('thead .sd-table-filter-trigger').length).toBe(3);
       const code = trigger('code')!;
       expect(code.getAttribute('aria-label')).toBe(t('core.component.table.filter-by', { title: 'Mã đơn' }));
-      expect(code.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(code.getAttribute('aria-haspopup')).toBe('menu');
       expect(code.classList).not.toContain('sd-table-filter-trigger--active');
       expect(getComputedStyle(code).opacity).toBe(hiddenOpacity());
       expect(trigger('status')).not.toBeNull();

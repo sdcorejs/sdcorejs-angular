@@ -147,6 +147,9 @@ export class SdQueryBar {
 
   /** Free-text search string. Two-way bindable via `[(search)]`. Only shown when `showSearch=true`. */
   readonly search = model<string>('');
+  // why: chữ trong ô tìm trước khi người dùng bắt đầu gõ — đổi chip ở applyOn 'commit' áp dụng giá trị này, không áp
+  // dụng phần đang gõ dở. `null`: không có gì đang gõ.
+  #searchBase: string | null = null;
 
   /**
    * Editing mode:
@@ -513,7 +516,7 @@ export class SdQueryBar {
     }
     const next = { field: field.key as any, operator, data } as Filter;
     this.filters.set([...this.filters(), next]);
-    if (this.resolvedApplyOn() === 'commit' && this.isFilterActive(next)) this.triggerApply();
+    if (this.resolvedApplyOn() === 'commit' && this.isFilterActive(next)) this.#applyChipChange();
   }
 
   /** Value committed by a completed inline chip (seamless input, picker, boolean toggle). */
@@ -701,7 +704,7 @@ export class SdQueryBar {
     }
     list.splice(index, 1);
     this.filters.set(list);
-    if (this.resolvedApplyOn() === 'commit' && this.isFilterActive(removed)) this.triggerApply();
+    if (this.resolvedApplyOn() === 'commit' && this.isFilterActive(removed)) this.#applyChipChange();
   }
 
   /** Empties the bar. Pinned chips stay, reset to their field's default operator and no value. */
@@ -727,13 +730,33 @@ export class SdQueryBar {
 
   setSearch(value: string): void {
     if (this.search() === value) return;
+    if (this.#searchBase === null) this.#searchBase = this.search();
     this.search.set(value);
   }
 
+  /** Enter in the search box: applies the typed text too, unless a required field is still empty. */
+  applySearch(): void {
+    if (this.invalidFields().length) return;
+    this.triggerApply();
+  }
+
   triggerApply(): void {
+    this.#searchBase = null;
+    this.#emitApply(this.#buildQuery());
+  }
+
+  /**
+   * A chip change applied at once (`applyOn: 'commit'`). It keeps the search text applied last: the text still being
+   * typed is applied by Enter, like the quick search of sd-table.
+   */
+  #applyChipChange(): void {
+    const query = this.#buildQuery();
+    this.#emitApply(this.#searchBase !== null && 'search' in query ? { ...query, search: this.#searchBase } : query);
+  }
+
+  #emitApply(q: SdQuery): void {
     // why: single deferred trigger — fire both the change notification and the reload
     // signal once, from here only (mutations no longer emit).
-    const q = this.#buildQuery();
     this.option()?.onQueryChange?.(q);
     this.queryChange.emit(q);
     this.option()?.onApply?.(q);
@@ -772,7 +795,7 @@ export class SdQueryBar {
       list.splice(idx, 1);
       this.filters.set(list);
       this.editingIndex.set(null);
-      if (this.isFilterActive(previous)) this.triggerApply();
+      if (this.isFilterActive(previous)) this.#applyChipChange();
       return;
     }
     // why: popover chỉ đổi operator + value của CHÍNH chip đó → giữ track key, nếu không chip sẽ
@@ -781,7 +804,7 @@ export class SdQueryBar {
     list[idx] = next;
     this.filters.set(list);
     this.editingIndex.set(null);
-    if (commit && this.#changed(previous, next)) this.triggerApply();
+    if (commit && this.#changed(previous, next)) this.#applyChipChange();
   }
 
   // ---------------------------------------------------------------------------
@@ -810,7 +833,7 @@ export class SdQueryBar {
   }
 
   #applyIfChanged(previous: Filter | undefined, next: Filter | undefined): void {
-    if (this.resolvedApplyOn() === 'commit' && previous && next && this.#changed(previous, next)) this.triggerApply();
+    if (this.resolvedApplyOn() === 'commit' && previous && next && this.#changed(previous, next)) this.#applyChipChange();
   }
 
   /** Focus the first control of the inline chip at `index` (chips render in `filters` order). */

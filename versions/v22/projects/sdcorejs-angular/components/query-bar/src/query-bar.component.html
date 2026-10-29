@@ -35,7 +35,7 @@
         type="text"
         [ngModel]="search()"
         (ngModelChange)="setSearch($event)"
-        (keydown.enter)="triggerApply()"
+        (keydown.enter)="applySearch()"
         [placeholder]="searchPlaceholder()" />
     </div>
     <span class="c-divider" aria-hidden="true"></span>
@@ -70,7 +70,23 @@
         @let _op = $any(filter.operator);
         @let _data = $any(filter).data;
         @let _invalid = isInvalid(filter);
-        @if (_field.type === 'string' || _field.type === 'number') {
+        @if (_field.disabled) {
+          <!-- why: chip inline là chính ô nhập — field bị khoá dùng chip popover bị khoá (chỉ hiển thị), như ở mode popover. -->
+          <sd-query-popover-chip
+            [field]="_field"
+            [filter]="filter"
+            [active]="isFilterActive(filter)"
+            [showOperator]="showOperatorFor(_field, $any(filter.operator))"
+            [valueText]="chipValueText(filter)"
+            [emptyText]="emptyTextFor(_field)"
+            [pinned]="!!_field.pinned"
+            [disabled]="true"
+            [invalid]="_invalid"
+            [describedBy]="_invalid ? _invalidHintId : undefined"
+            [menu]="chipPopover.menu()!"
+            (open)="openChipPopover(i)"
+            (remove)="removeFilter(i)" />
+        } @else if (_field.type === 'string' || _field.type === 'number') {
           <!-- Seamless chip — the pill is the input (string / number). -->
           <sd-query-inline-value-chip
             [field]="_field"

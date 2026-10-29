@@ -395,6 +395,15 @@ describe('table-query-bar.util', () => {
       expect(first.filters).not.toContain(code!);
     });
 
+    it('returns the previous object for a one-ended range the popover committed without the other end', () => {
+      const value = defaults();
+      value.columnFilter = { weight: { from: 3, to: null } };
+      // The popover commits only the end that was typed: `{ from: 3 }`.
+      const previous = [chip('column:weight', 'BETWEEN', { from: 3 })];
+      const query = tableFilterToQuery(value, context(), previous);
+      expect(query.filters).toContain(previous[0]);
+    });
+
     it('keeps the order of unpinned chips from the previous list and appends new ones in declaration order', () => {
       const value = defaults();
       value.columnFilter = { total: 5, code: 'x', active: '1' };
@@ -438,6 +447,15 @@ describe('table-query-bar.util', () => {
       const value = defaults();
       value.columnFilter = { createdAt: { from: '2026/01/01', to: null } };
       expect(queryToTableFilter(tableFilterToQuery(value, context()), context(), value).patch.columnFilter!['createdAt']).toBeNull();
+    });
+
+    it('also resets a NULL / NOT_NULL operator left on a covered column', () => {
+      const value = defaults();
+      value.columnFilter = { createdAt: null };
+      value.columnOperator = { createdAt: 'NOT_NULL' };
+      const { patch } = queryToTableFilter(tableFilterToQuery(value, context()), context(), value);
+      expect(['NULL', 'NOT_NULL']).not.toContain(patch.columnOperator!['createdAt']);
+      expect(paging({ ...value, ...patch }) ?? []).not.toContain(jasmine.objectContaining({ field: 'createdAt', operator: 'NOT_NULL' }));
     });
 
     it('writes columnOperator only for columns with operator.enable', () => {

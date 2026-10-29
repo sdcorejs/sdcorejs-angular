@@ -97,7 +97,7 @@
         [class.sd-table-filter-trigger--active]="_triggerActive"
         [attr.data-autoid]="_autoId ? _autoId + '-filter-trigger-' + column.field : null"
         [attr.aria-label]="filterTriggerLabel(column, _triggerActive)"
-        aria-haspopup="dialog"
+        aria-haspopup="menu"
         (mousedown)="$event.stopPropagation()"
         (click)="$event.stopPropagation(); openQueryBarField(_triggerKey, $event.currentTarget)">
         <sd-icon name="filter_alt" aria-hidden="true"></sd-icon>

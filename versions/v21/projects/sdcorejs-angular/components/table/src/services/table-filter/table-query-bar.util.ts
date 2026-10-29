@@ -495,7 +495,9 @@ export const tableFilterToQuery = (value: TableFilterValue, ctx: SdTableQueryCon
     if (!field.pinned && !chip.active) continue;
     const before = previous.get(key);
     const next =
-      before && before.operator === chip.operator && stringify((before as { data?: unknown }).data) === stringify(chip.data)
+      // why: so theo dạng chuẩn — popover gửi khoảng một đầu là `{ from }`, raw dựng lại là `{ from, to: null }`; coi là một
+      // chip để không dựng lại DOM (và mất focus) ngay sau khi menu trả focus về chip.
+      before && before.operator === chip.operator && sameRaw(source.shape, (before as { data?: unknown }).data, chip.data)
         ? before
         : ({ field: key, operator: chip.operator, data: chip.data } as Filter);
     (field.pinned ? pinned : rest).push(next);
@@ -598,7 +600,15 @@ export const queryToTableFilter = (
     }
   }
   // why: cột bị external cùng field che không có control nào trên thanh; xoá để không còn điều kiện ẩn từ cache cũ.
-  for (const field of ctx.covered) columnFilter[field] = null;
+  for (const field of ctx.covered) {
+    columnFilter[field] = null;
+    // why: NULL / NOT_NULL lọc cả khi không có giá trị — trả operator về mặc định, nếu không điều kiện vẫn gửi đi.
+    if (isNoData(columnOperator[field])) {
+      const fallback = ctx.defaultColumnOperator?.[field];
+      if (fallback && !isNoData(fallback)) columnOperator[field] = fallback;
+      else delete columnOperator[field];
+    }
+  }
 
   const term = ctx.search ? (query.search ?? '').trim() : (current.quickSearch?.term ?? '');
   return {

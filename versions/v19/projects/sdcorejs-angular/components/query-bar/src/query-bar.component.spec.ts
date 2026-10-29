@@ -1106,6 +1106,26 @@ describe('SdQueryBar (host options)', () => {
       expect(fixture.nativeElement.querySelector('.c-seamless__x')).toBeNull();
     });
 
+    it('keeps a disabled field read-only in inline mode', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [
+        { ...status, disabled: true },
+        { ...name, disabled: true },
+      ]);
+      component.filters.set([
+        { field: 'status', operator: 'IN', data: ['a'] } as any,
+        { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+      ]);
+      fixture.detectChanges();
+      const host: HTMLElement = fixture.nativeElement;
+      expect(host.querySelector('sd-query-inline-chip')).withContext('values field').toBeNull();
+      expect(host.querySelector('sd-query-inline-value-chip')).withContext('string field').toBeNull();
+      expect(chips().map(chip => chip.getAttribute('aria-disabled'))).toEqual(['true', 'true']);
+      chips()[1].click();
+      fixture.detectChanges();
+      expect(component.editingIndex()).toBeNull();
+    });
+
     it('does not open the popover of a disabled field', () => {
       fixture.componentRef.setInput('fields', [{ ...status, disabled: true }, name]);
       fixture.detectChanges();
@@ -1139,6 +1159,22 @@ describe('SdQueryBar (host options)', () => {
       expect(chip.getAttribute('aria-invalid')).toBe('true');
       expect(chip.getAttribute('aria-describedby')).toBe('tenant-hint');
       expect(chip.querySelector('.c-chip-value')?.textContent?.trim()).toBe(i18n.t('core.component.query-bar.placeholder.select-value'));
+    });
+
+    it('does not apply on Enter while a required field is empty', () => {
+      setOption({ showSearch: true });
+      const apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      const enter = () =>
+        (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+        );
+      component.setSearch('abc');
+      enter();
+      expect(apply).not.toHaveBeenCalled();
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a'] } as any]);
+      enter();
+      expect(apply).toHaveBeenCalledTimes(1);
     });
 
     it('disables search while a required field is empty', () => {
@@ -1219,6 +1255,28 @@ describe('SdQueryBar (host options)', () => {
         component.onChipPopoverCommit({ field: 'status', operator: 'IN', data: [] } as any);
         expect(component.filters().length).toBe(1);
         expect(apply).toHaveBeenCalledTimes(1);
+      });
+
+      it('keeps the applied search text when a chip change applies; Enter applies the typed text', () => {
+        const enter = () =>
+          (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+          );
+        component.setSearch('abc');
+        component.openChipPopover(1);
+        component.onChipPopoverCommit({ field: 'name', operator: 'CONTAIN', data: 'y' } as any);
+        expect(apply.calls.mostRecent().args[0].search).toBe('');
+        expect(component.search()).withContext('the typed text stays in the box').toBe('abc');
+
+        enter();
+        expect(apply.calls.mostRecent().args[0].search).toBe('abc');
+
+        component.setSearch('abcd');
+        component.onInlineCommit(1, 'z');
+        expect(apply.calls.mostRecent().args[0].search).toBe('abc');
+        component.removeFilter(1);
+        expect(apply.calls.mostRecent().args[0].search).toBe('abc');
+        expect(apply).toHaveBeenCalledTimes(4);
       });
 
       it('applies on Enter in the search box', () => {
