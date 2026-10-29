@@ -110,6 +110,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - A `BETWEEN` chip with both ends empty counts as empty: no “ — ” value, and it no longer counts as active.
 
+#### Table
+
+- The filter of a column under a grouped header (`type: 'children'`) is sent, matched and restored. Before, only top-level `columns` were read: the value was left out of `pagingReq`, ignored by local filtering and sorting, and the column's `filter.default`, cached value and `SD_TABLE_CONFIGURATION.filter.operator` were never applied.
+  - `SdConvertToPagingReq` reads leaf columns, so passing `option.columns` by hand now sends child columns too; a grouped header itself sends nothing (it used to send its own field when `rawColumnFilter` held one).
+- Clearing the filters of a table with a `split-number` or `split-date` column no longer throws `Cannot read properties of undefined (reading 'from')`. Both ends show empty, and typing one end recreates `{ from, to }`.
+
 ## [3.3] - 2026-10-29
 
 Packages `19.3.3` · `20.3.3` · `21.3.3` · `22.3.3`, validated against `*.3.2`.

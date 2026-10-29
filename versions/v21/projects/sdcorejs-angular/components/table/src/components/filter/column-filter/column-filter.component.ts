@@ -164,6 +164,17 @@ export class ColumnFilterComponent {
     this.filterChange.emit();
   };
 
+  /**
+   * Ghi một đầu của filter tách đôi (split-number / split-date) vào columnFilter dùng chung. Ghi tại chỗ vào object
+   * { from, to } đang có; nếu bảng đã đặt lại columnFilter (xoá lọc, setFilter) làm mất object đó thì tạo lại.
+   */
+  setRangeEnd(field: string, end: 'from' | 'to', value: unknown): void {
+    const filter = this.columnFilter();
+    const range = filter[field];
+    if (range && typeof range === 'object') range[end] = value;
+    else filter[field] = { from: null, to: null, [end]: value };
+  }
+
   // Blur input: commit giá trị KHÔNG trigger reload.
   onFilterCommit = () => {
     this.#emitFilterOnChange();

@@ -15139,8 +15139,6 @@ interface Order {
   id: number;
   code: string;
   customer: string;
-  phone: string;
-  email: string;
   warehouseId: string;
   priority: string;
   status: string;
@@ -15189,8 +15187,6 @@ const ORDERS: Order[] = Array.from({ length: 36 }, (_, index) => ({
   id: index + 1,
   code: \`DH-\${24300 + index}\`,
   customer: CUSTOMERS[index % CUSTOMERS.length],
-  phone: \`09\${String(10000000 + index * 7919).slice(0, 8)}\`,
-  email: \`kh\${index + 1}@example.com\`,
   warehouseId: WAREHOUSES[index % WAREHOUSES.length].id,
   priority: PRIORITIES[index % 2].id,
   status: STATUSES[index % STATUSES.length].id,
@@ -15294,23 +15290,19 @@ export class TableQueryBarExampleComponent {
       { field: 'customer', title: 'Khách hàng', type: 'string', width: '170px' },
       { field: 'createdAt', title: 'Ngày tạo', type: 'date', width: '120px' },
       {
-        field: 'total',
-        title: 'Tổng tiền',
-        type: 'number',
-        align: 'right',
-        width: '140px',
-        filter: { operator: { enable: true, list: ['EQUAL', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL'] } },
-      },
-      { field: 'payment', title: 'Thanh toán', type: 'values', width: '150px', option: { items: PAYMENTS, valueField: 'id', displayField: 'name' } },
-      // why: header nhóm chỉ chứa cột không lọc — SdConvertToPagingReq chỉ đọc cột cấp đầu, nên filter của cột con không
-      // được gửi đi ở cả hai mode.
-      {
-        field: 'contact',
-        title: 'Liên hệ',
+        field: 'money',
+        title: 'Thanh toán',
         type: 'children',
         children: [
-          { field: 'phone', title: 'Điện thoại', type: 'string', width: '130px', filter: { disabled: true } },
-          { field: 'email', title: 'Email', type: 'string', width: '190px', filter: { disabled: true } },
+          {
+            field: 'total',
+            title: 'Tổng tiền',
+            type: 'number',
+            align: 'right',
+            width: '140px',
+            filter: { operator: { enable: true, list: ['EQUAL', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL'] } },
+          },
+          { field: 'payment', title: 'Trạng thái TT', type: 'values', width: '150px', option: { items: PAYMENTS, valueField: 'id', displayField: 'name' } },
         ],
       },
       { field: 'weight', title: 'Cân nặng (kg)', type: 'number', align: 'right', width: '130px', filter: { type: 'split-number' } },

@@ -3,6 +3,7 @@ import type { SdQuery, SdQueryField } from '@sdcorejs/angular/components/query-b
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 import { SdTableColumnAnyRow } from '../../models/table-column.model';
+import { leafColumns } from '../column-leaf.util';
 import { isDefaultControlFilter, isNoDataColumnOperator } from './table-filter-operator.util';
 import type { SdTableExternalFilter, SdTableOptionFilterQueryBar, TableFilterValue } from './table-filter.model';
 import type { SdTableOptionQuickSearch, SdTableQuickSearchFilter } from './table-quick-search.model';
@@ -292,8 +293,7 @@ export const sdTableQueryFields = (args: {
 
   if (args.hideColumns) return result;
 
-  const leaves = args.columns.flatMap(column => (column.type === 'children' ? column.children : [column])) as SdTableColumnAnyRow[];
-  for (const column of leaves) {
+  for (const column of leafColumns(args.columns)) {
     const key = `column:${column.field}`;
     if (externalKeys.has(column.field)) {
       result.covered.push(column.field);

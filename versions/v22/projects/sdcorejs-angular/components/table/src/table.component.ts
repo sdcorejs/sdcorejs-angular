@@ -60,7 +60,7 @@ import { SdTableMobileAction } from './components/mobile-cards/mobile-action.mod
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
-import { SdTableColumn, SdTableColumnAnyRow, SdTableColumnNormal } from './models/table-column.model';
+import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
 import {
@@ -132,6 +132,7 @@ import { SdTreePipe } from './pipes/sd-tree.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
 import { buildColumnWidthMap } from './services/column-width.util';
+import { leafColumns } from './services/column-leaf.util';
 import { filterLocalItems, hasActiveColumnFilter } from './services/table-local/table-local.util';
 import { isNoDataColumnOperator } from './services/table-filter/table-filter-operator.util';
 import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
@@ -244,10 +245,6 @@ const isRawFilterSet = (value: unknown): boolean => {
 };
 
 const isNoDataOperator = (operator: Operator | undefined): boolean => operator === 'NULL' || operator === 'NOT_NULL';
-
-/** Leaf columns of `option.columns` (children of grouped headers flattened). */
-const leafColumns = (columns: SdTableColumnAnyRow[]): SdTableColumnNormal<any>[] =>
-  columns.flatMap(column => (column.type === 'children' ? column.children : [column]));
 
 @Injectable()
 export class SdTablePaginatorIntl extends MatPaginatorIntl {
@@ -1440,7 +1437,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const filterConfiguration = this.tableConfiguration?.filter;
     if (option.filter.mode === undefined && filterConfiguration?.mode) option.filter.mode = filterConfiguration.mode;
     if (filterConfiguration?.queryBar) option.filter.queryBar = { ...filterConfiguration.queryBar, ...option.filter.queryBar };
-    for (const column of option.columns || []) {
+    // why: cột con của header nhóm cũng có filter và operator riêng.
+    for (const column of leafColumns(option.columns)) {
       if (column.filter?.operator?.enable) {
         if (!column.filter?.operator?.list?.length) {
           column.filter.operator.list = this.tableConfiguration?.filter?.operator?.list?.[column.type] || [];

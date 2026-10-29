@@ -408,4 +408,68 @@ describe('ColumnFilterComponent', () => {
       expect(filter['price']).toBeUndefined();
     });
   });
+
+  // Bug: the table resets its shared columnFilter object in place (clearFilter, setFilter, reset to the defaults), so
+  // the { from, to } of a split filter can disappear after the init effect ran. The split template then read
+  // `undefined.from` and change detection threw "Cannot read properties of undefined (reading 'from')".
+  describe('split filter whose range object disappears in place', () => {
+    const splitNumber = { field: 'price', type: 'number', title: 'Giá', filter: { type: 'split-number' } } as SdTableColumn;
+    const splitDate = { field: 'createdAt', type: 'date', title: 'Ngày', filter: { type: 'split-date' } } as SdTableColumn;
+
+    for (const [name, column] of [
+      ['split-number', splitNumber],
+      ['split-date', splitDate],
+    ] as const) {
+      // why: component OnPush — sửa object tại chỗ không làm view dirty; đổi một input khác (như bảng re-render header)
+      // để template đọc lại `columnFilter` mà không đổi ref của nó (đổi ref sẽ chạy lại effect khởi tạo và che lỗi).
+      const rerender = (pass: number) => {
+        fixture.componentRef.setInput('autoId', `tbl-${pass}`);
+        fixture.detectChanges();
+      };
+
+      it(`renders an empty ${name} instead of throwing when the key is removed`, () => {
+        const filter: Record<string, any> = {};
+        bootstrap(column, filter);
+        filter[column.field] = { from: 5, to: 9 };
+        rerender(1);
+
+        delete filter[column.field];
+        expect(() => rerender(2)).not.toThrow();
+      });
+
+      it(`renders an empty ${name} instead of throwing when the key is set to undefined`, () => {
+        const filter: Record<string, any> = {};
+        bootstrap(column, filter);
+        filter[column.field] = undefined;
+        expect(() => rerender(1)).not.toThrow();
+      });
+    }
+
+    it('writes a typed end into a new { from, to } on the shared object', () => {
+      const filter: Record<string, any> = {};
+      bootstrap(splitNumber, filter);
+      delete filter['price'];
+      fixture.componentRef.setInput('autoId', 'tbl');
+      fixture.detectChanges();
+      const change = jasmine.createSpy('filterChange');
+      component.filterChange.subscribe(change);
+
+      const from = fixture.debugElement.queryAll(By.css('sd-input-number'))[0];
+      from.triggerEventHandler('modelChange', 7);
+      from.triggerEventHandler('sdChange', 7);
+
+      expect(filter['price']).toEqual({ from: 7, to: null });
+      expect(change).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps writing into the existing range object, as before', () => {
+      const filter: Record<string, any> = {};
+      bootstrap(splitNumber, filter);
+      const range = filter['price'];
+      const to = fixture.debugElement.queryAll(By.css('sd-input-number'))[1];
+      to.triggerEventHandler('modelChange', 20);
+      expect(filter['price']).toBe(range);
+      expect(range).toEqual({ from: null, to: 20 });
+    });
+  });
 });

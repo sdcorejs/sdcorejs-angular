@@ -8,6 +8,7 @@ import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.mo
 import { SdTableOptionQuickSearch, SdTableQuickSearchValue } from './table-quick-search.model';
 import { quickSearchConditions } from './table-quick-search.util';
 import { isNoDataColumnOperator } from './table-filter-operator.util';
+import { leafColumns } from '../column-leaf.util';
 export type {
   SdTableOptionQuickSearch,
   SdTableQuickSearchFilter,
@@ -291,8 +292,8 @@ export const SdConvertToPagingReq = (
       }
     }
   }
-  // Xử lý column filter
-  for (const column of columns || []) {
+  // Xử lý column filter — cột lá: cột con của header nhóm có filter riêng, header nhóm thì không.
+  for (const column of leafColumns(columns)) {
     const value = rawColumnFilter?.[column.field];
     const field = fieldMapping?.[column.field] || column.field;
     const operator = columnOperator?.[column.field] || column.filter?.operator?.default;

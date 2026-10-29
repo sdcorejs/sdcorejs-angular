@@ -179,6 +179,8 @@
 <!-- ================================================ -->
 <!-- Split from/to templates (đưa xuống cuối file)    -->
 <!-- ================================================ -->
+<!-- why: `[model]` đọc `?.` và `(modelChange)` qua setRangeEnd — bảng có thể đặt lại columnFilter tại chỗ (xoá lọc,
+     setFilter) làm mất object { from, to }; `[(model)]="…[field].from"` khi đó đọc / ghi vào undefined và ném lỗi. -->
 <ng-template #splitNumberTpl let-field="field" let-disabled="disabled">
   <div class="d-flex align-items-center" style="flex: 1 1 0%; min-width: 0">
     <sd-input-number
@@ -186,7 +188,8 @@
       style="flex: 1 1 0%; min-width: 0"
       size="sm"
       [label]="_label"
-      [(model)]="_columnFilter[field].from"
+      [model]="_columnFilter[field]?.from"
+      (modelChange)="setRangeEnd(field, 'from', $event)"
       (sdChange)="onFilterChange()"
       (sdBlur)="onFilterCommit()"
       (cleared)="onFilterChange()"
@@ -199,7 +202,8 @@
       [autoId]="_autoId + '-to'"
       style="flex: 1 1 0%; min-width: 0"
       size="sm"
-      [(model)]="_columnFilter[field].to"
+      [model]="_columnFilter[field]?.to"
+      (modelChange)="setRangeEnd(field, 'to', $event)"
       (sdChange)="onFilterChange()"
       (sdBlur)="onFilterCommit()"
       (cleared)="onFilterChange()"
@@ -218,7 +222,8 @@
       type="date"
       size="sm"
       [label]="_label"
-      [(model)]="_columnFilter[field].from"
+      [model]="_columnFilter[field]?.from"
+      (modelChange)="setRangeEnd(field, 'from', $event)"
       (sdChange)="onFilterChange()"
       [disabled]="disabled"
       clearable
@@ -230,7 +235,8 @@
       style="flex: 1 1 0%; min-width: 0"
       type="date"
       size="sm"
-      [(model)]="_columnFilter[field].to"
+      [model]="_columnFilter[field]?.to"
+      (modelChange)="setRangeEnd(field, 'to', $event)"
       (sdChange)="onFilterChange()"
       [disabled]="disabled"
       clearable
