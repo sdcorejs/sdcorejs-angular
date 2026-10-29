@@ -35,5 +35,10 @@ Source of truth: `table-query-bar.md`. This file records the decisions taken in 
 Done, uncommitted. Extra i18n key `core.component.query-bar.clear` (clear label without count). `removeFilter` now nulls `editingIndex` before closing the menu (commit of a removed chip ignored). `addDisabled` compares the picker list with used keys.
 API consistency: `onClearAll` follows `onApply`/`onQueryChange` (callback in option); `required`/`disabled` mirror `SdTableExternalFilter`; `views` mirrors `SdTableColumnLazyValues.option.views`; new knobs option-only per the "option is the main API" comment; `showOperatorOnChip` input widened (compatible).
 
+## Step 2 status (2026-10-29)
+Step 1 committed as eaa249cb0. Step 2: `SdTableOptionFilterQueryBar`, `filter.mode`/`queryBar` (option + `ISdTableConfiguration`), optional `TableFilterRegister.value.default()`, `table-query-bar.util.ts` (`sdTableQueryFields`, `tableFilterToQuery`, `queryToTableFilter`) + spec (68 parity cases in two zones). Option > configuration merge lands in step 3 with `effectiveMode`.
+Adapter rules: chip ordering = pinned (declaration) → previous bar order → new chips (declaration); equivalent raw values keep the stored representation; column operator modes `none` / `chip` / `no-data` (IN/BETWEEN/EQUAL implied by shape only write NULL/NOT_NULL, leaving NULL resets to the default operator); search box shown whenever quickSearch exists (recommendation, user not answered yet).
+Observation: `SdConvertToPagingReq` and the register only read top-level `option.columns`, so filters on `children` leaves are never sent in either mode (pre-existing).
+
 ## Query-bar additions (option-only unless noted)
 `SdQueryField.pinned/required/group`, lazy `option.views`; `SdQueryBarOption.applyOn/appearance/onClearAll/clearDisabled/searchPlaceholder/invalidHintId`, `showOperatorOnChip: boolean | 'auto'` (input + option); `openField()`, `invalidFields()`; slot `[sdQueryBarEnd]`. Fixes: BETWEEN with both ends empty is inactive; chip dates formatted; lazy/values-fn labels resolved once.

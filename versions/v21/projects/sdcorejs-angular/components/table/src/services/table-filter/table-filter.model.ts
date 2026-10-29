@@ -97,6 +97,32 @@ export interface SdTableOptionFilter<T = unknown> {
 
   /** Hàm xử lý khi trigger clear filter từ external filter */
   onClearFilter?: () => void;
+
+  /**
+   * Giao diện lọc. `'query-bar'`: quick search, external filter và filter dưới cột gộp vào một `sd-query-bar` ở đầu
+   * bảng; giá trị lọc, cache và `pagingReq` giữ nguyên như `'default'`. Mobile luôn dùng giao diện `'default'`.
+   * @defaultValue 'default'
+   */
+  mode?: 'default' | 'query-bar';
+
+  /** Chỉ dùng khi `mode` là `'query-bar'`. */
+  queryBar?: SdTableOptionFilterQueryBar;
+}
+
+/** Tuỳ chọn của `filter.mode: 'query-bar'`. */
+export interface SdTableOptionFilterQueryBar {
+  /**
+   * Cách sửa chip: popover hoặc control ngay trên thanh (`sd-query-bar` mode `'inline'`).
+   * @defaultValue 'popover'
+   */
+  editor?: 'popover' | 'inline';
+  /**
+   * Thay danh sách chip ghim mặc định (quick filter đang hiện, external đang hiện inline hoặc `required`). Phần tử là
+   * `field` của `quickSearch.filters` / `externalFilters` / `columns`. Field `required` luôn được ghim.
+   */
+  pinned?: string[];
+  /** Field không đưa vào thanh; giá trị đang có vẫn được gửi đi. */
+  exclude?: string[];
 }
 
 type FilterDates = Pick<SdDateTimeService, 'begin' | 'end' | 'beginOfNextDay' | 'parse'>;
@@ -485,5 +511,7 @@ export interface TableFilterRegister {
     set: (value: Partial<TableFilterValue>) => TableFilterValue;
     remove: () => void;
     observer: Observable<TableFilterValue>;
+    /** Giá trị mà `remove()` sẽ đặt — default của cột, external và quick search (signal đọc tại lúc gọi). Không ghi cache. */
+    default?: () => TableFilterValue;
   };
 }

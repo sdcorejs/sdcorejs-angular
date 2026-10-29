@@ -189,6 +189,12 @@ export class SdTableFilterService {
           remove: () => {
             activeFilterValue.set(this.#defaultValue(args));
           },
+          default: () => {
+            const value = this.#defaultValue(args);
+            // why: `#defaultValue` trả về chính object `args.columnOperator` (dùng chung với bảng) — tách ra để người
+            // đọc không sửa nhầm vào đó.
+            return { ...value, columnOperator: { ...value.columnOperator } };
+          },
           observer: activeFilterValue.observer.pipe(
             // Sử dụng mặc định nếu bị reset
             map(value => value || this.#defaultValue(args))
