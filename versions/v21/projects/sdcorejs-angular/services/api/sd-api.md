@@ -133,7 +133,7 @@ Before 1.5 the raw body object was thrown directly. It was not an `Error`, so `i
 
 ## Configuration and interceptors
 
-`SD_API_CONFIG` registers `SdApiHandler` values by host at the root injector. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
+`SD_API_CONFIGURATION` registers `SdApiHandler` values by host at the root injector. `mapResponse` is applied by the service. `intercept`, `beforeRemote` and `afterRemote` are executed by `SdHttpInterceptor`.
 
 ### `provideSdApiConfiguration(configuration)`
 
@@ -148,11 +148,11 @@ export class OrdersModule {}
 { path: 'orders', providers: [provideSdApiConfiguration({ handlers: [...] })], loadComponent: () => ... }
 ```
 
-`SD_API_CONFIG` in a lazily loaded module works too. A library can keep `{ provide: SD_API_CONFIG, useClass: X, multi: true }` in its NgModule or in a `Route.providers`. When the Router creates that route's injector, `SdApiHandlerRegistry` reads the scope's own `SD_API_CONFIG` entries and registers them. This happens in the same navigation, after routes are recognized and before guards (`canActivate`), resolvers and components run. The entries are removed when the injector is destroyed, including by the router's injector cleanup in Angular 21+. The library does not need to know whether the shell mounts it eagerly or lazily. The Router has no public API for route injectors, so Core reads the Router's `_injector` / `_loadedInjector` fields. A `canMatch` guard inside the lazy module runs before its scope is registered.
+`SD_API_CONFIGURATION` in a lazily loaded module works too. A library can keep `{ provide: SD_API_CONFIGURATION, useClass: X, multi: true }`, or the same declaration with the deprecated name `SD_API_CONFIG`, in its NgModule or in a `Route.providers`. When the Router creates that route's injector, `SdApiHandlerRegistry` reads the scope's own `SD_API_CONFIGURATION` entries and registers them. This happens in the same navigation, after routes are recognized and before guards (`canActivate`), resolvers and components run. The entries are removed when the injector is destroyed, including by the router's injector cleanup in Angular 21+. The library does not need to know whether the shell mounts it eagerly or lazily. The Router has no public API for route injectors, so Core reads the Router's `_injector` / `_loadedInjector` fields. A `canMatch` guard inside the lazy module runs before its scope is registered.
 
 A handler from a lazy route exists only after its route has been navigated to. A request that the shell makes before that, for example a permission load in a guard on a parent route, is not handled by it. The shell must provide a handler at the root for its own hosts.
 
-`SdApiHandlerRegistry` (`providedIn: 'root'`) holds the runtime registrations: `register(configuration)` returns an unregister function, and `configurations()` is a signal of the current list. The interceptor and `SdApiService` resolve each request against the root `SD_API_CONFIG` list plus the registry.
+`SdApiHandlerRegistry` (`providedIn: 'root'`) holds the runtime registrations: `register(configuration)` returns an unregister function, and `configurations()` is a signal of the current list. The interceptor and `SdApiService` resolve each request against the root `SD_API_CONFIGURATION` list plus the registry.
 
 ### Host matching
 
@@ -168,7 +168,7 @@ A raw `url.startsWith(host)` test made `https://api.example.com.attacker.tld/x` 
 
 Under SSR there is no `window.location`, so relative hosts and relative URLs are resolved against a fixed synthetic origin. Relative-to-relative matching stays consistent; absolute hosts still require a real origin match.
 
-When several handlers match, the **longest** matching prefix (origin plus path) wins, so `https://gw.example/bpm` beats `https://gw.example` regardless of the order they were provided in. Equally long prefixes keep registration order, with root `SD_API_CONFIG` providers first. Blank hosts match nothing.
+When several handlers match, the **longest** matching prefix (origin plus path) wins, so `https://gw.example/bpm` beats `https://gw.example` regardless of the order they were provided in. Equally long prefixes keep registration order, with root `SD_API_CONFIGURATION` providers first. Blank hosts match nothing.
 
 ### `SdApiModule` (NgModule applications)
 
@@ -220,7 +220,7 @@ The message is exported as `SD_API_MISSING_HTTP_CLIENT_MESSAGE`. The check is de
 
 `withInterceptorsFromDi()` is the part that makes the module's `HTTP_INTERCEPTORS` contribution take effect. `provideHttpClient()` on its own registers `HttpClient` but ignores every DI-registered class interceptor, including `SdHttpInterceptor`.
 
-`SD_API_CONFIGURATION` remains a deprecated alias of the same token.
+`SD_API_CONFIG` remains a deprecated alias of the same token; new code uses `SD_API_CONFIGURATION`.
 
 ## SSR, browser APIs and cleanup
 

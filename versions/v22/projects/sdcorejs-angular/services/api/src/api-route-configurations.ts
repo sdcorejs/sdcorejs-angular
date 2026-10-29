@@ -1,6 +1,6 @@
 import { DestroyRef, EnvironmentInjector, ErrorHandler } from '@angular/core';
 import { Route, Router, RoutesRecognized } from '@angular/router';
-import { ISdApiConfiguration, SD_API_CONFIG } from './api.model';
+import { ISdApiConfiguration, SD_API_CONFIGURATION } from './api.model';
 
 /** Nơi nhận configuration nhặt được từ route; {@link SdApiHandlerRegistry} là hiện thực. */
 interface SdApiConfigurationSink {
@@ -18,9 +18,9 @@ interface SdApiConfigurationSink {
 type SdRouterRoute = Route & { _injector?: unknown; _loadedInjector?: unknown; _loadedRoutes?: unknown };
 
 /**
- * Nhặt `SD_API_CONFIG` khai trong injector của lazy route và đăng ký vào registry ở root.
+ * Nhặt `SD_API_CONFIGURATION` khai trong injector của lazy route và đăng ký vào registry ở root.
  *
- * why: interceptor sống ở root nên không thấy `{ provide: SD_API_CONFIG, multi: true }` nằm trong
+ * why: interceptor sống ở root nên không thấy `{ provide: SD_API_CONFIGURATION, multi: true }` nằm trong
  * `Route.providers` hay NgModule nạp bằng `loadChildren`. Library không biết shell mount nó eager
  * hay lazy, nên Core phải tự tìm các injector đó thay vì bắt library đổi cách khai.
  *
@@ -41,7 +41,7 @@ export function sdTrackRouteApiConfigurations(
     tracked.add(injector);
     try {
       // why: `self` — chỉ provider của chính scope này; root và scope cha đã được tính ở chỗ khác.
-      const configurations = injector.get<ISdApiConfiguration[] | null>(SD_API_CONFIG, null, { self: true, optional: true }) ?? [];
+      const configurations = injector.get<ISdApiConfiguration[] | null>(SD_API_CONFIGURATION, null, { self: true, optional: true }) ?? [];
       if (!configurations.length) return;
       const unregisters = configurations.map(configuration => sink.register(configuration));
       injector.get(DestroyRef).onDestroy(() => unregisters.forEach(unregister => unregister()));

@@ -47,7 +47,7 @@ export type SdCacheRemoveCallback = (key: string, option?: SdCacheOption<unknown
 
 /**
  * Số entry `type: 'memory'` tối đa được giữ trước khi LRU đẩy entry cũ nhất ra.
- * Ghi đè bằng `maxMemoryEntries` trên `SD_CACHE_CONFIG`.
+ * Ghi đè bằng `maxMemoryEntries` trên `SD_CACHE_CONFIGURATION`.
  */
 export const SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES = 500;
 
@@ -67,7 +67,10 @@ export interface ISdCacheConfiguration {
   remove?: SdCacheRemoveCallback;
 }
 
-export const SD_CACHE_CONFIG = new InjectionToken<ISdCacheConfiguration>('sd-cache.configuration');
+export const SD_CACHE_CONFIGURATION = new InjectionToken<ISdCacheConfiguration>('sd-cache.configuration');
+
+/** @deprecated Use `SD_CACHE_CONFIGURATION`. This is the same injection token. */
+export const SD_CACHE_CONFIG = SD_CACHE_CONFIGURATION;
 
 export interface SdLegacyCacheCallbacks<T> {
   matches: (key: string, option?: SdCacheOption<unknown>) => boolean;

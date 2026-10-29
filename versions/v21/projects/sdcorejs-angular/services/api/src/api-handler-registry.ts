@@ -18,13 +18,13 @@ import { sdTrackRouteApiConfigurations } from './api-route-configurations';
  * Handler API đăng ký lúc runtime, sống ở root injector.
  *
  * why: `SdHttpInterceptor` được đăng ký qua `HTTP_INTERCEPTORS` ở ROOT, nên
- * `inject(SD_API_CONFIG)` của nó chỉ thấy provider ở root. Library nào khai
- * `{ provide: SD_API_CONFIG, multi: true }` trong NgModule mà shell nạp bằng
+ * `inject(SD_API_CONFIGURATION)` của nó chỉ thấy provider ở root. Library nào khai
+ * `{ provide: SD_API_CONFIGURATION, multi: true }` trong NgModule mà shell nạp bằng
  * `loadChildren` thì provider nằm ở child injector của lazy route — interceptor không
  * bao giờ thấy, nên mất `intercept` / `beforeRemote` / `afterRemote` trong im lặng.
  * Registry này là điểm hẹn ở root mà mọi scope (root, eager, lazy) đều ghi vào được.
  *
- * Registry tự nhặt `SD_API_CONFIG` khai trong injector của lazy route (`Route.providers`,
+ * Registry tự nhặt `SD_API_CONFIGURATION` khai trong injector của lazy route (`Route.providers`,
  * NgModule của `loadChildren`) trong chính navigation Router tạo injector đó — trước guard,
  * resolver và component — và gỡ khi injector bị huỷ;
  * library giữ nguyên cách khai multi provider, không cần biết shell mount nó eager hay lazy.

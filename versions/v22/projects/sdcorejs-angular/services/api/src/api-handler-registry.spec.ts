@@ -45,8 +45,8 @@ class LazyLibraryModule {}
 const remoteLog: string[] = [];
 
 /**
- * Library giữ nguyên cách khai cũ: `{ provide: SD_API_CONFIG, useClass, multi: true }` trong NgModule,
- * không biết shell nạp nó eager hay lazy.
+ * Library giữ nguyên cách khai cũ: `{ provide: SD_API_CONFIG, useClass, multi: true }` trong NgModule (tên cũ, cùng
+ * token với `SD_API_CONFIGURATION`), không biết shell nạp nó eager hay lazy.
  */
 @Injectable()
 class PlainLibraryApiConfiguration implements ISdApiConfiguration {
@@ -165,7 +165,7 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
       const longHost = 'https://gw.example/bpm';
       configure(
         [],
-        [{ provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('root', [lazyFirst ? longHost : shortHost])] } }]
+        [{ provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('root', [lazyFirst ? longHost : shortHost])] } }]
       );
       const scope = createEnvironmentInjector(
         [provideSdApiConfiguration({ handlers: [tagging('lazy', [lazyFirst ? shortHost : longHost])] })],
@@ -184,8 +184,8 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
     configure(
       [],
       [
-        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('first', ['https://gw.example/a'])] } },
-        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('second', ['https://gw.example/a'])] } },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('first', ['https://gw.example/a'])] } },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('second', ['https://gw.example/a'])] } },
       ]
     );
     expect(handlerFor('https://gw.example/a/x')).toBe('first');
@@ -208,7 +208,7 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
   });
 
   it('resolves SD_API_CONFIG and SD_API_CONFIGURATION to the same handler list', () => {
-    expect(SD_API_CONFIGURATION).toBe(SD_API_CONFIG);
+    expect(SD_API_CONFIG).toBe(SD_API_CONFIGURATION);
     configure(
       [],
       [
@@ -225,7 +225,7 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
 
   // why: host trống đã fail closed trong `sdMatchesSecureRoute` (bước này đã có ở @sdcorejs/angular); chỉ khẳng định
   // nó không nuốt request của handler khác và không làm hỏng việc chọn prefix dài nhất.
-  describe('plain SD_API_CONFIG providers in lazy scopes (no library change)', () => {
+  describe('plain SD_API_CONFIGURATION providers in lazy scopes (no library change)', () => {
     beforeEach(() => (remoteLog.length = 0));
 
     /** Injector Router dựng cho route (`Route.providers` hoặc NgModule của `loadChildren`). */
@@ -235,7 +235,7 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
     };
 
     const routeProvidedHandler = {
-      provide: SD_API_CONFIG,
+      provide: SD_API_CONFIGURATION,
       multi: true,
       useValue: { handlers: [tagging('route', ['https://gw.example/route'])] },
     };
@@ -312,10 +312,10 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
       expect(TestBed.inject(SdApiHandlerRegistry).configurations().length).toBe(1);
     });
 
-    it('does not register root SD_API_CONFIG providers a second time', async () => {
+    it('does not register root SD_API_CONFIGURATION providers a second time', async () => {
       configure(
         [{ path: 'other', component: LazyPageComponent }],
-        [{ provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('root', ['https://gw.example/root'])] } }]
+        [{ provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('root', ['https://gw.example/root'])] } }]
       );
       const harness = await RouterTestingHarness.create();
       await harness.navigateByUrl('/other');
@@ -330,8 +330,8 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
       configure(
         [],
         [
-          { provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('blank', ['', '   '])] } },
-          { provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('real', ['https://gw.example/real'])] } },
+          { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('blank', ['', '   '])] } },
+          { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('real', ['https://gw.example/real'])] } },
         ]
       );
       expect(handlerFor('https://gw.example/real/1')).toBe('real');
@@ -339,7 +339,7 @@ describe('SdApiHandlerRegistry / provideSdApiConfiguration', () => {
     });
 
     it('keeps the real host of a handler that also lists a blank one', () => {
-      configure([], [{ provide: SD_API_CONFIG, multi: true, useValue: { handlers: [tagging('gw', ['', 'https://gw.example'])] } }]);
+      configure([], [{ provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: [tagging('gw', ['', 'https://gw.example'])] } }]);
       expect(handlerFor('https://gw.example/x')).toBe('gw');
       expect(handlerFor('https://other.example/x')).toBeNull();
     });

@@ -14,6 +14,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import {
   ISdCacheConfiguration,
   SD_CACHE_CONFIG,
+  SD_CACHE_CONFIGURATION,
   SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES,
   SdCache,
   SdCacheOption,
@@ -237,7 +238,7 @@ describe('SdCacheService', () => {
   function configure(configuration?: ISdCacheConfiguration): SdCacheService {
     adapter = new FakeStorageAdapter();
     const providers: Provider[] = [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }];
-    if (configuration) providers.push({ provide: SD_CACHE_CONFIG, useValue: configuration });
+    if (configuration) providers.push({ provide: SD_CACHE_CONFIGURATION, useValue: configuration });
     TestBed.configureTestingModule({ providers });
     return TestBed.inject(SdCacheService);
   }
@@ -247,10 +248,14 @@ describe('SdCacheService', () => {
   function restart(configuration?: ISdCacheConfiguration): SdCacheService {
     TestBed.resetTestingModule();
     const providers: Provider[] = [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }];
-    if (configuration) providers.push({ provide: SD_CACHE_CONFIG, useValue: configuration });
+    if (configuration) providers.push({ provide: SD_CACHE_CONFIGURATION, useValue: configuration });
     TestBed.configureTestingModule({ providers });
     return TestBed.inject(SdCacheService);
   }
+
+  it('keeps SD_CACHE_CONFIG as a deprecated alias of SD_CACHE_CONFIGURATION', () => {
+    expect(SD_CACHE_CONFIG).toBe(SD_CACHE_CONFIGURATION);
+  });
 
   it('preserves the create/get/set/has/remove/default/observer public behavior', () => {
     const service = configure();

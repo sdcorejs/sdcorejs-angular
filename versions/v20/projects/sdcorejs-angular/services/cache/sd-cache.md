@@ -56,7 +56,7 @@ Storage corruption, quota/security failures and unavailable browser storage do n
 `type: 'memory'` entries are held in an LRU map with a hard cap. When the cap is exceeded, the least-recently-used entry is dropped; both reads and writes count as "recently used".
 
 - **Default cap:** `SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES` = **500** entries.
-- **Configure:** `maxMemoryEntries` on `SD_CACHE_CONFIG`. Values that are not finite or `< 1` fall back to the default.
+- **Configure:** `maxMemoryEntries` on `SD_CACHE_CONFIGURATION`. Values that are not finite or `< 1` fall back to the default.
 - **Scope:** memory only. `session`/`local` entries are governed by browser storage quota, not by this cap.
 - **What counts as a read:** every `get()`, `has()`, `snapshot()` and cache-hit `load()` — including repeated calls through a handle that is already open, not just the first read that hydrates it. Recency is a property of the call, never of the handle's age.
 - A read never resurrects an already-evicted owner: the still-open handle keeps serving its own hydrated copy, but the shared entry stays gone.
@@ -64,7 +64,7 @@ Storage corruption, quota/security failures and unavailable browser storage do n
 ```ts
 providers: [
   {
-    provide: SD_CACHE_CONFIG,
+    provide: SD_CACHE_CONFIGURATION,
     useValue: { maxMemoryEntries: 200 } satisfies ISdCacheConfiguration,
   },
 ];
@@ -76,12 +76,12 @@ An evicted key behaves exactly like a cold key: `has()` returns `false`, `get()`
 
 ## Global configuration
 
-`SD_CACHE_CONFIG` is active and supports global namespace/version, serializer, identity canonicalizer, key conversion, the memory bound and remote callbacks.
+`SD_CACHE_CONFIGURATION` is active and supports global namespace/version, serializer, identity canonicalizer, key conversion, the memory bound and remote callbacks.
 
 ```ts
 providers: [
   {
-    provide: SD_CACHE_CONFIG,
+    provide: SD_CACHE_CONFIGURATION,
     useValue: {
       namespace: 'portal',
       version: 2,
@@ -100,7 +100,7 @@ The injected persistence adapter reports storage as unavailable outside the brow
 
 ## Migration from pre-1.4 behavior
 
-- `SD_CACHE_CONFIG` now affects runtime behavior; verify namespace/key conversion before upgrading persisted data.
+- `SD_CACHE_CONFIGURATION` now affects runtime behavior; verify namespace/key conversion before upgrading persisted data.
 - Prefer `ttlMs`; `hours` remains compatible.
 - Values no longer pass through lossy JSON cloning. Unsupported values throw a typed persistence error.
 - Use `snapshot()` when `undefined` is a legitimate cached value.

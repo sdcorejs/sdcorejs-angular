@@ -9,7 +9,7 @@ import {
   SdPersistenceStorageAdapter,
   SdPersistenceStorageArea,
 } from '@sdcorejs/angular/services/persistence';
-import { ISdStorageConfiguration, SD_STORAGE_CONFIG } from './storage.model';
+import { ISdStorageConfiguration, SD_STORAGE_CONFIG, SD_STORAGE_CONFIGURATION } from './storage.model';
 import { SdStorageService } from './storage.service';
 
 class FakeStorageAdapter implements SdPersistenceStorageAdapter {
@@ -202,7 +202,7 @@ describe('SdStorageService', () => {
   function configure(configuration?: ISdStorageConfiguration): SdStorageService {
     adapter = new FakeStorageAdapter();
     const providers: Provider[] = [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }];
-    if (configuration) providers.push({ provide: SD_STORAGE_CONFIG, useValue: configuration });
+    if (configuration) providers.push({ provide: SD_STORAGE_CONFIGURATION, useValue: configuration });
     TestBed.configureTestingModule({ providers });
     return TestBed.inject(SdStorageService);
   }
@@ -212,10 +212,14 @@ describe('SdStorageService', () => {
   function restart(configuration?: ISdStorageConfiguration): SdStorageService {
     TestBed.resetTestingModule();
     const providers: Provider[] = [{ provide: SD_PERSISTENCE_STORAGE_ADAPTER, useValue: adapter }];
-    if (configuration) providers.push({ provide: SD_STORAGE_CONFIG, useValue: configuration });
+    if (configuration) providers.push({ provide: SD_STORAGE_CONFIGURATION, useValue: configuration });
     TestBed.configureTestingModule({ providers });
     return TestBed.inject(SdStorageService);
   }
+
+  it('keeps SD_STORAGE_CONFIG as a deprecated alias of SD_STORAGE_CONFIGURATION', () => {
+    expect(SD_STORAGE_CONFIG).toBe(SD_STORAGE_CONFIGURATION);
+  });
 
   it('preserves default/get/has/remove/observer and object-key behavior', () => {
     const service = configure();
@@ -485,7 +489,7 @@ describe('SdStorageService', () => {
     expect(new Set(adapter.local.keys()).size).toBe(2);
   });
 
-  it('lets SD_STORAGE_CONFIG.namespace partition every handle of the app at once', () => {
+  it('lets SD_STORAGE_CONFIGURATION.namespace partition every handle of the app at once', () => {
     const service = configure({ namespace: 'portal' });
     service.create<string>('shared-key').set('from-portal');
     const defaulted = restart();

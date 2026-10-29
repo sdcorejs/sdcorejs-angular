@@ -4,13 +4,13 @@ import { defer, from, Observable, of, throwError } from 'rxjs';
 import { catchError, concatMap, dematerialize, map, materialize, switchMap } from 'rxjs/operators';
 import { SdApiHandlerRegistry } from '../api-handler-registry';
 import { sdResolveApiHandler } from '../api-host';
-import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
+import { ISdApiConfiguration, SD_API_CONFIGURATION, SdApiHandler } from '../api.model';
 
 @Injectable()
 export class SdHttpInterceptor implements HttpInterceptor {
   // why: interceptor sống ở root; handler của lazy scope chỉ đến qua registry, nên resolve MỖI request
   // (hợp nhất list tĩnh với registry) thay vì cache một lần lúc construct.
-  readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) ?? [];
+  readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIGURATION, { optional: true }) ?? [];
   readonly #registry = inject(SdApiHandlerRegistry);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
