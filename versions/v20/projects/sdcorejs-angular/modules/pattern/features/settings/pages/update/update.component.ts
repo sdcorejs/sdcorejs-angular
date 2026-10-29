@@ -52,6 +52,7 @@ const CURRENCIES = [
         headerRight
         *sdPermission="'PATTERN_SETTINGS_U_UPDATE'"
         title="Lưu"
+        prefixIcon="save"
         type="fill"
         color="primary"
         autoId="settings-save"
@@ -59,7 +60,7 @@ const CURRENCIES = [
         (click)="save()" />
       <div class="d-flex flex-column gap-16 py-16">
         <sd-section title="Thông tin cửa hàng">
-          <div class="row p-8">
+          <div class="row px-16 pt-16 pb-8">
             <div class="col-12 col-md-6">
               <sd-input
                 label="Tên cửa hàng"
@@ -80,7 +81,7 @@ const CURRENCIES = [
           </div>
         </sd-section>
         <sd-section title="Bán hàng">
-          <div class="row p-8">
+          <div class="row px-16 pt-16 pb-8">
             <div class="col-12 col-md-6">
               <sd-select
                 label="Tiền tệ"
@@ -126,7 +127,7 @@ const CURRENCIES = [
           </div>
         </sd-section>
         <sd-section title="Thông báo">
-          <div class="row p-8">
+          <div class="row px-16 pt-16 pb-8">
             <div class="col-12 col-md-6 d-flex align-items-center">
               <sd-switch
                 label="Gửi email"
@@ -152,7 +153,7 @@ const CURRENCIES = [
           </div>
         </sd-section>
         <sd-section title="Bảo mật">
-          <div class="row p-8">
+          <div class="row px-16 pt-16 pb-8">
             <div class="col-12 col-md-6">
               <sd-input-number
                 label="Hết phiên sau (phút)"

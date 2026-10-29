@@ -26,7 +26,14 @@ import type { ProductSaveReq } from '../../services/product.model';
     <sd-page-form title="Tạo mới sản phẩm" [backLink]="['..']">
       <div headerRight class="d-flex align-items-center gap-8">
         <sd-button title="Huỷ" type="outline" autoId="product-cancel" (click)="cancel()" />
-        <sd-button title="Lưu" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
+        <sd-button
+          title="Tạo sản phẩm"
+          prefixIcon="save"
+          type="fill"
+          color="primary"
+          autoId="product-save"
+          [loading]="saving()"
+          (click)="save()" />
       </div>
       <div class="py-16">
         <general-information-form [form]="form" [seed]="seed" [errors]="apiErrors.errors()" />

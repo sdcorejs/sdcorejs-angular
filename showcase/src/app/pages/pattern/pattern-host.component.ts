@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
+/** Class on `<body>` while /pattern is open; styles.scss gives it the library's base typography. */
+const PATTERN_BODY_CLASS = 'app-pattern-open';
 
 /**
  * Mount of `@sdcorejs/angular/modules/pattern` at /pattern: the screens cover the viewport, as a portal page
@@ -27,4 +31,12 @@ import { RouterOutlet } from '@angular/router';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PatternHostComponent {}
+export class PatternHostComponent {
+  constructor() {
+    // why: drawers and dialogs render in the CDK overlay under <body>, outside this host. Without the library's
+    // typography they inherit the docs' IBM Plex Sans 15px, and badges, titles and fields no longer match a portal.
+    const body = inject(DOCUMENT).body;
+    body.classList.add(PATTERN_BODY_CLASS);
+    inject(DestroyRef).onDestroy(() => body.classList.remove(PATTERN_BODY_CLASS));
+  }
+}

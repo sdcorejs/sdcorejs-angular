@@ -2,6 +2,8 @@
 export interface PatternCatalogRoute {
   /** Router commands relative to the pattern shell, e.g. `['product', '1', 'detail']`. */
   readonly link: readonly string[];
+  /** Query params of the link, e.g. `{ lines: 'sd-table' }`; `path` then shows them too, so it stays unique. */
+  readonly queryParams?: Readonly<Record<string, string>>;
   /** URL pattern as written in the docs, e.g. `product/:id/detail`. */
   readonly path: string;
   /** Selector or pattern the screen uses. */
@@ -115,7 +117,14 @@ export const PATTERN_CATALOG: readonly PatternCatalogGroup[] = [
         link: ['order', 'create'],
         path: 'order/create',
         layout: 'sd-page-form toc',
-        shows: 'customer-select hai dòng. Bảng dòng hàng nhập inline với product-select, tổng tự tính.',
+        shows: 'customer-select hai dòng. Bảng dòng hàng nhập inline (<table>) với product-select, tổng tự tính.',
+      },
+      {
+        link: ['order', 'create'],
+        queryParams: { lines: 'sd-table' },
+        path: 'order/create?lines=sd-table',
+        layout: 'sd-page-form toc + sd-table',
+        shows: 'Cùng form, dòng hàng dựng bằng sd-table: field size sm trong ô, xoá dòng là command, tổng ở footer.',
       },
       {
         link: ['order', '2400', 'update'],

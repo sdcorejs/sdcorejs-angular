@@ -90,7 +90,7 @@ test.describe('customer drawers', () => {
     await openPattern(page, 'customer');
     await tableRows(page);
     await page.getByRole('button', { name: 'Tạo khách hàng' }).click();
-    const save = drawer(page).getByRole('button', { name: 'Lưu' });
+    const save = drawer(page).getByRole('button', { name: 'Tạo khách hàng' });
     await save.click();
     await expect(drawer(page).locator('sd-inform')).toHaveCount(2);
     await expect(drawer(page).getByLabel('Tên khách hàng')).toBeFocused();

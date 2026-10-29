@@ -43,7 +43,14 @@ import {
     <sd-side-drawer title="Tạo khách hàng" width="600px" autoId="customer-create" [beforeClose]="beforeClose" (sdClosed)="closed()">
       <general-information-form [form]="form" [seed]="seed" [errors]="apiErrors.errors()" [invalidGroups]="invalidGroups()" />
       <div sdFooterRight class="d-flex align-items-center gap-8">
-        <sd-button title="Lưu" type="fill" color="primary" autoId="customer-save" [loading]="saving()" (click)="save()" />
+        <sd-button
+          title="Tạo khách hàng"
+          prefixIcon="save"
+          type="fill"
+          color="primary"
+          autoId="customer-save"
+          [loading]="saving()"
+          (click)="save()" />
       </div>
     </sd-side-drawer>
   `,

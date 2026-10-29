@@ -51,7 +51,7 @@ import {
         [editing]="true"
         [errors]="apiErrors.errors()" />
       <div sdFooterRight class="d-flex align-items-center gap-8">
-        <sd-button title="Lưu" type="fill" color="primary" autoId="category-save" [loading]="saving()" (click)="save()" />
+        <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" autoId="category-save" [loading]="saving()" (click)="save()" />
       </div>
     </sd-side-drawer>
   `,

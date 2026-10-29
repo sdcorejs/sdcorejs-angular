@@ -34,7 +34,7 @@ export function productSaveReq(form: ProductForm, code?: string): ProductSaveReq
   imports: [SdInput, SdInputNumber, SdSection, ProductStatusSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<sd-section title="Thông tin chung">
-    <div class="row p-8">
+    <div class="row px-16 pt-16 pb-8">
       <div class="col-12 col-md-6">
         <sd-input
           label="Mã sản phẩm"

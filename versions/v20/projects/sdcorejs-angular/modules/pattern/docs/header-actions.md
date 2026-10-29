@@ -69,14 +69,7 @@ import { CustomerDetailPipe } from '../../../customer/pipes/customer-detail.pipe
 import { ApprovalStepsComponent } from '../../components/approval-steps/approval-steps.component';
 import { LinesViewComponent } from '../../components/lines-view/lines-view.component';
 import { OrderService } from '../../services/order.service';
-import {
-  canUpdateOrder,
-  ORDER_APPROVAL_OPTIONS,
-  orderApprovalBadge,
-  orderStatusBadge,
-  type OrderAction,
-  type OrderDto,
-} from '../../services/order.model';
+import { canUpdateOrder, orderApprovalBadge, orderStatusBadge, type OrderAction, type OrderDto } from '../../services/order.model';
 
 /**
  * Chi tiết đơn (`:id/detail`, route con của danh sách). Mở trong drawer 600px hoặc trang `sd-page-detail` theo
@@ -164,7 +157,13 @@ import {
           <sd-section-item label="Thanh toán">{{ order.payment }}</sd-section-item>
           <sd-section-item label="Ngày tạo">{{ order.createdAt | sdFormatDatetime }}</sd-section-item>
           <sd-section-item label="Tổng tiền (₫)">{{ order.total | sdFormatNumber: 0 }}</sd-section-item>
-          <sd-section-item label="Trạng thái">{{ statusBadge().title }} · {{ approvalName() }}</sd-section-item>
+          <sd-section-item label="Trạng thái">
+            <div class="d-flex align-items-center gap-8 flex-wrap">
+              @for (badge of badges(); track $index) {
+                <sd-badge [type]="badge.type" [title]="badge.title" [color]="badge.color" />
+              }
+            </div>
+          </sd-section-item>
         </sd-section>
         <div sdFooterRight class="d-flex align-items-center gap-8 flex-wrap">
           <ng-container [ngTemplateOutlet]="actions" />
@@ -194,7 +193,9 @@ import {
           </sd-section>
           <lines-view [lines]="order.lines" />
           <sd-section title="Thông tin phê duyệt">
-            <sd-section-item label="Trạng thái duyệt">{{ approvalName() }}</sd-section-item>
+            <sd-section-item label="Trạng thái duyệt">
+              <sd-badge [type]="approvalBadge().type" [title]="approvalBadge().title" [color]="approvalBadge().color" />
+            </sd-section-item>
             <sd-section-item label="Người gửi duyệt">{{ submitted()?.by | sdEmpty }}</sd-section-item>
             <sd-section-item label="Người duyệt">{{ decided()?.by | sdEmpty }}</sd-section-item>
             <sd-section-item label="Lý do từ chối">{{ decided()?.reason | sdEmpty }}</sd-section-item>
@@ -219,8 +220,9 @@ export class DetailComponent {
   protected readonly entity = linkedSignal(() => this.#resolved());
   protected readonly pending = signal(false);
   protected readonly statusBadge = computed(() => orderStatusBadge(this.entity().status));
-  protected readonly badges = computed(() => [this.statusBadge(), orderApprovalBadge(this.entity().approval)]);
-  protected readonly approvalName = computed(() => ORDER_APPROVAL_OPTIONS.find(option => option.id === this.entity().approval)?.name);
+  protected readonly approvalBadge = computed(() => orderApprovalBadge(this.entity().approval));
+  /** Trạng thái đơn và trạng thái duyệt: title của trang, dòng "Trạng thái" của drawer. */
+  protected readonly badges = computed(() => [this.statusBadge(), this.approvalBadge()]);
   protected readonly editable = computed(() => canUpdateOrder(this.entity()));
   protected readonly submitted = computed(() => [...this.entity().approvalHistory].reverse().find(step => step.action === 'submit'));
   protected readonly decided = computed(() =>
