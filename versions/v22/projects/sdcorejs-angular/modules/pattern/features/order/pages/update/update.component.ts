@@ -29,6 +29,7 @@ import {
   type OrderForm,
 } from '../../components/general-information-form/general-information-form.component';
 import { LinesFormComponent } from '../../components/lines-form/lines-form.component';
+import { LinesTableFormComponent } from '../../components/lines-table-form/lines-table-form.component';
 import { OrderService } from '../../services/order.service';
 import type { OrderDto } from '../../services/order.model';
 
@@ -39,19 +40,23 @@ import type { OrderDto } from '../../services/order.model';
 @Component({
   selector: 'update',
   standalone: true,
-  imports: [SdPageComponent, SdButton, SdSection, SdTextarea, GeneralInformationFormComponent, LinesFormComponent],
+  imports: [SdPageComponent, SdButton, SdSection, SdTextarea, GeneralInformationFormComponent, LinesFormComponent, LinesTableFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <sd-page-form [title]="'Cập nhật đơn hàng #' + entity().code" [backLink]="['../detail']" toc>
       <div headerRight class="d-flex align-items-center gap-8">
         <sd-button title="Huỷ" type="outline" autoId="order-cancel" (click)="cancel()" />
-        <sd-button title="Lưu" type="fill" color="primary" autoId="order-save" [loading]="saving()" (click)="save()" />
+        <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" autoId="order-save" [loading]="saving()" (click)="save()" />
       </div>
       <div class="d-flex flex-column gap-16 py-16">
         <general-information-form [form]="form" [seed]="entity()" />
-        <lines-form [form]="form" [seed]="entity().lines" [errors]="apiErrors.errors()" />
+        @if (linesTable) {
+          <lines-table-form [form]="form" [seed]="entity().lines" [errors]="apiErrors.errors()" />
+        } @else {
+          <lines-form [form]="form" [seed]="entity().lines" [errors]="apiErrors.errors()" />
+        }
         <sd-section title="Ghi chú">
-          <div class="p-16">
+          <div class="px-16 pt-16 pb-8">
             <sd-textarea label="Ghi chú nội bộ" name="note" [form]="form" [model]="entity().note" maxlength="500" />
           </div>
         </sd-section>
@@ -64,6 +69,8 @@ export class UpdateComponent {
   readonly #notify = inject(SdNotifyService);
   readonly #router = inject(Router);
   readonly #route = inject(ActivatedRoute);
+  /** `?lines=sd-table`: dòng hàng dựng bằng `sd-table` (`lines-table-form`) để so với `<table>`. Màn thật chọn một. */
+  protected readonly linesTable = this.#route.snapshot.queryParamMap.get('lines') === 'sd-table';
   readonly #host: HTMLElement = inject(ElementRef).nativeElement;
   readonly #injector = inject(Injector);
   /** Đơn do resolver tải; draft khởi tạo từ đây. */

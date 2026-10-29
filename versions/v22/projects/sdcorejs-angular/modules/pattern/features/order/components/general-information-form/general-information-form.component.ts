@@ -43,7 +43,7 @@ const options = (values: readonly string[]) => values.map(value => ({ value }));
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <sd-section title="Thông tin chung">
-      <div class="row p-8">
+      <div class="row px-16 pt-16 pb-8">
         <div class="col-12 col-md-6">
           <customer-select autoId="order-customer" [form]="form()" [model]="seed().customerId || null" required />
         </div>

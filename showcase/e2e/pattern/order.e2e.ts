@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { confirmDialog, openPattern, tableRows, throttleGap } from './pattern.support';
 
 // /pattern/order: tabs and score cards on one state, bulk actions with partial results, detail with the approval
@@ -110,5 +110,86 @@ test.describe('order detail and workflow', () => {
     await page.getByRole('button', { name: 'Lưu' }).click();
     await expect(page.locator('[data-line="0"]')).toContainText('Vượt tồn kho');
     await expect(page).toHaveURL(/\/pattern\/order\/2400\/update$/);
+    // hideInlineError: the message is an icon with a tooltip, so the row keeps the height of the others.
+    await expect(page.locator('[data-line="0"] mat-error')).toHaveCount(0);
+    await expect(page.locator('[data-line="0"] sd-input-number').first().locator('.sd-error-icon')).toBeVisible();
+  });
+
+  test('shows the order status and the approval status as badges in the drawer', async ({ page }) => {
+    await openPattern(page, 'order/2400/detail');
+    const status = page.locator('.sd-side-drawer-active sd-section-item').filter({ hasText: 'Trạng thái' });
+    await expect(status.locator('sd-badge')).toHaveText(['Chờ xác nhận', 'Nháp']);
+    // The showcase gives /pattern the library's typography, overlays included (not the docs' IBM Plex Sans).
+    const font = await status
+      .locator('sd-badge')
+      .first()
+      .evaluate(element => getComputedStyle(element).fontFamily);
+    expect(font).toMatch(/^Roboto/);
+  });
+});
+
+test.describe('order form', () => {
+  const centerY = (locator: Locator) =>
+    locator.evaluate(element => {
+      const box = element.getBoundingClientRect();
+      return box.top + box.height / 2;
+    });
+  // Middle of the text itself, not of the cell around it.
+  const textCenterY = (locator: Locator) =>
+    locator.evaluate(element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const box = range.getBoundingClientRect();
+      return box.top + box.height / 2;
+    });
+
+  test('lines keep small fields and the line total on one line; the button says what it creates', async ({ page }) => {
+    await openPattern(page, 'order/create');
+    await expect(page.locator('sd-page-form').getByRole('button', { name: 'Tạo đơn hàng' })).toBeVisible();
+
+    const line = page.locator('[data-line="0"]');
+    const fields = line.locator('.mat-mdc-text-field-wrapper');
+    await expect(fields).toHaveCount(3);
+    const middle = await centerY(fields.first());
+    for (const box of [fields.nth(1), fields.nth(2), line.locator('sd-button button')]) {
+      expect(Math.abs((await centerY(box)) - middle)).toBeLessThanOrEqual(1);
+    }
+    expect(Math.abs((await textCenterY(line.locator('[data-autoid="order-line-0-amount"]'))) - middle)).toBeLessThanOrEqual(1.5);
+    // size="sm": 32px fields.
+    for (const height of await fields.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height))) {
+      expect(height).toBe(32);
+    }
+  });
+
+  test('builds the same lines with sd-table: add from the command header, total under the table', async ({ page }) => {
+    await openPattern(page, 'order/create?lines=sd-table');
+    const rows = page.locator('lines-table-form sd-table tr.c-row');
+    await expect(rows).toHaveCount(1);
+
+    await rows.nth(0).locator('sd-input-number').nth(0).locator('input').fill('3');
+    await rows.nth(0).locator('sd-input-number').nth(1).locator('input').fill('1000');
+    await rows.nth(0).locator('sd-input-number').nth(1).locator('input').blur();
+    await expect(page.locator('[data-autoid="order-line-0-amount"]')).toHaveText('3,000');
+
+    await page.locator('lines-table-form').getByRole('button', { name: 'Thêm dòng' }).click();
+    await expect(rows).toHaveCount(2);
+    // The table reloads after the row is added; what was typed in the first row stays.
+    await expect(rows.nth(0).locator('sd-input-number').nth(0).locator('input')).toHaveValue('3');
+    await expect(page.locator('lines-table-form')).toContainText('2 dòng hàng');
+    await expect(page.locator('[data-autoid="order-total"]')).toHaveText('3,000');
+
+    await throttleGap(page);
+    await rows.nth(1).getByRole('button', { name: 'Xoá dòng' }).click();
+    await expect(rows).toHaveCount(1);
+    await expect(page.locator('lines-table-form')).toContainText('1 dòng hàng');
+  });
+
+  // sd-table renders its rows after its first read: the lines must not count as a change of the form just opened.
+  test('leaves the sd-table form just opened without asking', async ({ page }) => {
+    await openPattern(page, 'order/2400/update?lines=sd-table');
+    await expect(page.locator('lines-table-form sd-table tr.c-row')).toHaveCount(2);
+    await page.locator('sd-page-form').getByRole('button', { name: 'Huỷ' }).click();
+    await expect(page).toHaveURL(/\/pattern\/order\/2400\/detail$/);
+    await expect(confirmDialog(page)).toHaveCount(0);
   });
 });

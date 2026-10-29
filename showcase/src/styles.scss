@@ -138,6 +138,15 @@ body {
   color: var(--docs-fg);
 }
 
+// /pattern covers the viewport like a portal page, so it gets the library's base typography (_base.scss of the
+// library), overlays included. The class is set by PatternHostComponent.
+body.app-pattern-open {
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: 1.5;
+  color: var(--sd-text, #1a1b1f);
+}
+
 code,
 kbd,
 pre,

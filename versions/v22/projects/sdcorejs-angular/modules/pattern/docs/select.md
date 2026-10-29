@@ -95,13 +95,14 @@ import { firstValueFrom } from 'rxjs';
 import { SdItemDefDefDirective } from '@sdcorejs/angular/forms/directives';
 import type { SdSearchReq } from '@sdcorejs/angular/forms/models';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import type { Filter } from '@sdcorejs/utils/models';
+import type { Filter, Size } from '@sdcorejs/utils/models';
 import { ProductService } from '../../services/product.service';
 import type { ProductDto } from '../../services/product.model';
 
 /**
  * Chọn sản phẩm cho màn khác (dòng đơn hàng). Lựa chọn mới chỉ gồm sản phẩm đang hoạt động; giá trị đã chọn
  * được tải theo ID (`VALUE`) nên sản phẩm đã ngừng vẫn hiển thị khi cập nhật. Option hai dòng: tên · mã · đơn vị.
+ * `size`, `hideInlineError` và `inlineError` chuyển thẳng xuống `sd-select`, để dùng được trong ô của bảng.
  */
 @Component({
   selector: 'product-select',
@@ -117,6 +118,9 @@ import type { ProductDto } from '../../services/product.model';
     valueField="id"
     displayField="name"
     [required]="required()"
+    [size]="size()"
+    [hideInlineError]="hideInlineError()"
+    [inlineError]="inlineError()"
     [autoId]="autoId()">
     <ng-template sdItemDef let-item="item">
       <div class="d-flex flex-column">
@@ -132,6 +136,10 @@ export class ProductSelectComponent {
   readonly name = input('productId');
   readonly label = input<string | undefined>('Sản phẩm');
   readonly required = input(false, { transform: booleanAttribute });
+  readonly size = input<Size>('md');
+  readonly hideInlineError = input(false, { transform: booleanAttribute });
+  /** Lỗi của API cho field này (vd `lines.0.productId`). */
+  readonly inlineError = input<string>();
   readonly autoId = input<string>();
   readonly model = model<string | null | undefined>();
 
