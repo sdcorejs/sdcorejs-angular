@@ -191,6 +191,11 @@ sd-checkbox {
 
 .c-item--hidden .c-title {
   color: var(--sd-disabled-text);
+
+  // why: forced-colors đổi mọi màu chữ về CanvasText — GrayText giữ lại dấu hiệu "cột đang ẩn".
+  @media (forced-colors: active) {
+    color: GrayText;
+  }
 }
 
 .c-pin {

@@ -12,6 +12,7 @@ import { TableInlineEditExampleComponent } from './examples/table-inline-edit.ex
 import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
 import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
+import { TableSettingsExampleComponent } from './examples/table-settings.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -191,6 +192,7 @@ const TASKS: Task[] = [
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
     TableQueryBarExampleComponent,
+    TableSettingsExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -236,6 +238,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
         note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
         <app-table-query-bar-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thiet-lap-cot') {
+      <demo-section heading="Thiết lập cột"
+        data-example-typescript="./examples/table-settings.example.ts" data-example-template="./examples/table-settings.example.html"
+        [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
+        note="Nút Thiết lập ở footer mở modal: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng, cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
+        <app-table-settings-example />
       </demo-section>
       }
 

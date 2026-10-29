@@ -62,6 +62,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - i18n: `core.component.table.query-bar.filters`, `.query-bar.columns`, `core.component.table.filter-by`, `core.component.table.filtering-by`.
   - See `sd-table.md`, “Query bar mode”.
 - `TableFilterRegister.value.default()` (optional): the value `remove()` stores, read without writing it.
+- The settings button carries a primary dot while the table uses custom settings: stored columns that differ from the option (settings modal or a width dragged on the table) or inline external filters that differ from `defaultShowing`. Columns added to or removed from the option do not count; Restore defaults turns it off; mobile shows none.
+  - Uses the `sd-button` indicator with `indicatorLabel` “Đang dùng thiết lập riêng” (`core.component.table.config.customized`).
+- Settings modal: columns can be reordered from the keyboard. Focus the handle ⠿, press Space or Enter to pick the row up, ↑ ↓ to move it, Space or Enter to drop it, Escape to cancel. A live region inside the modal reads each step.
 
 ### Changed
 
@@ -76,6 +79,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Query bar
 
 - The number in the clear-all label counts the chips that hold a value, not every chip; with none, the label has no number. The button also gets an `aria-label`.
+
+#### Table
+
+- The columns tab of the settings modal is a list instead of a five-column table. Each row has the handle, the **Hiện** checkbox and a summary (title, fixed and shortened flags, width); the row opens to edit the title (with “Gốc: … · Khôi phục”), the width and the **Cố định khi cuộn ngang** / **Rút gọn nội dung dài** checkboxes. The **Hiện** checkbox is never locked; a hidden column locks its details.
+  - Above eight columns, a find box matches the current or original title without accents; reordering is off while searching. “Hiện {shown}/{total} cột” and **Hiện tất cả** sit next to it.
+  - Width: a number is stored as `${n}px` and an empty field as `undefined`; a value in another unit is kept as written. It is rounded and kept within the column's px `minWidth` / `maxWidth` on blur and on Apply.
+  - Footer: **Khôi phục mặc định** (was **Mặc định**) moves to the left as a text button; **Bỏ qua** is outlined and **Áp dụng** filled, all small. Footer autoIds are unchanged; the find box and **Hiện tất cả** get `-config-find` and `-config-show-all`.
+  - Restore defaults also puts the inline external filters back to `defaultShowing`.
+  - Skip leaves the stored settings untouched: edits no longer change the stored objects in place.
+  - i18n: new `core.component.table.config.*` keys (`reset`, `find-column`, `shown-count`, `show-all`, `drag-disabled-search`, `width-auto`, `hidden`, `origin`, `restore`, `fixed-label`, `truncate-label`, `truncate-hint`, `customized`, `reorder-*`); `config.drag-hint` has new text. `core.component.table.fixed`, `char-limit` and `core.component.form-builder.default` are kept but no longer used by the modal.
+  - See `sd-table.md`, “Settings modal”.
 
 ### Deprecated
 

@@ -36,3 +36,34 @@ first, commit only when the user says so.
 - The Show checkbox gets its accessible name from a visually hidden `label` (sd-checkbox has no `aria-label` input).
 - The truncate hint is visible text under the checkbox (readable by touch and screen readers), not a tooltip.
 - Restore defaults resets `inlineExternal` too.
+- Open row background: `color-mix(in srgb, var(--sd-text) 4%, transparent)` instead of `--sd-surface` (the modal body
+  already is `--sd-surface`, so the open row would not stand out). Handle colour: `--sd-disabled-text`
+  (`--sd-text-disabled` is not a theme token).
+- The search icon is a suffix (sd-input has no prefix slot). "Hiện tất cả" uses `color="primary"` as in the mock.
+- The Show checkbox's 40px state layer is pulled to 18px with a negative margin so titles line up with the 62px
+  details column; handle and open button sit above the spare touch area.
+- The dot hides when `isMobile()`, not only with mobile cards (without `sdRowMobileDef` the desktop footer shows).
+- Forced colours: a hidden column's title uses `GrayText`.
+
+## Commits
+1. 103c54a9b — columns tab list. 2. 79db5f374 — keyboard reorder. 3. a8402f3f7 — settings button dot.
+4. docs, CHANGELOG, showcase demo "Thiết lập cột" (14 columns), forced-colours title.
+
+## API consistency review (for the PR)
+- Compared with: sd-button (`indicator`, `indicatorColor`, `indicatorLabel` used as documented), sd-input / sd-checkbox
+  (`size="sm"`, `hideInlineError`, `label`), sd-modal (`sdFooterLeft` / `sdFooterRight`), existing table autoIds.
+- Public API: unchanged. `ConfiguredColumn`, `ConfiguredTable`, `ConfiguredTableResult`, `ConfigService`, storage key and
+  format, `open()` / `close()` / `onSave()` / `onReset()`, footer autoIds kept.
+- Additions: `SdTable.hasCustomSetup` (computed) and `onConfigDefaultsRestored`, `ConfigComponent.defaultsRestored`
+  (component not exported), autoIds `-config-find` (sd-input → `forms-input-…`) and `-config-show-all` following the
+  `-config-*` pattern, `services/config-custom.util.ts` (internal, `sdTable*` prefix like `sdTableQueryFields`).
+- Behaviour change: Restore defaults also restores the inline external filters; edits no longer mutate the stored
+  objects, so Skip leaves them untouched.
+- v19 → v20/v21/v22 by `npm run sync`; `check:sync` green; no hand edits in derived workspaces.
+- Independent review: pending.
+
+## Showcase checks done
+5 and 14 columns; mouse and keyboard reorder, Escape keeps the modal; open rows, rename + restore, width number /
+empty / `20%` / min-max clamp (160 → 320); Apply → dot, resize → dot, Restore defaults → off, reload with `key` → kept;
+light, dark, graphite tokens, forced colours (dot and modal), reduced motion; 1280px (modal 512px) and 1920px (768px).
+Not checked with a real screen reader (live region content only).

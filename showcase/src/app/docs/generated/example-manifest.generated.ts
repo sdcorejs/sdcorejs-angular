@@ -273,6 +273,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-server-khong-biet-tong"
   | "components/table/example-server-side"
   | "components/table/example-the-mobile-va-thao-tac"
+  | "components/table/example-thiet-lap-cot"
   | "components/table/example-toi-gian"
   | "components/table/example-tra-cuu-co-ban"
   | "components/table/example-tree-khong-cot-stt-chevron-nam-trong-cot-dau-don-vi"
@@ -2214,6 +2215,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-loc-bang-query-bar",
     title: "Lọc bằng query bar",
     description: "Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.",
+  },
+  {
+    sourceKey: "components/table/example-thiet-lap-cot",
+    pageKey: "components/table",
+    sectionId: "example-thiet-lap-cot",
+    title: "Thiết lập cột",
+    description: "Nút Thiết lập ở footer mở modal: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng, cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.",
   },
   {
     sourceKey: "components/table/example-the-mobile-va-thao-tac",

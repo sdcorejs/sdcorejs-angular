@@ -12940,6 +12940,7 @@ import { TableInlineEditExampleComponent } from './examples/table-inline-edit.ex
 import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
 import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
+import { TableSettingsExampleComponent } from './examples/table-settings.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -13119,6 +13120,7 @@ const TASKS: Task[] = [
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
     TableQueryBarExampleComponent,
+    TableSettingsExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -13164,6 +13166,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
         note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
         <app-table-query-bar-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thiet-lap-cot') {
+      <demo-section heading="Thiết lập cột"
+        data-example-typescript="./examples/table-settings.example.ts" data-example-template="./examples/table-settings.example.html"
+        [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
+        note="Nút Thiết lập ở footer mở modal: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng, cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
+        <app-table-settings-example />
       </demo-section>
       }
 
@@ -15954,6 +15965,92 @@ export class TableUnknownTotalDemoComponent {
     this.sourceSize.set(32);
     this.#write('Khôi phục 32 sự kiện');
   }
+}`,
+  },
+  "components/table/example-thiet-lap-cot": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  id: number;
+  code: string;
+  customer: string;
+  phone: string;
+  email: string;
+  createdAt: string;
+  status: string;
+  channel: string;
+  payment: string;
+  staff: string;
+  warehouse: string;
+  weight: number;
+  total: number;
+  note: string;
+  updatedAt: string;
+}
+
+const CUSTOMERS = ['Đỗ Thu Hà', 'Nguyễn Văn Minh', 'Trần Thị Lan', 'Vũ Đức Long', 'Lê Minh Châu', 'Phạm Quốc Huy'];
+const STATUSES = ['Chờ xác nhận', 'Đang giao', 'Hoàn tất'];
+const CHANNELS = ['Website', 'Shopee', 'Cửa hàng'];
+const PAYMENTS = ['Đã thanh toán', 'Chưa thanh toán', 'Hoàn tiền'];
+const STAFF = ['Hoàng Anh Tuấn', 'Bùi Thị Mai Phương', 'Ngô Đức Thịnh'];
+const WAREHOUSES = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng'];
+
+const day = (offset: number): string => {
+  const date = new Date(2026, 9, 1 + offset);
+  return \`\${date.getFullYear()}/\${String(date.getMonth() + 1).padStart(2, '0')}/\${String(date.getDate()).padStart(2, '0')}\`;
+};
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  id: index + 1,
+  code: \`DH-\${24300 + index}\`,
+  customer: CUSTOMERS[index % CUSTOMERS.length],
+  phone: \`09\${String(10000000 + index * 7919).slice(0, 8)}\`,
+  email: \`kh\${index + 1}@example.com\`,
+  createdAt: day(index % 28),
+  status: STATUSES[index % STATUSES.length],
+  channel: CHANNELS[index % CHANNELS.length],
+  payment: PAYMENTS[index % PAYMENTS.length],
+  staff: STAFF[index % STAFF.length],
+  warehouse: WAREHOUSES[index % WAREHOUSES.length],
+  weight: (index % 9) + 1,
+  total: (index + 3) * 650_000,
+  note: index % 4 === 0 ? 'Giao gấp trong ngày, gọi trước cho khách khi tới nơi' : '',
+  updatedAt: \`\${day((index % 28) + 1)} 09:30:00\`,
+}));
+
+@Component({
+  selector: 'app-table-settings-example',
+  standalone: true,
+  imports: [SdTable],
+  templateUrl: './table-settings.example.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableSettingsExampleComponent {
+  // why: \`key\` lưu thiết lập vào localStorage — tải lại trang vẫn giữ thứ tự, độ rộng, cột ẩn.
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    key: 'showcase-table-settings',
+    items: () => ORDERS,
+    paginate: { pageSize: 5, pages: [5, 10, 24] },
+    config: { visible: true, resizable: true },
+    columns: [
+      { field: 'code', title: 'Mã đơn', type: 'string', width: '120px', fixed: true },
+      { field: 'customer', title: 'Khách hàng', type: 'string', width: '200px', minWidth: '160px', maxWidth: '320px' },
+      { field: 'phone', title: 'Điện thoại', type: 'string', width: '130px' },
+      { field: 'email', title: 'Email', type: 'string', width: '200px', invisible: true },
+      { field: 'createdAt', title: 'Ngày tạo', type: 'date', width: '120px' },
+      { field: 'status', title: 'Trạng thái', type: 'string', width: '140px' },
+      { field: 'channel', title: 'Kênh bán', type: 'string' },
+      { field: 'payment', title: 'Thanh toán', type: 'string', width: '140px' },
+      { field: 'staff', title: 'Nhân viên phụ trách', type: 'string', width: '180px', cell: { truncate: { enable: true } } },
+      { field: 'warehouse', title: 'Kho xuất', type: 'string', width: '120px' },
+      { field: 'weight', title: 'Cân nặng (kg)', type: 'number', align: 'right', width: '120px' },
+      { field: 'total', title: 'Tổng tiền', type: 'number', align: 'right', width: '140px' },
+      { field: 'note', title: 'Ghi chú', type: 'string', width: '20%', cell: { truncate: { enable: true } } },
+      { field: 'updatedAt', title: 'Cập nhật', type: 'datetime', width: '160px' },
+    ],
+  };
 }`,
   },
   "components/table/example-tra-cuu-co-ban": {
@@ -30384,6 +30481,10 @@ Bởi Nguyễn Văn A"></sd-badge>
     </sd-table>
     <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
   </demo-section>`,
+  },
+  "components/table/example-thiet-lap-cot": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-thiet-lap-cot"],
+    html: `<sd-table autoId="settings-demo" [option]="option" />`,
   },
   "components/table/example-toi-gian": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
