@@ -8,12 +8,19 @@ export const configWidthPx = (value: string | null | undefined): number | undefi
   return match ? Number(match[1]) : undefined;
 };
 
-/** What the width field stores: a number becomes `${n}px`, empty becomes `undefined`, anything else stays verbatim. */
+// A number as an `<input type="number">` may hold it: sign, decimals, exponent, optional px.
+const NUMBER_INPUT = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?\s*(?:px)?$/i;
+
+/**
+ * What the width field stores: a positive number becomes `${n}px`, zero or a negative number and an empty field become
+ * `undefined`, anything else (`20%`, `12rem`) stays verbatim.
+ */
 export const configWidthFromInput = (value: unknown): string | undefined => {
   const text = String(value ?? '').trim();
   if (!text) return undefined;
-  const px = configWidthPx(text);
-  return px === undefined ? text : `${px}px`;
+  if (!NUMBER_INPUT.test(text)) return text;
+  const px = Number(text.replace(/px$/i, '').trim());
+  return Number.isFinite(px) && px > 0 ? `${px}px` : undefined;
 };
 
 /** Rounds a px width and keeps it inside the px `minWidth` / `maxWidth`; bounds in another unit cannot be compared. */

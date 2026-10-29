@@ -21,19 +21,20 @@
             </ng-template>
           </sd-input>
         }
-        <span class="c-toolbar-spacer"></span>
-        <span class="c-shown-count">
-          {{ 'core.component.table.config.shown-count' | sdTranslate: { shown: shownCount(), total: totalCount() } }}
-        </span>
-        <sd-button
-          [autoId]="_autoId ? _autoId + '-config-show-all' : null"
-          type="text"
-          color="primary"
-          size="sm"
-          [title]="'core.component.table.config.show-all' | sdTranslate"
-          [disabled]="allShown()"
-          (click)="showAll()">
-        </sd-button>
+        <div class="c-toolbar-end">
+          <span class="c-shown-count">
+            {{ 'core.component.table.config.shown-count' | sdTranslate: { shown: shownCount(), total: totalCount() } }}
+          </span>
+          <sd-button
+            [autoId]="_autoId ? _autoId + '-config-show-all' : null"
+            type="text"
+            color="primary"
+            size="sm"
+            [title]="'core.component.table.config.show-all' | sdTranslate"
+            [disabled]="allShown()"
+            (click)="showAll()">
+          </sd-button>
+        </div>
       </div>
 
       <!-- why: handle ⠿ là cách duy nhất để đổi thứ tự cột và tự nó không nói ra điều đó — dòng gợi ý tránh việc người
@@ -73,9 +74,9 @@
                 cdkDragHandle
                 [disabled]="_searching"
                 [title]="'core.component.table.config.drag-handle' | sdTranslate"
-                [attr.aria-label]="'core.component.table.config.drag-handle' | sdTranslate"
+                [attr.aria-label]="('core.component.table.config.drag-handle' | sdTranslate) + ': ' + _title"
                 [attr.aria-describedby]="hintId"
-                (pointerdown)="onHandlePointerDown()"
+                (pointerdown)="onHandlePointerDown(_field)"
                 (keydown)="onHandleKeydown($event, _field)"
                 (blur)="onHandleBlur(_field)">
                 <sd-icon name="drag_indicator" size="20px" aria-hidden="true"></sd-icon>
@@ -92,14 +93,16 @@
                 type="button"
                 class="c-toggle"
                 [attr.aria-expanded]="_open"
-                [attr.aria-controls]="detailsId(_field)"
+                [attr.aria-controls]="_open ? detailsId(_field) : null"
                 (click)="toggleRow(_field)">
                 <span class="c-title">{{ _title }}</span>
                 @if (!_hidden && item.fixed) {
-                  <sd-icon class="c-pin" name="push_pin" size="16px" [title]="'core.component.table.config.fixed-label' | sdTranslate"></sd-icon>
+                  @let _fixedLabel = 'core.component.table.config.fixed-label' | sdTranslate;
+                  <sd-icon class="c-pin" name="push_pin" size="16px" [title]="_fixedLabel" [ariaLabel]="_fixedLabel"></sd-icon>
                 }
                 @if (!_hidden && (item.truncate ?? item.origin.truncate)) {
-                  <sd-icon class="c-trunc" name="short_text" size="16px" [title]="'core.component.table.config.truncate-label' | sdTranslate"></sd-icon>
+                  @let _truncateLabel = 'core.component.table.config.truncate-label' | sdTranslate;
+                  <sd-icon class="c-trunc" name="short_text" size="16px" [title]="_truncateLabel" [ariaLabel]="_truncateLabel"></sd-icon>
                 }
                 <span class="c-width-meta">{{ widthSummary(item) }}</span>
                 <sd-icon class="c-chevron" size="20px" [name]="_open ? 'expand_less' : 'expand_more'" aria-hidden="true"></sd-icon>

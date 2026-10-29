@@ -39,7 +39,7 @@ Pick via `[mode]`:
 | `'search'` (default) | Search button, Enter in the search box, a saved filter. Chip edits stay a draft. | shown |
 | `'commit'` | Also: a popover that closes with a changed operator or value, an inline chip commit that changes it, a completed inline build chip with a value, removing a chip that had a value. A popover that closes unchanged, or removing an empty chip, does not apply. | hidden |
 
-With `'commit'`, an added (unpinned) chip whose popover closes empty is dropped; it applies only when the chip had a value before. Enter in the search box always applies, also with an unchanged term.
+With `'commit'`, an added (unpinned) chip whose popover closes empty is dropped; it applies only when the chip had a value before. A chip change applies the search text applied last: the text still being typed is applied by Enter, like the quick search of sd-table. Enter in the search box applies, also with an unchanged term, unless a `required` field is empty (like the disabled Search button).
 
 ## Models
 
@@ -101,7 +101,7 @@ Knobs shared by every type, for a host that owns the chip list (for example `sd-
 | `pinned` | The chip is always on the bar: no remove button, `removeFilter` and Delete do nothing, left out of the field picker. An empty pinned chip reads `core.component.query-bar.all`. The host keeps one entry for the field in `filters`; the bar never adds it. `clearAll()` keeps pinned chips and empties them. |
 | `required` | An empty chip gets the error look, `aria-invalid="true"` and `aria-describedby` = `option.invalidHintId`; it reads `core.component.query-bar.placeholder.select-value`. `canSearch()` is false while `invalidFields()` is not empty. The bar renders no message itself — the host does. |
 | `group` | Field-picker heading. Groups keep the order in which they first appear; a single group shows no heading. |
-| `disabled` | The chip is read-only: no popover, no remove button, `aria-disabled="true"`. |
+| `disabled` | The chip is read-only: no popover, no remove button, `aria-disabled="true"`. In inline mode it renders as that read-only chip too, instead of an editable inline chip. |
 
 The field picker gets a find box (`core.component.query-bar.find-field`) when it lists more than eight fields. It matches labels ignoring case and Vietnamese accents (`don` finds "Mã đơn" and "Đơn vị"); typing does not trigger the menu's typeahead.
 

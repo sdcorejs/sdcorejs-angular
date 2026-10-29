@@ -107,6 +107,9 @@ export class SdColumnResizeDirective implements OnDestroy {
   #onMouseup = () => {
     const finalPx = `${Math.round(this.#currentWidth)}px`;
     this.#cleanupDrag();
+    // why: bấm vào tay nắm mà không đổi độ rộng thì không có gì để lưu — trước đây nó ghi độ rộng đang hiển thị (kể cả
+    // cột auto / %) vào thiết lập của bảng.
+    if (Math.round(this.#currentWidth) === Math.round(this.#startWidth)) return;
     // emit trong Angular zone để consumer chạy CD bình thường
     this.#zone.run(() => this.resizeEnd.emit(finalPx));
   };

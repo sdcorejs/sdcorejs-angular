@@ -11,10 +11,13 @@
 // Thanh công cụ: ô tìm · số cột đang hiện · Hiện tất cả
 // ---------------------------------------------------------------------------
 
+// why: ô tìm 220px + số cột + Hiện tất cả cần khoảng 430px — modal sm (40vw) hẹp hơn thì nhóm bên phải xuống dòng thay vì
+// làm body cuộn ngang.
 .c-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
   min-height: 32px;
 }
 
@@ -27,8 +30,11 @@
   color: var(--sd-text-secondary);
 }
 
-.c-toolbar-spacer {
-  flex: 1;
+.c-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .c-shown-count {

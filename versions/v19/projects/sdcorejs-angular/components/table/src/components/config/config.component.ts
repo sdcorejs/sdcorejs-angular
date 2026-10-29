@@ -86,6 +86,8 @@ export class ConfigComponent {
   readonly #id = `sd-table-config-${nextId++}`;
   readonly hintId = `${this.#id}-hint`;
   #setting?: SdStorageWithDefault<ConfiguredTable>;
+  /** Widths as opened; only an edited width is rounded and clamped (an untouched `120.5px` stays as it is). */
+  #openedWidths = new Map<string, string | undefined>();
   /** Row lifted from the keyboard, and the order Escape goes back to. */
   readonly picked = signal<{ field: string; order: ConfiguredColumn[] } | null>(null);
   /** Text of the live region: each keyboard reorder step. */
@@ -118,6 +120,7 @@ export class ConfigComponent {
     if (!opt) return;
     this.#setting = this.#configService.init(opt)!;
     this.configuration.set(this.#setting?.get());
+    this.#openedWidths = new Map(this.configuration()?.columns?.map(column => [column.origin.field, column.width]));
     this.query.set('');
     this.expanded.set(null);
     this.#textWidthField.set(null);
@@ -164,8 +167,13 @@ export class ConfigComponent {
 
   toggleRow = (field: string) => this.expanded.update(current => (current === field ? null : field));
 
-  /** Pressing the handle closes the open row first, so CDK measures rows of one height when the drag starts. */
-  onHandlePointerDown = () => this.expanded.set(null);
+  /**
+   * Pressing the handle of the open row closes it first, so its preview is the summary row. Another open row stays open:
+   * closing it would move the pressed row away from the pointer before CDK measures.
+   */
+  onHandlePointerDown = (field: string) => {
+    if (this.expanded() === field) this.expanded.set(null);
+  };
 
   drop = (event: CdkDragDrop<ConfiguredColumn[]>) => {
     this.picked.set(null);
@@ -330,6 +338,7 @@ export class ConfigComponent {
 
   /** Number → px, then rounded and kept within the column's px `minWidth` / `maxWidth`. */
   #settledWidth = (column: ConfiguredColumn): string | undefined => {
+    if (column.width === this.#openedWidths.get(column.origin.field)) return column.width;
     const option = this.tableOption()?.columns?.find(item => item.field === column.origin.field);
     return configWidthClamp(configWidthFromInput(column.width), option?.minWidth, option?.maxWidth);
   };

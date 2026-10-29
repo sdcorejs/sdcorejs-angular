@@ -23,6 +23,13 @@ describe('config width helpers', () => {
       expect(configWidthFromInput('96px')).toBe('96px');
     });
 
+    it('reads exponents and drops numbers that are not a positive width', () => {
+      expect(configWidthFromInput('1e3')).toBe('1000px');
+      expect(configWidthFromInput('-50')).toBeUndefined();
+      expect(configWidthFromInput('0')).toBeUndefined();
+      expect(configWidthFromInput(-50)).toBeUndefined();
+    });
+
     it('stores an empty field as undefined', () => {
       expect(configWidthFromInput('')).toBeUndefined();
       expect(configWidthFromInput('   ')).toBeUndefined();

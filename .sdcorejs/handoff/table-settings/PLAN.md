@@ -20,7 +20,7 @@ first, commit only when the user says so.
 2. **`hasCustomSetup`**: computed from the column storage the table already subscribes to, `widthChange$`
    (`persistColumnWidth` writes silently) and `filterRegister.configuration` (`inlineExternal`). Columns present on
    both sides only; order compared with the option, `title`/`width`/`invisible`/`fixed`/`truncate` with the stored
-   `origin`. Restore defaults also resets `inlineExternal` (internal `reset` output on `ConfigComponent`; the confirm
+   `origin`. Restore defaults also resets `inlineExternal` (internal `defaultsRestored` output on `ConfigComponent`; the confirm
    text already says "all settings"). `TableFilterConfiguration.mode` / `modeSelectable` do not exist — skipped.
 3. **No mat-table**: `div.c-list[cdkDropList]` scrolls itself (CDK auto-scroll), each `div.c-item[cdkDrag]` holds the
    summary row and the details. Selectors use the item's own classes so the body-level preview keeps its style.
@@ -60,7 +60,18 @@ first, commit only when the user says so.
 - Behaviour change: Restore defaults also restores the inline external filters; edits no longer mutate the stored
   objects, so Skip leaves them untouched.
 - v19 → v20/v21/v22 by `npm run sync`; `check:sync` green; no hand edits in derived workspaces.
-- Independent review: pending.
+- Independent review: done 2026-10-30 (two reviewers, query bar and settings); findings fixed, see below.
+- `SdTable.hasCustomSetup` and `SdTable.onConfigDefaultsRestored` are additive public members of the exported class
+  (they appear in its `.d.ts`); nothing was renamed or removed.
+
+## Review fixes (2026-10-30)
+- Pressing a handle closes only its own open row (an open row above no longer moves the pressed row away from the pointer).
+- The toolbar wraps in a narrow modal (count + Hiện tất cả form one group).
+- Apply / blur settle only edited widths; `-50`, `0` store `undefined`, `1e3` stores `1000px`.
+- A click on the resize grip that does not change the width stores nothing (no dot, no `onResize`).
+- Handle named after its column; fixed / shortened flags named; `aria-controls` only while open.
+- Specs for the mouse path (drop mapping, drop while searching, pointerdown).
+- CHANGELOG: dropped the "Skip" bullet (`SdStorageService.get()` already returned a clone).
 
 ## Showcase checks done
 5 and 14 columns; mouse and keyboard reorder, Escape keeps the modal; open rows, rename + restore, width number /

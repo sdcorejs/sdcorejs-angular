@@ -181,6 +181,11 @@ describe('ConfigComponent (table setup dialog)', () => {
       expect(row.querySelector('sd-input')).toBeNull();
     }));
 
+    it('names each handle after its column', fakeAsync(() => {
+      open();
+      expect(item('email').querySelector('.c-handle')!.getAttribute('aria-label')).toContain('Email');
+    }));
+
     it('names each Show checkbox after its column', fakeAsync(() => {
       open();
       const label = item('email').querySelector('.c-show label');
@@ -244,6 +249,12 @@ describe('ConfigComponent (table setup dialog)', () => {
       expect(meta('e')).toBe('100 px');
     }));
 
+    it('names the fixed and truncated flags for screen readers', fakeAsync(() => {
+      open();
+      expect(item('a').querySelector('.c-pin')!.getAttribute('aria-label')).toBe('Cố định khi cuộn ngang');
+      expect(item('e').querySelector('.c-trunc')!.getAttribute('aria-label')).toBe('Rút gọn nội dung dài');
+    }));
+
     it('flags fixed and truncated visible columns', fakeAsync(() => {
       open();
       expect(item('a').querySelector('.c-pin')).not.toBeNull();
@@ -279,6 +290,7 @@ describe('ConfigComponent (table setup dialog)', () => {
       open();
       const button = item('email').querySelector<HTMLButtonElement>('.c-toggle')!;
       expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(button.hasAttribute('aria-controls')).withContext('no target while collapsed').toBe(false);
       toggle('email');
       expect(button.getAttribute('aria-expanded')).toBe('true');
       const details = item('email').querySelector<HTMLElement>('.c-details')!;
@@ -446,6 +458,28 @@ describe('ConfigComponent (table setup dialog)', () => {
       expect(columnOf('name').width).toBe('300px');
     }));
 
+    it('leaves widths nobody edited untouched on Apply', fakeAsync(() => {
+      setup([
+        { field: 'odd', title: 'Lẻ', width: '120.5px' },
+        { field: 'narrow', title: 'Hẹp', width: '100px', minWidth: '150px' },
+      ]);
+      open();
+      byAutoId('components-table-demo-config-apply')!.click();
+      tick(300);
+      fixture.detectChanges();
+      open();
+      expect(columnOf('odd').width).toBe('120.5px');
+      expect(columnOf('narrow').width).toBe('100px');
+    }));
+
+    it('leaves the width alone when the field is left without an edit', fakeAsync(() => {
+      setup([{ field: 'odd', title: 'Lẻ', width: '120.5px' }]);
+      open();
+      toggle('odd');
+      blur(item('odd').querySelector('.c-field-width'));
+      expect(columnOf('odd').width).toBe('120.5px');
+    }));
+
     it('clamps on Apply too and saves the result', fakeAsync(() => {
       open();
       toggle('name');
@@ -601,6 +635,60 @@ describe('ConfigComponent (table setup dialog)', () => {
       fixture.detectChanges();
       open();
       expect(columnOf('email').invisible).toBeFalsy();
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Mouse reorder
+  // -------------------------------------------------------------------------
+
+  describe('mouse reorder', () => {
+    const drop = (previousIndex: number, currentIndex: number) => {
+      component.drop({ previousIndex, currentIndex } as Parameters<ConfigComponent['drop']>[0]);
+      render();
+    };
+
+    it('moves the dropped row to its new index', fakeAsync(() => {
+      setup();
+      open();
+      drop(0, 2);
+      expect(rowFields()).toEqual(['email', 'dept', 'name']);
+    }));
+
+    it('ignores a drop while searching', fakeAsync(() => {
+      setup(WIDE_COLUMNS);
+      open();
+      find('ngay');
+      drop(0, 1);
+      find('');
+      expect(rowFields().slice(0, 2)).toEqual(['code', 'customer']);
+    }));
+
+    it('closes the open row only when its own handle is pressed', fakeAsync(() => {
+      setup();
+      open();
+      toggle('name');
+      item('dept')
+        .querySelector('.c-handle')!
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      render();
+      expect(item('name').querySelector('.c-details')).withContext('another row keeps it open').not.toBeNull();
+      item('name')
+        .querySelector('.c-handle')!
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      render();
+      expect(item('name').querySelector('.c-details')).toBeNull();
+    }));
+  });
+
+  describe('toolbar', () => {
+    it('wraps instead of overflowing a narrow modal', fakeAsync(() => {
+      setup(WIDE_COLUMNS);
+      open();
+      const toolbar = panel().querySelector<HTMLElement>('.c-toolbar')!;
+      toolbar.style.width = '320px';
+      expect(getComputedStyle(toolbar).flexWrap).toBe('wrap');
+      expect(toolbar.scrollWidth).toBeLessThanOrEqual(toolbar.clientWidth + 1);
     }));
   });
 

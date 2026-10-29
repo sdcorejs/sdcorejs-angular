@@ -45,8 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Query bar
 
 - Options for a host that owns the chip list (used by the table's query-bar mode); a bar that sets none of them behaves as before.
-  - Fields: `pinned` (always on the bar, no remove button, out of the field picker, an empty chip reads “Tất cả”), `required` (empty chip marked invalid with `aria-invalid`, Search disabled, listed by `invalidFields()`), `group` (field-picker headings) and `option.views` on `lazy-values`. A `disabled` field's chip no longer opens its popover.
-  - `SdQueryBarOption`: `applyOn: 'search' | 'commit'` (`'commit'` applies every committed chip edit and hides the Search button), `appearance: 'flush'`, `onClearAll`, `clearDisabled`, `searchPlaceholder`, `invalidHintId`; `showOperatorOnChip` (option and input) also takes `'auto'`.
+  - Fields: `pinned` (always on the bar, no remove button, out of the field picker, an empty chip reads “Tất cả”), `required` (empty chip marked invalid with `aria-invalid`, Search disabled, listed by `invalidFields()`), `group` (field-picker headings) and `option.views` on `lazy-values`. A `disabled` field's chip is read-only: it no longer opens its popover, and in inline mode it is not an editable chip.
+  - `SdQueryBarOption`: `applyOn: 'search' | 'commit'` (`'commit'` applies every committed chip edit with the search text applied last, and hides the Search button; Enter waits for the required fields), `appearance: 'flush'`, `onClearAll`, `clearDisabled`, `searchPlaceholder`, `invalidHintId`; `showOperatorOnChip` (option and input) also takes `'auto'`.
   - `openField(key, returnFocusTo?)` opens a field's editor from outside the bar; `[sdQueryBarEnd]` projects content after the toolbar.
   - The field picker gets a find box above eight fields (accent-insensitive).
   - Chips show dates as `dd/MM/yyyy` (`dd/MM/yyyy HH:mm`), a range in one year as `01/10 – 31/10/2026`, an open range as “Từ …” / “Đến …”, and the labels of restored `lazy-values` values (looked up once) and of `values` whose `items` is a function.
@@ -87,9 +87,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Width: a number is stored as `${n}px` and an empty field as `undefined`; a value in another unit is kept as written. It is rounded and kept within the column's px `minWidth` / `maxWidth` on blur and on Apply.
   - Footer: **Khôi phục mặc định** (was **Mặc định**) moves to the left as a text button; **Bỏ qua** is outlined and **Áp dụng** filled, all small. Footer autoIds are unchanged; the find box and **Hiện tất cả** get `-config-find` and `-config-show-all`.
   - Restore defaults also puts the inline external filters back to `defaultShowing`.
-  - Skip leaves the stored settings untouched: edits no longer change the stored objects in place.
   - i18n: new `core.component.table.config.*` keys (`reset`, `find-column`, `shown-count`, `show-all`, `drag-disabled-search`, `width-auto`, `hidden`, `origin`, `restore`, `fixed-label`, `truncate-label`, `truncate-hint`, `customized`, `reorder-*`); `config.drag-hint` has new text. `core.component.table.fixed`, `char-limit` and `core.component.form-builder.default` are kept but no longer used by the modal.
   - See `sd-table.md`, “Settings modal”.
+- A click on the column resize grip that does not change the width no longer stores a width or calls `config.onResize`.
 
 ### Deprecated
 
