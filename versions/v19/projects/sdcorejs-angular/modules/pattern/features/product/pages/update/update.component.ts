@@ -27,7 +27,7 @@ import type { ProductDto } from '../../services/product.model';
     <sd-page-form [title]="'Cập nhật sản phẩm #' + entity().code" [backLink]="['../detail']">
       <div headerRight class="d-flex align-items-center gap-8">
         <sd-button title="Huỷ" type="outline" autoId="product-cancel" (click)="cancel()" />
-        <sd-button title="Lưu" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
+        <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
       </div>
       <div class="py-16">
         <general-information-form [form]="form" [seed]="entity()" [editing]="true" [errors]="apiErrors.errors()" />

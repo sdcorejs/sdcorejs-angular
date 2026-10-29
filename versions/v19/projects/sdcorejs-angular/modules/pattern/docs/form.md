@@ -104,7 +104,7 @@ export class GeneralInformationFormComponent {
 }
 ```
 
-Trang tạo: Huỷ · Lưu ở `headerRight`, lưu lỗi thì focus field lỗi đầu tiên và gắn lỗi của API vào field, lưu xong sang chi tiết bằng `replaceUrl`:
+Trang tạo: Huỷ · Tạo sản phẩm ở `headerRight`, lưu lỗi thì focus field lỗi đầu tiên và gắn lỗi của API vào field, lưu xong sang chi tiết bằng `replaceUrl`:
 
 <!-- @source features/product/pages/create/create.component.ts -->
 ```ts
@@ -136,7 +136,14 @@ import type { ProductSaveReq } from '../../services/product.model';
     <sd-page-form title="Tạo mới sản phẩm" [backLink]="['..']">
       <div headerRight class="d-flex align-items-center gap-8">
         <sd-button title="Huỷ" type="outline" autoId="product-cancel" (click)="cancel()" />
-        <sd-button title="Lưu" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
+        <sd-button
+          title="Tạo sản phẩm"
+          prefixIcon="save"
+          type="fill"
+          color="primary"
+          autoId="product-save"
+          [loading]="saving()"
+          (click)="save()" />
       </div>
       <div class="py-16">
         <general-information-form [form]="form" [seed]="seed" [errors]="apiErrors.errors()" />
@@ -228,7 +235,7 @@ import type { ProductDto } from '../../services/product.model';
     <sd-page-form [title]="'Cập nhật sản phẩm #' + entity().code" [backLink]="['../detail']">
       <div headerRight class="d-flex align-items-center gap-8">
         <sd-button title="Huỷ" type="outline" autoId="product-cancel" (click)="cancel()" />
-        <sd-button title="Lưu" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
+        <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" autoId="product-save" [loading]="saving()" (click)="save()" />
       </div>
       <div class="py-16">
         <general-information-form [form]="form" [seed]="entity()" [editing]="true" [errors]="apiErrors.errors()" />
@@ -786,7 +793,7 @@ export class LinesTableFormComponent {
 
 ## Quy tắc
 
-- MUST đặt Huỷ (outline) và Lưu (fill, primary) ở `headerRight` của `sd-page-form` (E3); không lặp nút lưu ở cuối thân.
+- MUST đặt Huỷ (outline) và nút lưu (fill, primary) ở `headerRight` của `sd-page-form` (E3); không lặp nút lưu ở cuối thân.
 - SHOULD cho nút lưu icon `save`; trang tạo ghi rõ hành động ("Tạo đơn hàng"), trang cập nhật ghi "Lưu".
 - MUST đặt title "Tạo mới <entity>" hoặc "Cập nhật <entity> #<mã>" (E5).
 - MUST bảo vệ thay đổi chưa lưu: `canDeactivate: [sdPageFormLeaveGuard]` trên route và `registerSdUnsavedChangesForm(..., { dirty: 'value' })` trong trang. Gõ rồi sửa về như cũ không bị hỏi; đóng tab trình duyệt khi còn thay đổi có hộp thoại của trình duyệt.

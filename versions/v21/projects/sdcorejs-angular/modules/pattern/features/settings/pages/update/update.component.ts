@@ -52,6 +52,7 @@ const CURRENCIES = [
         headerRight
         *sdPermission="'PATTERN_SETTINGS_U_UPDATE'"
         title="Lưu"
+        prefixIcon="save"
         type="fill"
         color="primary"
         autoId="settings-save"

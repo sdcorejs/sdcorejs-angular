@@ -46,7 +46,14 @@ import {
       (sdClosed)="closed()">
       <general-information-form [form]="form" [seed]="seed" [parentName]="parent()?.name ?? null" [errors]="apiErrors.errors()" />
       <div sdFooterRight class="d-flex align-items-center gap-8">
-        <sd-button title="Lưu" type="fill" color="primary" autoId="category-save" [loading]="saving()" (click)="save()" />
+        <sd-button
+          title="Tạo danh mục"
+          prefixIcon="save"
+          type="fill"
+          color="primary"
+          autoId="category-save"
+          [loading]="saving()"
+          (click)="save()" />
       </div>
     </sd-side-drawer>
   `,

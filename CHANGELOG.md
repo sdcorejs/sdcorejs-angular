@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Order form: the fields of an order line use `size="sm"` and `hideInlineError`, and the product, quantity, unit price, line total and delete button share one middle line. An API error on a line, the product included, is an icon with a tooltip on its cell, so the row keeps its height. Required columns get a red `*` after the title.
 - The form sections of the order, product and settings screens use `row px-16 pt-16 pb-8`, so fields line up with the 16px section title instead of sitting 8px from the edge.
 - The order create page saves with “Tạo đơn hàng” and the update page with “Lưu”, both with the `save` icon.
+- The other form screens follow the same save button: product, customer and category create save with “Tạo sản phẩm”, “Tạo khách hàng” and “Tạo danh mục”; their update screens and settings keep “Lưu”. Every save button has the `save` icon.
 - Order detail: “Trạng thái” in the drawer and “Trạng thái duyệt” on the page show badges instead of plain text.
 
 ## [3.3] - 2026-10-29

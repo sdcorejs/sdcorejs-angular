@@ -18,7 +18,7 @@ test('adds a child category from the row command, in a drawer', async ({ page })
   await expect(drawer(page)).toContainText('Thêm danh mục con của Nước giải khát');
   await drawer(page).getByLabel('Mã danh mục').fill('DU-NUOC-9');
   await drawer(page).getByLabel('Tên danh mục').fill('Nước khoáng có ga');
-  await drawer(page).getByRole('button', { name: 'Lưu' }).click();
+  await drawer(page).getByRole('button', { name: 'Tạo danh mục' }).click();
 
   await expect(drawer(page)).toHaveCount(0);
   await expect(page).toHaveURL(/\/pattern\/category$/);
