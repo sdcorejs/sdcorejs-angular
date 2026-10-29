@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="design_doc_mode" content="canvas">
+<title>sd-table · Chọn kiểu bộ lọc trong Thiết lập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons&amp;display=block" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f4f1;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px;color:#1a1b1f}
+.mi{font-family:'Material Icons';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;display:inline-block;overflow:hidden}
+button:focus-visible{outline:2px solid #005cbb;outline-offset:2px}
+</style>
+</helmet>
+<section data-screen-label="Spec" style="padding:48px 40px 40px;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6;display:flex;flex-direction:column;gap:28px;border-bottom:1px solid #dddcd6">
+<header style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+<span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">SPEC · TABLE-SETTINGS.MD</span>
+<h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Modal Thiết lập · tab Cột và nút Thiết lập</h2>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:#3a3c42;font-size:14px">
+<li>Tiêu đề, Độ rộng: <code>sd-input size="sm" label hideInlineError</code>, label nổi trên viền; độ rộng có hậu tố px qua <code>sdSuffixDef</code>. Ô tìm cùng size sm.</li>
+<li>Nút: <code>sd-button</code> size sm (32px), dáng pill M3 sẵn có của lib. Khôi phục mặc định đặt ở <code>sdFooterLeft</code>, type text.</li>
+<li>Cố định, Rút gọn dùng <code>sd-checkbox</code> như cột Hiện, thay cho công tắc ở vòng 2.</li>
+<li>Khung modal theo <code>sd-modal.md</code>: bo 8px, header/footer đệm 12px · 16px, body lề 16px. Vẫn <code>width="sm"</code> (40vw).</li>
+</ul>
+</header>
+
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+<div id="3a" style="width:600px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3a</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Tab Cột</strong></div>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px 20px;display:flex;justify-content:center">
+<div style="width:560px;background:#ffffff;border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,.18);font-family:Roboto,sans-serif;color:#212121;overflow:hidden">
+<div style="padding:12px 8px 12px 16px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:18px;font-weight:500;line-height:24px">Thiết lập</span><span class="mi" aria-hidden="true" style="width:40px;height:40px;line-height:40px;border-radius:50%;font-size:22px;color:#5f6368;text-align:center">close</span></div>
+<div style="display:flex;gap:4px;padding:0 16px;border-bottom:1px solid #e3e4ea"><span style="height:44px;padding:0 14px;display:inline-flex;align-items:center;font-size:14px;font-weight:500;color:#005cbb;border-bottom:2px solid #005cbb;margin-bottom:-1px;box-sizing:border-box">Cột</span><span style="height:44px;padding:0 14px;display:inline-flex;align-items:center;font-size:14px;font-weight:500;color:#5f6368;border-bottom:2px solid transparent;margin-bottom:-1px;box-sizing:border-box">Bộ lọc</span></div>
+<div style="padding:16px 16px 4px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:220px;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:13px;color:#7a7a7a"><span class="mi" aria-hidden="true" style="font-size:18px">search</span>Tìm cột</div><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">{{ shownText }}</span><button type="button" onClick="{{ showAll }}" style="{{ showAllPill }}">Hiện tất cả</button></div>
+<span style="font-size:12px;line-height:18px;color:#6b7280">Kéo ⠿, hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự.</span>
+<div style="border:1px solid #e3e4ea;border-radius:8px;overflow-y:auto;overflow-x:hidden;max-height:400px">
+<sc-for list="{{ rows2b }}" as="r" hint-placeholder-count="8"><div style="{{ r.wrapStyle }}">
+<div style="{{ r.rowStyle }}">
+<span class="mi" aria-hidden="true" style="font-size:20px;color:#b6bcc6;flex:none">drag_indicator</span>
+<button type="button" role="checkbox" aria-checked="{{ r.shown }}" aria-label="{{ r.title }}" onClick="{{ r.toggleShown }}" style="padding:0;border:0;background:transparent;display:inline-flex;cursor:pointer;flex:none"><span style="{{ r.shownCb }}"><span class="mi" aria-hidden="true" style="font-size:14px">{{ r.shownIcon }}</span></span></button>
+<button type="button" aria-expanded="{{ r.open }}" onClick="{{ r.toggleOpen }}" style="flex:1;min-width:0;height:44px;padding:0 4px 0 2px;border:0;background:transparent;display:flex;align-items:center;gap:8px;cursor:pointer;font:400 14px Roboto,sans-serif;text-align:left">
+<span style="{{ r.titleStyle }}">{{ r.title }}</span>
+<sc-if value="{{ r.pinned }}" hint-placeholder-val="{{ false }}"><span class="mi" title="Cố định" style="font-size:16px;color:#005cbb;flex:none">push_pin</span></sc-if>
+<sc-if value="{{ r.trunc }}" hint-placeholder-val="{{ false }}"><span class="mi" title="Rút gọn" style="font-size:16px;color:#7a7a7a;flex:none">short_text</span></sc-if>
+<span style="font-size:12px;color:#7a7a7a;white-space:nowrap;flex:none;min-width:58px;text-align:right;font-variant-numeric:tabular-nums">{{ r.widthMeta }}</span>
+<span class="mi" aria-hidden="true" style="font-size:20px;color:#5f6368;flex:none">{{ r.chevron }}</span>
+</button>
+</div>
+<sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:8px 16px 14px 62px;display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,112px);gap:12px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:4px;padding-top:4px">
+<div style="position:relative;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;font-size:13px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#f7f8fa;font-size:11px;line-height:14px;color:#5f6368">Tiêu đề</span>{{ r.title }}</div>
+<sc-if value="{{ r.renamed }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:16px;color:#7a7a7a;padding-left:2px">Gốc: {{ r.origin }} · <span style="color:#005cbb;font-weight:500">Khôi phục</span></span></sc-if>
+</div>
+<div style="padding-top:4px"><div style="position:relative;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;gap:4px;font-size:13px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#f7f8fa;font-size:11px;line-height:14px;color:#5f6368">Độ rộng</span><span style="{{ r.widthInputStyle }}">{{ r.widthText }}</span><span style="color:#9aa0a6;font-size:12px">px</span></div></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 24px">
+<button type="button" role="checkbox" aria-checked="{{ r.fixed }}" onClick="{{ r.toggleFixed }}" style="padding:0;border:0;background:transparent;display:flex;align-items:center;gap:8px;cursor:pointer;font:400 13px Roboto,sans-serif;color:#212121"><span style="{{ r.fixCb }}"><span class="mi" aria-hidden="true" style="font-size:14px">{{ r.fixIcon }}</span></span>Cố định khi cuộn ngang</button>
+<button type="button" role="checkbox" aria-checked="{{ r.trunc }}" onClick="{{ r.toggleTrunc }}" title="Cắt bằng … , rê chuột để xem đủ" style="padding:0;border:0;background:transparent;display:flex;align-items:center;gap:8px;cursor:pointer;font:400 13px Roboto,sans-serif;color:#212121"><span style="{{ r.trCb }}"><span class="mi" aria-hidden="true" style="font-size:14px">{{ r.trIcon }}</span></span>Rút gọn nội dung dài</button>
+</div>
+</div>
+</sc-if>
+</div></sc-for>
+</div>
+</div>
+<div style="padding:12px 16px;display:flex;align-items:center;gap:8px"><span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">restart_alt</span>Khôi phục mặc định</span><span style="flex:1"></span><span style="height:32px;padding:0 16px;border:1px solid #74777f;border-radius:16px;box-sizing:border-box;display:inline-flex;align-items:center;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none">Bỏ qua</span><span style="height:32px;padding:0 16px;border-radius:16px;display:inline-flex;align-items:center;font-size:14px;font-weight:500;color:#ffffff;background:#005cbb;white-space:nowrap;flex:none">Áp dụng</span></div>
+</div>
+</div>
+</div>
+
+<div id="3b" style="width:520px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3b</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Đánh dấu nút Thiết lập</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Core đã có sẵn: <code>sd-button</code> có <code>indicator</code> (chấm hoặc số), <code>indicatorColor</code>, <code>indicatorLabel</code>. Footer bảng chưa dùng; chỉ cần truyền một computed.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;font-family:Roboto,sans-serif">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px/16px 'Be Vietnam Pro',sans-serif;color:#5f6167">Chưa có thiết lập riêng</span>
+<div style="background:#ffffff;border-radius:6px;height:48px;padding:0 8px;display:flex;align-items:center;gap:8px">
+<span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">refresh</span>Tải lại</span>
+<span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">get_app</span>Xuất dữ liệu</span>
+<span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">settings</span>Thiết lập</span>
+</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px/16px 'Be Vietnam Pro',sans-serif;color:#5f6167">Có thiết lập riêng</span>
+<div style="background:#ffffff;border-radius:6px;height:48px;padding:0 8px;display:flex;align-items:center;gap:8px">
+<span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">refresh</span>Tải lại</span>
+<span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none"><span class="mi" aria-hidden="true" style="font-size:18px">get_app</span>Xuất dữ liệu</span>
+<span style="position:relative;display:inline-flex;flex:none"><span style="height:32px;padding:0 12px 0 10px;border-radius:16px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#005cbb;white-space:nowrap;flex:none;background:#eef4fc"><span class="mi" aria-hidden="true" style="font-size:18px">settings</span>Thiết lập</span><span aria-hidden="true" style="position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;background:#005cbb;box-shadow:0 0 0 2px #ffffff"></span></span>
+</div><span style="font:400 12px/16px 'Be Vietnam Pro',sans-serif;color:#5f6167">Nút Thiết lập vẽ ở trạng thái hover để thấy chấm nằm trên góc trên-cuối của pill.</span></div>
+</div>
+<pre style="margin:0;padding:14px 16px;background:#1a1b1f;color:#e8e8e3;border-radius:10px;font:400 12.5px/1.65 'JetBrains Mono',monospace;overflow-x:auto;white-space:pre">{{ indicatorCode }}</pre>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li><code>hasCustomSetup()</code> bật khi cấu hình cột đã lưu khác <code>#default(option)</code> ở thứ tự, hiện/ẩn, tiêu đề, độ rộng, cố định, rút gọn; hoặc có <code>TableFilterConfiguration.mode</code>; hoặc <code>inlineExternal</code> khác giá trị khởi tạo.</li>
+<li>So sánh sau khi bỏ các cột không còn trong <code>option</code>, để thêm hoặc bớt cột ở code không làm chấm bật.</li>
+<li>Màu primary: đây là trạng thái, không phải lỗi. Chấm, không dùng số.</li>
+<li><code>indicatorLabel</code> "Đang dùng thiết lập riêng" đọc qua <code>aria-describedby</code>; tên nút vẫn là "Thiết lập".</li>
+<li>Khôi phục mặc định thì chấm tắt ngay.</li>
+</ul>
+</div>
+
+</div>
+
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 22px;display:flex;flex-direction:column;gap:10px;max-width:1160px;box-sizing:border-box">
+<strong style="font-weight:600;font-size:17px">Đã chốt</strong>
+<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Kéo đổi độ rộng cột ngay trên bảng (<code>persistColumnWidth</code>) cũng bật chấm.</li>
+<li>Ô Độ rộng nhận số, lưu thành <code>`${n}px`</code>. Giá trị gốc không phải px (%, rem) thì hiện nguyên văn và bỏ hậu tố px.</li>
+<li>Nút Công cụ trên mobile không có chấm.</li>
+</ol>
+</div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    aMode: 'default', bTab: 'filters', bMode: 'qb', cMode: 'qb',
+    pins: { status: true, createdAt: true, channel: false, staff: false, area: true },
+    open2: 'customer',
+    cols2: [
+      { k: 'code', title: 'Mã đơn', width: '120', shown: true, fixed: true, trunc: false },
+      { k: 'customer', title: 'Khách hàng', origin: 'Tên khách hàng', width: '', shown: true, fixed: false, trunc: true },
+      { k: 'phone', title: 'Số điện thoại', width: '', shown: false, fixed: false, trunc: false },
+      { k: 'createdAt', title: 'Ngày tạo', width: '128', shown: true, fixed: false, trunc: false },
+      { k: 'status', title: 'Trạng thái', width: '150', shown: true, fixed: false, trunc: false },
+      { k: 'channel', title: 'Kênh bán', width: '', shown: true, fixed: false, trunc: false },
+      { k: 'payment', title: 'Thanh toán', width: '', shown: true, fixed: false, trunc: false },
+      { k: 'staff', title: 'Nhân viên phụ trách', width: '', shown: true, fixed: false, trunc: true },
+      { k: 'note', title: 'Ghi chú', width: '240', shown: false, fixed: false, trunc: true },
+      { k: 'total', title: 'Tổng tiền', width: '140', shown: true, fixed: false, trunc: false },
+    ],
+  };
+  renderVals() {
+    const s = this.state;
+    const set = p => this.setState(p);
+    const cb = (on, dis) => 'width:18px;height:18px;flex:none;box-sizing:border-box;border-radius:2px;display:inline-flex;align-items:center;justify-content:center;' +
+      (on ? 'background:#005cbb;border:2px solid #005cbb;color:#ffffff;' : 'border:2px solid #74777f;color:transparent;') + (dis ? 'opacity:.45;' : '');
+    const radio = on => 'width:18px;height:18px;flex:none;box-sizing:border-box;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid ' + (on ? '#005cbb' : '#74777f');
+    const dot = on => 'width:8px;height:8px;border-radius:50%;background:' + (on ? '#005cbb' : 'transparent');
+    const input = 'height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 8px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+
+    const COLS = [['Mã đơn', '120', true, true, false], ['Khách hàng', '', true, false, true], ['Ngày tạo', '128', true, false, false], ['Trạng thái', '150', true, false, false], ['Tổng tiền', '', false, false, false]];
+    const cols = COLS.map(([title, width, shown, fixed, trunc]) => ({
+      title, width: width || 'auto',
+      shownCb: cb(shown), shownIcon: shown ? 'check' : '',
+      inputStyle: input + (shown ? '' : 'opacity:.55;'),
+      widthStyle: input + (width ? '' : 'color:#9aa0a6;') + (shown ? '' : 'opacity:.55;'),
+      fixedCb: cb(fixed, !shown), fixedIcon: fixed ? 'check' : '',
+      truncCb: cb(trunc, !shown), truncIcon: trunc ? 'check' : '',
+    }));
+
+    const FIELDS = [
+      { k: 'warehouse', label: 'Kho xuất', kind: 'Tìm nhanh', lock: true },
+      { k: 'status', label: 'Trạng thái', kind: 'Nhiều giá trị' },
+      { k: 'createdAt', label: 'Ngày tạo', kind: 'Khoảng ngày' },
+      { k: 'channel', label: 'Kênh bán', kind: 'Danh sách' },
+      { k: 'staff', label: 'Nhân viên phụ trách', kind: 'Tìm theo tên' },
+      { k: 'area', label: 'Khu vực', kind: 'Tuỳ chỉnh', custom: true },
+    ];
+    const pinList = (mode, withCustom) => FIELDS.filter(f => withCustom || !f.custom).map(f => {
+      const out = f.custom && mode === 'qb';
+      const on = f.lock ? true : out ? false : !!s.pins[f.k];
+      const disabled = !!(f.lock || out);
+      return {
+        label: f.label, on, disabled,
+        note: f.lock ? 'Luôn hiện' : out ? 'Không có trên thanh' : f.kind,
+        cb: cb(on, disabled), icon: on ? 'check' : '',
+        labelStyle: 'flex:1;min-width:0;' + (out ? 'color:#9aa0a6' : ''),
+        rowStyle: 'height:40px;width:100%;padding:0 12px;border:0;background:transparent;display:flex;align-items:center;gap:10px;font:400 13px Roboto,sans-serif;color:#212121;text-align:left;cursor:' + (disabled ? 'default' : 'pointer'),
+        menuStyle: 'height:36px;width:100%;padding:0 16px;border:0;background:transparent;display:flex;align-items:center;gap:12px;font:400 14px Roboto,sans-serif;color:#212121;text-align:left;cursor:' + (disabled ? 'default' : 'pointer'),
+        toggle: disabled ? undefined : () => set({ pins: { ...s.pins, [f.k]: !s.pins[f.k] } }),
+      };
+    });
+
+    const segBtn = on => 'height:32px;padding:0 12px;border:0;display:inline-flex;align-items:center;gap:6px;font:500 13px Roboto,sans-serif;cursor:pointer;' +
+      (on ? 'background:#e3edf9;color:#005cbb' : 'background:#ffffff;color:#44474e');
+    const card = on => 'padding:10px;border-radius:8px;box-sizing:border-box;background:#ffffff;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;font-family:Roboto,sans-serif;color:#212121;' +
+      (on ? 'border:2px solid #005cbb;' : 'border:2px solid #e3e4ea;');
+    const tab = on => 'height:44px;padding:0 14px;border:0;background:transparent;font:500 14px Roboto,sans-serif;cursor:pointer;margin-bottom:-1px;border-bottom:2px solid ' + (on ? '#005cbb;color:#005cbb' : 'transparent;color:#5f6368');
+    const menuBase = 'position:absolute;z-index:5;top:44px;width:264px;background:#ffffff;border-radius:4px;padding:6px 0;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px rgba(0,0,0,.14),0 1px 10px rgba(0,0,0,.12);';
+
+    const C2 = s.cols2;
+    const upd = (k, patch) => set({ cols2: s.cols2.map(c => (c.k === k ? { ...c, ...patch } : c)) });
+    const shownN = C2.filter(c => c.shown).length;
+    const quiet = (hover, dim) => 'height:32px;box-sizing:border-box;border-radius:4px;padding:0 8px;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;' +
+      (hover ? 'border:1px solid #c4c6d0;background:#ffffff;' : 'border:1px solid transparent;') + (dim ? 'opacity:.55;' : '');
+    const track = on => 'width:32px;height:18px;flex:none;border-radius:9px;box-sizing:border-box;position:relative;display:inline-block;background:' + (on ? '#005cbb' : '#c4c6d0');
+    const thumb = on => 'position:absolute;top:2px;width:14px;height:14px;border-radius:50%;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.25);left:' + (on ? '16px' : '2px');
+    const rows2a = C2.map(c => {
+      const hov = c.k === 'customer';
+      return {
+        title: c.title, shown: c.shown,
+        rowStyle: 'display:grid;grid-template-columns:76px minmax(0,1fr) 104px 64px 68px;height:48px;align-items:center;border-top:1px solid #eef0f3;' + (hov ? 'background:#f7f8fa;' : ''),
+        shownCb: cb(c.shown), shownIcon: c.shown ? 'check' : '', toggleShown: () => upd(c.k, { shown: !c.shown }),
+        titleStyle: quiet(hov, !c.shown),
+        widthText: c.width || 'Tự động', unit: c.width ? 'px' : '',
+        widthStyle: quiet(hov, !c.shown) + (c.width ? '' : 'color:#9aa0a6;'),
+        fixedCb: cb(c.fixed, !c.shown), fixedIcon: c.fixed ? 'check' : '',
+        truncCb: cb(c.trunc, !c.shown), truncIcon: c.trunc ? 'check' : '',
+      };
+    });
+    const rows2b = C2.map((c, i) => {
+      const open = s.open2 === c.k;
+      return {
+        title: c.title, origin: c.origin || '', renamed: !!c.origin, shown: c.shown, open,
+        fixed: c.fixed, trunc: c.trunc && c.shown, pinned: c.fixed && c.shown,
+        wrapStyle: (i ? 'border-top:1px solid #eef0f3;' : '') + (open ? 'background:#f7f8fa;' : ''),
+        rowStyle: 'display:flex;align-items:center;gap:10px;padding:0 8px 0 12px;',
+        shownCb: cb(c.shown), shownIcon: c.shown ? 'check' : '', toggleShown: () => upd(c.k, { shown: !c.shown }),
+        titleStyle: 'flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (c.shown ? 'color:#212121' : 'color:#9aa0a6'),
+        widthMeta: c.shown ? (c.width ? c.width + ' px' : 'Tự động') : 'Đang ẩn',
+        chevron: open ? 'expand_less' : 'expand_more',
+        toggleOpen: () => set({ open2: open ? null : c.k }),
+        widthText: c.width || 'Tự động', widthInputStyle: 'flex:1;' + (c.width ? '' : 'color:#9aa0a6'),
+        fixTrack: track(c.fixed), fixThumb: thumb(c.fixed), toggleFixed: () => upd(c.k, { fixed: !c.fixed }),
+        trTrack: track(c.trunc), trThumb: thumb(c.trunc), toggleTrunc: () => upd(c.k, { trunc: !c.trunc }),
+        fixCb: cb(c.fixed), fixIcon: c.fixed ? 'check' : '', trCb: cb(c.trunc), trIcon: c.trunc ? 'check' : '',
+      };
+    });
+    return {
+      rows2a, rows2b,
+      shownText: 'Hiện ' + shownN + '/' + C2.length + ' cột',
+      showAll: () => set({ cols2: s.cols2.map(c => ({ ...c, shown: true })) }),
+      indicatorCode: '<sd-button type="text" prefixIcon="settings"\n  [title]="\'core.component.table.setup-short\' | sdTranslate"\n  [indicator]="hasCustomSetup()"\n  indicatorColor="primary"\n  [indicatorLabel]="\'core.component.table.config.customized\' | sdTranslate"\n  (click)="_configComponent.open()" />',
+      showAllPill: 'height:32px;padding:0 12px;border:0;border-radius:16px;background:transparent;font:500 14px Roboto,sans-serif;cursor:pointer;' + (shownN === C2.length ? 'color:#bdc1c6' : 'color:#005cbb'),
+      showAllStyle: 'height:28px;padding:0 6px;border:0;background:transparent;font:500 13px Roboto,sans-serif;cursor:pointer;' + (shownN === C2.length ? 'color:#bdc1c6' : 'color:#005cbb'),
+      aSeg: [['default', 'Khung bộ lọc', 'view_agenda'], ['qb', 'Thanh bộ lọc', 'view_stream']].map(([id, label, icon]) => ({
+        label, icon, on: s.aMode === id, style: segBtn(s.aMode === id) + (id === 'qb' ? 'border-left:1px solid #c4c6d0;' : ''), pick: () => set({ aMode: id }),
+      })),
+      aCaption: s.aMode === 'qb' ? 'Tìm nhanh, bộ lọc và lọc theo cột gộp vào một thanh chip ở đầu bảng.' : 'Ô lọc nằm trong khung phía trên bảng và dưới tiêu đề cột.',
+      colsShort: cols.slice(0, 3),
+      cols,
+      bTabs: [['cols', 'Cột'], ['filters', 'Bộ lọc']].map(([id, label]) => ({ label, on: s.bTab === id, style: tab(s.bTab === id), pick: () => set({ bTab: id }) })),
+      bIsCols: s.bTab === 'cols', bIsFilters: s.bTab === 'filters',
+      bDefOn: s.bMode === 'default', bQbOn: s.bMode === 'qb',
+      bDefCard: card(s.bMode === 'default'), bQbCard: card(s.bMode === 'qb'),
+      bDefRadio: radio(s.bMode === 'default'), bDefDot: dot(s.bMode === 'default'),
+      bQbRadio: radio(s.bMode === 'qb'), bQbDot: dot(s.bMode === 'qb'),
+      bPickDef: () => set({ bMode: 'default' }), bPickQb: () => set({ bMode: 'qb' }),
+      bListDesc: s.bMode === 'qb' ? 'Ghim thành chip trên thanh. Bộ lọc khác thêm bằng nút +.' : 'Hiện trong khung Bộ lọc. Bộ lọc tắt ở đây bị ẩn khỏi khung.',
+      bPins: pinList(s.bMode, true),
+      bWarn: s.bMode === 'qb' && !!s.pins.area,
+      cIsDef: s.cMode === 'default', cIsQb: s.cMode === 'qb',
+      cMenuPos: menuBase + (s.cMode === 'qb' ? 'right:8px;' : 'right:40px;'),
+      cModes: [['default', 'Khung bộ lọc'], ['qb', 'Thanh bộ lọc']].map(([id, label]) => ({
+        label, on: s.cMode === id, radio: radio(s.cMode === id), dot: dot(s.cMode === id), pick: () => set({ cMode: id }),
+      })),
+      cPins: pinList(s.cMode, false),
+      cRows: [
+        ['DH-24312', 'Đỗ Thu Hà', '28/10/2026', 'Hoàn tất'], ['DH-24301', 'Nguyễn Văn Minh', '26/10/2026', 'Chờ xác nhận'],
+        ['DH-24298', 'Trần Thị Lan', '24/10/2026', 'Đang giao'], ['DH-24290', 'Vũ Đức Long', '21/10/2026', 'Hoàn tất'],
+        ['DH-24287', 'Lê Minh Châu', '19/10/2026', 'Chờ xác nhận'], ['DH-24276', 'Phạm Quốc Huy', '15/10/2026', 'Đang giao'],
+      ].map(([code, name, date, status]) => ({ code, name, date, status })),
+    };
+  }
+}
+</script>
+</body>
+</html>
