@@ -38,7 +38,7 @@ import { PatternSourceViewer } from '../shell/pattern-source-viewer';
                 @for (route of group.routes; track route.path) {
                   <tr>
                     <td>
-                      <a [routerLink]="route.link">/pattern/{{ route.path }}</a>
+                      <a [routerLink]="route.link" [queryParams]="route.queryParams">/pattern/{{ route.path }}</a>
                     </td>
                     <td class="sd-pattern-index__layout">{{ route.layout }}</td>
                     <td>{{ route.shows }}</td>

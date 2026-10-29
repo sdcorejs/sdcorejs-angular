@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormArray, FormGroup } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
+import { registerSdUnsavedChangesForm, SdUnsavedChangesService } from '@sdcorejs/angular/services/unsaved-changes';
 import { ProductService } from '../../../product/services/product.service';
 import type { OrderLineDto } from '../../services/order.model';
 import { LinesFormComponent } from './lines-form.component';
@@ -14,7 +15,12 @@ import { LinesFormComponent } from './lines-form.component';
 })
 class LinesHost {
   readonly form = new FormGroup({});
+  readonly unsaved = registerSdUnsavedChangesForm(inject(SdUnsavedChangesService), this.form, { id: 'order-lines', dirty: 'value' });
   readonly seed = signal<readonly OrderLineDto[]>([{ productId: '1', quantity: 2, unitPrice: 100 }]);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.unsaved.destroy());
+  }
 }
 
 const product = (id: string) => ({ id, code: `SP-00${id}`, name: `Sản phẩm ${id}`, unit: 'Cái', price: 100, status: 'active' });
@@ -45,6 +51,7 @@ describe('LinesFormComponent', () => {
     const fixture = await render();
     expect(lines(fixture.componentInstance.form)).toEqual([jasmine.objectContaining({ productId: '1', quantity: 2, unitPrice: 100 })]);
     expect(fixture.nativeElement.querySelectorAll('[data-line]').length).toBe(1);
+    expect(fixture.componentInstance.unsaved.dirty()).toBeFalse();
   });
 
   // why: the update page is reused when only `:id` changes; the rows must follow the new order.
@@ -65,6 +72,8 @@ describe('LinesFormComponent', () => {
       jasmine.objectContaining({ productId: '3', quantity: 1, unitPrice: 300 }),
     ]);
     expect(fixture.nativeElement.querySelectorAll('[data-line]').length).toBe(2);
+    // The lines of the new order are its saved value, not a change from the previous order.
+    expect(host.unsaved.dirty()).toBeFalse();
   });
 
   it('starts with one empty row when the seed has none', async () => {

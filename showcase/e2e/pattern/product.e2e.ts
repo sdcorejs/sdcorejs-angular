@@ -78,7 +78,7 @@ test.describe('product create', () => {
     await tableRows(page);
     await page.getByRole('button', { name: 'Tạo mới' }).click();
     await expect(title(page)).toHaveText('Tạo mới sản phẩm');
-    const save = page.getByRole('button', { name: 'Lưu' });
+    const save = page.getByRole('button', { name: 'Tạo sản phẩm' });
 
     await save.click();
     await expect(page.getByLabel('Mã sản phẩm')).toBeFocused();
