@@ -10,7 +10,7 @@ import { SdApiHandlerRegistry } from './api-handler-registry';
 import { sdResolveApiHandler } from './api-host';
 import {
   ISdApiConfiguration,
-  SD_API_CONFIG,
+  SD_API_CONFIGURATION,
   SdApiError,
   SdApiHandler,
   SdApiRetryOption,
@@ -55,7 +55,7 @@ export class SdApiService {
   readonly #maxTimerMs = 2_147_483_647;
   readonly #maxRetryAttempts = 10;
   readonly #httpClient = inject(HttpClient);
-  readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) ?? [];
+  readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIGURATION, { optional: true }) ?? [];
   readonly #registry = inject(SdApiHandlerRegistry);
   readonly #cacheService = inject(SdCacheService);
   readonly #destroyRef = inject(DestroyRef);

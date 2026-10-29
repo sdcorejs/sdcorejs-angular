@@ -63,7 +63,7 @@ providers: [
 ];
 ```
 
-Adapter methods are synchronous because Web Storage hydration is synchronous. Remote asynchronous cache callbacks remain on `SD_CACHE_CONFIG`.
+Adapter methods are synchronous because Web Storage hydration is synchronous. Remote asynchronous cache callbacks remain on `SD_CACHE_CONFIGURATION`.
 
 ## Custom serializer rules
 

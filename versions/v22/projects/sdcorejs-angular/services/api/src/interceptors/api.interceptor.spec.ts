@@ -9,7 +9,7 @@ import {
 } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
-import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
+import { ISdApiConfiguration, SD_API_CONFIGURATION, SdApiHandler } from '../api.model';
 import { SdHttpInterceptor } from './api.interceptor';
 
 /**
@@ -26,7 +26,7 @@ function configure(handlers: ISdApiConfiguration['handlers'] | null) {
       provideHttpClient(withInterceptorsFromDi()),
       provideHttpClientTesting(),
       { provide: HTTP_INTERCEPTORS, useClass: SdHttpInterceptor, multi: true },
-      ...(handlers ? [{ provide: SD_API_CONFIG, multi: true, useValue: { handlers } }] : []),
+      ...(handlers ? [{ provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers } }] : []),
     ],
   });
 }
@@ -495,7 +495,7 @@ describe('SdHttpInterceptor', () => {
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
         { provide: HTTP_INTERCEPTORS, useClass: SdHttpInterceptor, multi: true },
-        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: undefined } },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: { handlers: undefined } },
       ],
     });
     const http = TestBed.inject(HttpClient);

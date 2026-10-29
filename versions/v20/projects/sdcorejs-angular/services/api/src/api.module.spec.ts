@@ -9,7 +9,7 @@ import {
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { VERSION } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ISdApiConfiguration, SD_API_CONFIG } from './api.model';
+import { ISdApiConfiguration, SD_API_CONFIGURATION } from './api.model';
 import { SD_API_MISSING_HTTP_CLIENT_MESSAGE, SdApiModule } from './api.module';
 import { SdHttpInterceptor } from './interceptors/api.interceptor';
 
@@ -76,7 +76,7 @@ describe('SdApiModule', () => {
       providers: [
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
-        { provide: SD_API_CONFIG, multi: true, useValue: configuration },
+        { provide: SD_API_CONFIGURATION, multi: true, useValue: configuration },
       ],
     });
     const http = TestBed.inject(HttpClient);

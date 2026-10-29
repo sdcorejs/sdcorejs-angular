@@ -17,7 +17,7 @@ import {
 import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
 import {
-  SD_CACHE_CONFIG,
+  SD_CACHE_CONFIGURATION,
   SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES,
   SdCache,
   SdCacheOption,
@@ -66,7 +66,7 @@ interface CacheHandleOperations<T> {
 
 @Injectable({ providedIn: 'root' })
 export class SdCacheService {
-  readonly #configuration = inject(SD_CACHE_CONFIG, { optional: true });
+  readonly #configuration = inject(SD_CACHE_CONFIGURATION, { optional: true });
   readonly #adapter = inject(SD_PERSISTENCE_STORAGE_ADAPTER);
   readonly #destroyRef = inject(DestroyRef);
   readonly #defaultSerializer = new SdGraphSerializer();
@@ -79,7 +79,7 @@ export class SdCacheService {
   // why: #memoryEntries trước đây không có trần và TTL thì opt-in, trong khi SdApiService luôn gọi
   // release() (không phải destroy()) sau mỗi request — release chỉ bỏ state của handle, KHÔNG bỏ
   // entry memory. Hệ quả: mỗi URL được cache để lại một entry sống hết đời app → bộ nhớ tăng đơn
-  // điệu. Chặn bằng LRU có trần, cấu hình qua SD_CACHE_CONFIG.maxMemoryEntries.
+  // điệu. Chặn bằng LRU có trần, cấu hình qua SD_CACHE_CONFIGURATION.maxMemoryEntries.
   readonly #maxMemoryEntries = this.#normalizeMaxMemoryEntries(this.#configuration?.maxMemoryEntries);
   #destroyed = false;
 

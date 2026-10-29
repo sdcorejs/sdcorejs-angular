@@ -73,10 +73,10 @@ export interface ISdApiConfiguration {
   handlers?: SdApiHandler[];
 }
 
-export const SD_API_CONFIG = new InjectionToken<ISdApiConfiguration>('sd-api.configuration');
+export const SD_API_CONFIGURATION = new InjectionToken<ISdApiConfiguration>('sd-api.configuration');
 
-/** @deprecated Use `SD_API_CONFIG`. This is the same injection token. */
-export const SD_API_CONFIGURATION = SD_API_CONFIG;
+/** @deprecated Use `SD_API_CONFIGURATION`. This is the same injection token. */
+export const SD_API_CONFIG = SD_API_CONFIGURATION;
 
 /**
  * Lỗi nghiệp vụ: HTTP 200 nhưng body envelope báo thất bại (`{ ok: false, ... }`).

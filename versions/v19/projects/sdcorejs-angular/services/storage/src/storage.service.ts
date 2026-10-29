@@ -16,7 +16,7 @@ import {
 } from '@sdcorejs/angular/services/persistence';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
-import { SD_STORAGE_CONFIG, SdStorage, SdStorageOption, SdStorageWithDefault } from './storage.model';
+import { SD_STORAGE_CONFIGURATION, SdStorage, SdStorageOption, SdStorageWithDefault } from './storage.model';
 
 interface StorageEntry {
   data: unknown;
@@ -58,7 +58,7 @@ interface StorageHandleOperations<T, TRead extends T | undefined> {
 
 @Injectable({ providedIn: 'root' })
 export class SdStorageService {
-  readonly #configuration = inject(SD_STORAGE_CONFIG, { optional: true });
+  readonly #configuration = inject(SD_STORAGE_CONFIGURATION, { optional: true });
   readonly #adapter = inject(SD_PERSISTENCE_STORAGE_ADAPTER);
   readonly #destroyRef = inject(DestroyRef);
   readonly #defaultSerializer = new SdGraphSerializer();
@@ -200,7 +200,7 @@ export class SdStorageService {
     // why: KHÔNG có namespace mặc định. Một hằng số dùng chung cho cả thư viện (vd `'sdcorejs'`) không
     // tách được hai app chung origin — cả hai đều nhận đúng hằng số đó nên vẫn va nhau y như cũ — mà
     // lại đổi identity của MỌI handle đang chạy, khiến dữ liệu đã persist bị bỏ rơi khi nâng cấp.
-    // Tách partition là việc của app: khai báo `namespace` per-handle hoặc qua `SD_STORAGE_CONFIG`.
+    // Tách partition là việc của app: khai báo `namespace` per-handle hoặc qua `SD_STORAGE_CONFIGURATION`.
     const namespace = option.namespace ?? this.#configuration?.namespace;
     const version = option.version ?? this.#configuration?.version;
     const area = option.type ?? 'local';

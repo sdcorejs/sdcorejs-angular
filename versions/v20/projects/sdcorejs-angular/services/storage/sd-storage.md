@@ -33,7 +33,7 @@ storage key, and each app silently overwrites the other's value.
 | Source | Precedence | Value |
 | --- | --- | --- |
 | `option.namespace` (per handle) | 1 (highest) | as supplied |
-| `SD_STORAGE_CONFIG.namespace` (per app) | 2 | as supplied |
+| `SD_STORAGE_CONFIGURATION.namespace` (per app) | 2 | as supplied |
 | — | — | absent (handles share one partition per origin) |
 
 ⚠️ **Every application that shares an origin with anything else MUST declare its own `namespace`.**
@@ -41,10 +41,10 @@ The library deliberately does not ship a fallback value: a library-wide constant
 both apps, so it would not separate them at all — it would only change the storage key of every
 existing handle and orphan already-persisted data. Only an app-chosen value actually partitions.
 
-The cheapest correct setup is one global `SD_STORAGE_CONFIG.namespace` per application:
+The cheapest correct setup is one global `SD_STORAGE_CONFIGURATION.namespace` per application:
 
 ```ts
-providers: [{ provide: SD_STORAGE_CONFIG, useValue: { namespace: 'app-a' } satisfies ISdStorageConfiguration }];
+providers: [{ provide: SD_STORAGE_CONFIGURATION, useValue: { namespace: 'app-a' } satisfies ISdStorageConfiguration }];
 ```
 
 Since `namespace` is part of the persistence identity, adopting or changing it starts a new storage
@@ -95,12 +95,12 @@ Current values are wrapped in a bounded, versioned envelope. Pre-1.4 JSON entrie
 
 ## Configuration
 
-`SD_STORAGE_CONFIG` supports a global key rewriter, namespace/version, serializer and deterministic identity canonicalizer.
+`SD_STORAGE_CONFIGURATION` supports a global key rewriter, namespace/version, serializer and deterministic identity canonicalizer.
 
 ```ts
 providers: [
   {
-    provide: SD_STORAGE_CONFIG,
+    provide: SD_STORAGE_CONFIGURATION,
     useValue: {
       namespace: 'portal',
       version: 2,
@@ -128,6 +128,6 @@ supplies a namespace, the handle is created without one — see the collision ha
 - `namespace`/`version` are part of identity, so changing either intentionally starts a new storage partition.
 - **`namespace` still has no default.** Handles created without one keep the storage key they already had, so no persisted value is orphaned by upgrading. Adding a `namespace` is an explicit, opt-in partition change: the previously stored values stop being read from that moment on.
 - Unsupported values now fail explicitly instead of losing types during JSON stringify/parse.
-- Verify custom `SD_STORAGE_CONFIG.key` functions because they now wrap versioned base keys.
+- Verify custom `SD_STORAGE_CONFIGURATION.key` functions because they now wrap versioned base keys.
 
 Focused coverage lives in `storage.service.spec.ts`, `storage.types.spec.ts` and the shared persistence specs.

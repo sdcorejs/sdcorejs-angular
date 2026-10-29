@@ -52,6 +52,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The other form screens follow the same save button: product, customer and category create save with “Tạo sản phẩm”, “Tạo khách hàng” and “Tạo danh mục”; their update screens and settings keep “Lưu”. Every save button has the `save` icon.
 - Order detail: “Trạng thái” in the drawer and “Trạng thái duyệt” on the page show badges instead of plain text.
 
+### Deprecated
+
+#### API
+
+- `SD_API_CONFIG`; use `SD_API_CONFIGURATION`. This reverses the 1.4 aliasing: `SD_API_CONFIGURATION` is now the name to use and `SD_API_CONFIG` the deprecated one.
+  - Both names are the same injection token, so existing `{ provide: SD_API_CONFIG, multi: true }` providers, including those in lazy routes and `loadChildren` modules, keep working unchanged.
+
+  ```diff
+  - { provide: SD_API_CONFIG, useClass: OrdersApiConfiguration, multi: true }
+  + { provide: SD_API_CONFIGURATION, useClass: OrdersApiConfiguration, multi: true }
+  ```
+
+#### Cache
+
+- `SD_CACHE_CONFIG`; use `SD_CACHE_CONFIGURATION`. Both names are the same injection token.
+
+#### Storage
+
+- `SD_STORAGE_CONFIG`; use `SD_STORAGE_CONFIGURATION`. Both names are the same injection token.
+
 ## [3.3] - 2026-10-29
 
 Packages `19.3.3` · `20.3.3` · `21.3.3` · `22.3.3`, validated against `*.3.2`.
