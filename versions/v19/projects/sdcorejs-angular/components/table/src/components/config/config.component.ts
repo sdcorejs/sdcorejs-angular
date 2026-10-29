@@ -1,5 +1,18 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { ChangeDetectorRef, Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectorRef,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  input,
+  output,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
@@ -43,6 +56,8 @@ export class ConfigComponent {
   // 2. SIGNAL QUERIES
   // ==========================================
   modal = viewChild<SdModal>(SdModal);
+  // why: signal query không đặt được trên member `#private`.
+  protected readonly handles = viewChildren<ElementRef<HTMLButtonElement>>('handle');
 
   // ==========================================
   // 3. INJECT
@@ -51,6 +66,7 @@ export class ConfigComponent {
   readonly #confirmService = inject(SdConfirmService);
   readonly #configService = inject(ConfigService);
   readonly #i18n = inject(I18nService);
+  readonly #injector = inject(Injector);
 
   // ==========================================
   // 4. STATE
@@ -68,6 +84,13 @@ export class ConfigComponent {
   readonly #id = `sd-table-config-${nextId++}`;
   readonly hintId = `${this.#id}-hint`;
   #setting?: SdStorageWithDefault<ConfiguredTable>;
+  /** Row lifted from the keyboard, and the order Escape goes back to. */
+  readonly picked = signal<{ field: string; order: ConfiguredColumn[] } | null>(null);
+  /** Text of the live region: each keyboard reorder step. */
+  readonly announcement = signal('');
+  // why: @for dời node DOM khi đổi thứ tự nên handle có thể mất focus giữa chừng; blur lúc đó không phải người dùng rời
+  // handle, không được coi là thả.
+  #refocusing = false;
 
   readonly #allColumns = computed(() => this.configuration()?.columns ?? []);
   readonly searchable = computed(() => this.#allColumns().length > FIND_THRESHOLD);
@@ -96,6 +119,8 @@ export class ConfigComponent {
     this.query.set('');
     this.expanded.set(null);
     this.#textWidthField.set(null);
+    this.picked.set(null);
+    this.announcement.set('');
     this.modal()?.open();
   };
 
@@ -140,6 +165,7 @@ export class ConfigComponent {
   onHandlePointerDown = () => this.expanded.set(null);
 
   drop = (event: CdkDragDrop<ConfiguredColumn[]>) => {
+    this.picked.set(null);
     if (this.searching() || event.previousIndex === event.currentIndex) return;
     const columns = [...this.#allColumns()];
     moveItemInArray(columns, event.previousIndex, event.currentIndex);
@@ -155,7 +181,94 @@ export class ConfigComponent {
   setTruncate = (field: string, truncate: boolean) => this.#patch(field, { truncate });
 
   // ==========================================
-  // 7. TITLE
+  // 7. KEYBOARD REORDER
+  // ==========================================
+  /** Space / Enter picks up and drops, ↑ / ↓ move the picked row, Escape puts the order back. */
+  onHandleKeydown = (event: KeyboardEvent, field: string) => {
+    const picked = this.picked();
+    switch (event.key) {
+      case ' ':
+      case 'Enter':
+        if (picked?.field === field) this.#dropPicked();
+        else this.#pick(field);
+        break;
+      case 'ArrowUp':
+      case 'ArrowDown':
+        if (picked?.field !== field) return;
+        this.#movePicked(field, event.key === 'ArrowUp' ? -1 : 1);
+        break;
+      case 'Escape':
+        if (!picked) return;
+        this.#cancelPick(picked);
+        break;
+      default:
+        return;
+    }
+    // why: khi đang giữ dòng, Escape không được đóng modal và ↑ ↓ không được cuộn danh sách.
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  /** Leaving the handle while a row is held drops it where it is. */
+  onHandleBlur = (field: string) => {
+    if (!this.#refocusing && this.picked()?.field === field) this.#dropPicked();
+  };
+
+  #pick = (field: string) => {
+    if (this.searching()) return;
+    const order = this.#allColumns();
+    this.picked.set({ field, order });
+    this.#announce('core.component.table.config.reorder-picked', field, { total: order.length });
+  };
+
+  #movePicked = (field: string, delta: number) => {
+    const columns = [...this.#allColumns()];
+    const from = columns.findIndex(column => column.origin.field === field);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= columns.length) return;
+    moveItemInArray(columns, from, to);
+    this.configuration.update(cfg => cfg && { ...cfg, columns });
+    this.#announce('core.component.table.config.reorder-moved', field, { total: columns.length });
+    this.#refocus(field);
+  };
+
+  #dropPicked = () => {
+    const field = this.picked()?.field;
+    this.picked.set(null);
+    if (field) this.#announce('core.component.table.config.reorder-dropped', field);
+  };
+
+  #cancelPick = (picked: { field: string; order: ConfiguredColumn[] }) => {
+    this.picked.set(null);
+    this.configuration.update(cfg => cfg && { ...cfg, columns: picked.order });
+    this.announcement.set(this.#i18n.t('core.component.table.config.reorder-cancelled'));
+    this.#refocus(picked.field);
+  };
+
+  /** Announces a step with the row's title and its 1-based position in the current order. */
+  #announce = (key: string, field: string, params: Record<string, number> = {}) => {
+    const columns = this.#allColumns();
+    const index = columns.findIndex(column => column.origin.field === field);
+    const column = columns[index];
+    if (!column) return;
+    this.announcement.set(this.#i18n.t(key, { title: this.titleOf(column), index: index + 1, ...params }));
+  };
+
+  #refocus = (field: string) => {
+    this.#refocusing = true;
+    afterNextRender(
+      () => {
+        this.handles()
+          .find(handle => handle.nativeElement.closest('.c-item')?.getAttribute('data-field') === field)
+          ?.nativeElement.focus();
+        this.#refocusing = false;
+      },
+      { injector: this.#injector }
+    );
+  };
+
+  // ==========================================
+  // 8. TITLE
   // ==========================================
   titleOf = (item: ConfiguredColumn): string => item.title || item.origin.title;
 
@@ -166,7 +279,7 @@ export class ConfigComponent {
   restoreTitle = (field: string) => this.#patch(field, { title: undefined });
 
   // ==========================================
-  // 8. WIDTH
+  // 9. WIDTH
   // ==========================================
   /** A width in another unit than px is edited as text, verbatim. */
   widthIsText = (item: ConfiguredColumn): boolean =>

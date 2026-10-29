@@ -329,6 +329,21 @@ sd-checkbox {
   }
 }
 
+// Dòng đang giữ bằng bàn phím: cùng hình thức với preview khi kéo chuột, nhưng vẫn nằm trong danh sách.
+.c-item--picked {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--sd-radius-4);
+  background: var(--sd-surface);
+  outline: 1px solid var(--sd-primary);
+  outline-offset: -1px;
+  box-shadow: var(--sd-shadow-md);
+
+  .c-handle {
+    color: var(--sd-primary);
+  }
+}
+
 // Các dòng còn lại trượt sang chỗ mới thay vì nhảy cóc.
 .cdk-drag-animating,
 .c-list.cdk-drop-list-dragging .c-item:not(.cdk-drag-placeholder) {

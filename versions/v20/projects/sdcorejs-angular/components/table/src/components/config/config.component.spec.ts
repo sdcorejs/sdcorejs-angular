@@ -603,4 +603,207 @@ describe('ConfigComponent (table setup dialog)', () => {
       expect(columnOf('email').invisible).toBeFalsy();
     }));
   });
+
+  // -------------------------------------------------------------------------
+  // Keyboard reorder
+  // -------------------------------------------------------------------------
+
+  describe('keyboard reorder', () => {
+    beforeEach(() => setup());
+
+    const handle = (field: string) => item(field).querySelector<HTMLButtonElement>('.c-handle')!;
+    const live = () => panel().querySelector<HTMLElement>('.c-live')!;
+
+    /** Dispatches a keydown on the handle; returns whether it bubbled past the dialog content. */
+    function press(field: string, key: string): { bubbled: boolean; prevented: boolean } {
+      let bubbled = false;
+      const listener = () => (bubbled = true);
+      document.addEventListener('keydown', listener);
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      handle(field).dispatchEvent(event);
+      document.removeEventListener('keydown', listener);
+      render();
+      return { bubbled, prevented: event.defaultPrevented };
+    }
+
+    it('announces through a live region inside the dialog', fakeAsync(() => {
+      open();
+      expect(live().getAttribute('aria-live')).toBe('assertive');
+      expect(live().getAttribute('aria-atomic')).toBe('true');
+      expect(live().textContent!.trim()).toBe('');
+    }));
+
+    it('points the handle at the drag hint', fakeAsync(() => {
+      open();
+      const hint = panel().querySelector('.c-hint')!;
+      expect(handle('email').getAttribute('aria-describedby')).toBe(hint.id);
+    }));
+
+    it('picks a row up with Space and says where it is', fakeAsync(() => {
+      open();
+      handle('email').focus();
+      const result = press('email', ' ');
+      expect(result.prevented).toBe(true);
+      expect(item('email').classList).toContain('c-item--picked');
+      expect(live().textContent!.trim()).toBe('Đã nhấc Email, vị trí 2/3.');
+    }));
+
+    it('moves the picked row with the arrows and keeps focus on its handle', fakeAsync(() => {
+      open();
+      handle('email').focus();
+      press('email', ' ');
+      const result = press('email', 'ArrowDown');
+      expect(result.prevented).toBe(true);
+      expect(rowFields()).toEqual(['name', 'dept', 'email']);
+      expect(document.activeElement).toBe(handle('email'));
+      expect(live().textContent!.trim()).toBe('Email: vị trí 3/3.');
+
+      press('email', 'ArrowUp');
+      press('email', 'ArrowUp');
+      expect(rowFields()).toEqual(['email', 'name', 'dept']);
+      expect(document.activeElement).toBe(handle('email'));
+      expect(live().textContent!.trim()).toBe('Email: vị trí 1/3.');
+    }));
+
+    it('does not move past either end', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      press('name', 'Enter');
+      press('name', 'ArrowUp');
+      expect(rowFields()).toEqual(['name', 'email', 'dept']);
+      expect(item('name').classList).toContain('c-item--picked');
+    }));
+
+    it('drops with Enter or Space and announces the new position', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      press('name', 'Enter');
+      press('name', 'ArrowDown');
+      press('name', 'Enter');
+      expect(item('name').classList).not.toContain('c-item--picked');
+      expect(live().textContent!.trim()).toBe('Đã chuyển Họ và tên tới vị trí 2.');
+
+      press('dept', ' ');
+      press('dept', 'ArrowUp');
+      press('dept', ' ');
+      expect(rowFields()).toEqual(['email', 'dept', 'name']);
+      expect(live().textContent!.trim()).toBe('Đã chuyển Phòng ban tới vị trí 2.');
+    }));
+
+    it('ignores the arrows until a row is picked', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      const result = press('name', 'ArrowDown');
+      expect(result.prevented).toBe(false);
+      expect(rowFields()).toEqual(['name', 'email', 'dept']);
+    }));
+
+    it('cancels with Escape, restores the order and keeps the dialog open', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      press('name', ' ');
+      press('name', 'ArrowDown');
+      press('name', 'ArrowDown');
+      const result = press('name', 'Escape');
+      tick(300);
+      fixture.detectChanges();
+      expect(result.bubbled).withContext('Escape must not reach the dialog').toBe(false);
+      expect(rowFields()).toEqual(['name', 'email', 'dept']);
+      expect(item('name').classList).not.toContain('c-item--picked');
+      expect(document.activeElement).toBe(handle('name'));
+      expect(live().textContent!.trim()).toBe('Đã huỷ đổi thứ tự.');
+      expect(document.body.querySelector('.sd-table-config')).not.toBeNull();
+    }));
+
+    it('lets Escape through when no row is picked', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      const result = press('name', 'Escape');
+      expect(result.bubbled).toBe(true);
+      tick(300);
+    }));
+
+    it('drops the row where it is when focus leaves the handle', fakeAsync(() => {
+      open();
+      handle('name').focus();
+      press('name', ' ');
+      press('name', 'ArrowDown');
+      handle('name').blur();
+      render();
+      expect(item('name').classList).not.toContain('c-item--picked');
+      expect(rowFields()).toEqual(['email', 'name', 'dept']);
+      expect(live().textContent!.trim()).toBe('Đã chuyển Họ và tên tới vị trí 2.');
+    }));
+
+    it('saves a keyboard reorder on Apply', fakeAsync(() => {
+      open();
+      handle('dept').focus();
+      press('dept', ' ');
+      press('dept', 'ArrowUp');
+      press('dept', ' ');
+      byAutoId('components-table-demo-config-apply')!.click();
+      tick(300);
+      fixture.detectChanges();
+      open();
+      expect(rowFields()).toEqual(['name', 'dept', 'email']);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Tab order
+  // -------------------------------------------------------------------------
+
+  describe('tab order', () => {
+    /** Focusable controls of the panel, in DOM (= Tab) order, named by their role in the dialog. */
+    function tabStops(): string[] {
+      const focusable = Array.from(
+        panel().querySelectorAll<HTMLElement>('input:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+      ).filter(el => !el.closest('[aria-hidden="true"]') && el.tabIndex >= 0);
+      return focusable.map(el => {
+        if (el.closest('.c-find')) return 'find';
+        if (el.closest('[data-autoid$="-config-show-all"]') || el.matches('[data-autoid$="-config-show-all"]')) return 'show-all';
+        const field = el.closest<HTMLElement>('.c-item')?.dataset['field'];
+        const part = el.classList.contains('c-handle')
+          ? 'handle'
+          : el.closest('.c-show')
+            ? 'show'
+            : el.classList.contains('c-toggle')
+              ? 'toggle'
+              : el.closest('.c-field-title')
+                ? el.classList.contains('c-restore')
+                  ? 'restore'
+                  : 'title'
+                : el.closest('.c-field-width')
+                  ? 'width'
+                  : el.closest('.c-fixed')
+                    ? 'fixed'
+                    : el.closest('.c-truncate')
+                      ? 'truncate'
+                      : el.className;
+        return `${field}:${part}`;
+      });
+    }
+
+    it('runs find → show all → handle, show, toggle per row → the open row details', fakeAsync(() => {
+      setup(WIDE_COLUMNS);
+      open();
+      clickCheckbox(item('code').querySelector('.c-show')!);
+      toggle('customer');
+      type(item('customer').querySelector('.c-field-title'), 'Tên khách');
+      const stops = tabStops();
+      expect(stops.slice(0, 2)).toEqual(['find', 'show-all']);
+      expect(stops.slice(2, 5)).toEqual(['code:handle', 'code:show', 'code:toggle']);
+      expect(stops.slice(5, 13)).toEqual([
+        'customer:handle',
+        'customer:show',
+        'customer:toggle',
+        'customer:title',
+        'customer:restore',
+        'customer:width',
+        'customer:fixed',
+        'customer:truncate',
+      ]);
+      expect(stops[13]).toBe('phone:handle');
+    }));
+  });
 });

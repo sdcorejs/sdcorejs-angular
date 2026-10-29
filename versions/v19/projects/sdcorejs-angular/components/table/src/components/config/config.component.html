@@ -42,6 +42,9 @@
         {{ (_searching ? 'core.component.table.config.drag-disabled-search' : 'core.component.table.config.drag-hint') | sdTranslate }}
       </p>
 
+      <!-- why: vùng live nằm TRONG modal — vùng nằm ngoài một hộp thoại aria-modal có thể bị trình đọc màn hình bỏ qua. -->
+      <div class="c-live sd-visually-hidden" aria-live="assertive" aria-atomic="true">{{ announcement() }}</div>
+
       <div
         class="c-list"
         cdkDropList
@@ -60,9 +63,11 @@
             [cdkDragData]="item"
             [attr.data-field]="_field"
             [class.c-item--open]="_open"
-            [class.c-item--hidden]="_hidden">
+            [class.c-item--hidden]="_hidden"
+            [class.c-item--picked]="picked()?.field === _field">
             <div class="c-row">
               <button
+                #handle
                 type="button"
                 class="c-handle"
                 cdkDragHandle
@@ -70,7 +75,9 @@
                 [title]="'core.component.table.config.drag-handle' | sdTranslate"
                 [attr.aria-label]="'core.component.table.config.drag-handle' | sdTranslate"
                 [attr.aria-describedby]="hintId"
-                (pointerdown)="onHandlePointerDown()">
+                (pointerdown)="onHandlePointerDown()"
+                (keydown)="onHandleKeydown($event, _field)"
+                (blur)="onHandleBlur(_field)">
                 <sd-icon name="drag_indicator" size="20px" aria-hidden="true"></sd-icon>
               </button>
               <!-- why: ô "Hiện" KHÔNG bao giờ bị khoá — nó là đường duy nhất để bật lại một cột đã tắt. Nhãn bị ẩn
