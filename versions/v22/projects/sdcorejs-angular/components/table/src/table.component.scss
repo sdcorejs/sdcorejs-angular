@@ -669,10 +669,50 @@
   gap: 6px;
 }
 
-:host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile) {
+:host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile),
+:host .sd-table-surface--query-bar > .c-container:not(.sd-table-mobile) {
   > .c-table {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+  }
+}
+
+// Query bar (filter.mode 'query-bar'): thanh flush nằm liền trong card bảng, nền trắng cố định như quick search; viền
+// ngăn với bảng là viền trên sẵn có của .c-table. Đệm 8px 12px thuộc appearance 'flush' của sd-query-bar.
+:host .sd-table-query-bar {
+  display: block;
+  flex: 0 0 auto;
+  min-width: 0;
+  background: var(--sd-table-bg, #ffffff);
+  border-top-left-radius: var(--sd-radius-6, 6px);
+  border-top-right-radius: var(--sd-radius-6, 6px);
+  --sd-control-label-bg: var(--sd-table-bg, #ffffff);
+}
+
+:host .sd-table-query-bar-end {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  min-width: 0;
+  padding-left: 8px;
+}
+
+:host .sd-table-query-bar-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 12px 8px;
+  background: var(--sd-table-bg, #ffffff);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-18, 18px);
+  color: var(--sd-error);
+
+  sd-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    font-size: var(--sd-font-size-16, 16px);
   }
 }
 

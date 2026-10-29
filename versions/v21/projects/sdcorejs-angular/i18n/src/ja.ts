@@ -546,6 +546,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.skip': 'スキップ',
   'core.component.table.apply': '適用',
   'core.component.table.filter': 'フィルター',
+  'core.component.table.query-bar.filters': 'フィルター',
+  'core.component.table.query-bar.columns': '列',
   'core.component.table.clear-selection': '選択を解除',
   'core.component.table.customize': 'カスタマイズ',
   'core.component.table.search': '検索',

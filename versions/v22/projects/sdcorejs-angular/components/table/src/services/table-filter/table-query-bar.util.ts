@@ -514,6 +514,36 @@ export const tableFilterToQuery = (value: TableFilterValue, ctx: SdTableQueryCon
 };
 
 /**
+ * Folds a change of the applied state into a bar that holds unapplied edits (manualFilter, or a chip edited while the
+ * state changed). A key whose applied chip did not change between `before` and `after` keeps its draft — edited,
+ * added or removed by the user. A key that changed takes the applied chip: the outside change wins for that field.
+ * New applied chips go after the draft ones.
+ */
+export const mergeQueryDraft = (draft: Filter[], before: Filter[], after: Filter[]): Filter[] => {
+  const keyOf = (filter: Filter): string => (filter as { field: string }).field;
+  const was = new Map(before.map(filter => [keyOf(filter), filter]));
+  const now = new Map(after.map(filter => [keyOf(filter), filter]));
+  const unchanged = (key: string): boolean => {
+    const left = was.get(key);
+    const right = now.get(key);
+    if (!left || !right) return !left && !right;
+    return (
+      left.operator === right.operator && stringify((left as { data?: unknown }).data) === stringify((right as { data?: unknown }).data)
+    );
+  };
+  const result: Filter[] = [];
+  const seen = new Set<string>();
+  for (const filter of draft) {
+    const key = keyOf(filter);
+    seen.add(key);
+    if (unchanged(key)) result.push(filter);
+    else if (now.has(key)) result.push(now.get(key)!);
+  }
+  for (const filter of after) if (!seen.has(keyOf(filter)) && !unchanged(keyOf(filter))) result.push(filter);
+  return result;
+};
+
+/**
  * Bar query → raw record (handoff section 5). Every field of the bar is written: its chip, or the empty value when
  * it has none. Covered columns are cleared; excluded fields are left alone. A value equivalent to the stored one
  * (`[]` and `null`, `'1'` and `true`, …) keeps the stored representation, so a round trip changes nothing.

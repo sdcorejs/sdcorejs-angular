@@ -545,6 +545,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.skip': 'Bỏ qua',
   'core.component.table.apply': 'Áp dụng',
   'core.component.table.filter': 'Bộ lọc',
+  'core.component.table.query-bar.filters': 'Bộ lọc',
+  'core.component.table.query-bar.columns': 'Cột',
   'core.component.table.clear-selection': 'Xóa lựa chọn',
   'core.component.table.customize': 'Tùy chỉnh',
   'core.component.table.search': 'Tìm kiếm',

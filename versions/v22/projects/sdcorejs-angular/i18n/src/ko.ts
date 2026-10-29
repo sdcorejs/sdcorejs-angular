@@ -545,6 +545,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.skip': '건너뛰기',
   'core.component.table.apply': '적용',
   'core.component.table.filter': '필터',
+  'core.component.table.query-bar.filters': '필터',
+  'core.component.table.query-bar.columns': '열',
   'core.component.table.clear-selection': '선택 해제',
   'core.component.table.customize': '사용자 지정',
   'core.component.table.search': '검색',

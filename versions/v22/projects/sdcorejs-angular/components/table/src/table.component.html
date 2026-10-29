@@ -26,7 +26,9 @@
 @let _rowCommands = rowCommands();
 @let _mobileCards = mobileCards();
 @let _isMobile = isMobile();
+@let _queryBarMode = queryBarMode();
 @let _showInlineFilter =
+  !_queryBarMode &&
   !_isMobile &&
   !_tableOption?.filter?.disabled &&
   _tableOption?.filter?.hideInlineFilter !== true &&
@@ -45,7 +47,7 @@
      trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
 <span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
-  @if (!_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+  @if (!_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
     <external-filter
       class="mb-16"
       [autoId]="_autoId"
@@ -159,8 +161,36 @@
   </ng-template>
 
   <ng-content select="[sdTableTop]"></ng-content>
-  <div class="sd-table-surface" [class.sd-table-surface--quick-search]="!!_quickSearch">
-    @if (_quickSearch) {
+  @let _queryBarOption = queryBarOption();
+  <div
+    class="sd-table-surface"
+    [class.sd-table-surface--quick-search]="!!_quickSearch && !_queryBarMode"
+    [class.sd-table-surface--query-bar]="_queryBarMode && !!_queryBarOption">
+    @if (_queryBarMode) {
+      <!-- why: thanh nằm trên .c-container, ngoài lớp loading (làm mờ .c-table) — luôn bấm được khi đang tải. -->
+      @if (_queryBarOption) {
+        @let _queryBarHint = queryBarHint();
+        <sd-query-bar
+          class="sd-table-query-bar"
+          role="search"
+          [attr.aria-label]="'core.component.table.filter' | sdTranslate"
+          [attr.data-autoid]="_autoId ? _autoId + '-query-bar' : null"
+          [option]="_queryBarOption"
+          [(filters)]="barFilters"
+          [(search)]="barSearch"
+          (apply)="onQueryBarApply($event)">
+          @if (sdQuickSearchRightDef(); as _right) {
+            <div sdQueryBarEnd class="sd-table-query-bar-end"><ng-container [ngTemplateOutlet]="_right.templateRef" /></div>
+          }
+        </sd-query-bar>
+        @if (_queryBarHint) {
+          <p class="sd-table-query-bar-hint" [id]="queryBarHintId">
+            <sd-icon name="error_outline" aria-hidden="true"></sd-icon>
+            <span>{{ _queryBarHint }}</span>
+          </p>
+        }
+      }
+    } @else if (_quickSearch) {
       <sd-table-quick-search
         [option]="_quickSearch"
         [value]="quickSearchValue()"

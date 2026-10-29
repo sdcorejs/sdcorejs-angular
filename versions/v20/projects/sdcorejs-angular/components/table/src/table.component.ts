@@ -20,6 +20,7 @@ import {
   effect,
   inject,
   input,
+  isDevMode,
   isSignal,
   output,
   signal,
@@ -41,15 +42,24 @@ import { SdTableTitleDefDirective } from './directives/sd-table-title-def.direct
 import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdTableQuickSearchRightDefDirective } from './directives/sd-table-quick-search-right-def.directive';
 import { TableQuickSearchComponent } from './components/filter/quick-search/quick-search.component';
-import { SdTableQuickSearchValue } from './services/table-filter/table-quick-search.model';
+import { SdTableQuickSearchFilterValue, SdTableQuickSearchValue } from './services/table-filter/table-quick-search.model';
 import { hasQuickSearchValue, quickSearchValid, sameQuickSearchValue } from './services/table-filter/table-quick-search.util';
+import { SdQuery, SdQueryBar, SdQueryBarOption } from '@sdcorejs/angular/components/query-bar';
+import {
+  mergeQueryDraft,
+  queryToTableFilter,
+  SdTableQueryChange,
+  SdTableQueryContext,
+  sdTableQueryFields,
+  tableFilterToQuery,
+} from './services/table-filter/table-query-bar.util';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
-import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model';
+import { SdTableColumn, SdTableColumnAnyRow, SdTableColumnNormal } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
 import {
@@ -102,7 +112,7 @@ import { AggregateSnapshot, buildAggregateSnapshot } from './services/table-aggr
 import { SdTableAggregateOperation, SdTableAggregateResult } from './models/table-aggregate.model';
 import { SdAggregateLayoutDirective, SdTableFooterRowDefDirective } from './directives/sd-aggregate-layout.directive';
 
-import { Operator } from '@sdcorejs/utils/models';
+import { Filter, Operator } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 
@@ -222,6 +232,22 @@ interface ScheduledTableRead {
   source: 'filter' | 'read';
 }
 
+/** A raw filter value that filters something — the rule of `#isFiltered`: a non-empty array, a range with an end, a value. */
+const isRawFilterSet = (value: unknown): boolean => {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === 'object' && ('from' in value || 'to' in value)) {
+    const range = value as { from?: unknown; to?: unknown };
+    return !!range.from || !!range.to;
+  }
+  return value !== undefined && value !== null && value !== '';
+};
+
+const isNoDataOperator = (operator: Operator | undefined): boolean => operator === 'NULL' || operator === 'NOT_NULL';
+
+/** Leaf columns of `option.columns` (children of grouped headers flattened). */
+const leafColumns = (columns: SdTableColumnAnyRow[]): SdTableColumnNormal<any>[] =>
+  columns.flatMap(column => (column.type === 'children' ? column.children : [column]));
+
 @Injectable()
 export class SdTablePaginatorIntl extends MatPaginatorIntl {
   // i18n labels resolved at construction. Reads VI/EN from I18nService.
@@ -262,6 +288,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     tabindex: '0',
     '[attr.data-loading]': 'loading() ? "true" : "false"',
     '[attr.data-loading-view]': 'loadingView()',
+    '[attr.data-filter-mode]': 'effectiveFilterMode()',
     '[class.sd-table--fill]': 'fill()',
   },
   providers: [
@@ -298,6 +325,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     ColumnTitleComponent,
     ExternalFilterComponent,
     TableQuickSearchComponent,
+    SdQueryBar,
     ConfigComponent,
     ColumnFilterComponent,
     MobileFilterComponent,
@@ -682,6 +710,123 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   private readonly quickSearchControl = viewChild(TableQuickSearchComponent);
   readonly quickSearchValid = computed(() => quickSearchValid(this.quickSearchOption(), this.quickSearchValue()));
   readonly #filterRegisterRevision = signal(0);
+
+  // ==========================================
+  // QUERY BAR (`filter.mode: 'query-bar'`) — một lớp hiển thị trên cùng TableFilterValue (handoff table-query-bar)
+  // ==========================================
+  /** `filter.mode` sau khi gộp `SD_TABLE_CONFIGURATION.filter.mode`. */
+  readonly filterMode = computed(() => this.tableOption()?.filter?.mode ?? 'default');
+  /** Giao diện lọc đang hiển thị: mobile luôn dùng giao diện mặc định; giá trị lọc không đổi khi đổi viewport. */
+  readonly effectiveFilterMode = computed(() => (this.isMobile() ? 'default' : this.filterMode()));
+  /** Thanh query bar thay quick search, external filter và filter dưới cột. */
+  readonly queryBarMode = computed(() => this.effectiveFilterMode() === 'query-bar' && !this.tableOption()?.filter?.disabled);
+  readonly queryBar = viewChild(SdQueryBar);
+  /** Chip trên thanh (nháp của thanh) và ô tìm — gắn hai chiều với `sd-query-bar`. */
+  readonly barFilters = signal<Filter[]>([]);
+  readonly barSearch = signal('');
+  readonly queryBarHintId = `sd-table-${Utilities.generateUuid()}-query-bar-hint`;
+  /** Giá trị lọc đã áp dụng, theo lần phát gần nhất của filter register. */
+  readonly #appliedFilter = signal<TableFilterValue | undefined>(undefined);
+  readonly #inlineExternal = signal<Record<string, boolean>>({});
+  #filterConfigurationSubscription?: Subscription;
+  /** Chip dựng từ giá trị đã áp dụng ở lần đồng bộ trước — để phân biệt nháp với giá trị đã áp dụng. */
+  #barDerived: Filter[] = [];
+  /** Mảng ghi vào `barFilters` lần cuối; khác mảng đang có nghĩa là người dùng đã sửa thanh. */
+  #barWritten: Filter[] = this.barFilters();
+  #barTerm?: string;
+  #barActive = false;
+  #barPending = false;
+  #barApplying = false;
+  #barWarned = false;
+
+  /** Cột bị ẩn qua cấu hình mà vẫn còn giá trị lọc: chip của nó ở lại thanh tới khi bị xoá. */
+  readonly #hiddenFilteredColumns = computed(
+    () => {
+      const config = this.configuration();
+      const value = this.#appliedFilter();
+      const option = this.tableOption();
+      if (!config || !value || !option || !this.queryBarMode()) return [] as string[];
+      const shown = new Set(leafColumns([...config.firstColumns, ...config.secondColumns]).map(column => column.field));
+      return leafColumns(option.columns)
+        .filter(column => !column.hidden && !shown.has(column.field) && isRawFilterSet(value.columnFilter?.[column.field]))
+        .map(column => column.field);
+    },
+    { equal: (a, b) => a.length === b.length && a.every((field, index) => field === b[index]) }
+  );
+
+  /** Field của thanh và bảng tra nguồn; `undefined` khi không ở mode query-bar. */
+  readonly queryBarModel = computed<SdTableQueryContext | undefined>(() => {
+    if (!this.queryBarMode()) return undefined;
+    const option = this.tableOption();
+    const config = this.configuration();
+    if (!option || !config) return undefined;
+    this.#filterRegisterRevision();
+    const filter = option.filter ?? {};
+    const hidden = new Set(this.#hiddenFilteredColumns());
+    const fields = sdTableQueryFields({
+      columns: [...config.firstColumns, ...leafColumns(option.columns).filter(column => hidden.has(column.field))],
+      externalFilters: filter.externalFilters,
+      quickSearch: this.quickSearchOption(),
+      inlineExternal: this.#inlineExternal(),
+      queryBar: filter.queryBar,
+      hideColumns: filter.hideInlineFilter === true,
+      labels: {
+        filters: this.#i18n.t('core.component.table.query-bar.filters'),
+        columns: this.#i18n.t('core.component.table.query-bar.columns'),
+      },
+      filterDefs: this.sdFilterDefs().map(def => def.sdTableFilterDef()),
+      cacheValues: this.cacheValues,
+    });
+    return { ...fields, defaultColumnOperator: untracked(() => this.filterRegister?.value.default?.().columnOperator) };
+  });
+
+  /** Giá trị đã áp dụng khác default (so trên các field của thanh) — bật nút Xoá lọc. */
+  readonly #queryBarDirty = computed(() => {
+    const ctx = this.queryBarModel();
+    const value = this.#appliedFilter();
+    const defaults = this.filterRegister?.value.default?.();
+    if (!ctx || !value || !defaults) return false;
+    const snapshot = (input: TableFilterValue): string => {
+      const query = tableFilterToQuery(input, ctx);
+      return Utilities.canonicalStringify({
+        filters: query.filters.map(filter => [(filter as { field: string }).field, filter.operator, (filter as { data?: unknown }).data]),
+        search: query.search ?? '',
+      });
+    };
+    return snapshot(value) !== snapshot(defaults);
+  });
+
+  readonly queryBarOption = computed<SdQueryBarOption | undefined>(() => {
+    const ctx = this.queryBarModel();
+    const filter = this.tableOption()?.filter;
+    if (!ctx || !filter) return undefined;
+    const autoId = this.autoId();
+    return {
+      autoId: autoId ? `${autoId}-query-bar` : undefined,
+      fields: ctx.fields,
+      mode: filter.queryBar?.editor ?? 'popover',
+      density: 'compact',
+      showSearch: ctx.search,
+      searchPlaceholder: this.quickSearchOption()?.placeholder,
+      showOperatorOnChip: 'auto',
+      applyOn: filter.manualFilter ? 'search' : 'commit',
+      appearance: 'flush',
+      onClearAll: this.#clearQueryBar,
+      clearDisabled: !this.#queryBarDirty(),
+      invalidHintId: this.queryBarHintId,
+    };
+  });
+
+  /** Dòng nhắc dưới thanh: field bắt buộc còn rỗng, kể cả quick filter bị ẩn (vẫn chặn đọc). */
+  readonly queryBarHint = computed(() => {
+    const labels = (this.queryBar()?.invalidFields() ?? []).map(field => field.label);
+    const value = this.quickSearchValue();
+    for (const item of this.quickSearchOption()?.filters ?? []) {
+      const hidden = isSignal(item.hidden) ? item.hidden() : item.hidden;
+      if (item.required && hidden && !hasQuickSearchValue(value.filters?.[item.field])) labels.push(item.title);
+    }
+    return labels.length ? this.#i18n.t('core.component.query-bar.required', { label: labels.join(', ') }) : '';
+  });
   key = Utilities.generateUuid();
 
   columnOperator: Record<string, Operator> = {};
@@ -927,6 +1072,41 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       });
     });
 
+    // Query bar: field đổi (cột, inlineExternal, ngôn ngữ) thì đồng bộ lại; vừa vào mode (desktop) thì dựng lại từ raw.
+    effect(() => {
+      const ctx = this.queryBarModel();
+      untracked(() => {
+        if (!ctx) {
+          this.#barActive = false;
+          return;
+        }
+        if (!this.filterRegister) return;
+        const rebuild = !this.#barActive;
+        this.#barActive = true;
+        this.#syncQueryBar(this.filterRegister.value.get(), rebuild);
+      });
+    });
+
+    // Query bar: raw đổi trong lúc popover đang mở / chip đang dựng thì hoãn; đóng xong mới đồng bộ.
+    effect(() => {
+      const bar = this.queryBar();
+      if (bar && (bar.editingIndex() !== null || bar.building())) return;
+      untracked(() => {
+        if (this.#barPending && this.filterRegister) this.#syncQueryBar(this.filterRegister.value.get(), false);
+      });
+    });
+
+    // Query bar: field không lên được thanh vẫn gửi giá trị — báo cho dev một lần mỗi bảng.
+    effect(() => {
+      const excluded = this.queryBarModel()?.excluded;
+      if (!excluded?.length || this.#barWarned || !isDevMode()) return;
+      this.#barWarned = true;
+      console.warn(
+        '[sd-table] filter.mode "query-bar": these filters are not on the query bar. Their values are still sent; keep filter.mode "default" if users must edit them.',
+        excluded
+      );
+    });
+
     effect(onCleanup => {
       const paginator = this.paginator();
       if (paginator) {
@@ -1165,8 +1345,19 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#configurationSubscription = undefined;
     this.#filterRegisterSubscription?.unsubscribe();
     this.#filterRegisterSubscription = undefined;
+    this.#filterConfigurationSubscription?.unsubscribe();
+    this.#filterConfigurationSubscription = undefined;
     this.filterRegister = undefined!;
     this.quickSearchValue.set({ term: '', filters: {} });
+    this.#appliedFilter.set(undefined);
+    this.#inlineExternal.set({});
+    this.#barDerived = [];
+    this.barFilters.set([]);
+    this.#barWritten = this.barFilters();
+    this.barSearch.set('');
+    this.#barTerm = undefined;
+    this.#barActive = false;
+    this.#barPending = false;
 
     this.#tableId = Utilities.generateUuid();
     this.key = Utilities.generateUuid();
@@ -1226,6 +1417,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     option.filter.manualFilter = option?.filter?.manualFilter ?? this.tableConfiguration?.filter?.manualFilter;
     option.filter.hideExternalFilterToolbar =
       option?.filter?.hideExternalFilterToolbar ?? this.tableConfiguration?.filter?.hideExternalFilterToolbar;
+    // why: chỉ ghi khi configuration có giá trị — bảng không dùng mode mới giữ nguyên object filter của consumer.
+    const filterConfiguration = this.tableConfiguration?.filter;
+    if (option.filter.mode === undefined && filterConfiguration?.mode) option.filter.mode = filterConfiguration.mode;
+    if (filterConfiguration?.queryBar) option.filter.queryBar = { ...filterConfiguration.queryBar, ...option.filter.queryBar };
     for (const column of option.columns || []) {
       if (column.filter?.operator?.enable) {
         if (!column.filter?.operator?.list?.length) {
@@ -1299,11 +1494,22 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       force: true,
     });
 
+    // Query bar: chip ghim theo inlineExternal (người dùng đổi ở mode default). Đăng ký trước value để lần đồng bộ đầu
+    // đã có giá trị này.
+    this.#filterConfigurationSubscription?.unsubscribe();
+    this.#filterConfigurationSubscription = this.filterRegister.configuration.observer.subscribe(configuration =>
+      this.#inlineExternal.set(configuration.inlineExternal || {})
+    );
+    this.#subscription.add(this.#filterConfigurationSubscription);
+
     this.#filterRegisterSubscription?.unsubscribe();
     this.#filterRegisterSubscription = this.filterRegister.value.observer.subscribe(value => {
       this.quickSearchValue.set(value.quickSearch || { term: '', filters: {} });
       this.columnOperator = value.columnOperator || {};
       this.#syncColumnFilterInPlace(value.columnFilter || {});
+      this.#appliedFilter.set(value);
+      // why: lần phát do thanh áp dụng thì dựng lại thanh từ raw (nháp đã nằm trong raw); lần phát từ ngoài thì giữ nháp.
+      this.#syncQueryBar(value, this.#barApplying);
       // why: hydrate ban đầu và onFilter chuẩn bị chính request hiện tại; không phát lịch đọc tự hủy nhánh đang chờ render.
       if (!this.#configurationReady) return;
       if (this.#preparingFilterRequest) {
@@ -1413,6 +1619,17 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return false;
   };
 
+  /**
+   * External filter `required` có giá trị chưa. Mode default đọc form của `ExternalFilterComponent` như trước; mode
+   * query-bar không có form đó nên kiểm tra trên giá trị đã áp dụng.
+   */
+  #externalFilterValid = (filterReq: SdTableFilterRequest): boolean => {
+    if (!this.queryBarMode()) return !this.externalFilter()?.form?.invalid;
+    return (this.tableOption()?.filter?.externalFilters ?? []).every(
+      item => !item.required || isRawFilterSet(filterReq.rawExternalFilter?.[item.field])
+    );
+  };
+
   #checkFilter = (filterReq: SdTableFilterRequest) => {
     this.isFiltered.set(this.#isFiltered(filterReq));
     this.requireFiltered.set(!!this.tableOption()?.filter?.externalFilters?.some(e => e.required) || !this.quickSearchValid());
@@ -1437,7 +1654,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       try {
         try {
           onFilter?.(filterReq, {
-            externalFilterValid: !this.externalFilter()?.form?.invalid,
+            externalFilterValid: this.#externalFilterValid(filterReq),
             quickSearchValid: validQuickSearch,
           });
         } catch (err) {
@@ -1451,7 +1668,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // why: onFilter có thể hydrate tenant/filter từ URL trước khi chụp snapshot; kiểm tra giá trị đã áp dụng.
       validQuickSearch = quickSearchValid(this.quickSearchOption(), filterReq.quickSearch);
       this.#checkFilter(filterReq);
-      if (this.externalFilter()?.form?.invalid || !validQuickSearch) {
+      if (!this.#externalFilterValid(filterReq) || !validQuickSearch) {
         this.#read.invalidate();
         this.#failedRead = undefined;
         this.loading.set(false);
@@ -1884,6 +2101,94 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   onQuickSearchChange = (value: SdTableQuickSearchValue): void => {
     this.filterRegister.value.set({ quickSearch: value });
+  };
+
+  /**
+   * Query bar `(apply)`: ghi cả thanh vào filter register trong một lần `value.set`, rồi gọi callback của các filter
+   * vừa đổi như control mặc định. Reload, cache, `filtered` đi đường cũ.
+   */
+  onQueryBarApply = (query: SdQuery): void => {
+    const ctx = this.queryBarModel();
+    if (!ctx || !this.filterRegister) return;
+    const current = this.filterRegister.value.get();
+    const { patch, changed } = queryToTableFilter(query, ctx, current);
+    const termChanged = (patch.quickSearch?.term ?? '') !== (current.quickSearch?.term ?? '');
+    // why: như column-filter — đổi toán tử của cột đang trống (không phải NULL / NOT_NULL) chỉ lưu, không đọc lại.
+    const silent =
+      !termChanged &&
+      changed.length > 0 &&
+      changed.every(change => {
+        const field = ctx.sources.get(change.key)?.field ?? '';
+        return (
+          !change.valueChanged &&
+          !isNoDataOperator(change.operator) &&
+          !isNoDataOperator(current.columnOperator?.[field]) &&
+          !isRawFilterSet(change.value)
+        );
+      });
+    this.#barApplying = true;
+    try {
+      this.filterRegister.value.set(silent ? { ...patch, notReload: true } : patch);
+    } finally {
+      this.#barApplying = false;
+    }
+    this.#runQueryBarCallbacks(changed, ctx);
+  };
+
+  /** `filter.onChange` / `operatorChange` của cột, `onChange` của external và quick filter — chỉ khi người dùng đổi. */
+  #runQueryBarCallbacks = (changed: SdTableQueryChange[], ctx: SdTableQueryContext): void => {
+    const filter = this.tableOption()?.filter;
+    for (const change of changed) {
+      const source = ctx.sources.get(change.key);
+      if (!source) continue;
+      if (source.column) {
+        if (change.operator) filter?.operatorChange?.(source.column, change.operator);
+        if (change.valueChanged) source.column.filter?.onChange?.(change.value, source.column, this.columnFilter);
+      } else if (change.valueChanged) {
+        if (source.external) source.external.onChange?.(change.value);
+        else source.quick?.onChange?.(change.value as SdTableQuickSearchFilterValue);
+      }
+    }
+  };
+
+  /** Nút Xoá lọc của thanh: về giá trị default như nút xoá của external filter, đọc lại một lần. */
+  #clearQueryBar = (): void => {
+    if (!this.filterRegister) return;
+    this.#barApplying = true;
+    try {
+      this.clearFilter();
+    } finally {
+      this.#barApplying = false;
+    }
+    this.tableOption()?.filter?.onClearFilter?.();
+  };
+
+  /**
+   * Raw → thanh. Không đặt lại `barFilters` khi kết quả y hệt (chip giữ identity, không vòng lặp: thanh chỉ phát
+   * `apply` khi người dùng thao tác). Đang mở popover / dựng chip thì hoãn tới khi đóng.
+   */
+  #syncQueryBar = (value: TableFilterValue, rebuild: boolean): void => {
+    const ctx = untracked(() => this.queryBarModel());
+    if (!ctx) return;
+    const bar = untracked(() => this.queryBar());
+    if (bar && untracked(() => bar.editingIndex() !== null || !!bar.building())) {
+      this.#barPending = true;
+      return;
+    }
+    this.#barPending = false;
+    const draft = untracked(() => this.barFilters());
+    const derived = tableFilterToQuery(value, ctx, draft).filters;
+    // why: thanh còn nháp (manualFilter, hoặc chip sửa trong lúc raw đổi từ ngoài) thì chỉ field đổi từ ngoài mới lấy raw.
+    const next = !rebuild && draft !== this.#barWritten ? mergeQueryDraft(draft, this.#barDerived, derived) : derived;
+    this.#barDerived = derived;
+    if (next.length !== draft.length || next.some((filter, index) => filter !== draft[index])) this.barFilters.set(next);
+    this.#barWritten = untracked(() => this.barFilters());
+    const term = value.quickSearch?.term ?? '';
+    // why: chỉ đẩy từ khoá khi từ khoá đã áp dụng đổi — không xoá phần đang gõ dở khi chip khác đổi.
+    if (rebuild || term !== this.#barTerm) {
+      this.#barTerm = term;
+      this.barSearch.set(term);
+    }
   };
 
   // Blur input filter: chỉ commit giá trị vào filterRegister, KHÔNG trigger reload.

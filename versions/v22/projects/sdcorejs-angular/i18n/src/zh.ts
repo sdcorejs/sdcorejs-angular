@@ -545,6 +545,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.skip': '跳过',
   'core.component.table.apply': '应用',
   'core.component.table.filter': '筛选',
+  'core.component.table.query-bar.filters': '筛选',
+  'core.component.table.query-bar.columns': '列',
   'core.component.table.clear-selection': '清除选择',
   'core.component.table.customize': '自定义',
   'core.component.table.search': '搜索',

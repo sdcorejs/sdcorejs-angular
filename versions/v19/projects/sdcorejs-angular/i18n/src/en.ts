@@ -544,6 +544,8 @@ export const EN_MESSAGES = {
   'core.component.table.skip': 'Skip',
   'core.component.table.apply': 'Apply',
   'core.component.table.filter': 'Filter',
+  'core.component.table.query-bar.filters': 'Filters',
+  'core.component.table.query-bar.columns': 'Columns',
   'core.component.table.clear-selection': 'Clear selection',
   'core.component.table.customize': 'Customize',
   'core.component.table.search': 'Search',

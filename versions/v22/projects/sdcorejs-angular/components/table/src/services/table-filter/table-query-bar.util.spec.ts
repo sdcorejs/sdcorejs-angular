@@ -5,7 +5,7 @@ import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { Filter } from '@sdcorejs/utils/models';
 import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';
 import { SdConvertToPagingReq, SdTableExternalFilter, SdTableOptionQuickSearch, TableFilterValue } from './table-filter.model';
-import { SdTableQueryContext, queryToTableFilter, sdTableQueryFields, tableFilterToQuery } from './table-query-bar.util';
+import { SdTableQueryContext, mergeQueryDraft, queryToTableFilter, sdTableQueryFields, tableFilterToQuery } from './table-query-bar.util';
 
 // Adapter of the sd-table query-bar mode (handoff table-query-bar, section 3–5 and 15 · 1–4). The bar
 // is a view: the same edit must produce the same pagingReq as the default-mode controls.
@@ -508,6 +508,27 @@ describe('table-query-bar.util', () => {
 
     it('trims the search term', () => {
       expect(apply([], defaults(), '  DH-1  ').patch.quickSearch!.term).toBe('DH-1');
+    });
+  });
+
+  describe('mergeQueryDraft', () => {
+    const a = chip('column:a', 'EQUAL', 1);
+    const b = chip('column:b', 'EQUAL', 2);
+
+    it('keeps drafts of fields whose applied chip did not change', () => {
+      const edited = chip('column:a', 'EQUAL', 5);
+      const added = chip('column:c', 'EQUAL', 3);
+      expect(mergeQueryDraft([edited, added], [a, b], [a, b])).toEqual([edited, added]);
+    });
+
+    it('lets an outside change win for its field and drops a chip the outside cleared', () => {
+      const outside = chip('column:a', 'EQUAL', 9);
+      expect(mergeQueryDraft([chip('column:a', 'EQUAL', 5), b], [a, b], [outside])).toEqual([outside]);
+    });
+
+    it('appends new applied chips and keeps chips the user removed removed', () => {
+      const added = chip('column:c', 'EQUAL', 3);
+      expect(mergeQueryDraft([a], [a, b], [a, b, added])).toEqual([a, added]);
     });
   });
 
