@@ -1,5 +1,34 @@
 # Reviewed release snapshots
 
+## Release 3.3
+
+`3.3.json` compares all four candidates with their same-major published `*.3.2`
+baseline. Candidates are the actual `19.3.3` / `20.3.3` / `21.3.3` / `22.3.3`
+tarballs built on Linux by the `publish-npm.yml` run `40744078668` for the first
+`v3.3` tag (source `166f16c79a266781d4aaac4d4ff2090da63d23c0`, the squash of #119, exact
+Node `24.22.1`), downloaded from that run's retained artifacts. That run stopped at
+"Verify all four retained packages" and published nothing. The snapshot was checked
+with `release-package-contract.mjs --compile-consumers` against the same artifacts.
+The canonical surface fingerprint reader excludes only `version` and `frameworkMajor`.
+Every baseline fingerprint equals the candidate fingerprint recorded in `3.2.json`.
+
+The export map adds `modules/pattern`; no export is removed. Dependencies, peers and
+engines are unchanged for each line. Angular 19 adds 317 packed files: 110
+`modules/pattern` declarations, 90 `modules/pattern` assets (the README, ten docs and
+the feature sources), 98 `modules/pattern` FESM files, 11 declarations for badge,
+section, table, upload file and the page layouts, and the four `modules/generic` chunks
+(with maps) under new content hashes. It removes ten: the previous `modules/generic`
+chunks and the chip `removable-chip.pipe` declarations (`SdRemovableChipPipe`, removed
+as the changelog documents). Later Angular lines add 197 files, among them one bundled
+declaration entry (`types/sdcorejs-angular-modules-pattern.d.ts`), and remove only the
+eight re-hashed `modules/generic` files.
+
+The source and declaration changes cover the page layouts (`sd-page`, `sd-page-list`,
+`sd-page-detail`, `sd-page-form`), the pattern screens, the chip input experience and
+API clean-up, tab router keyboard support and context menu, the upload file viewer,
+field and inline variant, and the table loading layer. They must be independently
+reviewed with this snapshot; CI never regenerates expectations.
+
 ## Release 3.2
 
 `3.2.json` compares all four candidates with their same-major published `*.3.1`
