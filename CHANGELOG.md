@@ -72,6 +72,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `SD_STORAGE_CONFIG`; use `SD_STORAGE_CONFIGURATION`. Both names are the same injection token.
 
+### Fixed
+
+#### Page
+
+- The table of contents (`toc`) no longer flickers through the entries in between when you click an entry: the clicked entry stays current while the page scrolls to its section.
+  - When the scroll stops, the clicked entry stays current as long as its section is in view, also a section too near the end of the page to reach the top. If you scrolled elsewhere in the meantime, the current entry follows the scroll position again.
+  - The end of the scroll is detected without `scrollend` as well, so the table of contents keeps following the scroll in browsers without that event.
+- The current entry of the table of contents follows sections that are added, removed or change height without a scroll. Before, it kept its old position in the list: it could mark the wrong entry, or none at all, until the next scroll.
+
 ## [3.3] - 2026-10-29
 
 Packages `19.3.3` · `20.3.3` · `21.3.3` · `22.3.3`, validated against `*.3.2`.

@@ -157,13 +157,17 @@ class ChildSectionHost {}
     <div style="width: 1600px; height: 360px; display: flex; flex-direction: column">
       <sd-page-form title="Cập nhật sản phẩm" [toc]="toc()" [width]="width()">
         <form>
-          <sd-section title="Thông tin chung" id="general">
-            <div style="height: 300px"></div>
-            <sd-section title="Nhóm con"><div style="height: 20px"></div></sd-section>
-          </sd-section>
+          @if (showGeneral()) {
+            <sd-section title="Thông tin chung" id="general">
+              <div [style.height.px]="generalHeight()"></div>
+              <sd-section title="Nhóm con"><div style="height: 20px"></div></sd-section>
+            </sd-section>
+          }
           <sd-section title="Giá" id="price"><div style="height: 300px"></div></sd-section>
           <sd-section><div style="height: 50px">Không có title</div></sd-section>
           <sd-section title="Kho" id="stock"><div style="height: 300px"></div></sd-section>
+          <!-- why: chừa chỗ để section cuối cuộn được lên mép trên và bỏ section khác không kéo scrollTop về. -->
+          <div style="height: 600px"></div>
         </form>
       </sd-page-form>
     </div>
@@ -172,6 +176,8 @@ class ChildSectionHost {}
 class FormHost {
   readonly toc = signal(true);
   readonly width = signal<SdPageWidth | null>(null);
+  readonly showGeneral = signal(true);
+  readonly generalHeight = signal(300);
 }
 
 describe('SdPageComponent', () => {
@@ -552,6 +558,89 @@ describe('SdPageComponent', () => {
       fixture.componentInstance.toc.set(false);
       await settle();
       expect(form().querySelector('.c-page-toc')).toBeNull();
+    });
+
+    describe('current entry', () => {
+      const current = () => items().map(item => item.getAttribute('aria-current'));
+      /** Cuộn để mép trên của section `id` cách mép trên vùng cuộn `offset` px, như một bước của cú cuộn. */
+      const scrollTo = (id: string, offset = 0) => {
+        const section = form().querySelector(`#${id}`) as HTMLElement;
+        wrapper().scrollTop += section.getBoundingClientRect().top - wrapper().getBoundingClientRect().top - offset;
+        wrapper().dispatchEvent(new Event('scroll'));
+        fixture.detectChanges();
+      };
+      const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      // why: đặt scrollTop làm trình duyệt bắn thêm một sự kiện scroll thật ở frame sau; chờ nó qua đi để bước kế
+      // tiếp đo đúng trường hợp "section đổi chỗ mà không có sự kiện scroll nào".
+      const flushNativeScroll = async () => {
+        await nextFrame();
+        await nextFrame();
+        fixture.detectChanges();
+      };
+
+      // why: bỏ hay giãn nội dung phía trên không được làm trình duyệt tự chỉnh scrollTop (scroll anchoring), nếu
+      // không sẽ có sự kiện scroll và spec không còn đo trường hợp "section đổi chỗ mà không cuộn".
+      beforeEach(() => (wrapper().style.overflowAnchor = 'none'));
+
+      it('moves with the sections when one above the current one is removed', async () => {
+        scrollTo('stock');
+        await flushNativeScroll();
+        expect(current()).toEqual([null, null, 'true']);
+
+        fixture.componentInstance.showGeneral.set(false);
+        await settle();
+
+        expect(items().map(item => item.textContent?.trim())).toEqual(['Giá', 'Kho']);
+        expect(current()).toEqual([null, 'true']);
+      });
+
+      it('moves when a section above grows without a scroll', async () => {
+        scrollTo('price');
+        await flushNativeScroll();
+        expect(current()).toEqual([null, 'true', null]);
+
+        fixture.componentInstance.generalHeight.set(800);
+        fixture.detectChanges();
+        await flushNativeScroll();
+
+        expect(current()).toEqual(['true', null, null]);
+      });
+
+      describe('after a click on an entry', () => {
+        // why: Karma không chờ cuộn mượt; chặn scrollIntoView rồi tự đặt scrollTop theo từng bước của cú cuộn.
+        beforeEach(() => {
+          spyOn(form().querySelector('#stock') as HTMLElement, 'scrollIntoView');
+          items()[2].click();
+          fixture.detectChanges();
+        });
+
+        it('stays on the clicked entry while the scroll passes the sections above it', () => {
+          scrollTo('price');
+          expect(current()).toEqual([null, null, 'true']);
+        });
+
+        it('follows the scroll again after scrollend', () => {
+          scrollTo('price');
+          wrapper().dispatchEvent(new Event('scrollend'));
+          fixture.detectChanges();
+          expect(current()).toEqual([null, 'true', null]);
+        });
+
+        it('follows the scroll again once scrolling stops, in a browser without scrollend', async () => {
+          fixture.nativeElement.addEventListener('scrollend', (event: Event) => event.stopPropagation(), { capture: true });
+          scrollTo('price');
+          await new Promise(resolve => setTimeout(resolve, 300));
+          fixture.detectChanges();
+          expect(current()).toEqual([null, 'true', null]);
+        });
+
+        it('keeps the clicked entry when the scroll stops with its section in view below the top', () => {
+          scrollTo('stock', 100);
+          wrapper().dispatchEvent(new Event('scrollend'));
+          fixture.detectChanges();
+          expect(current()).toEqual([null, null, 'true']);
+        });
+      });
     });
   });
 });

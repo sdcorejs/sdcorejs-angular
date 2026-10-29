@@ -32,6 +32,10 @@ export type SdPageBackLink = string | readonly unknown[];
 export type SdPageAside = 'end' | 'start';
 
 const SD_PAGE_MAX_BADGES = 2;
+/** Section có mép trên cách mép trên vùng cuộn không quá số px này được coi là đã chạm đỉnh. */
+const SD_PAGE_TOC_TOP_TOLERANCE = 8;
+/** Không có sự kiện scroll trong khoảng này thì coi như cú cuộn do bấm mục lục đã dừng. */
+const SD_PAGE_TOC_SCROLL_IDLE_MS = 150;
 
 // why: một component cho cả ba selector, mặc định khác nhau theo tên thẻ host.
 const SD_PAGE_DEFAULT_WIDTH: Record<string, SdPageWidth> = {
@@ -95,6 +99,11 @@ export class SdPageComponent implements SdSectionRegistry {
   // nên danh sách tính lại sau mỗi lần render chứ không tính ngay trong computed.
   protected readonly tocItems = signal<readonly SdPageTocItem[]>([]);
   protected readonly activeTocIndex = signal(0);
+  // why: cuộn mượt tới section vừa bấm đi ngang các section ở giữa; giữ mục vừa bấm tới khi cuộn dừng thay vì
+  // để mục lục nháy qua từng mục. Lưu phần tử, không lưu chỉ số, vì danh sách có thể đổi trong lúc cuộn.
+  #clickTarget: HTMLElement | null = null;
+  #clickScrollTimer: ReturnType<typeof setTimeout> | undefined;
+  #tocResize: ResizeObserver | null = null;
 
   // why: fallback của slot headerLeft chỉ render khi không có headerLeft/sdHeaderLeft, nên vắng nó nghĩa là
   // vùng trái đã bị thay và backLink không có chỗ hiện.
@@ -111,15 +120,39 @@ export class SdPageComponent implements SdSectionRegistry {
     effect(() => {
       const enabled = this.toc();
       const entries = this.#sections().map(entry => ({ title: entry.section.title(), el: entry.el }));
-      afterNextRender(() => this.tocItems.set(enabled ? this.#collectToc(entries) : []), { injector: this.#injector });
+      afterNextRender(
+        () => {
+          this.tocItems.set(enabled ? this.#collectToc(entries) : []);
+          this.#observeTocLayout();
+          // why: thêm/bớt section làm chỉ số cũ trỏ sai mục (hoặc ra ngoài danh sách) mà không có sự kiện scroll nào.
+          this.#syncActiveToc();
+        },
+        { injector: this.#injector }
+      );
     });
 
     afterNextRender(() => {
       const wrapper = this.wrapper().nativeElement;
-      const onScroll = (): void => this.#syncActiveToc();
+      const onScroll = (): void => {
+        if (this.#clickTarget) this.#armClickScrollEnd();
+        this.#syncActiveToc();
+      };
+      const onScrollEnd = (): void => {
+        if (this.#clickTarget) this.#endClickScroll();
+      };
       // why: scroll bắn liên tục; chỉ signal đổi mới cần render lại, không cần chạy change detection mỗi lần.
-      this.#zone.runOutsideAngular(() => wrapper.addEventListener('scroll', onScroll, { passive: true }));
-      this.#destroyRef.onDestroy(() => wrapper.removeEventListener('scroll', onScroll));
+      this.#zone.runOutsideAngular(() => {
+        wrapper.addEventListener('scroll', onScroll, { passive: true });
+        wrapper.addEventListener('scrollend', onScrollEnd);
+      });
+      this.#destroyRef.onDestroy(() => {
+        wrapper.removeEventListener('scroll', onScroll);
+        wrapper.removeEventListener('scrollend', onScrollEnd);
+      });
+    });
+    this.#destroyRef.onDestroy(() => {
+      this.#tocResize?.disconnect();
+      clearTimeout(this.#clickScrollTimer);
     });
 
     if (isDevMode()) {
@@ -154,6 +187,8 @@ export class SdPageComponent implements SdSectionRegistry {
     const item = this.tocItems()[index];
     if (!item) return;
     this.activeTocIndex.set(index);
+    this.#clickTarget = item.el;
+    this.#armClickScrollEnd();
     const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     item.el.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
   }
@@ -171,9 +206,57 @@ export class SdPageComponent implements SdSectionRegistry {
       .sort((left, right) => (left.el.compareDocumentPosition(right.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   }
 
+  // why: section đổi chiều cao (bảng tải xong, section mở ra hay thu lại) hay khung cuộn đổi cỡ làm section đổi chỗ mà
+  // không có sự kiện scroll. `.c-page-content` không giãn theo nội dung nên phải theo dõi chính các section. Trang
+  // không có mục lục thì không giữ observer nào.
+  #observeTocLayout(): void {
+    this.#tocResize?.disconnect();
+    const items = this.tocItems();
+    if (!items.length || typeof ResizeObserver === 'undefined') return;
+    this.#tocResize ??= this.#zone.runOutsideAngular(() => new ResizeObserver(() => this.#syncActiveToc()));
+    this.#tocResize.observe(this.wrapper().nativeElement);
+    for (const item of items) this.#tocResize.observe(item.el);
+  }
+
+  // why: `scrollend` chưa có ở mọi trình duyệt. Hẹn giờ lại sau mỗi sự kiện scroll nên cú cuộn coi như dừng khi
+  // không còn sự kiện nào, kể cả khi section đã ở sẵn vị trí và không cuộn chút nào.
+  #armClickScrollEnd(): void {
+    clearTimeout(this.#clickScrollTimer);
+    this.#zone.runOutsideAngular(() => {
+      this.#clickScrollTimer = setTimeout(() => this.#endClickScroll(), SD_PAGE_TOC_SCROLL_IDLE_MS);
+    });
+  }
+
+  #endClickScroll(): void {
+    clearTimeout(this.#clickScrollTimer);
+    const target = this.#clickTarget;
+    this.#clickTarget = null;
+    if (!target) return;
+    const index = this.tocItems().findIndex(item => item.el === target);
+    const area = this.wrapper().nativeElement.getBoundingClientRect();
+    const top = target.getBoundingClientRect().top;
+    // why: section gần cuối trang không cuộn lên tới mép trên được; còn nằm trong vùng nhìn thì giữ mục vừa bấm.
+    // Người dùng đã cuộn đi chỗ khác trong lúc đó thì tính lại theo vị trí cuộn.
+    if (index >= 0 && top >= area.top - SD_PAGE_TOC_TOP_TOLERANCE && top < area.bottom) {
+      this.activeTocIndex.set(index);
+      return;
+    }
+    this.#syncActiveToc();
+  }
+
   #syncActiveToc(): void {
     const items = this.tocItems();
     if (!items.length) return;
+    if (this.#clickTarget) {
+      const clicked = items.findIndex(item => item.el === this.#clickTarget);
+      if (clicked >= 0) {
+        this.activeTocIndex.set(clicked);
+        return;
+      }
+      // why: section vừa bấm đã bị gỡ khỏi trang; thôi giữ nó và tính theo vị trí cuộn.
+      this.#clickTarget = null;
+      clearTimeout(this.#clickScrollTimer);
+    }
     const wrapper = this.wrapper().nativeElement;
     // why: cuộn tới đáy thì section cuối có thể không bao giờ chạm mép trên; khi đó nó là section đang đọc.
     if (wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 1) {
@@ -183,7 +266,7 @@ export class SdPageComponent implements SdSectionRegistry {
     const top = wrapper.getBoundingClientRect().top;
     let active = 0;
     items.forEach((item, index) => {
-      if (item.el.getBoundingClientRect().top - top <= 8) active = index;
+      if (item.el.getBoundingClientRect().top - top <= SD_PAGE_TOC_TOP_TOLERANCE) active = index;
     });
     this.activeTocIndex.set(active);
   }
