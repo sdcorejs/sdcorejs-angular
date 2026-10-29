@@ -590,6 +590,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.reorder-moved': '{title}: vị trí {index}/{total}.',
   'core.component.table.config.reorder-dropped': 'Đã chuyển {title} tới vị trí {index}.',
   'core.component.table.config.reorder-cancelled': 'Đã huỷ đổi thứ tự.',
+  'core.component.table.config.customized': 'Đang dùng thiết lập riêng',
   'core.component.table.popup-export.select-columns': 'Vui lòng chọn cột dữ liệu để xuất',
   'core.component.table.selector-action.selected': 'Đã chọn {count}',
   'core.component.table.selector-action.more': 'Thêm',

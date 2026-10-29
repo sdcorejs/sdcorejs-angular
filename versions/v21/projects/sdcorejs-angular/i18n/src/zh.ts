@@ -590,6 +590,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.reorder-moved': '{title}：位置 {index}/{total}。',
   'core.component.table.config.reorder-dropped': '已将{title}移到位置 {index}。',
   'core.component.table.config.reorder-cancelled': '已取消调整顺序。',
+  'core.component.table.config.customized': '正在使用自定义设置',
   'core.component.table.popup-export.select-columns': '请选择要导出的列',
   'core.component.table.selector-action.selected': '已选择 {count} 项',
   'core.component.table.selector-action.more': '更多',

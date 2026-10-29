@@ -48,6 +48,8 @@ export class ConfigComponent {
   autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   tableOption = input<SdTableOption | undefined>(undefined);
   changes = output<ConfiguredTableResult>();
+  /** Restore defaults was confirmed and the stored setup removed. */
+  defaultsRestored = output<void>();
 
   // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
   autoId = computed(() => this.autoIdInput() || '');
@@ -138,6 +140,7 @@ export class ConfigComponent {
   onReset = async () => {
     this.#confirmService.confirm(this.#i18n.t('core.component.table.config.confirm-reset')).then(() => {
       this.#setting?.remove();
+      this.defaultsRestored.emit();
       this.modal()?.close();
       this.#ref.detectChanges();
     });

@@ -131,6 +131,7 @@ import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { SdTreePipe } from './pipes/sd-tree.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
+import { sdTableHasCustomSetup } from './services/config-custom.util';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { leafColumns } from './services/column-leaf.util';
 import { filterLocalItems, hasActiveColumnFilter } from './services/table-local/table-local.util';
@@ -392,6 +393,17 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly sdRowMobileDef = contentChild<SdTableRowMobileDefDirective<T>>(SdTableRowMobileDefDirective, { descendants: false });
   readonly isMobile = inject(SdViewportService).isMobile;
   readonly mobileCards = computed(() => this.isMobile() && !!this.sdRowMobileDef());
+  /**
+   * The footer settings button carries a dot while the table uses a setup of its own: stored columns that differ from
+   * the option (settings modal or a resize on the table) or inline external filters that differ from `defaultShowing`.
+   */
+  readonly hasCustomSetup = computed(() =>
+    sdTableHasCustomSetup({
+      option: this.tableOption(),
+      configuration: this.#configuredTable(),
+      inlineExternal: this.#inlineExternalSetup(),
+    })
+  );
 
   // ==========================================
   // 3. COMPUTED FROM QUERIES
@@ -726,6 +738,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /** Giá trị lọc đã áp dụng, theo lần phát gần nhất của filter register. */
   readonly #appliedFilter = signal<TableFilterValue | undefined>(undefined);
   readonly #inlineExternal = signal<Record<string, boolean>>({});
+  // why: tách khỏi #inlineExternal (mặc định {}) — trước khi filter register phát lần đầu thì chưa biết, không được
+  // coi là "khác defaultShowing" mà bật chấm trên nút Thiết lập.
+  readonly #inlineExternalSetup = signal<Record<string, boolean> | undefined>(undefined);
+  /** Column setup the table reads from storage; the settings button dot compares it with the option. */
+  readonly #configuredTable = signal<ConfiguredTable | undefined>(undefined);
+  #configStorage?: { get: () => ConfiguredTable };
   #filterConfigurationSubscription?: Subscription;
   /** Chip dựng từ giá trị đã áp dụng ở lần đồng bộ trước — để phân biệt nháp với giá trị đã áp dụng. */
   #barDerived: Filter[] = [];
@@ -1056,8 +1074,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           this.#loadCompleted = false;
 
           const storage = this.#configService.init(initOpt);
+          this.#configStorage = storage;
           this.#configurationSubscription?.unsubscribe();
           this.#configurationSubscription = storage.observer.subscribe(configuration => {
+            this.#configuredTable.set(configuration);
             const configurationRevision = ++this.#configurationRevision;
             const valid = () =>
               !this.#destroyed &&
@@ -1165,6 +1185,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
     this.#subscription.add(
       this.#configService.widthChange$.subscribe(({ field, width }) => {
+        // why: persistColumnWidth ghi storage im lặng (observer không phát) nên đọc lại để chấm trên nút Thiết lập bật.
+        this.#configuredTable.set(this.#configStorage?.get());
         // Update configuration signal local — KHÔNG gọi loadValues/reload
         const conf = this.configuration();
         if (!conf) return;
@@ -1367,6 +1389,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.quickSearchValue.set({ term: '', filters: {} });
     this.#appliedFilter.set(undefined);
     this.#inlineExternal.set({});
+    this.#inlineExternalSetup.set(undefined);
     this.#barDerived = [];
     this.barFilters.set([]);
     this.#barWritten = this.barFilters();
@@ -1514,9 +1537,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     // Query bar: chip ghim theo inlineExternal (người dùng đổi ở mode default). Đăng ký trước value để lần đồng bộ đầu
     // đã có giá trị này.
     this.#filterConfigurationSubscription?.unsubscribe();
-    this.#filterConfigurationSubscription = this.filterRegister.configuration.observer.subscribe(configuration =>
-      this.#inlineExternal.set(configuration.inlineExternal || {})
-    );
+    this.#filterConfigurationSubscription = this.filterRegister.configuration.observer.subscribe(configuration => {
+      this.#inlineExternal.set(configuration.inlineExternal || {});
+      this.#inlineExternalSetup.set(configuration.inlineExternal || {});
+    });
     this.#subscription.add(this.#filterConfigurationSubscription);
 
     this.#filterRegisterSubscription?.unsubscribe();
@@ -2539,6 +2563,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#refreshAggregate();
     this.#updateSelectedItems();
     this.#syncSelectAllState();
+  };
+
+  /** Restore defaults in the settings modal also puts the inline external filters back to `defaultShowing`. */
+  onConfigDefaultsRestored = () => {
+    this.filterRegister?.configuration.remove();
   };
 
   onColumnResize = (field: string, width: string) => {

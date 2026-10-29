@@ -591,6 +591,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.reorder-moved': '{title}: 위치 {index}/{total}.',
   'core.component.table.config.reorder-dropped': '{title}을(를) {index} 위치로 옮겼습니다.',
   'core.component.table.config.reorder-cancelled': '순서 변경을 취소했습니다.',
+  'core.component.table.config.customized': '사용자 설정 사용 중',
   'core.component.table.popup-export.select-columns': '내보낼 열을 선택해 주세요',
   'core.component.table.selector-action.selected': '{count}개 선택됨',
   'core.component.table.selector-action.more': '더 보기',

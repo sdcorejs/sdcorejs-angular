@@ -891,6 +891,9 @@
                 class="mr-8"
                 [title]="'core.component.table.setup-short' | sdTranslate"
                 prefixIcon="settings"
+                [indicator]="!_isMobile && hasCustomSetup()"
+                indicatorColor="primary"
+                [indicatorLabel]="'core.component.table.config.customized' | sdTranslate"
                 (click)="_configComponent.open()"
                 type="text">
               </sd-button>
@@ -953,7 +956,7 @@
   </div>
 
   @if (_tableOption.config?.visible) {
-    <config [autoId]="_autoId" [tableOption]="_tableOption" />
+    <config [autoId]="_autoId" [tableOption]="_tableOption" (defaultsRestored)="onConfigDefaultsRestored()" />
   }
   <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
   @if (!_tableOption.filter?.disabled && filterRegister) {

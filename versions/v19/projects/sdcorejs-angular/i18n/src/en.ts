@@ -589,6 +589,7 @@ export const EN_MESSAGES = {
   'core.component.table.config.reorder-moved': '{title}: position {index} of {total}.',
   'core.component.table.config.reorder-dropped': 'Moved {title} to position {index}.',
   'core.component.table.config.reorder-cancelled': 'Reorder cancelled.',
+  'core.component.table.config.customized': 'Using custom settings',
   'core.component.table.popup-export.select-columns': 'Please select columns to export',
   'core.component.table.selector-action.selected': 'Selected {count}',
   'core.component.table.selector-action.more': 'More',
