@@ -47,6 +47,16 @@ $qb-radius-input:   6px;
 
   &.c-density-compact { padding: 8px; }
   &.c-density-comfortable { padding: 10px; }
+
+  // why: `appearance: 'flush'` — thanh nằm liền trong card của host (vd sd-table), nên bỏ khung riêng;
+  // nền, viền ngăn cách và bo góc thuộc về host.
+  &.c-appearance-flush {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 12px;
+  }
 }
 
 // Filter area — grows to fill the bar and wraps its chips internally.

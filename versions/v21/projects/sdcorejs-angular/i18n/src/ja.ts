@@ -695,6 +695,12 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.empty': '保存済みフィルターはありません。',
   'core.component.query-bar.saved-filters.save': '現在のフィルターを保存',
   'core.component.query-bar.saved-filters.name-label': 'フィルター名',
+  'core.component.query-bar.all': 'すべて',
+  'core.component.query-bar.required': 'データを表示するには{label}を選択してください',
+  'core.component.query-bar.find-field': '項目を検索',
+  'core.component.query-bar.range.from': '{value} 以降',
+  'core.component.query-bar.range.to': '{value} まで',
+  'core.component.query-bar.clear': 'すべてクリア',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '指定した日付',

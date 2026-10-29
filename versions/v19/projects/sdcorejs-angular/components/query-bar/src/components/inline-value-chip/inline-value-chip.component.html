@@ -18,6 +18,8 @@
   class="c-seamless"
   role="group"
   [attr.aria-label]="field().label"
+  [attr.aria-invalid]="invalid() ? 'true' : null"
+  [attr.aria-describedby]="describedBy() ?? null"
   [attr.data-state]="_state"
   [class.c-seamless--compact]="_density === 'compact'"
   [class.c-seamless--comfortable]="_density === 'comfortable'"
@@ -86,8 +88,10 @@
     </span>
   }
 
-  <!-- × segment -->
-  <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
-    <sd-icon name="close"></sd-icon>
-  </button>
+  <!-- × segment — pinned chips cannot be removed. -->
+  @if (!pinned()) {
+    <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
+      <sd-icon name="close"></sd-icon>
+    </button>
+  }
 </span>

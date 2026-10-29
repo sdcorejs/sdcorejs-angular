@@ -26,7 +26,9 @@
     <button
       type="button"
       class="c-clear-all"
+      [disabled]="clearDisabled()"
       [matTooltip]="clearAllLabel()"
+      [attr.aria-label]="clearAllLabel()"
       (click)="clear.emit()">
       <sd-icon name="delete_sweep"></sd-icon>
     </button>
@@ -43,13 +45,16 @@
       (apply)="applyFilter.emit($event)" />
   }
 
-  <!-- why: far-right "submit at the end of the toolbar" position; sole query trigger. -->
-  <button
-    type="button"
-    class="c-search-trigger"
-    [disabled]="!canSearch()"
-    [matTooltip]="searchLabel()"
-    (click)="search.emit()">
-    <sd-icon name="search"></sd-icon>
-  </button>
+  <!-- why: far-right "submit at the end of the toolbar" position; sole query trigger.
+       Hidden when every chip edit applies on its own (bar applyOn: 'commit'). -->
+  @if (showSearchButton()) {
+    <button
+      type="button"
+      class="c-search-trigger"
+      [disabled]="!canSearch()"
+      [matTooltip]="searchLabel()"
+      (click)="search.emit()">
+      <sd-icon name="search"></sd-icon>
+    </button>
+  }
 </div>

@@ -1,0 +1,39 @@
+# Plan — sd-table query-bar filter mode (approved 2026-10-29)
+
+Source of truth: `table-query-bar.md`. This file records the decisions taken in the plan review.
+
+## Steps (one commit each, commit only when the user asks)
+1. sd-query-bar Q1–Q12 (+ 5 `query-bar.*` i18n keys, `sd-query-bar.md`).
+2. sd-table base: `SdTableOptionFilterQueryBar`, `filter.mode`, `filter.queryBar`, configuration, `table-query-bar.util.ts` + spec, `value.default()` on the register.
+3. sd-table UI: render bar, apply/required/manualFilter/clear/cache/mobile/loading/a11y/dev warning.
+4. Column header filter trigger.
+5. Docs, CHANGELOG, showcase demo.
+
+## Decisions (section 14)
+1. Sync: `[(filters)]="barFilters"`, `[(search)]="barSearch"`. Apply-originated emission → full rebuild from raw with identity reuse. External emission → per-key merge: key whose raw-derived value did not change keeps the bar draft. Defer while `editingIndex() !== null` or `building()`. Skip set when nothing changed.
+2. Gate: replace `externalFilter()?.form?.invalid` (onFilter context + server gate) with `#externalFilterValid(filterReq)`: query-bar → every required external has a value in `rawExternalFilter`; default → unchanged expression. `#loadCompleted` untouched. Local tables do not gate on external required (same as default).
+3. Focus returns to the header icon: `openField(key, returnFocusTo?)` disables `restoreFocus` for that open and focuses the element on `menuClosed`.
+4. External date/datetime without GE/LE `defaultOperator` → excluded + dev warning.
+5. Displayed leaf columns; a config-hidden column that still holds an applied value keeps its chip until cleared. `column.hidden` stays excluded.
+6. Added-chip order in memory only.
+
+## Deviations agreed
+- Header icon is a sibling of `.c-header-title` (sortable title is role=button + Enter sorts).
+- Column date/datetime and external daterange map to query field type `date` (old controls are date-only).
+- Operator callback: call `filter.operatorChange` directly, not `onOperatorChange()`.
+- NULL/NOT_NULL offered on every default-control column when in `operator.list`.
+- Boolean column raw stays `'1'`/`'0'`.
+- `value.default()` added to the filter register for clear-enabled + empty-operator defaults; semantic empty comparison.
+- External `onChange` called for every type.
+- `.c-filter-header` stays in DOM hidden when `multipleHeader` (like `hideInlineFilter: true`).
+- Required empty chip shows `placeholder.select-value`.
+- Clear button stays icon-only, gains `aria-label`; count = active chips.
+- `data-filter-mode` host attribute in both modes.
+- Open question (ask at step 3): search box when quickSearch has no contain/equal fields — recommend show (default-mode parity).
+
+## Step 1 status (2026-10-29)
+Done, uncommitted. Extra i18n key `core.component.query-bar.clear` (clear label without count). `removeFilter` now nulls `editingIndex` before closing the menu (commit of a removed chip ignored). `addDisabled` compares the picker list with used keys.
+API consistency: `onClearAll` follows `onApply`/`onQueryChange` (callback in option); `required`/`disabled` mirror `SdTableExternalFilter`; `views` mirrors `SdTableColumnLazyValues.option.views`; new knobs option-only per the "option is the main API" comment; `showOperatorOnChip` input widened (compatible).
+
+## Query-bar additions (option-only unless noted)
+`SdQueryField.pinned/required/group`, lazy `option.views`; `SdQueryBarOption.applyOn/appearance/onClearAll/clearDisabled/searchPlaceholder/invalidHintId`, `showOperatorOnChip: boolean | 'auto'` (input + option); `openField()`, `invalidFields()`; slot `[sdQueryBarEnd]`. Fixes: BETWEEN with both ends empty is inactive; chip dates formatted; lazy/values-fn labels resolved once.

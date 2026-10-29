@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@a
 import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { NgTemplateOutlet } from '@angular/common';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { Filter, Operator } from '@sdcorejs/utils/models';
+import { take } from 'rxjs/operators';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -19,7 +21,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   styleUrl: './popover-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, MatTooltipModule, SdOperator],
+  imports: [SdIcon, MatMenuModule, MatTooltipModule, SdOperator, NgTemplateOutlet],
 })
 export class SdQueryPopoverChip {
   /** Resolved field (from the bar's `fieldByKey()` map). `undefined` → render raw key. */
@@ -36,6 +38,21 @@ export class SdQueryPopoverChip {
 
   /** Rendered value text for the value slot. */
   readonly valueText = input<string>('');
+
+  /** Muted text shown after the label while the chip has no value ("All" on a pinned chip). */
+  readonly emptyText = input<string>('');
+
+  /** Pinned chip — no remove button. */
+  readonly pinned = input(false);
+
+  /** Read-only chip — does not open its popover. */
+  readonly disabled = input(false);
+
+  /** Required chip without a value — error look, `aria-invalid`. */
+  readonly invalid = input(false);
+
+  /** Id set as `aria-describedby` (the host's required hint). */
+  readonly describedBy = input<string | undefined>(undefined);
 
   /** Chip popover mat-menu instance supplied by the parent. */
   readonly menu = input.required<MatMenu>();
@@ -58,8 +75,21 @@ export class SdQueryPopoverChip {
   // closes the open one — expose open/close so the parent doesn't need a ViewChild on the
   // internal MatMenuTrigger directive.
   private readonly trigger = viewChild('chipTrigger', { read: MatMenuTrigger });
-  openMenu(): void {
-    this.trigger()?.openMenu();
+  /**
+   * Opens the chip popover. With `returnFocusTo`, that element (e.g. the host control that asked
+   * for the chip) gets focus back when the popover closes, instead of the chip.
+   */
+  openMenu(returnFocusTo?: HTMLElement): void {
+    const trigger = this.trigger();
+    if (!trigger) return;
+    if (returnFocusTo) {
+      trigger.restoreFocus = false;
+      trigger.menuClosed.pipe(take(1)).subscribe(() => {
+        trigger.restoreFocus = true;
+        returnFocusTo.focus();
+      });
+    }
+    trigger.openMenu();
   }
   closeMenu(): void {
     this.trigger()?.closeMenu();

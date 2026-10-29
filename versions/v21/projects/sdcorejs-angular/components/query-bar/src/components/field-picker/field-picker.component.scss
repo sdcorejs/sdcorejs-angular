@@ -4,6 +4,7 @@ $qb-primary:        var(--sd-primary);
 $qb-text:           var(--sd-query-bar-text, #212121);
 $qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
 $qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
+$qb-border:         var(--sd-query-bar-border, #d6d8db);
 
 ::ng-deep .mat-mdc-menu-panel.c-field-picker-menu {
   min-width: 200px;
@@ -57,5 +58,47 @@ $qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
     padding: 12px 16px;
     font-size: var(--sd-font-size-13, 13px);
     color: $qb-text-muted;
+  }
+
+  .c-field-group {
+    padding: 8px 16px 4px;
+    font-size: var(--sd-font-size-11, 11px);
+    font-weight: var(--sd-font-weight-medium, 500);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $qb-text-muted;
+  }
+
+  .c-field-find {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 8px 4px;
+    padding: 0 8px;
+    height: 32px;
+    border: 1px solid $qb-border;
+    border-radius: var(--sd-radius-6, 6px);
+
+    &:focus-within {
+      border-color: $qb-primary;
+      outline: 2px solid var(--sd-focus-ring-color);
+      outline-offset: -1px;
+    }
+  }
+  .c-field-find-icon {
+    font-size: var(--sd-font-size-16, 16px);
+    width: 16px;
+    height: 16px;
+    color: $qb-text-muted;
+  }
+  .c-field-find-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: var(--sd-font-size-13, 13px);
+    color: $qb-text;
   }
 }

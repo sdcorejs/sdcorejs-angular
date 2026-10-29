@@ -691,6 +691,12 @@ export const EN_MESSAGES = {
   'core.component.query-bar.saved-filters.empty': 'No saved filters yet.',
   'core.component.query-bar.saved-filters.save': 'Save current filter',
   'core.component.query-bar.saved-filters.name-label': 'Filter name',
+  'core.component.query-bar.all': 'All',
+  'core.component.query-bar.required': 'Select {label} to view data',
+  'core.component.query-bar.find-field': 'Find field',
+  'core.component.query-bar.range.from': 'From {value}',
+  'core.component.query-bar.range.to': 'To {value}',
+  'core.component.query-bar.clear': 'Clear all',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Specific date',

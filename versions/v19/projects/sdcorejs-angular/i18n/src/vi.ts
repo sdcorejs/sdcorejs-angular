@@ -692,6 +692,12 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.empty': 'Chưa có bộ lọc nào.',
   'core.component.query-bar.saved-filters.save': 'Lưu bộ lọc hiện tại',
   'core.component.query-bar.saved-filters.name-label': 'Tên bộ lọc',
+  'core.component.query-bar.all': 'Tất cả',
+  'core.component.query-bar.required': 'Chọn {label} để xem dữ liệu',
+  'core.component.query-bar.find-field': 'Tìm trường',
+  'core.component.query-bar.range.from': 'Từ {value}',
+  'core.component.query-bar.range.to': 'Đến {value}',
+  'core.component.query-bar.clear': 'Xóa tất cả',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Ngày cụ thể',
