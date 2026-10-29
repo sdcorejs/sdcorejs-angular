@@ -524,4 +524,109 @@ describe('SdTable filter.mode query-bar', () => {
       expect(JSON.stringify(calls[0].args)).toContain('external:custom');
     }));
   });
+
+  // Handoff section 8 · spec 15 · 13: the filter icon in a column header opens that field on the bar.
+  describe('header filter triggers', () => {
+    const t = (key: string, params?: Record<string, string>) => TestBed.inject(I18nService).t(key, params);
+    const trigger = (field: string) =>
+      el().querySelector(`[data-autoid="components-table-orders-filter-trigger-${field}"]`) as HTMLButtonElement | null;
+    const hiddenOpacity = () => (matchMedia('(pointer: coarse)').matches ? '1' : '0');
+
+    beforeEach(() => configure());
+
+    it('adds a trigger to every column on the bar, and to a column covered by an external filter', fakeAsync(() => {
+      mount(buildOption());
+      expect(el().querySelectorAll('thead .sd-table-filter-trigger').length).toBe(3);
+      const code = trigger('code')!;
+      expect(code.getAttribute('aria-label')).toBe(t('core.component.table.filter-by', { title: 'Mã đơn' }));
+      expect(code.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(code.classList).not.toContain('sd-table-filter-trigger--active');
+      expect(getComputedStyle(code).opacity).toBe(hiddenOpacity());
+      expect(trigger('status')).not.toBeNull();
+    }));
+
+    it('has no trigger in the default mode', fakeAsync(() => {
+      mount(buildOption({ mode: undefined }));
+      expect(el().querySelector('.sd-table-filter-trigger')).toBeNull();
+    }));
+
+    it('stays visible and says so while the column filters by an applied value', fakeAsync(() => {
+      mount(buildOption({ manualFilter: true }));
+      commit('column:total', { data: 5 });
+      // why: chỉ giá trị đã áp dụng mới bật icon; nháp chưa bấm Tìm kiếm thì chưa.
+      expect(trigger('total')!.classList).not.toContain('sd-table-filter-trigger--active');
+      (el().querySelector('.c-search-trigger') as HTMLButtonElement).click();
+      settle();
+      const total = trigger('total')!;
+      expect(total.classList).toContain('sd-table-filter-trigger--active');
+      // why: opacity có transition 120ms; fakeAsync không chạy thời gian CSS nên đọc giữa chừng ra 0.
+      total.style.transition = 'none';
+      expect(getComputedStyle(total).opacity).toBe('1');
+      expect(total.getAttribute('aria-label')).toBe(t('core.component.table.filtering-by', { title: 'Tổng tiền' }));
+      commit('external:status', { data: ['new'] });
+      settle();
+      expect(trigger('status')!.classList).not.toContain('sd-table-filter-trigger--active');
+    }));
+
+    it('opens the chip of its field without sorting, adding the chip when needed', fakeAsync(() => {
+      const option = buildOption();
+      option.sort = { enable: true };
+      (option.columns[0] as { sortable?: boolean }).sortable = true;
+      mount(option);
+      loader.calls.reset();
+      trigger('code')!.click();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(table.sortState().active).toBe('');
+      expect(bar().editingIndex()).toBe(indexOf('column:code'));
+      expect(indexOf('column:code')).toBeGreaterThan(-1);
+      bar().popoverChips()[indexOf('column:code')].closeMenu();
+      settle();
+      expect(loader).not.toHaveBeenCalled();
+    }));
+
+    it('opens the external chip that covers its column', fakeAsync(() => {
+      mount(buildOption());
+      trigger('status')!.click();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(bar().editingIndex()).toBe(indexOf('external:status'));
+      bar().popoverChips()[indexOf('external:status')].closeMenu();
+      settle();
+    }));
+
+    it('gives focus back to the trigger when the popover closes', fakeAsync(() => {
+      mount(buildOption());
+      const total = trigger('total')!;
+      total.focus();
+      total.click();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      bar().popoverChips()[indexOf('column:total')].closeMenu();
+      settle();
+      expect(document.activeElement).toBe(total);
+    }));
+
+    it('puts the trigger before the title of a right-aligned column', fakeAsync(() => {
+      mount(buildOption());
+      const total = trigger('total')!;
+      expect(getComputedStyle(total.parentElement!).flexDirection).toBe('row-reverse');
+      expect(getComputedStyle(trigger('code')!.parentElement!).flexDirection).toBe('row');
+      expect(total.parentElement!.querySelector('.c-header-title')).not.toBeNull();
+    }));
+
+    it('places the trigger in the leaf cell of a grouped header', fakeAsync(() => {
+      const option = buildOption();
+      option.columns = [
+        option.columns[0],
+        { field: 'money', title: 'Tiền', type: 'children', children: [option.columns[1] as never] },
+      ] as ServerOption['columns'];
+      mount(option);
+      expect(el().querySelector('tr.c-second-header [data-autoid="components-table-orders-filter-trigger-total"]')).not.toBeNull();
+      expect(el().querySelector('tr.c-first-header [data-autoid="components-table-orders-filter-trigger-money"]')).toBeNull();
+    }));
+  });
 });

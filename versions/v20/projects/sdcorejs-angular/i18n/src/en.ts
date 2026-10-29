@@ -546,6 +546,8 @@ export const EN_MESSAGES = {
   'core.component.table.filter': 'Filter',
   'core.component.table.query-bar.filters': 'Filters',
   'core.component.table.query-bar.columns': 'Columns',
+  'core.component.table.filter-by': 'Filter by {title}',
+  'core.component.table.filtering-by': 'Filtering by {title}',
   'core.component.table.clear-selection': 'Clear selection',
   'core.component.table.customize': 'Customize',
   'core.component.table.search': 'Search',

@@ -43,5 +43,8 @@ Observation: `SdConvertToPagingReq` and the register only read top-level `option
 ## Step 3 status (2026-10-29)
 Step 2 committed as 3fe970aa9. Step 3: `filterMode` / `effectiveFilterMode` / `queryBarMode`, host `data-filter-mode`, option > configuration merge in `#initConfiguration` (written only when the configuration sets it), bar rendered in `.sd-table-surface` (role=search, flush, `[sdQueryBarEnd]` = quick-search right slot), hint line, `#externalFilterValid` gate, `onQueryBarApply` (one `value.set`, operator-only on an empty column → notReload), callbacks after set, clear via `clearFilter()` + `onClearFilter`, `mergeQueryDraft` in util, sync deferred while a popover/build is open, dev warning once per instance, config-hidden columns with a value keep their chip. i18n `table.query-bar.filters/columns`. Spec `table.component.query-bar.spec.ts` (§15 · 5–12, 14–17).
 
+## Step 4 status (2026-10-29)
+Step 3 committed as 3256d0839. Step 4: `#queryBarTrigger` template beside `.c-header-title` (wrapper class `sd-table-header-cell--trigger`, `--end` = row-reverse for align right), `queryBarActiveKeys` from `sdTableActiveQueryKeys` (applied value), `openQueryBarField(key, trigger)` → `openField(key, returnFocusTo)`. i18n `table.filter-by/filtering-by`. Specs: 8 header-trigger tests + util test.
+
 ## Query-bar additions (option-only unless noted)
 `SdQueryField.pinned/required/group`, lazy `option.views`; `SdQueryBarOption.applyOn/appearance/onClearAll/clearDisabled/searchPlaceholder/invalidHintId`, `showOperatorOnChip: boolean | 'auto'` (input + option); `openField()`, `invalidFields()`; slot `[sdQueryBarEnd]`. Fixes: BETWEEN with both ends empty is inactive; chip dates formatted; lazy/values-fn labels resolved once.

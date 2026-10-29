@@ -513,6 +513,13 @@ export const tableFilterToQuery = (value: TableFilterValue, ctx: SdTableQueryCon
   };
 };
 
+/** Keys of the bar fields whose applied value filters something — header icons show them as filtering. */
+export const sdTableActiveQueryKeys = (value: TableFilterValue, ctx: SdTableQueryContext): Set<string> => {
+  const keys = new Set<string>();
+  for (const [key, source] of ctx.sources) if (chipOf(source, value).active) keys.add(key);
+  return keys;
+};
+
 /**
  * Folds a change of the applied state into a bar that holds unapplied edits (manualFilter, or a chip edited while the
  * state changed). A key whose applied chip did not change between `before` and `after` keeps its draft — edited,

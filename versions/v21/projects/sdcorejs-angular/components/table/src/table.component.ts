@@ -50,6 +50,7 @@ import {
   queryToTableFilter,
   SdTableQueryChange,
   SdTableQueryContext,
+  sdTableActiveQueryKeys,
   sdTableQueryFields,
   tableFilterToQuery,
 } from './services/table-filter/table-query-bar.util';
@@ -816,6 +817,24 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       invalidHintId: this.queryBarHintId,
     };
   });
+
+  /** Khoá thanh của các field đang lọc theo giá trị đã áp dụng — icon lọc ở header của chúng luôn hiện. */
+  readonly queryBarActiveKeys = computed(() => {
+    const ctx = this.queryBarModel();
+    const value = this.#appliedFilter();
+    return ctx && value ? sdTableActiveQueryKeys(value, ctx) : new Set<string>();
+  });
+
+  /** `aria-label` của icon lọc ở header: "Lọc theo …" / "Đang lọc theo …". */
+  filterTriggerLabel(column: SdTableColumn, active: boolean): string {
+    const title = typeof column.title === 'string' ? column.title : column.title?.title || column.field;
+    return this.#i18n.t(active ? 'core.component.table.filtering-by' : 'core.component.table.filter-by', { title });
+  }
+
+  /** Icon lọc ở header: mở chip của field trên thanh (tạo chip nếu chưa có); đóng popover thì focus về icon. */
+  openQueryBarField(key: string, trigger: EventTarget | null): void {
+    this.queryBar()?.openField(key, trigger instanceof HTMLElement ? trigger : undefined);
+  }
 
   /** Dòng nhắc dưới thanh: field bắt buộc còn rỗng, kể cả quick filter bị ẩn (vẫn chặn đọc). */
   readonly queryBarHint = computed(() => {

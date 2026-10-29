@@ -5,7 +5,14 @@ import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { Filter } from '@sdcorejs/utils/models';
 import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';
 import { SdConvertToPagingReq, SdTableExternalFilter, SdTableOptionQuickSearch, TableFilterValue } from './table-filter.model';
-import { SdTableQueryContext, mergeQueryDraft, queryToTableFilter, sdTableQueryFields, tableFilterToQuery } from './table-query-bar.util';
+import {
+  SdTableQueryContext,
+  mergeQueryDraft,
+  queryToTableFilter,
+  sdTableActiveQueryKeys,
+  sdTableQueryFields,
+  tableFilterToQuery,
+} from './table-query-bar.util';
 
 // Adapter of the sd-table query-bar mode (handoff table-query-bar, section 3–5 and 15 · 1–4). The bar
 // is a view: the same edit must produce the same pagingReq as the default-mode controls.
@@ -508,6 +515,21 @@ describe('table-query-bar.util', () => {
 
     it('trims the search term', () => {
       expect(apply([], defaults(), '  DH-1  ').patch.quickSearch!.term).toBe('DH-1');
+    });
+  });
+
+  describe('sdTableActiveQueryKeys', () => {
+    it('lists the fields whose applied value filters something, NULL operators included', () => {
+      const value = defaults();
+      value.quickSearch = { term: '', filters: { warehouseId: 'hn', tags: [] } };
+      value.columnFilter = { total: 0, weight: { from: null, to: null }, code: null };
+      value.columnOperator = { ...value.columnOperator, code: 'NULL' };
+      expect([...sdTableActiveQueryKeys(value, context())]).toEqual([
+        'quick:warehouseId',
+        'external:createdAt',
+        'column:code',
+        'column:total',
+      ]);
     });
   });
 
