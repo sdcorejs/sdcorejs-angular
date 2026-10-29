@@ -46,5 +46,9 @@ Step 2 committed as 3fe970aa9. Step 3: `filterMode` / `effectiveFilterMode` / `q
 ## Step 4 status (2026-10-29)
 Step 3 committed as 3256d0839. Step 4: `#queryBarTrigger` template beside `.c-header-title` (wrapper class `sd-table-header-cell--trigger`, `--end` = row-reverse for align right), `queryBarActiveKeys` from `sdTableActiveQueryKeys` (applied value), `openQueryBarField(key, trigger)` → `openField(key, returnFocusTo)`. i18n `table.filter-by/filtering-by`. Specs: 8 header-trigger tests + util test.
 
+## Step 5 status (2026-10-29)
+Step 4 committed as 3d9476da9. Step 5: `sd-table.md` "Query bar mode" + `data-filter-mode` + autoIds + configuration; root CHANGELOG [Unreleased] (Added Query bar / Table, Changed Query bar, Fixed Query bar); showcase example `table-query-bar.example.{ts,html}` (mode + manualFilter switches, pagingReq panel, cacheable, FilterUtilities backend), registry 35 → 36 / 494 → 495, generated example sources. Showcase check fixed `.sd-table-query-bar-end` (flex none, align-self flex-start). Screenshots in `.sdcorejs/handoff/screenshots/table-query-bar-*.png`.
+Pre-existing issues found (not fixed, default mode must not change): (1) leaves of `children` columns are never sent by `SdConvertToPagingReq` (top-level columns only); (2) `clearFilter()` in default mode with a `split-number` column throws in column-filter's split template (`_columnFilter[field].from` of a key removed in place).
+
 ## Query-bar additions (option-only unless noted)
 `SdQueryField.pinned/required/group`, lazy `option.views`; `SdQueryBarOption.applyOn/appearance/onClearAll/clearDisabled/searchPlaceholder/invalidHintId`, `showOperatorOnChip: boolean | 'auto'` (input + option); `openField()`, `invalidFields()`; slot `[sdQueryBarEnd]`. Fixes: BETWEEN with both ends empty is inactive; chip dates formatted; lazy/values-fn labels resolved once.

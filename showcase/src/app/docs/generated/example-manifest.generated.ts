@@ -261,6 +261,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-lenh-dong-co-menu-con"
   | "components/table/example-lenh-dong-phai"
   | "components/table/example-loading-empty-error"
+  | "components/table/example-loc-bang-query-bar"
   | "components/table/example-mobile-chon-du-lieu"
   | "components/table/example-mobile-qua-nhieu-trang"
   | "components/table/example-mobile-trong-hop-thoai"
@@ -2206,6 +2207,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-external-filters",
     title: "External filters",
     description: "Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.",
+  },
+  {
+    sourceKey: "components/table/example-loc-bang-query-bar",
+    pageKey: "components/table",
+    sectionId: "example-loc-bang-query-bar",
+    title: "Lọc bằng query bar",
+    description: "Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.",
   },
   {
     sourceKey: "components/table/example-the-mobile-va-thao-tac",

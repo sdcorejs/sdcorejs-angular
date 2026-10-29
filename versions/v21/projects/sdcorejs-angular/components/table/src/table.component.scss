@@ -689,11 +689,13 @@
   --sd-control-label-bg: var(--sd-table-bg, #ffffff);
 }
 
+// why: slot cuối giữ đủ rộng cho nội dung của consumer; vùng chip (.c-query-bar__main) là phần co lại và xuống dòng.
 :host .sd-table-query-bar-end {
+  flex: none;
   display: flex;
   align-items: center;
-  align-self: center;
-  min-width: 0;
+  // Đứng ở hàng chip đầu như cụm nút của thanh, dù chip xuống nhiều hàng.
+  align-self: flex-start;
   padding-left: 8px;
 }
 

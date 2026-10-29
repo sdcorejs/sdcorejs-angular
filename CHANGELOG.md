@@ -42,6 +42,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - The add button sits in the header of the command column (`sdTableCommandHeaderDef`), deleting a line is a row command, and the line count and total are under the table. Both components share `orderLines()` for the `form.lines` FormArray, the line totals and the unit price of the picked product. The catalog lists the new route and `docs/form.md` shows both.
 - `product-select` passes `size`, `hideInlineError` and `inlineError` to `<sd-select>`.
 
+#### Query bar
+
+- Options for a host that owns the chip list (used by the table's query-bar mode); a bar that sets none of them behaves as before.
+  - Fields: `pinned` (always on the bar, no remove button, out of the field picker, an empty chip reads “Tất cả”), `required` (empty chip marked invalid with `aria-invalid`, Search disabled, listed by `invalidFields()`), `group` (field-picker headings) and `option.views` on `lazy-values`. A `disabled` field's chip no longer opens its popover.
+  - `SdQueryBarOption`: `applyOn: 'search' | 'commit'` (`'commit'` applies every committed chip edit and hides the Search button), `appearance: 'flush'`, `onClearAll`, `clearDisabled`, `searchPlaceholder`, `invalidHintId`; `showOperatorOnChip` (option and input) also takes `'auto'`.
+  - `openField(key, returnFocusTo?)` opens a field's editor from outside the bar; `[sdQueryBarEnd]` projects content after the toolbar.
+  - The field picker gets a find box above eight fields (accent-insensitive).
+  - Chips show dates as `dd/MM/yyyy` (`dd/MM/yyyy HH:mm`), a range in one year as `01/10 – 31/10/2026`, an open range as “Từ …” / “Đến …”, and the labels of restored `lazy-values` values (looked up once) and of `values` whose `items` is a function.
+  - i18n: `core.component.query-bar.all`, `.required`, `.find-field`, `.range.from`, `.range.to`, `.clear`.
+
+#### Table
+
+- `filter.mode: 'query-bar'` (also `SD_TABLE_CONFIGURATION.filter.mode`): one `sd-query-bar` at the top of the table replaces quick search, the external filter section and the column filter row. The filter state, cache, `pagingReq`, `required`, `manualFilter`, `onFilter` and the filter callbacks are unchanged — the same edit sends the same request as the default mode.
+  - Visible quick filters and external filters shown inline or `required` are pinned chips; the rest is under `+`, grouped “Bộ lọc” / “Cột”. `filter.queryBar` sets `editor` (`'popover'` / `'inline'`), `pinned` and `exclude`.
+  - Each filterable column header gets a filter icon that opens its chip; it stays visible in the primary colour while the column filters.
+  - Mobile keeps the default controls. Filters the bar cannot edit (custom templates, `time` columns, date external filters without `GREATER_OR_EQUAL` / `LESS_OR_EQUAL`, …) keep their values and are listed by a dev-mode console warning.
+  - The host gets `data-filter-mode="default" | "query-bar"` in both modes.
+  - i18n: `core.component.table.query-bar.filters`, `.query-bar.columns`, `core.component.table.filter-by`, `core.component.table.filtering-by`.
+  - See `sd-table.md`, “Query bar mode”.
+- `TableFilterRegister.value.default()` (optional): the value `remove()` stores, read without writing it.
+
 ### Changed
 
 #### Pattern
@@ -51,6 +72,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The order create page saves with “Tạo đơn hàng” and the update page with “Lưu”, both with the `save` icon.
 - The other form screens follow the same save button: product, customer and category create save with “Tạo sản phẩm”, “Tạo khách hàng” and “Tạo danh mục”; their update screens and settings keep “Lưu”. Every save button has the `save` icon.
 - Order detail: “Trạng thái” in the drawer and “Trạng thái duyệt” on the page show badges instead of plain text.
+
+#### Query bar
+
+- The number in the clear-all label counts the chips that hold a value, not every chip; with none, the label has no number. The button also gets an `aria-label`.
 
 ### Deprecated
 
@@ -80,6 +105,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - When the scroll stops, the clicked entry stays current as long as its section is in view, also a section too near the end of the page to reach the top. If you scrolled elsewhere in the meantime, the current entry follows the scroll position again.
   - The end of the scroll is detected without `scrollend` as well, so the table of contents keeps following the scroll in browsers without that event.
 - The current entry of the table of contents follows sections that are added, removed or change height without a scroll. Before, it kept its old position in the list: it could mark the wrong entry, or none at all, until the next scroll.
+
+#### Query bar
+
+- A `BETWEEN` chip with both ends empty counts as empty: no “ — ” value, and it no longer counts as active.
 
 ## [3.3] - 2026-10-29
 

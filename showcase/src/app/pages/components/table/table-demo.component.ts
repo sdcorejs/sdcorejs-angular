@@ -11,6 +11,7 @@ import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.
 import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
 import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
+import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -189,6 +190,7 @@ const TASKS: Task[] = [
     TableUnknownTotalDemoComponent,
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
+    TableQueryBarExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -225,6 +227,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'filter.externalFilters', value: 'string / values / number / daterange' }, { name: 'filter.manualFilter', value: 'true' }]"
         note="Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.">
         <sd-table autoId="external-filters" [option]="externalFilterOption" />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-bang-query-bar') {
+      <demo-section heading="Lọc bằng query bar"
+        data-example-typescript="./examples/table-query-bar.example.ts" data-example-template="./examples/table-query-bar.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
+        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
+        <app-table-query-bar-example />
       </demo-section>
       }
 

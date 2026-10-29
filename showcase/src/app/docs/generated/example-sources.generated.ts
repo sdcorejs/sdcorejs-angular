@@ -12939,6 +12939,7 @@ import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.
 import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
 import { TableInlineErrorsExampleComponent } from './examples/table-inline-errors.example';
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
+import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -13117,6 +13118,7 @@ const TASKS: Task[] = [
     TableUnknownTotalDemoComponent,
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
+    TableQueryBarExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -13153,6 +13155,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'filter.externalFilters', value: 'string / values / number / daterange' }, { name: 'filter.manualFilter', value: 'true' }]"
         note="Bộ lọc gọn, có khoảng đệm với mép section. Nhập điều kiện rồi nhấn Tìm kiếm; nút xóa và thiết lập nằm trên header. Bảng bo nhẹ ở các góc ngoài, vẫn cuộn và giữ header cố định.">
         <sd-table autoId="external-filters" [option]="externalFilterOption" />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-bang-query-bar') {
+      <demo-section heading="Lọc bằng query bar"
+        data-example-typescript="./examples/table-query-bar.example.ts" data-example-template="./examples/table-query-bar.example.html" data-example-style="./examples/table-pattern-example.scss"
+        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
+        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
+        <app-table-query-bar-example />
       </demo-section>
       }
 
@@ -14721,6 +14732,20 @@ export class TableCustomCellsExampleComponent {
   padding-block: 6px;
 }
 
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .required-mark {
   color: var(--sd-error, #d32f2f);
 }`,
@@ -14892,6 +14917,20 @@ export class TableInlineOperatorExampleComponent {
 .cell-input {
   display: block;
   padding-block: 6px;
+}
+
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .required-mark {
@@ -15067,6 +15106,297 @@ export class TableStatesExampleComponent {
 .cell-input {
   display: block;
   padding-block: 6px;
+}
+
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.required-mark {
+  color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-loc-bang-query-bar": {
+    typescript: `import { JsonPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTable, SdTableOption, SdTableQuickSearchRightDefDirective } from '@sdcorejs/angular/components/table';
+import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
+import { FilterUtilities } from '@sdcorejs/utils/fns';
+import { PagingReq } from '@sdcorejs/utils/models';
+
+interface Order {
+  id: number;
+  code: string;
+  customer: string;
+  phone: string;
+  email: string;
+  warehouseId: string;
+  priority: string;
+  status: string;
+  channel: number;
+  note: string;
+  total: number;
+  weight: number;
+  payment: string;
+  createdAt: string;
+  deliveredOn: string;
+  updatedAt: string;
+}
+
+const WAREHOUSES = [
+  { id: 'hn', name: 'Hà Nội' },
+  { id: 'hcm', name: 'Hồ Chí Minh' },
+  { id: 'dn', name: 'Đà Nẵng' },
+];
+const PRIORITIES = [
+  { id: 'high', name: 'Cao' },
+  { id: 'normal', name: 'Thường' },
+];
+const STATUSES = [
+  { id: 'new', name: 'Chờ xác nhận' },
+  { id: 'shipping', name: 'Đang giao' },
+  { id: 'done', name: 'Hoàn tất' },
+];
+const CHANNELS = [
+  { id: 1, name: 'Website' },
+  { id: 2, name: 'Shopee' },
+  { id: 3, name: 'Cửa hàng' },
+];
+const PAYMENTS = [
+  { id: 'paid', name: 'Đã thanh toán' },
+  { id: 'unpaid', name: 'Chưa thanh toán' },
+  { id: 'refund', name: 'Hoàn tiền' },
+];
+const CUSTOMERS = ['Đỗ Thu Hà', 'Nguyễn Văn Minh', 'Trần Thị Lan', 'Vũ Đức Long', 'Lê Minh Châu', 'Phạm Quốc Huy'];
+
+const day = (offset: number): string => {
+  const date = new Date(2026, 9, 1 + offset);
+  return \`\${date.getFullYear()}/\${String(date.getMonth() + 1).padStart(2, '0')}/\${String(date.getDate()).padStart(2, '0')}\`;
+};
+
+const ORDERS: Order[] = Array.from({ length: 36 }, (_, index) => ({
+  id: index + 1,
+  code: \`DH-\${24300 + index}\`,
+  customer: CUSTOMERS[index % CUSTOMERS.length],
+  phone: \`09\${String(10000000 + index * 7919).slice(0, 8)}\`,
+  email: \`kh\${index + 1}@example.com\`,
+  warehouseId: WAREHOUSES[index % WAREHOUSES.length].id,
+  priority: PRIORITIES[index % 2].id,
+  status: STATUSES[index % STATUSES.length].id,
+  channel: CHANNELS[index % CHANNELS.length].id,
+  note: index % 4 === 0 ? 'Giao gấp' : '',
+  total: (index + 3) * 650_000,
+  weight: (index % 9) + 1,
+  payment: PAYMENTS[index % PAYMENTS.length].id,
+  createdAt: day(index % 28),
+  deliveredOn: day((index % 28) + 2),
+  updatedAt: \`\${day((index % 28) + 1)} 09:30:00\`,
+}));
+
+@Component({
+  selector: 'app-table-query-bar-example',
+  standalone: true,
+  imports: [JsonPipe, SdButton, SdCheckbox, SdTable, SdTableQuickSearchRightDefDirective],
+  templateUrl: './table-query-bar.example.html',
+  styleUrl: './table-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableQueryBarExampleComponent {
+  readonly mode = signal<'default' | 'query-bar'>('query-bar');
+  readonly manualFilter = signal(false);
+  /** Last \`pagingReq\` sent by the table — the same edit must give the same payload in both modes. */
+  readonly pagingReq = signal<PagingReq | undefined>(undefined);
+
+  // why: option mới mỗi lần đổi mode → bảng dựng lại; cùng \`filter.key\` + \`cacheable\` nên giá trị đã lọc được giữ.
+  readonly option = computed<SdTableOption<Order>>(() => ({
+    type: 'server',
+    rowKey: 'id',
+    items: async (_filterReq, pagingReq) => {
+      this.pagingReq.set(pagingReq);
+      await new Promise(resolve => setTimeout(resolve, 600));
+      // Demo backend: applies pagingReq.filters as a real API would, then pages.
+      const rows = ORDERS.filter(row => FilterUtilities.match(pagingReq.filters ?? [], row));
+      const { pageNumber = 0, pageSize = 8 } = pagingReq;
+      return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
+    },
+    paginate: { pageSize: 8, pages: [8, 16, 36] },
+    sort: { enable: true },
+    filter: {
+      mode: this.mode(),
+      manualFilter: this.manualFilter(),
+      key: 'showcase-table-query-bar',
+      cacheable: true,
+      quickSearch: {
+        containFields: ['code', 'customer'],
+        placeholder: 'Mã đơn, khách hàng…',
+        filters: [
+          {
+            field: 'warehouseId',
+            title: 'Kho xuất',
+            type: 'values',
+            required: true,
+            default: 'hn',
+            option: { items: WAREHOUSES, valueField: 'id', displayField: 'name' },
+          },
+          {
+            field: 'priority',
+            title: 'Ưu tiên',
+            type: 'values',
+            option: { items: PRIORITIES, valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+          },
+        ],
+      },
+      externalFilters: [
+        {
+          field: 'status',
+          title: 'Trạng thái',
+          type: 'values',
+          defaultShowing: true,
+          option: { items: STATUSES, valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+        },
+        { field: 'createdAt', title: 'Ngày tạo', type: 'daterange', defaultShowing: true, default: { from: day(0), to: day(30) } },
+        {
+          field: 'channel',
+          title: 'Kênh bán',
+          type: 'lazy-values',
+          option: {
+            valueField: 'id',
+            displayField: 'name',
+            items: async ({ type, searchText, value }) =>
+              type === 'VALUE'
+                ? CHANNELS.filter(item => ([] as unknown[]).concat(value).includes(item.id))
+                : CHANNELS.filter(item => item.name.toLowerCase().includes((searchText ?? '').toLowerCase())),
+          },
+        },
+        { field: 'note', title: 'Ghi chú', type: 'string' },
+      ],
+    },
+    columns: [
+      {
+        field: 'code',
+        title: 'Mã đơn',
+        type: 'string',
+        width: '130px',
+        sortable: true,
+        filter: { operator: { enable: true, list: ['CONTAIN', 'EQUAL', 'START_WITH'] } },
+      },
+      { field: 'customer', title: 'Khách hàng', type: 'string', width: '170px' },
+      { field: 'createdAt', title: 'Ngày tạo', type: 'date', width: '120px' },
+      {
+        field: 'total',
+        title: 'Tổng tiền',
+        type: 'number',
+        align: 'right',
+        width: '140px',
+        filter: { operator: { enable: true, list: ['EQUAL', 'GREATER_OR_EQUAL', 'LESS_OR_EQUAL'] } },
+      },
+      { field: 'payment', title: 'Thanh toán', type: 'values', width: '150px', option: { items: PAYMENTS, valueField: 'id', displayField: 'name' } },
+      // why: header nhóm chỉ chứa cột không lọc — SdConvertToPagingReq chỉ đọc cột cấp đầu, nên filter của cột con không
+      // được gửi đi ở cả hai mode.
+      {
+        field: 'contact',
+        title: 'Liên hệ',
+        type: 'children',
+        children: [
+          { field: 'phone', title: 'Điện thoại', type: 'string', width: '130px', filter: { disabled: true } },
+          { field: 'email', title: 'Email', type: 'string', width: '190px', filter: { disabled: true } },
+        ],
+      },
+      { field: 'weight', title: 'Cân nặng (kg)', type: 'number', align: 'right', width: '130px', filter: { type: 'split-number' } },
+      { field: 'deliveredOn', title: 'Ngày giao', type: 'date', width: '120px', filter: { type: 'date' } },
+      { field: 'updatedAt', title: 'Cập nhật', type: 'datetime', width: '160px' },
+    ],
+  }));
+}`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// Fake-delay switch of the "Loading / empty / error" example: label and buttons on one line.
+.table-delays {
+  align-items: center;
+}
+
+.table-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+.table-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Two-line header and cell content of the "Custom TH / TD" example.
+.cell-stack small {
+  display: block;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+// Money stays right-aligned in custom cells, as in the built-in number column.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-amount--primary {
+  color: var(--sd-primary, #005cbb);
+}
+
+// Inputs inside a row keep the 36px row readable.
+.cell-input {
+  display: block;
+  padding-block: 6px;
+}
+
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .required-mark {
@@ -15245,6 +15575,20 @@ export class TableInlineErrorsExampleComponent {
   padding-block: 6px;
 }
 
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .required-mark {
   color: var(--sd-error, #d32f2f);
 }`,
@@ -15411,6 +15755,20 @@ export class TableInlineEditExampleComponent {
 .cell-input {
   display: block;
   padding-block: 6px;
+}
+
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .required-mark {
@@ -15738,6 +16096,20 @@ export class TableStandardExampleComponent {
 .cell-input {
   display: block;
   padding-block: 6px;
+}
+
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .required-mark {
@@ -29734,6 +30106,22 @@ Bởi Nguyễn Văn A"></sd-badge>
       (sdRetry)="retry()" />
   </ng-template>
 </sd-table>`,
+  },
+  "components/table/example-loc-bang-query-bar": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-loc-bang-query-bar"],
+    html: `<div class="d-flex align-items-center flex-wrap gap-8 mb-16">
+  <sd-button title="Mode default" size="sm" [type]="mode() === 'default' ? 'fill' : 'outline'" (click)="mode.set('default')" />
+  <sd-button title="Mode query-bar" size="sm" [type]="mode() === 'query-bar' ? 'fill' : 'outline'" (click)="mode.set('query-bar')" />
+  <sd-checkbox label="manualFilter" size="sm" [model]="manualFilter()" (sdChange)="manualFilter.set(!!$event)" />
+</div>
+@let _option = option();
+<sd-table autoId="query-bar-demo" [option]="_option">
+  <ng-template sdTableQuickSearchRightDef>
+    <sd-button title="Xuất" size="sm" type="outline" prefixIcon="download" />
+  </ng-template>
+</sd-table>
+<p class="table-note">pagingReq gửi đi (cùng thao tác cho ra cùng payload ở hai mode):</p>
+<pre class="table-paging-req" data-autoid="query-bar-demo-paging-req">{{ pagingReq()?.filters | json }}</pre>`,
   },
   "components/table/example-mobile-chon-du-lieu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],

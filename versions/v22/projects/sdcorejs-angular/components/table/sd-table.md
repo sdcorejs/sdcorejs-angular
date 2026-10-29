@@ -572,6 +572,62 @@ Import **`SdTableQuickSearchRightDefDirective`** in the consumer's standalone `i
 
 The projected checkbox is consumer-owned; it does not automatically add a predicate. Also import `SdCheckbox` and implement its state/handler. Native keyword/clear controls expose `data-autoid="customers-quick-search-term"` and `customers-quick-search-clear`; dropdowns receive `autoId="customers-quick-search-<field>"`. The keyword has a label, placeholder, Enter hint and IME-safe submission.
 
+#### Query bar mode (`filter.mode: 'query-bar'`)
+
+`filter.mode: 'query-bar'` replaces quick search, the external filter section and the column filter row with one `sd-query-bar` at the top of the table surface. It is a view only: the filter state is still `TableFilterValue`, so `items()`, `filterReq`, `pagingReq`, the cache, `required`, `default`, `manualFilter`, `onFilter` and the filter callbacks behave as in the default mode. **The same edit sends the same `pagingReq` in both modes.** Switching modes, or the viewport, keeps the applied values.
+
+```ts
+filter: {
+  mode: 'query-bar',
+  queryBar: { editor: 'popover', pinned: ['warehouseId', 'status'], exclude: ['internalCode'] },
+  quickSearch: { containFields: ['code', 'customer.name'], placeholder: 'Mã đơn, khách hàng…', filters: [/* … */] },
+  externalFilters: [/* … */],
+}
+```
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `mode` | `'default'` | `'query-bar'` turns the mode on. `SD_TABLE_CONFIGURATION.filter.mode` sets it for every table; the option wins. |
+| `queryBar.editor` | `'popover'` | `'inline'` edits chips directly on the bar (`sd-query-bar` mode `'inline'`). |
+| `queryBar.pinned` | visible quick filters + external filters shown inline (`defaultShowing` / user setting) or `required` | Replaces the default list of pinned chips. Items are `field`s of `quickSearch.filters`, `externalFilters` or `columns`. `required` fields are always pinned. |
+| `queryBar.exclude` | — | Fields left off the bar; their values are still sent. |
+
+`SD_TABLE_CONFIGURATION.filter.queryBar` is merged field by field under `option.filter.queryBar`. Mobile (`SdViewportService.isMobile()`) always renders the default controls, quick search and the mobile filter drawer included. `filter.disabled` renders no filter UI, as before.
+
+**Layout.** The bar is flush inside the table card (padding `8px 12px`): search box (quick-search `placeholder`, shown whenever `quickSearch` is set) │ pinned chips │ added chips │ `+` … clear button │ Search (with `manualFilter` only) │ the `sdTableQuickSearchRightDef` template. Chips wrap; the actions stay on the first row. The bar sits outside the loading layer, so it stays usable during `skeleton` and `refresh`. `role="search"`, `aria-label` = `core.component.table.filter`.
+
+**Chips.** Pinned chips (no remove button) read `Tất cả` when empty, `Chọn giá trị` when the field is `required`. Other fields are under `+`, grouped "Bộ lọc" (quick + external) and "Cột"; more than eight fields get a find box. Operators are limited to what the raw record can hold:
+
+| Source | Bar field | Operators | Raw value |
+| --- | --- | --- | --- |
+| `quickSearch.term` | search box | OR over `containFields` / `equalFields` | `quickSearch.term` |
+| `quickSearch.filters[]` | same type | `selection` containing `MULTIPLE` → `IN`; else `defaultOperator ?? EQUAL` | `quickSearch.filters[field]` |
+| external `string` / `number` | same type | `defaultOperator ?? CONTAIN` / `?? EQUAL` | `externalFilter[field]` (`EQUAL` + commas → `IN`, as before) |
+| external `boolean` | `boolean` (`displayOnTrue/False` labels) | `EQUAL` | `true` / `false` |
+| external `date` / `datetime` | same type | its `defaultOperator` (`GREATER_OR_EQUAL` / `LESS_OR_EQUAL`) | one date |
+| external `daterange` | `date` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+| external `values` / `lazy-values` | same type | `MULTIPLE` → `IN`; else `defaultOperator ?? EQUAL` | value or array |
+| column `string` / `number` | same type | `operator.list` without `BETWEEN` / `IN` / `NOT_IN` when `operator.enable`; else `operator.default ?? CONTAIN / EQUAL` | `columnFilter[field]`, `columnOperator[field]` |
+| column `number` + `filter.type: 'split-number'` | `number` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+| column `boolean` | `boolean` | `EQUAL` | `'1'` / `'0'` |
+| column `values` / `lazy-values` | same type | `MULTIPLE` → `IN`; else `operator.list` ∩ `EQUAL`, `NOT_EQUAL` (default `EQUAL`) | value or array |
+| column `date` / `datetime`, `filter.type: 'date'` | `date` | `EQUAL` (whole day) | one date |
+| column `date` / `datetime`, other filter types | `date` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+
+Columns whose `operator.list` holds `NULL` / `NOT_NULL` (default controls) offer them too. Column `date` / `datetime` and external `daterange` use date-only pickers, as the default controls do, since the request covers whole days.
+
+**Not on the bar** (values still sent; a dev-mode `console.warn` lists them once per table): external `type: 'custom'`, fields with an `sdTableFilterDef` or `filter.filterDef` template, `time` columns, `hidden` columns, columns with `filter.disabled`, external `date` / `datetime` without `defaultOperator` `GREATER_OR_EQUAL` / `LESS_OR_EQUAL` (they send no condition in the default mode either), `queryBar.exclude`, and `hidden` quick filters (their value and `required` still apply). With `hideInlineFilter: true` no column goes on the bar; `'auto'` keeps them (they only sit under `+`). A column with the same field as an external filter is covered by it: only the external chip shows and the column value is always cleared. A column hidden through the table settings keeps its chip while it still filters. Children of grouped headers are offered, but `SdConvertToPagingReq` reads only top-level `columns`, so their values are not sent — in either mode.
+
+**Applying.** Without `manualFilter`, a chip popover that closes with a changed value or operator, removing a chip that had a value, an inline chip commit and Enter in the search box each apply once (the existing 700 ms read debounce). A popover that closes unchanged reads nothing; an added chip that closes empty is dropped. Changing the operator of an empty column is stored without a read, like the column filter. With `manualFilter: true` edits stay a draft until the Search button (disabled while a `required` field is empty) or Enter. Every apply writes the whole bar in one `filterRegister.value.set`; then column `filter.onChange(value, column, columnFilter)`, `filter.operatorChange(column, operator)`, external `onChange(value)` and quick-filter `onChange(value)` run for the fields the user changed — never on init or for changes from outside. Changes from outside (`setFilter`, a signal `default`, the cache) wait while a chip popover is open and never overwrite unapplied edits of other chips.
+
+**Required.** An empty `required` chip has the error look and `aria-invalid`, and a hint under the bar (`core.component.query-bar.required`, labels joined by commas; also hidden required quick filters) is its `aria-describedby`. An empty required external filter blocks a server read through its value (`onFilter` gets `externalFilterValid: false`); `requireFiltered` and the "choose a filter" state are unchanged.
+
+**Clear.** The clear button (label `core.component.query-bar.clear-all` with the number of chips that hold a value) resets to the defaults (`filterRegister.value.remove()`), calls `filter.onClearFilter` and reads once. It is disabled while the applied state equals the defaults.
+
+**Header icons.** Every leaf column whose field is on the bar, or is covered by an external filter, gets a 20 × 20 `button.sd-table-filter-trigger` (`filter_alt`) beside its title — after it, or before it for `align: 'right'`. It is invisible (still focusable) until the header cell is hovered or focused, or on a coarse pointer, and stays visible in `--sd-primary` while the field filters by an applied value. Clicking it opens that field's chip (adding it when needed) without sorting or resizing; focus returns to the icon when the popover closes. `aria-label`: `core.component.table.filter-by` / `filtering-by` with the column title; `aria-haspopup="dialog"`.
+
+**Ignored in this mode:** `externalFilterPerRow`, `collapsible`, `externalFilterCollapsed`, `hideExternalFilterToolbar`.
+
 #### Inline column filter — commit semantics
 
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
@@ -1092,6 +1148,7 @@ Colours come from the theme (see `assets/THEME.md`, "Table tokens"): the header 
 The desktop table uses subtle 6px outer corners: the existing scroll area rounds the top corners and the paginator rounds the bottom corners. No additional clipping or scroll container is introduced, preserving sticky headers and columns. Mobile cards retain their existing shape.
 
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
+- **Query bar** (`filter.mode: 'query-bar'`, desktop): one chip row flush at the top of the table card instead of quick search, external filter and the filter row; a funnel icon appears beside a filterable column title on hover and stays blue while that column filters.
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
@@ -1112,6 +1169,8 @@ provide: SD_TABLE_CONFIGURATION,
 useValue: {
   paginate: { pageSize: 50, pages: [10, 25, 50, 100], showFirstLastButtons: true },
   filter: { hideInlineFilter: false, operator: { default: { string: 'CONTAIN', ... }, list: { ... } } },
+  // Giao diện lọc mặc định cho mọi bảng (option.filter.mode thắng); queryBar gộp theo từng field.
+  // filter: { mode: 'query-bar', queryBar: { editor: 'popover' } },
   // Ảnh thay cho 3 trạng thái empty mặc định (bỏ trống thì dùng ảnh của core).
   images: { dataEmpty: 'assets/empty.svg', filterEmpty: 'assets/no-results.svg', filterRequired: 'assets/choose-filter.svg' },
   // Lớp loading cho mọi bảng; option.loading của từng bảng thắng theo từng field.
@@ -1392,6 +1451,7 @@ Rendered directly on the `<sd-table>` host element:
 | `data-autoid`  | `components-table-<autoId>` | input `autoId`                                                |
 | `data-loading` | `"true"` / `"false"`        | `loading` signal (toggled by paging + external-filter submit) |
 | `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | what the loading layer draws (see **Loading**). `skeleton` shows at once and also while `data-loading` is `"false"` (before the configuration, during the first read's debounce); `refresh` starts `showDelay` after `data-loading` and can stay `minDuration` after it |
+| `data-filter-mode` | `"default"` / `"query-bar"` | filter UI on screen: `filter.mode`, except that mobile always renders `"default"` |
 
 Selector example:
 
@@ -1420,6 +1480,8 @@ All interactive children derive their autoId from the table base `components-tab
 | Selector-action: clear-selection (×)                  | `components-button-<B>-clear-selection`                                                                      |
 | Config modal: skip / reset / apply                    | `components-button-<B>-config-skip` / `-config-reset` / `-config-apply`                                      |
 | External filter: clear / setting / submit             | `components-button-<B>clear` / `…setting` / `…submit`                                                        |
+| Query bar (`filter.mode: 'query-bar'`)                | host `<B>-query-bar`; inner controls use it as the `sd-query-bar` autoId prefix                              |
+| Header filter icon (query-bar mode)                   | `<B>-filter-trigger-<field>`                                                                                 |
 
 `<rowId>` / `groupKey` come from `SdTableItem.meta.id` / `meta.group.key`, guaranteeing uniqueness per row/group. **Set `option.rowKey` if you want `<rowId>` to be a readable, deterministic value** (e.g. `…-expand-42`) — without it the id is an internally generated `sd-row-<n>` that changes between page loads and is unusable as a stable E2E selector. See **Row identity** above. Group toggles use `meta.group.key` (a hash of the group field values) and stay deterministic regardless. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
 
