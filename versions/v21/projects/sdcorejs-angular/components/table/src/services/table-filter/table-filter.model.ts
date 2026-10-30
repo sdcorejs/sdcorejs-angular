@@ -113,8 +113,9 @@ export interface SdTableOptionFilter<T = unknown> {
 /** Tuỳ chọn của `filter.mode: 'query-bar'`. */
 export interface SdTableOptionFilterQueryBar {
   /**
-   * Cách sửa chip: popover hoặc control ngay trên thanh (`sd-query-bar` mode `'inline'`).
-   * @defaultValue 'popover'
+   * Cách sửa chip: control ngay trên thanh (`sd-query-bar` mode `'inline'`) hoặc popover. `sd-query-bar` đứng riêng
+   * vẫn mặc định `'popover'`.
+   * @defaultValue 'inline'
    */
   editor?: 'popover' | 'inline';
   /**

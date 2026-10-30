@@ -29,6 +29,7 @@
 @let _queryBarMode = queryBarMode();
 @let _queryBarKeys = queryBarModel()?.columnKeys;
 @let _queryBarActive = queryBarActiveKeys();
+@let _queryBarTriggerPopup = queryBarOption()?.mode === 'popover' ? 'menu' : null;
 @let _showInlineFilter =
   !_queryBarMode &&
   !_isMobile &&
@@ -86,7 +87,8 @@
   </ng-template>
   <!-- Icon lọc ở header cột (mode query-bar): mở chip của field trên thanh. why: nằm cạnh .c-header-title chứ không
        nằm trong — title sort được là role=button và bắt Enter, lồng button vào sẽ thành nested-interactive và Enter
-       trên icon sẽ sort. Chặn mousedown/click để không sort, không bắt đầu kéo cột. -->
+       trên icon sẽ sort. Chặn mousedown/click để không sort, không bắt đầu kéo cột. Editor inline chỉ focus chip trên
+       thanh, không mở popup, nên chỉ editor popover mới khai aria-haspopup. -->
   <ng-template #queryBarTrigger let-column>
     @let _triggerKey = _queryBarKeys?.get(column.field);
     @if (_triggerKey) {
@@ -97,7 +99,7 @@
         [class.sd-table-filter-trigger--active]="_triggerActive"
         [attr.data-autoid]="_autoId ? _autoId + '-filter-trigger-' + column.field : null"
         [attr.aria-label]="filterTriggerLabel(column, _triggerActive)"
-        aria-haspopup="menu"
+        [attr.aria-haspopup]="_queryBarTriggerPopup"
         (mousedown)="$event.stopPropagation()"
         (click)="$event.stopPropagation(); openQueryBarField(_triggerKey, $event.currentTarget)">
         <sd-icon name="filter_alt" aria-hidden="true"></sd-icon>

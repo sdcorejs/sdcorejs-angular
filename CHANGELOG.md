@@ -34,9 +34,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+> [!IMPORTANT]
+> **Before upgrading:** the table query bar (`filter.mode: 'query-bar'`) now edits chips inline on the bar; set `filter.queryBar.editor: 'popover'` (per table or in `SD_TABLE_CONFIGURATION`) to keep the popover chips.
+
 ### Changed (BREAKING for consumers)
 
 #### Table
+
+- `filter.queryBar.editor` defaults to `'inline'` (was `'popover'`): each chip's operator and value are edited directly on the bar. A standalone `sd-query-bar` still defaults to `'popover'`.
+  - The header filter icon focuses the field's chip, or starts building one when the field has none. It declares `aria-haspopup="menu"` only with the popover editor.
+  - **Migration:** to keep the previous look, set the editor per table or for every table.
+
+    ```diff
+      filter: {
+        mode: 'query-bar',
+    +   queryBar: { editor: 'popover' },
+      },
+    ```
 
 - Default client XLSX export now writes untransformed `date`, `datetime` and `time` columns as Excel numeric date/time cells, displayed as `dd/MM/yyyy`, `dd/MM/yyyy HH:mm:ss` and `HH:mm:ss`.
   - **Migration:** code reading these XLSX files must accept numeric/date cells instead of the previous date strings. Existing transforms still take priority; their strings remain text. CSV retains its existing string formats.

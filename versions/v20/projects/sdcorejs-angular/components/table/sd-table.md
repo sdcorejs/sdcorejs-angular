@@ -595,7 +595,7 @@ The projected checkbox is consumer-owned; it does not automatically add a predic
 ```ts
 filter: {
   mode: 'query-bar',
-  queryBar: { editor: 'popover', pinned: ['warehouseId', 'status'], exclude: ['internalCode'] },
+  queryBar: { pinned: ['warehouseId', 'status'], exclude: ['internalCode'] },
   quickSearch: { containFields: ['code', 'customer.name'], placeholder: 'Mã đơn, khách hàng…', filters: [/* … */] },
   externalFilters: [/* … */],
 }
@@ -604,7 +604,7 @@ filter: {
 | Option | Default | Effect |
 | --- | --- | --- |
 | `mode` | `'default'` | `'query-bar'` turns the mode on. `SD_TABLE_CONFIGURATION.filter.mode` sets it for every table; the option wins. |
-| `queryBar.editor` | `'popover'` | `'inline'` edits chips directly on the bar (`sd-query-bar` mode `'inline'`). |
+| `queryBar.editor` | `'inline'` | `'inline'` edits the operator and value of each chip directly on the bar (`sd-query-bar` mode `'inline'`); `'popover'` edits a chip in its popover. A standalone `sd-query-bar` still defaults to `'popover'`. |
 | `queryBar.pinned` | visible quick filters + external filters shown inline (`defaultShowing` / user setting) or `required` | Replaces the default list of pinned chips. Items are `field`s of `quickSearch.filters`, `externalFilters` or `columns`. `required` fields are always pinned. |
 | `queryBar.exclude` | — | Fields left off the bar; their values are still sent. |
 
@@ -640,7 +640,7 @@ Columns whose `operator.list` holds `NULL` / `NOT_NULL` (default controls) offer
 
 **Clear.** The clear button (label `core.component.query-bar.clear-all` with the number of chips that hold a value) resets to the defaults (`filterRegister.value.remove()`), calls `filter.onClearFilter` and reads once. It is disabled while the applied state equals the defaults.
 
-**Header icons.** Every leaf column whose field is on the bar, or is covered by an external filter, gets a 20 × 20 `button.sd-table-filter-trigger` (`filter_alt`) beside its title — after it, or before it for `align: 'right'`. It is invisible (still focusable) until the header cell is hovered or focused, or on a coarse pointer, and stays visible in `--sd-primary` while the field filters by an applied value. Clicking it opens that field's chip (adding it when needed) without sorting or resizing; focus returns to the icon when the popover closes. `aria-label`: `core.component.table.filter-by` / `filtering-by` with the column title; `aria-haspopup="menu"` (the chip popover is a menu).
+**Header icons.** Every leaf column whose field is on the bar, or is covered by an external filter, gets a 20 × 20 `button.sd-table-filter-trigger` (`filter_alt`) beside its title — after it, or before it for `align: 'right'`. It is invisible (still focusable) until the header cell is hovered or focused, or on a coarse pointer, and stays visible in `--sd-primary` while the field filters by an applied value. Clicking it opens that field's chip without sorting or resizing: with the inline editor it focuses the chip, or starts building one when the field has none; with `editor: 'popover'` it opens the chip popover (adding the chip when needed) and focus returns to the icon when the popover closes. `aria-label`: `core.component.table.filter-by` / `filtering-by` with the column title; `aria-haspopup="menu"` only with `editor: 'popover'` (the chip popover is a menu).
 
 **Ignored in this mode:** `externalFilterPerRow`, `collapsible`, `externalFilterCollapsed`, `hideExternalFilterToolbar`.
 

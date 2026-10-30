@@ -827,7 +827,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return {
       autoId: autoId ? `${autoId}-query-bar` : undefined,
       fields: ctx.fields,
-      mode: filter.queryBar?.editor ?? 'popover',
+      mode: filter.queryBar?.editor ?? 'inline',
       density: 'compact',
       showSearch: ctx.search,
       searchPlaceholder: this.quickSearchOption()?.placeholder,
