@@ -15,13 +15,14 @@ function deferred<T>() {
 describe('SdSelect read channels', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [SdSelect, NoopAnimationsModule] }));
 
-  function setup(loader: jasmine.Spy, value?: string | string[], inline = false) {
+  function setup(loader: jasmine.Spy, value?: string | string[], inline = false, virtualScroll = false) {
     const f = TestBed.createComponent(SdSelect);
     f.componentRef.setInput('items', loader);
     f.componentRef.setInput('valueField', 'id');
     f.componentRef.setInput('displayField', 'name');
     f.componentRef.setInput('model', value);
     f.componentRef.setInput('viewed', inline ? 'inline' : false);
+    f.componentRef.setInput('virtualScroll', virtualScroll);
     if (Array.isArray(value)) {
       f.componentRef.setInput('multiple', true);
       f.componentRef.setInput('limit', 1);
@@ -243,35 +244,73 @@ describe('SdSelect read channels', () => {
     }));
   }
 
-  it('supports Tab and retry in the panel without selection or submission', fakeAsync(() => {
-    const loader = jasmine.createSpy('loader').and.callFake(() => Promise.reject('failed'));
-    const { f, comp, selection } = setup(loader);
-    comp.open();
-    tick(600);
-    f.detectChanges();
-    const trigger = f.nativeElement.querySelector('mat-select') as HTMLElement;
-    trigger.focus();
-    expect(comp.readState().status).withContext('before Tab state').toBe('error');
-    expect(comp.selectRef()!.panelOpen).withContext('before Tab panel').toBeTrue();
-    expect(document.querySelector('.sd-select-panel .sd-read-state-region button')).withContext('before Tab button').not.toBeNull();
-    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true, cancelable: true }));
-    const button = document.querySelector<HTMLButtonElement>('.sd-select-panel .sd-read-state-region button')!;
-    expect(document.activeElement).toBe(button);
-    expect(button.closest('mat-option')).toBeNull();
-    expect(button.type).toBe('button');
-    const pending = deferred<unknown[]>();
-    loader.and.returnValue(pending.promise);
-    const count = loader.calls.count();
-    button.click();
-    flushMicrotasks();
-    f.detectChanges();
-    expect(loader.calls.count()).toBe(count + 1);
-    expect(comp.selectRef()!.panelOpen).toBeTrue();
-    expect(selection).not.toHaveBeenCalled();
-    pending.resolve([]);
-    flushMicrotasks();
-    f.destroy();
-  }));
+  for (const multiple of [false, true]) {
+    for (const virtualScroll of [false, true]) {
+      it(`supports Tab and retry without selection or submission (multiple=${multiple}, virtual=${virtualScroll})`, fakeAsync(() => {
+        const loader = jasmine.createSpy('loader').and.callFake(() => Promise.reject('failed'));
+        const { f, comp, selection } = setup(loader, multiple ? [] : undefined, false, virtualScroll);
+        comp.open();
+        tick(600);
+        f.detectChanges();
+        const trigger = f.nativeElement.querySelector('mat-select') as HTMLElement;
+        trigger.focus();
+        expect(comp.readState().status).withContext('before Tab state').toBe('error');
+        expect(comp.selectRef()!.panelOpen).withContext('before Tab panel').toBeTrue();
+        expect(document.querySelector('.sd-select-panel .sd-read-state-region button')).withContext('before Tab button').not.toBeNull();
+        trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true, cancelable: true }));
+        const button = document.querySelector<HTMLButtonElement>('.sd-select-panel .sd-read-state-region button')!;
+        expect(document.activeElement).toBe(button);
+        expect(button.closest('mat-option')).toBeNull();
+        expect(button.type).toBe('button');
+        const search = comp.selectRef()!.panel.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
+        search.focus();
+        search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true, cancelable: true }));
+        expect(document.activeElement).toBe(button);
+        const pending = deferred<unknown[]>();
+        loader.and.returnValue(pending.promise);
+        const count = loader.calls.count();
+        button.click();
+        flushMicrotasks();
+        f.detectChanges();
+        expect(loader.calls.count()).toBe(count + 1);
+        expect(comp.selectRef()!.panelOpen).toBeTrue();
+        expect(selection).not.toHaveBeenCalled();
+        pending.resolve([]);
+        flushMicrotasks();
+        f.destroy();
+      }));
+    }
+  }
+
+  for (const key of ['Escape', 'Tab']) {
+    it(`closes the retry panel with ${key === 'Tab' ? 'Shift+Tab' : key} and restores trigger focus`, fakeAsync(() => {
+      const loader = jasmine.createSpy('loader').and.callFake(() => Promise.reject('failed'));
+      const { f, comp, selection } = setup(loader);
+      comp.open();
+      tick(600);
+      f.detectChanges();
+      const trigger = f.nativeElement.querySelector('mat-select') as HTMLElement;
+      trigger.focus();
+      trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true, cancelable: true }));
+      const button = comp.selectRef()!.panel.nativeElement.querySelector('.sd-read-state-region button') as HTMLButtonElement;
+      expect(document.activeElement).toBe(button);
+      const event = new KeyboardEvent('keydown', {
+        key,
+        keyCode: key === 'Tab' ? 9 : 27,
+        shiftKey: key === 'Tab',
+        bubbles: true,
+        cancelable: true,
+      });
+      button.dispatchEvent(event);
+      tick(600);
+      f.detectChanges();
+      expect(comp.selectRef()!.panelOpen).toBeFalse();
+      expect(document.activeElement).toBe(trigger);
+      expect(event.defaultPrevented).toBeTrue();
+      expect(selection).not.toHaveBeenCalled();
+      f.destroy();
+    }));
+  }
 
   it('invalidates the failed VALUE request on model changes', fakeAsync(() => {
     const loader = jasmine

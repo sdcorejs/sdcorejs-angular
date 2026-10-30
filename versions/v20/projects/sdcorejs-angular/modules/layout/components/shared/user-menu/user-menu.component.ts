@@ -2,7 +2,6 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   computed,
   effect,
@@ -34,7 +33,6 @@ import {
 })
 export class SdLayoutUserMenuComponent {
   readonly #configuration = inject(SD_LAYOUT_CONFIGURATION, { optional: true });
-  readonly #destroyRef = inject(DestroyRef);
   readonly #document = inject(DOCUMENT);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
@@ -107,11 +105,15 @@ export class SdLayoutUserMenuComponent {
       this.close(false);
     };
 
-    this.#document.addEventListener('keydown', onDocumentKeydown);
-    this.#document.addEventListener('pointerdown', onDocumentPointerDown);
-    this.#destroyRef.onDestroy(() => {
-      this.#document.removeEventListener('keydown', onDocumentKeydown);
-      this.#document.removeEventListener('pointerdown', onDocumentPointerDown);
+    effect(onCleanup => {
+      if (!this.isOpen()) return;
+      // why: menu đóng không cần xử lý các phím và click của toàn trang.
+      this.#document.addEventListener('keydown', onDocumentKeydown);
+      this.#document.addEventListener('pointerdown', onDocumentPointerDown);
+      onCleanup(() => {
+        this.#document.removeEventListener('keydown', onDocumentKeydown);
+        this.#document.removeEventListener('pointerdown', onDocumentPointerDown);
+      });
     });
   }
 

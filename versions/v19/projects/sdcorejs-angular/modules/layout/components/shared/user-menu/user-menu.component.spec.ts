@@ -32,6 +32,36 @@ describe('SdLayoutUserMenuComponent', () => {
 
   afterEach(() => utilityStyles.remove());
 
+  it('attaches global listeners only while open and releases the same callbacks on close and destroy', () => {
+    fixture.destroy();
+    const add = spyOn(document, 'addEventListener').and.callThrough();
+    const remove = spyOn(document, 'removeEventListener').and.callThrough();
+    fixture = TestBed.createComponent(SdLayoutUserMenuComponent);
+    fixture.componentRef.setInput('userInfo', { fullName: 'Demo' });
+    fixture.detectChanges();
+    const registrations = () => add.calls.allArgs().filter(([type]) => type === 'keydown' || type === 'pointerdown');
+    expect(registrations().length).toBe(0);
+    for (let cycle = 0; cycle < 3; cycle++) {
+      fixture.componentInstance.open();
+      fixture.componentInstance.open();
+      fixture.detectChanges();
+      expect(registrations().length).toBe((cycle + 1) * 2);
+      const listeners = registrations().slice(-2);
+      fixture.componentInstance.close();
+      fixture.detectChanges();
+      for (const [type, listener] of listeners) {
+        expect(remove.calls.allArgs().some(args => args[0] === type && args[1] === listener)).toBeTrue();
+      }
+    }
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
+    const listeners = registrations().slice(-2);
+    fixture.destroy();
+    for (const [type, listener] of listeners) {
+      expect(remove.calls.allArgs().some(args => args[0] === type && args[1] === listener)).toBeTrue();
+    }
+  });
+
   it('renders the shared user identity and avatar trigger', () => {
     const trigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
     expect(trigger).not.toBeNull();

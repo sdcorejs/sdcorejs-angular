@@ -18,6 +18,7 @@ import {
   input,
   isSignal,
   model,
+  NgZone,
   numberAttribute,
   OnInit,
   output,
@@ -196,6 +197,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   #ref = inject(ChangeDetectorRef);
+  readonly #zone = inject(NgZone);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   #el = inject(ElementRef);
   readonly #i18n = inject(I18nService);
@@ -677,11 +679,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #destroyRef = inject(DestroyRef);
 
   constructor() {
-    // why: CDK dispatch keydown ở body capture; bắt Tab sớm hơn nhưng chỉ trong control/panel này.
-    this.#el.nativeElement.ownerDocument.addEventListener('keydown', this.focusReadRetry, true);
     this.#destroyRef.onDestroy(() => {
       this.#destroyed = true;
-      this.#el.nativeElement.ownerDocument.removeEventListener('keydown', this.focusReadRetry, true);
       this.#valueRead.invalidate();
       this.#searchRead.invalidate();
       ++this.#searchRequestId;
@@ -740,6 +739,26 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
         results.forEach(({ action, result }) => map.set(action, result));
         this.#footerFnVisibility.set(map);
         this.#ref.markForCheck();
+      });
+    });
+
+    effect(onCleanup => {
+      const select = this.selectRef();
+      if (!select) return;
+      const document = this.#el.nativeElement.ownerDocument as Document;
+      const removeListener = () => document.removeEventListener('keydown', this.focusReadRetry, true);
+      const opened = select.openedChange.subscribe(isOpened => {
+        if (isOpened) {
+          // why: capture Tab before Material handles it, only while this panel is open.
+          this.#zone.runOutsideAngular(() => document.addEventListener('keydown', this.focusReadRetry, true));
+        } else {
+          removeListener();
+        }
+      });
+      onCleanup(() => {
+        // why: viewed/virtual mode can destroy the inner MatSelect without emitting a close event.
+        opened.unsubscribe();
+        removeListener();
       });
     });
 
