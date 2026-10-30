@@ -113,3 +113,60 @@ describe('SdTableFilterService value.default()', () => {
     expect(register.value.default!().columnOperator).toEqual({ code: 'EQUAL' });
   });
 });
+
+// The filter mode the user picks in the settings modal is stored with the inline external filters.
+describe('SdTableFilterService configuration.mode', () => {
+  let key: string;
+
+  const register = (force = false) =>
+    TestBed.inject(SdTableFilterService).register({ key } as never, {
+      id: key,
+      columns: [{ field: 'code', title: 'Code', type: 'string' }] as never,
+      externalFilters: [
+        { field: 'status', title: 'Status', type: 'string', defaultShowing: true },
+        { field: 'note', title: 'Note', type: 'string' },
+      ],
+      filterDefs: [],
+      force,
+    });
+
+  beforeEach(() => {
+    key = `filter-mode-${Math.random().toString(36).slice(2)}`;
+    TestBed.configureTestingModule({ providers: [SdTableFilterService] });
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    localStorage.clear();
+  });
+
+  it('stores the mode, and keeps it when only the inline external filters change', () => {
+    const configuration = register().configuration;
+    expect(configuration.get().mode).toBeUndefined();
+    configuration.set({ mode: 'query-bar' });
+    expect(configuration.get()).toEqual({ inlineExternal: { status: true, note: false }, mode: 'query-bar' });
+    configuration.set({ inlineExternal: { status: false, note: true } });
+    expect(configuration.get()).toEqual({ inlineExternal: { status: false, note: true }, mode: 'query-bar' });
+  });
+
+  it('clears the mode on an explicit undefined and keeps the inline external filters', () => {
+    const configuration = register().configuration;
+    configuration.set({ inlineExternal: { status: false, note: true }, mode: 'default' });
+    configuration.set({ mode: undefined });
+    expect(configuration.get()).toEqual({ inlineExternal: { status: false, note: true } });
+  });
+
+  it('reads the stored mode back after a reload, and drops a value it does not know', () => {
+    register().configuration.set({ mode: 'query-bar' });
+    expect(register(true).configuration.get().mode).toBe('query-bar');
+    register().configuration.set({ mode: 'grid' as never });
+    expect(register(true).configuration.get().mode).toBeUndefined();
+  });
+
+  it('removes the mode with the inline external filters', () => {
+    const configuration = register().configuration;
+    configuration.set({ inlineExternal: { status: false, note: true }, mode: 'query-bar' });
+    configuration.remove();
+    expect(configuration.get()).toEqual({ inlineExternal: { status: true, note: false } });
+  });
+});

@@ -1,5 +1,6 @@
 import { ConfiguredColumn, ConfiguredTable } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
+import { SdTableOptionFilter } from './table-filter/table-filter.model';
 
 /** The column setup of an option before anyone changes it: every column that is not `hidden`, in option order. */
 export const defaultConfiguredTable = (option: SdTableOption | undefined): ConfiguredTable => ({
@@ -38,17 +39,20 @@ const changedFromOrigin = (column: ConfiguredColumn): boolean => {
 
 /**
  * Whether the table uses a setup of its own: the stored columns differ from the defaults in order, visibility, title,
- * width (the settings modal or a resize on the table), fixed or truncate, or the inline external filters differ from
- * `defaultShowing`. Columns added to or removed from the option since the setup was stored do not count.
+ * width (the settings modal or a resize on the table), fixed or truncate, the inline external filters differ from
+ * `defaultShowing`, or the stored filter mode differs from `filter.mode` (only while `filter.modeSelectable` is not
+ * `false`). Columns added to or removed from the option since the setup was stored do not count.
  */
 export const sdTableHasCustomSetup = ({
   option,
   configuration,
   inlineExternal,
+  filterMode,
 }: {
   option: SdTableOption | undefined;
   configuration: ConfiguredTable | undefined;
   inlineExternal?: Record<string, boolean>;
+  filterMode?: SdTableOptionFilter['mode'];
 }): boolean => {
   const defaults = defaultConfiguredTable(option).columns!.map(column => column.origin.field);
   const known = new Set(defaults);
@@ -57,6 +61,9 @@ export const sdTableHasCustomSetup = ({
   const order = defaults.filter(field => storedFields.has(field));
   if (stored.some((column, index) => column.origin.field !== order[index] || changedFromOrigin(column))) return true;
 
-  if (!inlineExternal || option?.filter?.disabled) return false;
-  return (option?.filter?.externalFilters ?? []).some(filter => !!inlineExternal[filter.field] !== !!filter.defaultShowing);
+  const filter = option?.filter;
+  if (filter?.disabled) return false;
+  if (filterMode && filter?.modeSelectable !== false && filterMode !== (filter?.mode ?? 'default')) return true;
+  if (!inlineExternal) return false;
+  return (filter?.externalFilters ?? []).some(external => !!inlineExternal[external.field] !== !!external.defaultShowing);
 };

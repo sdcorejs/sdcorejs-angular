@@ -62,6 +62,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `SdExcelColumn.numFmt` sets an Excel number format for numeric or `Date` data cells in `SdExcelService.export()`. Strings are never parsed as dates. Omitted or empty formats preserve integer `0` / decimal General defaults; templates, CSV and additional sheets retain their existing behavior.
 
+#### Table
+
+- The filter mode can be a user setting: `TableFilterConfiguration.mode` stores the mode the user picks, next to the inline external filters, and wins over `filter.mode`.
+  - `filter.modeSelectable` (default `true`, also in `SD_TABLE_CONFIGURATION.filter`): `false` always uses `filter.mode` and ignores a stored choice.
+  - The stored mode turns on the dot of the settings button while it differs from `filter.mode`, and **Khôi phục mặc định** clears it. Mobile still renders the default controls.
+  - `filterRegister.configuration.set()` keeps the fields it is not given: setting only `inlineExternal` keeps the mode, and `mode: undefined` clears it.
+
 ## [3.4] - 2026-10-30
 
 Packages `19.3.4` · `20.3.4` · `21.3.4` · `22.3.4`, validated against `*.3.3`.

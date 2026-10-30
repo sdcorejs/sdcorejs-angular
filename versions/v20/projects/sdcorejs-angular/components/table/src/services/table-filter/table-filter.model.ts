@@ -28,6 +28,8 @@ export interface TableFilterConfiguration {
   // columnFilter?: Record<string, any>; // Giá trị filter column
   inlineExternal: Record<string, boolean>; // Ẩn hiện filter external
   // externalFilter?: Record<string, any>; // Giá trị filter external
+  /** Giao diện lọc người dùng chọn trong modal Thiết lập; thắng `filter.mode` khi `filter.modeSelectable` khác `false`. */
+  mode?: SdTableOptionFilter['mode'];
 }
 
 export interface TableFilterValue {
@@ -105,6 +107,14 @@ export interface SdTableOptionFilter<T = unknown> {
    * @defaultValue 'default'
    */
   mode?: 'default' | 'query-bar';
+
+  /**
+   * Cho người dùng chọn giao diện lọc trong modal Thiết lập. Lựa chọn được lưu cùng thiết lập bộ lọc (theo `filter.key`)
+   * và thắng `mode`; **Khôi phục mặc định** xoá nó. `false`: luôn dùng `mode` và bỏ qua lựa chọn đã lưu.
+   * `SD_TABLE_CONFIGURATION.filter.modeSelectable` đặt cho mọi bảng; option thắng.
+   * @defaultValue true
+   */
+  modeSelectable?: boolean;
 
   /** Chỉ dùng khi `mode` là `'query-bar'`. */
   queryBar?: SdTableOptionFilterQueryBar;

@@ -90,6 +90,7 @@ import {
 import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
+  SdTableOptionFilter,
   TableFilterRegister,
   TableFilterValue,
 } from './services/table-filter/table-filter.model';
@@ -395,13 +396,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly mobileCards = computed(() => this.isMobile() && !!this.sdRowMobileDef());
   /**
    * The footer settings button carries a dot while the table uses a setup of its own: stored columns that differ from
-   * the option (settings modal or a resize on the table) or inline external filters that differ from `defaultShowing`.
+   * the option (settings modal or a resize on the table), inline external filters that differ from `defaultShowing`, or
+   * a stored filter mode that differs from `filter.mode`.
    */
   readonly hasCustomSetup = computed(() =>
     sdTableHasCustomSetup({
       option: this.tableOption(),
       configuration: this.#configuredTable(),
       inlineExternal: this.#inlineExternalSetup(),
+      filterMode: this.#filterModeSetup(),
     })
   );
 
@@ -724,8 +727,16 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // ==========================================
   // QUERY BAR (`filter.mode: 'query-bar'`) — một lớp hiển thị trên cùng TableFilterValue (handoff table-query-bar)
   // ==========================================
-  /** `filter.mode` sau khi gộp `SD_TABLE_CONFIGURATION.filter.mode`. */
-  readonly filterMode = computed(() => this.tableOption()?.filter?.mode ?? 'default');
+  /** Giao diện lọc người dùng đã lưu (modal Thiết lập), theo lần phát gần nhất của thiết lập bộ lọc. */
+  readonly #filterModeSetup = signal<SdTableOptionFilter['mode']>(undefined);
+  /**
+   * Giao diện lọc đã chọn: lựa chọn đã lưu của người dùng (trừ khi `filter.modeSelectable` là `false`), rồi
+   * `filter.mode` sau khi gộp `SD_TABLE_CONFIGURATION.filter.mode`.
+   */
+  readonly filterMode = computed(() => {
+    const filter = this.tableOption()?.filter;
+    return (filter?.modeSelectable !== false ? this.#filterModeSetup() : undefined) ?? filter?.mode ?? 'default';
+  });
   /** Giao diện lọc đang hiển thị: mobile luôn dùng giao diện mặc định; giá trị lọc không đổi khi đổi viewport. */
   readonly effectiveFilterMode = computed(() => (this.isMobile() ? 'default' : this.filterMode()));
   /** Thanh query bar thay quick search, external filter và filter dưới cột. */
@@ -1405,6 +1416,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#appliedFilter.set(undefined);
     this.#inlineExternal.set({});
     this.#inlineExternalSetup.set(undefined);
+    this.#filterModeSetup.set(undefined);
     this.#barDerived = [];
     this.barFilters.set([]);
     this.#barWritten = this.barFilters();
@@ -1474,6 +1486,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     // why: chỉ ghi khi configuration có giá trị — bảng không dùng mode mới giữ nguyên object filter của consumer.
     const filterConfiguration = this.tableConfiguration?.filter;
     if (option.filter.mode === undefined && filterConfiguration?.mode) option.filter.mode = filterConfiguration.mode;
+    if (option.filter.modeSelectable === undefined && filterConfiguration?.modeSelectable !== undefined) {
+      option.filter.modeSelectable = filterConfiguration.modeSelectable;
+    }
     if (filterConfiguration?.queryBar) option.filter.queryBar = { ...filterConfiguration.queryBar, ...option.filter.queryBar };
     // why: cột con của header nhóm cũng có filter và operator riêng.
     for (const column of leafColumns(option.columns)) {
@@ -1556,6 +1571,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#filterConfigurationSubscription = this.filterRegister.configuration.observer.subscribe(configuration => {
       this.#inlineExternal.set(configuration.inlineExternal || {});
       this.#inlineExternalSetup.set(configuration.inlineExternal || {});
+      this.#filterModeSetup.set(configuration.mode);
     });
     this.#subscription.add(this.#filterConfigurationSubscription);
 
@@ -2587,7 +2603,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#syncSelectAllState();
   };
 
-  /** Restore defaults in the settings modal also puts the inline external filters back to `defaultShowing`. */
+  /**
+   * Restore defaults in the settings modal also puts the inline external filters back to `defaultShowing` and clears the
+   * stored filter mode.
+   */
   onConfigDefaultsRestored = () => {
     this.filterRegister?.configuration.remove();
   };

@@ -604,6 +604,7 @@ filter: {
 | Option | Default | Effect |
 | --- | --- | --- |
 | `mode` | `'default'` | `'query-bar'` turns the mode on. `SD_TABLE_CONFIGURATION.filter.mode` sets it for every table; the option wins. |
+| `modeSelectable` | `true` | Lets the user pick the filter mode in the settings modal. The choice is stored with the filter settings (`TableFilterConfiguration.mode`, persistent with `filter.key`), wins over `mode`, turns on the dot of the settings button while it differs from `mode`, and is cleared by **Khôi phục mặc định**. `false` always uses `mode` and ignores a stored choice. `SD_TABLE_CONFIGURATION.filter.modeSelectable` sets it for every table; the option wins. |
 | `queryBar.editor` | `'inline'` | `'inline'` edits the operator and value of each chip directly on the bar (`sd-query-bar` mode `'inline'`); `'popover'` edits a chip in its popover. A standalone `sd-query-bar` still defaults to `'popover'`. |
 | `queryBar.pinned` | visible quick filters + external filters shown inline (`defaultShowing` / user setting) or `required` | Replaces the default list of pinned chips. Items are `field`s of `quickSearch.filters`, `externalFilters` or `columns`. `required` fields are always pinned. |
 | `queryBar.exclude` | — | Fields left off the bar; their values are still sent. |
