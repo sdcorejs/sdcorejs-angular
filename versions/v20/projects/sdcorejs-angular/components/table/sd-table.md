@@ -658,7 +658,7 @@ Columns whose `operator.list` holds `NULL` / `NOT_NULL` (default controls) offer
 
 #### Grouped headers and split filters
 
-- **Columns under a grouped header** (`type: 'children'`) filter like flat columns. `SdConvertToPagingReq`, local filtering and local sorting, `filter.default`, the cache and `SD_TABLE_CONFIGURATION.filter.operator` all work on leaf columns; the grouped header itself sends nothing. Before, only top-level `columns` were read, so a child column's filter was never sent, matched or restored. Passing `option.columns` to `SdConvertToPagingReq` by hand now includes the children too.
+- **Columns under a grouped header** (`type: 'children'`) filter like flat columns. `SdConvertToPagingReq`, local filtering and local sorting, `filter.default`, the cache and `SD_TABLE_CONFIGURATION.filter.operator` all work on leaf columns; the grouped header itself sends nothing. Before, only top-level `columns` were read, so a child column's filter was never sent, matched or restored. Passing `option.columns` to `SdConvertToPagingReq` by hand now includes the children too. The list of a child `values` column is loaded like a top-level one, for its cells, its filter and the export.
 - **Split filters survive a reset.** Clearing the filters (`clearFilter()`, the external filter's clear button, `setFilter` without the field) can drop the `{ from, to }` of a `split-number` / `split-date` column from the shared `columnFilter`. The column filter now shows both ends empty and recreates `{ from, to }` when one is typed; before, change detection threw `Cannot read properties of undefined (reading 'from')`.
 
 #### Inline column filter — local matching semantics (`type: 'local'`)
