@@ -1,5 +1,35 @@
 # Reviewed release snapshots
 
+## Release 3.4
+
+`3.4.json` compares all four candidates with their same-major published `*.3.3`
+baseline. Candidates are the actual `19.3.4` / `20.3.4` / `21.3.4` / `22.3.4`
+tarballs built on Linux by the `publish-npm.yml` run `40999588659` for the first
+`v3.4` tag (source `e0789741f7a99aacf330c46fb51698f9f430a3c6`, the squash of #126, exact
+Node `24.22.1`), downloaded from that run's retained artifacts. That run stopped at
+"Verify all four retained packages" and published nothing. The snapshot was built in
+an LF worktree of the source commit and checked there with
+`release-package-contract.mjs --compile-consumers` against the same artifacts.
+The canonical surface fingerprint reader excludes only `version` and `frameworkMajor`.
+Every baseline fingerprint equals the candidate fingerprint recorded in `3.3.json`.
+
+The export map, dependencies, peers and engines are unchanged for each line. Angular 19
+adds 86 packed files and removes 78: the 78 `modules/pattern` FESM chunks (with maps)
+come back under new content hashes, the order form adds `order-lines.ts` and
+`lines-table-form.component.ts` to the pattern sources, and six internal deep-path
+declarations are new (the table's `config-width.util`, `column-leaf.util`,
+`config-custom.util` and `table-query-bar.util`, and the pattern `order-lines` and
+`lines-table-form.component`), none of them an entry point. Later Angular lines add 80
+files and remove the same 78 re-hashed chunks.
+
+The source and declaration changes cover the table query-bar filter mode, the
+redesigned table settings modal and its settings-button dot, the query bar options
+(pinned, required and grouped fields, `applyOn`, `openField()`), grouped-header filters
+and `values` lists, split filters after a reset, the configuration token rename with
+deprecated `*_CONFIG` aliases, the pattern order form and the page table of contents.
+They must be independently reviewed with this snapshot; CI never regenerates
+expectations.
+
 ## Release 3.3
 
 `3.3.json` compares all four candidates with their same-major published `*.3.2`
