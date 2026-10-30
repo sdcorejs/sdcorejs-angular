@@ -13,6 +13,8 @@ $qb-primary-faint:  var(--sd-primary-light);
 $qb-border:         var(--sd-query-bar-border, #d6d8db);
 $qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
 $qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
+$qb-danger:         var(--sd-query-bar-chip-danger, #d23535);
+$qb-danger-bg:      var(--sd-query-bar-chip-danger-bg, #fff5f5);
 $qb-radius-chip:    999px;
 
 :host { display: contents; }
@@ -32,6 +34,16 @@ $qb-radius-chip:    999px;
 
   :host-context(.c-density-compact) & { height: 28px; }
   :host-context(.c-density-comfortable) & { height: 32px; }
+
+  // Ghim: không có nút × nên chừa lề phải bằng lề trái.
+  &.c-token-pinned { padding-right: 12px; }
+
+  // Bắt buộc mà rỗng: cùng token lỗi với chip seamless.
+  &.c-token-invalid {
+    border-color: $qb-danger;
+    background: $qb-danger-bg;
+    color: $qb-danger;
+  }
 }
 
 .c-token-icon {

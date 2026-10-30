@@ -7,6 +7,7 @@ import { SdTableOptionTree } from '../../models/table-option-tree.model';
 import { SdTableFilterRequest, SdTableOptionFilter } from '../table-filter/table-filter.model';
 import { matchesQuickSearch, quickSearchConditions } from '../table-filter/table-quick-search.util';
 import { resolveFieldValue } from '../field-value.util';
+import { leafColumns } from '../column-leaf.util';
 import { isNoDataColumnOperator } from '../table-filter/table-filter-operator.util';
 import { subtreeMatches } from '../tree/tree.util';
 import { compareLocalValues } from './table-local-sort.util';
@@ -214,7 +215,8 @@ export const filterLocalItems = <T, TItem extends LocalFilterItem<T>>(
   option: FilterLocalItemsOption<T>,
   filterInfo: SdTableFilterRequest<T>
 ): FilterLocalItemsResult<T, TItem> => {
-  const { columns } = option;
+  // why: cột con của header nhóm mới có giá trị để lọc / sort; header nhóm thì không.
+  const columns = leafColumns(option.columns);
   const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
   const quickSearch = option.filter?.disabled ? undefined : option.filter?.quickSearch;
   const matchesData = (data: T) =>

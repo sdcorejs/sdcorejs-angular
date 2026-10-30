@@ -64,6 +64,20 @@
   padding-block: 6px;
 }
 
+// pagingReq of the "Lọc bằng query bar" example — compare the payload of both filter modes.
+.table-paging-req {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--sd-border, #e0e3e8);
+  border-radius: var(--sd-radius-6, 6px);
+  background: var(--sd-surface-muted, #f5f6f7);
+  color: var(--sd-text, #212121);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .required-mark {
   color: var(--sd-error, #d32f2f);
 }

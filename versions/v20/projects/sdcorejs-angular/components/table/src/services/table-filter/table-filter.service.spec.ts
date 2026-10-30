@@ -72,3 +72,44 @@ describe('SdTableFilterService storage ownership', () => {
     expect(first.destroy).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('SdTableFilterService value.default()', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('returns what remove() stores, without writing it', () => {
+    TestBed.configureTestingModule({ providers: [SdTableFilterService] });
+    const service = TestBed.inject(SdTableFilterService);
+    const register = service.register(undefined, {
+      id: `default-${Math.random()}`,
+      columns: [
+        { field: 'code', title: 'Code', type: 'string', filter: { default: 'DH', operator: { enable: true, default: 'EQUAL' } } },
+      ] as never,
+      externalFilters: [{ field: 'period', title: 'Period', type: 'daterange', default: { from: '2026/10/01' } }],
+      filterDefs: [],
+      quickSearch: {
+        filters: [
+          {
+            field: 'tenant',
+            title: 'Tenant',
+            type: 'values',
+            default: 'north',
+            option: { items: [], valueField: 'id', displayField: 'name' },
+          },
+        ],
+      },
+    });
+    register.value.set({ columnFilter: { code: 'X' } });
+
+    const defaults = register.value.default!();
+    expect(defaults).toEqual({
+      columnFilter: { code: 'DH' },
+      externalFilter: { period: { from: '2026/10/01', to: undefined } },
+      columnOperator: { code: 'EQUAL' },
+      quickSearch: { term: '', filters: { tenant: 'north' } },
+    });
+    expect(register.value.get().columnFilter).toEqual({ code: 'X' });
+
+    defaults.columnOperator!['code'] = 'CONTAIN';
+    expect(register.value.default!().columnOperator).toEqual({ code: 'EQUAL' });
+  });
+});

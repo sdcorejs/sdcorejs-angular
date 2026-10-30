@@ -40,10 +40,15 @@ export class SdQueryActionsBar {
 
   // Clear-all —
   readonly showClearAll = input(true, { transform: booleanAttribute });
+  /** Number in the clear-all label; falls back to `filtersCount`. `0` drops the number. */
+  readonly clearCount = input<number | undefined>(undefined);
+  readonly clearDisabled = input(false);
   readonly clear = output<void>();
 
   // Search trigger —
   readonly canSearch = input(false);
+  /** `false` hides the button (bar `applyOn: 'commit'`). */
+  readonly showSearchButton = input(true);
   readonly search = output<void>();
 
   // Nhãn i18n —
@@ -51,7 +56,12 @@ export class SdQueryActionsBar {
   // `I18nService.setLanguage()` đổi catalog), và `clear-all` còn phải nội suy `{count}` nên
   // ghép chuỗi trong template sẽ khoá cứng trật tự từ của tiếng Việt.
   readonly logicGroupLabel = computed(() => this.#i18n.t('core.component.query-bar.logic-operator'));
-  readonly clearAllLabel = computed(() => this.#i18n.t('core.component.query-bar.clear-all', { count: this.filtersCount() }));
+  readonly clearAllLabel = computed(() => {
+    const count = this.clearCount() ?? this.filtersCount();
+    // why: nút tắt (không có gì khác mặc định) hoặc không chip nào có giá trị thì "(0)" chỉ gây nhiễu.
+    if (this.clearDisabled() || count === 0) return this.#i18n.t('core.component.query-bar.clear');
+    return this.#i18n.t('core.component.query-bar.clear-all', { count });
+  });
   readonly searchLabel = computed(() => this.#i18n.t('core.component.query-bar.search'));
 
   setLogic(value: SdQueryLogic): void {

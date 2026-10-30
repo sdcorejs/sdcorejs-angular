@@ -88,6 +88,19 @@ describe('SdColumnResizeDirective', () => {
     expect(host.lastWidth).toBe('150px');
   });
 
+  it('emits nothing for a click on the grip that does not change the width', () => {
+    const handle = thEl.querySelector('.sd-col-resize-handle')!;
+    dispatchMouse(handle, 'mousedown', 100);
+    dispatchMouse(document, 'mouseup', 100);
+    expect(host.lastWidth).toBeNull();
+
+    dispatchMouse(handle, 'mousedown', 100);
+    dispatchMouse(document, 'mousemove', 140);
+    dispatchMouse(document, 'mousemove', 100); // back where it started
+    dispatchMouse(document, 'mouseup', 100);
+    expect(host.lastWidth).toBeNull();
+  });
+
   it('clamp width về minWidth (default 40px)', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);

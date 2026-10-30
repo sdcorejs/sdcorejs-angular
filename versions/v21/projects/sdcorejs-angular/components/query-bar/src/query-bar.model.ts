@@ -33,6 +33,18 @@ interface SdQueryFieldBase<T = unknown> {
   defaultOperator?: Operator;
   /** Field is offered in picker but not interactive (read-only badge in chip). */
   disabled?: boolean;
+  /**
+   * The chip is always on the bar: no remove button, left out of the field picker, and an empty
+   * chip reads "All". The host keeps one entry for the field in `filters`; the bar never adds it.
+   */
+  pinned?: boolean;
+  /**
+   * The field needs a value: its empty chip is marked invalid, the Search button is disabled and
+   * `SdQueryBar.invalidFields()` lists it. The explanation line belongs to the host.
+   */
+  required?: boolean;
+  /** Field-picker group heading. Groups follow their first appearance; one group shows no heading. */
+  group?: string;
 }
 
 export interface SdQueryFieldString<T = unknown> extends SdQueryFieldBase<T> {
@@ -87,6 +99,11 @@ export interface SdQueryFieldLazyValues<T = unknown, K = Record<string, any>> ex
     search: SdSearch<K>;
     valueField: NestedKeyOf<K>;
     displayField: NestedKeyOf<K>;
+    /**
+     * Resolves the items of values restored on a chip (cache, URL). Without it the bar asks
+     * `search({ type: 'VALUE', value })` once. Mirrors `SdTableColumnLazyValues.option.views`.
+     */
+    views?: (values: any[]) => Promise<K[]>;
   };
 }
 
@@ -133,9 +150,35 @@ export interface SdQueryBarOption<T = unknown> {
   savedFiltersKey?: string;
   showLogicToggle?: boolean;
   showClearAll?: boolean;
-  showOperatorOnChip?: boolean;
+  /**
+   * Operator symbol on the chip face. `'auto'` shows it when the field offers more than one
+   * operator, or when the chip's operator differs from `SD_QUERY_DEFAULT_OPERATOR_BY_TYPE[type]`.
+   */
+  showOperatorOnChip?: boolean | 'auto';
   onQueryChange?: (query: SdQuery<T>) => void;
   onApply?: (query: SdQuery<T>) => void;
+  /**
+   * When chip edits fire `apply`.
+   * - `'search'` (default): edits stay a draft until the Search button or Enter in the search box.
+   * - `'commit'`: a popover that closes with a changed operator or value, an inline commit, removing
+   *   a chip that had a value, and Enter in the search box apply at once; the Search button is hidden.
+   *   An added chip that closes empty is dropped without applying.
+   * @defaultValue 'search'
+   */
+  applyOn?: 'search' | 'commit';
+  /**
+   * `'flush'` drops the bar's own border, radius, shadow and background so it sits inside a host card.
+   * @defaultValue 'default'
+   */
+  appearance?: 'default' | 'flush';
+  /** Replaces the built-in clear-all (which empties every chip and keeps pinned ones). */
+  onClearAll?: () => void;
+  /** Disables the clear-all button, for a host that knows nothing differs from its defaults. */
+  clearDisabled?: boolean;
+  /** Placeholder of the free-text search box; overrides `core.component.query-bar.search-placeholder`. */
+  searchPlaceholder?: string;
+  /** Id of the host element explaining missing required values; set as `aria-describedby` on empty required chips. */
+  invalidHintId?: string;
 }
 
 /** Persisted bookmark of a query (filters + logic + search) — managed by `[savedFiltersKey]`. */

@@ -1,11 +1,12 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { SdStorageService, SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { Subject } from 'rxjs';
-import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
+import { ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn } from '../models/table-column.model';
+import { defaultConfiguredTable } from './config-custom.util';
 
 // Aggregate templates contain Angular view references; they must never enter the storage-key hash.
 function storageColumns(columns: SdTableColumn[]): SdTableColumn[] {
@@ -229,27 +230,6 @@ export class ConfigService {
     this.#widthChange.next({ field, width });
   };
 
-  #default = (tableOption: SdTableOption): ConfiguredTable => {
-    const columns: ConfiguredColumn[] =
-      tableOption?.columns
-        ?.filter(e => !e.hidden)
-        .map(e => ({
-          origin: {
-            field: e.field,
-            title: typeof e.title === 'string' ? e.title : e.title?.title,
-            width: e.width,
-            invisible: e.invisible,
-            fixed: e.fixed,
-            truncate: e?.cell?.truncate?.enable,
-          },
-          title: typeof e.title === 'string' ? e.title : e.title?.title,
-          width: e.width,
-          invisible: e.invisible,
-          fixed: e.fixed,
-          truncate: e?.cell?.truncate?.enable,
-        })) || [];
-    return {
-      columns,
-    };
-  };
+  // why: bảng dùng cùng hàm để biết thiết lập đang lưu có khác mặc định không (chấm trên nút Thiết lập).
+  #default = (tableOption: SdTableOption): ConfiguredTable => defaultConfiguredTable(tableOption);
 }

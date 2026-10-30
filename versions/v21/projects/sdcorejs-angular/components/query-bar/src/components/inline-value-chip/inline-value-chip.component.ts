@@ -48,6 +48,12 @@ export class SdQueryInlineValueChip {
   readonly autoId = input<string | undefined>(undefined);
   /** Focus the first input on creation — used for the in-progress build chip. */
   readonly autofocus = input(false);
+  /** Pinned chip — no × segment. */
+  readonly pinned = input(false);
+  /** Required chip without a value — error look while not focused, `aria-invalid`. */
+  readonly invalid = input(false);
+  /** Id set as `aria-describedby` (the host's required hint). */
+  readonly describedBy = input<string | undefined>(undefined);
 
   /** Emitted on commit (Enter / blur) with the parsed next value. */
   readonly valueChange = output<unknown>();
@@ -95,6 +101,7 @@ export class SdQueryInlineValueChip {
   readonly state = computed<ChipState>(() => {
     if (this.hasError()) return 'error';
     if (this.focused()) return 'focus';
+    if (this.invalid()) return 'error';
     return this.hasValue() ? 'active' : 'pending';
   });
 

@@ -6,6 +6,8 @@ $qb-border:        var(--sd-query-bar-border, #d6d8db);
 $qb-bg:            var(--sd-query-bar-bg, #ffffff);
 $qb-text-secondary:var(--sd-query-bar-text-secondary, #5f6368);
 $qb-text-muted:    var(--sd-query-bar-text-muted, #7a7a7a);
+$qb-danger:        var(--sd-query-bar-chip-danger, #d23535);
+$qb-danger-bg:     var(--sd-query-bar-chip-danger-bg, #fff5f5);
 $qb-radius-chip:   999px;
 
 :host { display: contents; } // chip is laid out by the parent flex row directly.
@@ -45,6 +47,26 @@ $qb-radius-chip:   999px;
     padding-right: 10px;
   }
 
+  // Ghim: không có nút ×, chừa đuôi ▾ sát mép như chip rỗng.
+  &.c-chip-pinned.c-chip-active {
+    padding-right: 4px;
+  }
+
+  // Bắt buộc mà rỗng: viền và chữ màu lỗi, cùng token với trạng thái lỗi của chip inline.
+  &.c-chip-invalid {
+    border-color: $qb-danger;
+    background: $qb-danger-bg;
+    color: $qb-danger;
+    .c-chip-value { color: $qb-danger; }
+  }
+
+  &.c-chip-disabled {
+    cursor: default;
+    opacity: 0.6;
+    &:hover { border-color: $qb-border; }
+    &.c-chip-active:hover { border-color: $qb-primary-light; }
+  }
+
   .c-chip-icon {
     font-size: var(--sd-font-size-16, 16px);
     width: 16px;
@@ -66,6 +88,11 @@ $qb-radius-chip:   999px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    &.c-chip-value--empty {
+      font-weight: var(--sd-font-weight-regular, 400);
+      color: $qb-text-muted;
+    }
   }
   .c-chip-chevron {
     font-size: var(--sd-font-size-18, 18px);
