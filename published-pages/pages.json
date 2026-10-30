@@ -1,8 +1,9 @@
 {
   "repository": "sdcorejs-angular",
-  "latest": "3.3",
+  "latest": "3.4",
   "retentionPerLeadingDigit": 5,
   "suffixes": [
+    "3.4",
     "3.3",
     "3.2",
     "3.1",

@@ -1,0 +1,1 @@
+import"./chunk-N476K7ZS.js";import{a,j as b}from"./chunk-TZGYRI4R.js";import"./chunk-DREKGYLA.js";import"./chunk-CBHWGQC4.js";import"./chunk-ODX3PANF.js";import"./chunk-ZFUEA4YZ.js";import"./chunk-HJ6IQRKX.js";import"./chunk-FX3X3VUZ.js";import"./chunk-BG2L3KHT.js";import"./chunk-ZJ3UP5H2.js";export{a as SD_PATTERN_ROUTES,b as provideSdPatterns};
