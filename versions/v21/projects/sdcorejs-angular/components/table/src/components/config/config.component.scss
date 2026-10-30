@@ -1,83 +1,129 @@
-// why: đường kẻ của mat-table mặc định là on-surface ~12% — trên một bảng 7+ dòng toàn control
-// nó đọc thành lưới kẻ đậm. Hạ xuống outline-variant (đường phân cách chuẩn của M3) và chỉ giữ kẻ
-// ngang, để mắt bám theo dòng chứ không phải khung.
-$config-border: var(--sd-border, rgba(0, 0, 0, 0.08));
-
-// why: modal đã chừa lề giống footer; thêm padding ở đây làm viền bảng thụt vào hai lần.
+// why: modal đã chừa lề giống footer; thêm padding ở đây làm viền danh sách thụt vào hai lần.
 .c-container {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   min-height: 200px;
 }
 
+// ---------------------------------------------------------------------------
+// Thanh công cụ: ô tìm · số cột đang hiện · Hiện tất cả
+// ---------------------------------------------------------------------------
+
+// why: ô tìm 220px + số cột + Hiện tất cả cần khoảng 430px — modal sm (40vw) hẹp hơn thì nhóm bên phải xuống dòng thay vì
+// làm body cuộn ngang.
+.c-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 32px;
+}
+
+.c-find {
+  flex: none;
+  width: 220px;
+}
+
+.c-find-icon {
+  color: var(--sd-text-secondary);
+}
+
+.c-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.c-shown-count {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .c-hint {
-  margin: 0 0 12px;
-  color: var(--sd-text-secondary, #6b7280);
-  font-size: var(--sd-font-size-12, 12px);
-  line-height: var(--sd-line-height-18, 18px);
+  margin: 0;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-18);
 }
 
-.c-table {
+// ---------------------------------------------------------------------------
+// Danh sách
+// ---------------------------------------------------------------------------
+
+// why: chính danh sách cuộn (không phải body modal) để CDK tự cuộn khi kéo dòng tới mép.
+.c-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: min(400px, 50vh);
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8);
+}
+
+.c-item + .c-item {
+  border-top: 1px solid var(--sd-border);
+}
+
+// why: modal đã dùng --sd-surface làm nền, nên dòng mở cần một lớp phủ rất nhẹ (như state layer của M3) mới tách
+// được khỏi các dòng khác — cùng công thức chạy đúng cả ở dark và các preset.
+.c-item--open {
+  background: color-mix(in srgb, var(--sd-text) 4%, transparent);
+}
+
+.c-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 8px 0 12px;
+}
+
+// why: handle phải là <button> để nhận focus và bàn phím, nhưng không được trông như một nút bấm — bỏ chrome của
+// button, chỉ giữ con trỏ "grab".
+.c-handle {
   position: relative;
-  overflow: auto;
-  max-height: 60vh;
-  border: 1px solid $config-border;
-  border-radius: var(--sd-radius-8, 8px);
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-4);
+  background: none;
+  color: var(--sd-disabled-text);
+  cursor: grab;
+  transition: color var(--sd-duration-fast) var(--sd-ease-standard);
 
-  table {
-    --mat-table-header-container-height: 40px;
-    --mat-table-row-item-container-height: 48px;
-    width: 100%;
-    background: transparent;
+  &:hover:not(:disabled),
+  &:focus-visible {
+    color: var(--sd-text-secondary);
   }
 
-  // Header: nền phẳng, chữ nhẹ hơn tiêu đề modal để không tranh chấp thị giác.
-  .c-th {
-    font-weight: var(--sd-font-weight-medium, 500);
-    font-size: var(--sd-font-size-13, 13px);
-    line-height: var(--sd-line-height-18, 18px);
-    color: var(--sd-text-secondary, #6b7280);
-    background: var(--sd-surface, #f7f8fa);
-    white-space: nowrap;
+  &:focus-visible {
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
   }
 
-  // why: input 32px và vùng checkbox 40px chỉ cần đệm 4px mỗi phía.
-  .mat-mdc-header-cell,
-  .mat-mdc-cell {
-    padding: 4px 12px;
-    vertical-align: middle;
-    border-bottom-color: $config-border;
+  &:active:not(:disabled) {
+    cursor: grabbing;
   }
 
-  .mat-mdc-header-cell:first-of-type,
-  .mat-mdc-cell:first-of-type {
-    padding-left: 12px;
-  }
-
-  // Dòng cuối không cần kẻ — viền ngoài của .c-table đã đóng khung.
-  .mat-mdc-row:last-of-type .mat-mdc-cell {
-    border-bottom: none;
-  }
-
-  .mat-mdc-row:hover .mat-mdc-cell {
-    background: var(--sd-surface, rgba(0, 0, 0, 0.02));
-  }
-
-  // Cột width/toggle chỉ chứa một control nhỏ → co về đúng nội dung, nhường chỗ cho cột tiêu đề.
-  .c-col-width {
-    width: 104px;
-  }
-
-  .c-col-toggle {
-    width: 88px;
-    text-align: center;
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
 }
 
-// why: bỏ baseline của inline host để cả ba checkbox nằm cùng trục giữa với input.
+// why: bỏ baseline của inline host để checkbox nằm đúng trục giữa của dòng.
 sd-checkbox {
   display: inline-flex;
   align-items: center;
-  vertical-align: middle;
 
   ::ng-deep .mat-mdc-checkbox {
     display: flex;
@@ -87,109 +133,238 @@ sd-checkbox {
   ::ng-deep .mat-internal-form-field {
     margin: 0;
   }
+}
 
-  // why: các checkbox trong bảng không có label; đệm label rỗng làm icon lệch ngang 2px.
-  ::ng-deep .mat-mdc-checkbox .mdc-label {
+// why: ô "Hiện" không có nhãn nhìn thấy (tiêu đề cột đứng ngay bên cạnh) nhưng nhãn vẫn phải có cho trình đọc màn
+// hình — giấu nó khỏi màn hình thay vì bỏ đi.
+.c-show {
+  flex: none;
+
+  // why: vùng state layer 40px của Material đẩy tiêu đề lệch khỏi cột 62px của phần chi tiết. Margin âm chỉ thu phần
+  // chiếm chỗ về đúng ô 18px; vòng hover/focus vẫn vẽ đủ (handle và nút mở nằm trên vùng chạm thừa).
+  ::ng-deep .mdc-checkbox {
+    margin: 0 -11px;
+  }
+
+  ::ng-deep .mdc-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
     padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
-.c-display-cell {
+.c-toggle {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 4px 0 2px;
+  border: 0;
+  border-radius: var(--sd-radius-4);
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: var(--sd-font-size-14);
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  &:hover .c-chevron {
+    color: var(--sd-text);
+  }
 }
 
-// why: handle phải là <button> để bắt được bàn phím/AT, nhưng không được nhìn như một nút bấm —
-// strip toàn bộ chrome của button và chỉ giữ con trỏ "move".
-.c-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.c-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-item--hidden .c-title {
+  color: var(--sd-disabled-text);
+
+  // why: forced-colors đổi mọi màu chữ về CanvasText — GrayText giữ lại dấu hiệu "cột đang ẩn".
+  @media (forced-colors: active) {
+    color: GrayText;
+  }
+}
+
+.c-pin {
+  flex: none;
+  color: var(--sd-primary);
+}
+
+.c-trunc {
+  flex: none;
+  color: var(--sd-text-secondary);
+}
+
+.c-width-meta {
+  flex: none;
+  min-width: 58px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.c-chevron {
+  flex: none;
+  color: var(--sd-text-secondary);
+}
+
+// ---------------------------------------------------------------------------
+// Phần chi tiết
+// ---------------------------------------------------------------------------
+
+// why: lề trái 62px để ô Tiêu đề thẳng hàng với tiêu đề ở dòng tóm tắt.
+.c-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 16px 14px 62px;
+}
+
+.c-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 112px);
+  gap: 12px;
+  align-items: start;
+}
+
+.c-origin {
+  margin-top: 4px;
+  padding-left: 2px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-16);
+}
+
+.c-restore {
   padding: 0;
   border: 0;
+  border-radius: var(--sd-radius-2);
   background: none;
-  color: var(--sd-text-disabled, #b6bcc6);
-  cursor: grab;
-  transition: color 0.15s ease;
+  color: var(--sd-primary);
+  font: inherit;
+  font-weight: var(--sd-font-weight-medium);
+  cursor: pointer;
 
-  &:hover,
-  &:focus-visible {
-    color: var(--sd-text-secondary, #6b7280);
-    outline: none;
+  &:hover:not(:disabled) {
+    text-decoration: underline;
   }
 
-  &:active {
-    cursor: grabbing;
+  &:focus-visible {
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: var(--sd-disabled-text);
+    cursor: default;
   }
 }
 
-// Cột tắt hiển thị: mờ đi + khoá editor, nhưng ô "Hiển thị" và handle vẫn dùng được.
-.c-row-hidden {
-  .mat-mdc-cell {
-    background: var(--sd-surface, rgba(0, 0, 0, 0.015));
-  }
+.c-px {
+  padding-right: 8px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+}
 
-  sd-input,
-  .c-col-toggle sd-checkbox {
-    opacity: 0.55;
-  }
+.c-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.c-truncate-field {
+  display: flex;
+  flex-direction: column;
+}
+
+// why: thẳng hàng với chữ của nhãn checkbox (vùng chạm 40px của checkbox đứng trước nhãn).
+.c-check-hint {
+  padding-left: 40px;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-16);
 }
 
 // ---------------------------------------------------------------------------
 // Kéo - thả
 // ---------------------------------------------------------------------------
 
-// why: CDK nhấc <tr> ra khỏi <table> để làm preview, nên nó mất luôn table layout và các ô sẽ
-// xẹp lại. `display: table` trả lại layout đó; phần còn lại làm cho dòng trông như đang được
-// nhấc lên khỏi mặt bảng: bo góc, viền theo màu primary, đổ bóng sâu hơn hover.
-.cdk-drag-preview {
-  display: table;
-  border-radius: var(--sd-radius-8, 8px);
-  background: var(--sd-surface, #fff);
-  outline: 1px solid var(--sd-primary, #2a66f4);
-  box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.16),
-    0 2px 8px rgba(0, 0, 0, 0.08);
+// why: CDK nhấc bản sao của dòng ra body làm preview; selector chỉ dựa vào class của chính dòng nên style vẫn bám.
+// Bo góc, viền primary, đổ bóng sâu hơn: dòng trông như đang được nhấc khỏi danh sách.
+.cdk-drag-preview.c-item {
+  box-sizing: border-box;
+  border-radius: var(--sd-radius-8);
+  background: var(--sd-surface);
+  outline: 1px solid var(--sd-primary);
+  box-shadow: var(--sd-shadow-lg);
   opacity: 0.98;
 
-  .mat-mdc-cell {
-    border-bottom: none;
-    padding: 4px 12px;
-    vertical-align: middle;
-  }
-
   .c-handle {
-    color: var(--sd-primary, #2a66f4);
+    color: var(--sd-primary);
     cursor: grabbing;
   }
 }
 
-// Chỗ trống nơi dòng sẽ rơi xuống: một khe rỗng, không phải bản sao mờ của dòng đang kéo.
-.cdk-drag-placeholder {
-  .mat-mdc-cell {
-    background: var(--sd-primary-light, rgba(42, 102, 244, 0.06));
-    border-bottom: none;
-    // why: kẻ trên/dưới bằng inset shadow — border trên <tr> không render được với table layout.
-    box-shadow:
-      inset 0 1px 0 var(--sd-primary, #2a66f4),
-      inset 0 -1px 0 var(--sd-primary, #2a66f4);
+// Chỗ dòng sẽ rơi xuống: một khe rỗng, không phải bản sao mờ của dòng đang kéo.
+.cdk-drag-placeholder.c-item {
+  background: var(--sd-primary-light);
+  box-shadow:
+    inset 0 1px 0 var(--sd-primary),
+    inset 0 -1px 0 var(--sd-primary);
 
-    // why: ẩn NỘI DUNG chứ không ẩn ô — visibility trên chính ô sẽ xoá luôn nền và viền vừa vẽ,
-    // còn display:none làm bảng giật vì mất chiều cao.
-    > * {
-      visibility: hidden;
-    }
+  // why: ẩn NỘI DUNG chứ không ẩn dòng — visibility trên chính dòng xoá luôn nền và viền vừa vẽ, còn display: none
+  // làm danh sách giật vì mất chiều cao.
+  > * {
+    visibility: hidden;
+  }
+}
+
+// Dòng đang giữ bằng bàn phím: cùng hình thức với preview khi kéo chuột, nhưng vẫn nằm trong danh sách.
+.c-item--picked {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--sd-radius-4);
+  background: var(--sd-surface);
+  outline: 1px solid var(--sd-primary);
+  outline-offset: -1px;
+  box-shadow: var(--sd-shadow-md);
+
+  .c-handle {
+    color: var(--sd-primary);
   }
 }
 
 // Các dòng còn lại trượt sang chỗ mới thay vì nhảy cóc.
 .cdk-drag-animating,
-.c-table.cdk-drop-list-dragging .mat-mdc-row:not(.cdk-drag-placeholder) {
+.c-list.cdk-drop-list-dragging .c-item:not(.cdk-drag-placeholder) {
   transition: transform 220ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-// Trong lúc kéo, khoá hover của các dòng khác để chỉ còn placeholder chỉ ra điểm rơi.
-.c-table.cdk-drop-list-dragging .mat-mdc-row:hover .mat-mdc-cell {
-  background: transparent;
+@media (prefers-reduced-motion: reduce) {
+  .c-handle,
+  .cdk-drag-animating,
+  .c-list.cdk-drop-list-dragging .c-item:not(.cdk-drag-placeholder) {
+    transition: none;
+  }
 }

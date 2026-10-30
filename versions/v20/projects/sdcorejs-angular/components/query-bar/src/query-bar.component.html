@@ -11,14 +11,16 @@
 @let _usedFieldKeys = usedFieldKeys();
 @let _editingIndex = editingIndex();
 @let _resolvedMode = resolvedMode();
-@let _resolvedShowOperatorOnChip = resolvedShowOperatorOnChip();
 @let _noFieldsLabel = noFieldsLabel();
 @let _addFilterLabel = addFilterLabel();
+@let _addDisabled = addDisabled();
+@let _invalidHintId = resolvedInvalidHintId();
 
 <div
   class="c-query-bar"
   [class.c-density-compact]="_resolvedDensity === 'compact'"
-  [class.c-density-comfortable]="_resolvedDensity === 'comfortable'">
+  [class.c-density-comfortable]="_resolvedDensity === 'comfortable'"
+  [class.c-appearance-flush]="resolvedAppearance() === 'flush'">
 
   <!-- Main region — search + filters + add-filter. Wraps internally; the right
        action toolbar stays anchored and does NOT flow with this. -->
@@ -33,7 +35,7 @@
         type="text"
         [ngModel]="search()"
         (ngModelChange)="setSearch($event)"
-        (keydown.enter)="triggerApply()"
+        (keydown.enter)="applySearch()"
         [placeholder]="searchPlaceholder()" />
     </div>
     <span class="c-divider" aria-hidden="true"></span>
@@ -67,16 +69,36 @@
       @if (_field) {
         @let _op = $any(filter.operator);
         @let _data = $any(filter).data;
-        @if (_field.type === 'string' || _field.type === 'number') {
+        @let _invalid = isInvalid(filter);
+        @if (_field.disabled) {
+          <!-- why: chip inline là chính ô nhập — field bị khoá dùng chip popover bị khoá (chỉ hiển thị), như ở mode popover. -->
+          <sd-query-popover-chip
+            [field]="_field"
+            [filter]="filter"
+            [active]="isFilterActive(filter)"
+            [showOperator]="showOperatorFor(_field, $any(filter.operator))"
+            [valueText]="chipValueText(filter)"
+            [emptyText]="emptyTextFor(_field)"
+            [pinned]="!!_field.pinned"
+            [disabled]="true"
+            [invalid]="_invalid"
+            [describedBy]="_invalid ? _invalidHintId : undefined"
+            [menu]="chipPopover.menu()!"
+            (open)="openChipPopover(i)"
+            (remove)="removeFilter(i)" />
+        } @else if (_field.type === 'string' || _field.type === 'number') {
           <!-- Seamless chip — the pill is the input (string / number). -->
           <sd-query-inline-value-chip
             [field]="_field"
             [operator]="_op"
             [value]="_data"
             [density]="_resolvedDensity"
-            [showOperator]="_resolvedShowOperatorOnChip"
+            [showOperator]="showOperatorFor(_field, _op)"
+            [pinned]="!!_field.pinned"
+            [invalid]="_invalid"
+            [describedBy]="_invalid ? _invalidHintId : undefined"
             [autoId]="inlineAutoId(i, 'value')"
-            (valueChange)="updateFilterData(i, $event)"
+            (valueChange)="onInlineCommit(i, $event)"
             (remove)="removeFilter(i)" />
         } @else {
           <sd-query-inline-chip
@@ -84,13 +106,16 @@
             [filter]="filter"
             [density]="_resolvedDensity"
             [multiple]="multiple(_op)"
-            [showOperator]="_resolvedShowOperatorOnChip"
+            [showOperator]="showOperatorFor(_field, _op)"
+            [pinned]="!!_field.pinned"
+            [invalid]="_invalid"
+            [describedBy]="_invalid ? _invalidHintId : undefined"
             [autoId]="inlineAutoId(i, 'value')"
             [valueText]="chipValueText(filter)"
             [isNoData]="isNoDataOperator(_op)"
-            (commit)="updateFilterData(i, $event)"
-            (commitRange)="setFilterRange(i, $event)"
-            (liveChange)="updateFilterData(i, $event)"
+            (commit)="onInlineCommit(i, $event)"
+            (commitRange)="onInlineRange(i, $event)"
+            (liveChange)="onInlineCommit(i, $event)"
             (remove)="removeFilter(i)" />
         }
       }
@@ -103,7 +128,7 @@
         [density]="_resolvedDensity"
         [allowedOperators]="allowedOperatorsFor(_b.field)"
         [multiple]="multiple($any(_b.operator))"
-        [showOperator]="_resolvedShowOperatorOnChip"
+        [showOperator]="showOperatorFor(_b.field, _b.operator)"
         (pickOperator)="pickBuildOperator($any($event))"
         (commitValue)="commitBuildValue($event)"
         (cancel)="cancelBuild()"
@@ -115,8 +140,9 @@
       type="button"
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
-      [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
+      [disabled]="_addDisabled"
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
+      (menuOpened)="addPicker.focusFind()">
       <sd-icon name="add"></sd-icon>
     </button>
   } @else {
@@ -128,14 +154,20 @@
       }
       @let _field = fieldByKey()[$any(filter).field];
       @let _active = isFilterActive(filter);
+      @let _invalid = isInvalid(filter);
       <!-- why: menu close commit is handled by chipPopover's (commit) →
            onChipPopoverCommit; popover-chip only signals open + remove here. -->
       <sd-query-popover-chip
         [field]="_field"
         [filter]="filter"
         [active]="_active"
-        [showOperator]="_resolvedShowOperatorOnChip"
+        [showOperator]="showOperatorFor(_field, $any(filter.operator))"
         [valueText]="chipValueText(filter)"
+        [emptyText]="emptyTextFor(_field)"
+        [pinned]="!!_field?.pinned"
+        [disabled]="!!_field?.disabled"
+        [invalid]="_invalid"
+        [describedBy]="_invalid ? _invalidHintId : undefined"
         [menu]="chipPopover.menu()!"
         (open)="openChipPopover(i)"
         (remove)="removeFilter(i)" />
@@ -146,18 +178,20 @@
       type="button"
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
-      [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
+      [disabled]="_addDisabled"
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
+      (menuOpened)="addPicker.focusFind()">
       <sd-icon name="add"></sd-icon>
     </button>
   }
 
   </div><!-- /.c-query-bar__main -->
 
-  <!-- Field picker — list available fields, fade ones already in use. -->
+  <!-- Field picker — list available fields, fade ones already in use. Pinned fields
+       always have their chip, so the picker leaves them out. -->
   <sd-query-field-picker
     #addPicker
-    [fields]="_resolvedFields"
+    [fields]="pickerFields()"
     [usedKeys]="_usedFieldKeys"
     (pick)="_resolvedMode === 'inline' ? beginBuild($event) : addFilter($event)" />
 
@@ -165,12 +199,18 @@
     [showLogicToggle]="resolvedShowLogicToggle()"
     [(logic)]="logic"
     [filtersCount]="_filters.length"
+    [clearCount]="activeCount()"
+    [clearDisabled]="resolvedClearDisabled()"
     [showSavedFilters]="resolvedShowSavedFilters()"
     [savedFiltersKey]="resolvedSavedFiltersKey()"
     [query]="currentQuery()"
     (applyFilter)="onApplyFilter($event)"
     [showClearAll]="resolvedShowClearAll()"
     [canSearch]="canSearch()"
-    (clear)="clearAll()"
+    [showSearchButton]="resolvedApplyOn() !== 'commit'"
+    (clear)="onClearClick()"
     (search)="triggerApply()" />
+
+  <!-- Host content pinned after the toolbar (e.g. sd-table's quick-search right slot). -->
+  <ng-content select="[sdQueryBarEnd]" />
 </div>

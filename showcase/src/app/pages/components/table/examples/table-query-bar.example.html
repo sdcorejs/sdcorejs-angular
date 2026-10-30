@@ -1,0 +1,13 @@
+<div class="d-flex align-items-center flex-wrap gap-8 mb-16">
+  <sd-button title="Mode default" size="sm" [type]="mode() === 'default' ? 'fill' : 'outline'" (click)="mode.set('default')" />
+  <sd-button title="Mode query-bar" size="sm" [type]="mode() === 'query-bar' ? 'fill' : 'outline'" (click)="mode.set('query-bar')" />
+  <sd-checkbox label="manualFilter" size="sm" [model]="manualFilter()" (sdChange)="manualFilter.set(!!$event)" />
+</div>
+@let _option = option();
+<sd-table autoId="query-bar-demo" [option]="_option">
+  <ng-template sdTableQuickSearchRightDef>
+    <sd-button title="Xuất" size="sm" type="outline" prefixIcon="download" />
+  </ng-template>
+</sd-table>
+<p class="table-note">pagingReq gửi đi (cùng thao tác cho ra cùng payload ở hai mode):</p>
+<pre class="table-paging-req" data-autoid="query-bar-demo-paging-req">{{ pagingReq()?.filters | json }}</pre>

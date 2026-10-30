@@ -3,36 +3,63 @@
 @let _field = field();
 @let _filterField = filterField();
 @let _filterOperator = filterOperator();
+@let _emptyText = emptyText();
+@let _invalid = invalid();
 
-<div
-  #chipTrigger="matMenuTrigger"
-  role="button"
-  tabindex="0"
-  class="c-chip"
-  [class.c-chip-active]="_active"
-  [class.c-chip-inactive]="!_active"
-  [attr.data-field]="_filterField"
-  [matTooltip]="_field?.label || _filterField"
-  [matMenuTriggerFor]="menu()"
-  (menuOpened)="open.emit()"
-  (keydown.enter)="chipTrigger.openMenu()"
-  (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
+@if (disabled()) {
+  <!-- why: chip chỉ đọc không gắn matMenuTrigger — không có cách nào mở popover, kể cả openMenu() của parent. -->
+  <div
+    role="button"
+    tabindex="0"
+    aria-disabled="true"
+    class="c-chip c-chip-disabled"
+    [class.c-chip-active]="_active"
+    [class.c-chip-inactive]="!_active"
+    [attr.data-field]="_filterField"
+    [matTooltip]="_field?.label || _filterField">
+    <ng-container [ngTemplateOutlet]="face" />
+  </div>
+} @else {
+  <div
+    #chipTrigger="matMenuTrigger"
+    role="button"
+    tabindex="0"
+    class="c-chip"
+    [class.c-chip-active]="_active"
+    [class.c-chip-inactive]="!_active"
+    [class.c-chip-pinned]="pinned()"
+    [class.c-chip-invalid]="_invalid"
+    [attr.aria-invalid]="_invalid ? 'true' : null"
+    [attr.aria-describedby]="describedBy() ?? null"
+    [attr.data-field]="_filterField"
+    [matTooltip]="_field?.label || _filterField"
+    [matMenuTriggerFor]="menu()"
+    (menuOpened)="open.emit()"
+    (keydown.enter)="chipTrigger.openMenu()"
+    (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
+    <ng-container [ngTemplateOutlet]="face" />
+  </div>
+}
+
+<ng-template #face>
   <sd-icon class="c-chip-icon" [name]="_field ? iconFor(_field) : 'tune'"></sd-icon>
   <span class="c-chip-label">{{ _field?.label || _filterField }}</span>
 
   @if (showOperator() && _active) {
     <sd-operator class="c-chip-operator" [operators]="[_filterOperator]" [model]="_filterOperator" size="xs" readonly />
-  } @else if (_active) {
+  } @else if (_active || _emptyText) {
     <span class="c-chip-sep">:</span>
   }
 
   @if (_active) {
     <span class="c-chip-value">{{ valueText() }}</span>
+  } @else if (_emptyText) {
+    <span class="c-chip-value c-chip-value--empty">{{ _emptyText }}</span>
   }
 
   <sd-icon class="c-chip-chevron" name="arrow_drop_down"></sd-icon>
 
-  @if (_active) {
+  @if (_active && !pinned() && !disabled()) {
     <span
       role="button"
       tabindex="0"
@@ -43,4 +70,4 @@
       <sd-icon name="close"></sd-icon>
     </span>
   }
-</div>
+</ng-template>

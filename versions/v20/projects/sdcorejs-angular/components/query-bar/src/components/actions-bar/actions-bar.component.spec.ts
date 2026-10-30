@@ -128,4 +128,35 @@ describe('SdQueryActionsBar', () => {
       expect(fixture.nativeElement.querySelector('.c-logic-toggle').getAttribute('aria-label')).toBe('Toán tử logic');
     });
   });
+
+  describe('host options (table query bar)', () => {
+    beforeEach(() => TestBed.inject(I18nService).setLanguage('vi', { reload: false }));
+
+    it('labels the clear button with clearCount when given', () => {
+      fixture.componentRef.setInput('filtersCount', 3);
+      fixture.componentRef.setInput('clearCount', 1);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.c-clear-all').getAttribute('aria-label')).toBe('Xóa tất cả (1)');
+    });
+
+    it('drops the count when nothing has a value or the button is disabled', () => {
+      fixture.componentRef.setInput('filtersCount', 2);
+      fixture.componentRef.setInput('clearCount', 0);
+      fixture.detectChanges();
+      expect(component.clearAllLabel()).toBe('Xóa tất cả');
+
+      fixture.componentRef.setInput('clearCount', 2);
+      fixture.componentRef.setInput('clearDisabled', true);
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.c-clear-all') as HTMLButtonElement;
+      expect(button.disabled).toBe(true);
+      expect(component.clearAllLabel()).toBe('Xóa tất cả');
+    });
+
+    it('hides the search button when showSearchButton is false', () => {
+      fixture.componentRef.setInput('showSearchButton', false);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.c-search-trigger')).toBeNull();
+    });
+  });
 });

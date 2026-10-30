@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sd-table · Lọc bằng query bar · Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons&amp;display=block" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f4f1;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px;color:#1a1b1f}
+.mi{font-family:'Material Icons';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;display:inline-block;overflow:hidden}
+button:focus-visible{outline:2px solid #005cbb;outline-offset:2px}
+</style>
+</helmet>
+<div style="background:#f4f4f1;min-height:100vh;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6">
+<div style="max-width:1180px;margin:0 auto;padding:48px clamp(16px,3vw,32px) 80px;box-sizing:border-box;display:flex;flex-direction:column;gap:56px">
+
+<header data-screen-label="Mở đầu" style="display:flex;flex-direction:column;gap:14px">
+<div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#5f6167;display:flex;flex-wrap:wrap;gap:6px 18px"><span>sdcorejs/sdcorejs-angular · main @ 166f16c</span><span>components/table · components/query-bar</span><a href="Query%20Bar%20Filter%20Mode%20Proposal.dc.html">Proposal</a><span>Nguồn chính: table-query-bar.md</span></div>
+<h1 style="margin:0;font-weight:600;font-size:40px;line-height:1.15;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">sd-table · Lọc bằng query bar</h1>
+<p style="margin:0;max-width:820px;color:#3a3c42;font-size:17px;text-wrap:pretty">Phương án A: <code>filter.mode: 'query-bar'</code> chỉ đổi lớp hiển thị. Chip trên thanh đọc và ghi <code>TableFilterValue</code> qua adapter, nên <code>pagingReq</code> giống hệt mode default. Bản bấm thử dưới đây in cả ba tầng cho từng trạng thái.</p>
+<nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:6px"><a href="#thu">01 Bản bấm thử</a><a href="#chip">02 Chip</a><a href="#header-icon">03 Icon ở header</a><a href="#anh-xa">04 Ánh xạ</a></nav>
+</header>
+
+<section id="thu" data-screen-label="01 Bản bấm thử" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">01</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Bản bấm thử</h2></div>
+<p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Bảng đơn hàng: quick search có từ khoá và dropdown Kho xuất; external Trạng thái (multiple, <code>defaultShowing</code>), Ngày tạo (daterange, có default), Kênh bán, Nhân viên; cột Ngày tạo và Trạng thái trùng field với external nên bị che.</p>
+<div role="group" aria-label="Trạng thái mẫu" style="display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#ecebe6;border-radius:8px;align-self:flex-start">
+<sc-for list="{{ views }}" as="v" hint-placeholder-count="7"><button type="button" aria-pressed="{{ v.pressed }}" onClick="{{ v.pick }}" style="{{ v.style }}">{{ v.label }}</button></sc-for>
+</div>
+<p style="margin:0;max-width:820px;font-size:14px;color:#3a3c42;min-height:44px;text-wrap:pretty">{{ note }}</p>
+
+<div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+<div style="padding:10px 16px;border-bottom:1px solid #dddcd6;display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;font:400 12px/1.5 'JetBrains Mono',monospace;color:#5f6167"><span>{{ chromeCode }}</span><span>{{ chromeNote }}</span></div>
+<div style="overflow-x:auto;background:#f3f4f7">
+<div style="min-width:900px;padding:16px;box-sizing:border-box;font-family:Roboto,sans-serif;color:#212121">
+<div style="background:#ffffff;border-radius:6px;box-shadow:0 0 0 1px #e3e4ea">
+
+<div style="padding:8px 12px;display:flex;align-items:flex-start;gap:8px;position:relative;z-index:4">
+<div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+<div style="width:220px;height:28px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:13px"><span class="mi" aria-hidden="true" style="font-size:16px;color:#7a7a7a">search</span><span style="{{ searchStyle }}">{{ searchText }}</span><span style="color:#9aa0a6;font-size:12px">↵</span></div>
+<span aria-hidden="true" style="width:1px;height:16px;background:#e2e4e7;margin:0 2px"></span>
+<sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+<span style="position:relative;display:inline-flex">
+<span style="{{ c.chipStyle }}"><span class="mi" aria-hidden="true" style="font-size:14px">{{ c.icon }}</span><span style="font-weight:500">{{ c.label }}</span><sc-if value="{{ c.colon }}" hint-placeholder-val="{{ true }}"><span style="color:#7a7a7a">:</span></sc-if><sc-if value="{{ c.hasOp }}" hint-placeholder-val="{{ false }}"><span title="{{ c.opTitle }}" style="font-size:14px;color:#44474e">{{ c.op }}</span></sc-if><span style="{{ c.valueStyle }}">{{ c.value }}</span><sc-if value="{{ c.caret }}" hint-placeholder-val="{{ true }}"><span class="mi" aria-hidden="true" style="font-size:18px">arrow_drop_down</span></sc-if><sc-if value="{{ c.removable }}" hint-placeholder-val="{{ false }}"><span style="align-self:stretch;width:26px;margin-left:2px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.06)"><span class="mi" aria-hidden="true" style="font-size:14px">close</span></span></sc-if></span>
+<sc-if value="{{ c.editPop }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:calc(100% + 6px);left:0;z-index:6;width:300px;background:#ffffff;border-radius:8px;box-shadow:0 6px 20px rgba(15,23,42,.14),0 0 0 1px rgba(15,23,42,.06);font-size:13px;line-height:1.4">
+<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e2e4e7;font-weight:500"><span class="mi" aria-hidden="true" style="font-size:16px;color:#005cbb">tag</span>Tổng tiền<span style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 2px 0 8px;border-radius:4px;background:#eef4fc;color:#005cbb;font-size:12px;font-weight:500">≥ Lớn hơn hoặc bằng<span class="mi" aria-hidden="true" style="font-size:16px">arrow_drop_down</span></span></div>
+<div style="padding:10px 12px 12px"><div style="height:32px;border:2px solid #005cbb;border-radius:6px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;justify-content:flex-end;font-variant-numeric:tabular-nums">5.000.000</div></div>
+<div style="padding:0 12px 10px;font-size:12px;color:#5f6368">Toán tử lấy từ <span style="font-family:'JetBrains Mono',monospace">operator.list</span> của cột</div>
+</div>
+</sc-if>
+<sc-if value="{{ c.listPop }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:calc(100% + 6px);left:0;z-index:6;width:240px;background:#ffffff;border-radius:8px;box-shadow:0 6px 20px rgba(15,23,42,.14),0 0 0 1px rgba(15,23,42,.06);font-size:13px;line-height:1.4">
+<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e2e4e7;font-weight:500"><span class="mi" aria-hidden="true" style="font-size:16px;color:#005cbb">list</span>Thanh toán</div>
+<div style="padding:6px 0">
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span style="width:16px;height:16px;border:2px solid #74777f;border-radius:3px;box-sizing:border-box"></span>Đã thanh toán</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px;background:#f5f6f7"><span style="width:16px;height:16px;border:2px solid #74777f;border-radius:3px;box-sizing:border-box"></span>Chưa thanh toán</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span style="width:16px;height:16px;border:2px solid #74777f;border-radius:3px;box-sizing:border-box"></span>Hoàn tiền</div>
+</div>
+</div>
+</sc-if>
+</span>
+</sc-for>
+<span style="position:relative;display:inline-flex">
+<span style="{{ addStyle }}"><span class="mi" aria-hidden="true" style="font-size:18px">add</span></span>
+<sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:calc(100% + 6px);left:0;z-index:6;width:250px;background:#ffffff;border-radius:8px;box-shadow:0 6px 20px rgba(15,23,42,.14),0 0 0 1px rgba(15,23,42,.06);padding:6px 0;font-size:13px;line-height:1.4">
+<div style="padding:6px 12px 4px;font-size:11px;line-height:16px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#7a7a7a">Bộ lọc</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span class="mi" aria-hidden="true" style="font-size:16px;color:#5f6368">list</span>Kênh bán</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px;background:#f5f6f7"><span class="mi" aria-hidden="true" style="font-size:16px;color:#5f6368">list</span>Nhân viên phụ trách</div>
+<div style="height:1px;background:#e2e4e7;margin:6px 0"></div>
+<div style="padding:2px 12px 4px;font-size:11px;line-height:16px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#7a7a7a">Cột</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span class="mi" aria-hidden="true" style="font-size:16px;color:#5f6368">text_fields</span>Mã đơn</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span class="mi" aria-hidden="true" style="font-size:16px;color:#5f6368">text_fields</span>Khách hàng</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px"><span class="mi" aria-hidden="true" style="font-size:16px;color:#5f6368">list</span>Thanh toán</div>
+<div style="height:32px;padding:0 12px;display:flex;align-items:center;gap:10px;color:#9aa0a6"><span class="mi" aria-hidden="true" style="font-size:16px">tag</span><span style="flex:1">Tổng tiền</span><span class="mi" aria-hidden="true" style="font-size:16px">check</span></div>
+</div>
+</sc-if>
+</span>
+</div>
+<div style="flex:none;height:28px;display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid #e2e4e7">
+<span style="{{ clearStyle }}"><span class="mi" aria-hidden="true" style="font-size:16px">filter_alt_off</span>{{ clearLabel }}</span>
+<sc-if value="{{ isManual }}" hint-placeholder-val="{{ false }}"><span style="height:28px;padding:0 12px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;background:#005cbb;color:#ffffff;white-space:nowrap"><span class="mi" aria-hidden="true" style="font-size:16px">search</span>Tìm kiếm</span></sc-if>
+</div>
+</div>
+<sc-if value="{{ isRequired }}" hint-placeholder-val="{{ false }}"><div style="padding:0 12px 8px;margin-top:-2px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#ba1a1a"><span class="mi" aria-hidden="true" style="font-size:14px">error_outline</span>Chọn Kho xuất để xem dữ liệu</div></sc-if>
+
+<div style="border-top:1px solid #eceef2;display:grid;grid-template-columns:110px minmax(170px,1fr) 128px 150px 130px 130px;height:40px;align-items:center;border-bottom:1px solid #e3e4ea;font-size:13px;font-weight:500;color:#44474e">
+<sc-for list="{{ heads }}" as="h" hint-placeholder-count="6"><div style="{{ h.cellStyle }}"><span>{{ h.title }}</span><sc-if value="{{ h.filterable }}" hint-placeholder-val="{{ false }}"><span class="mi" title="{{ h.tip }}" style="{{ h.iconStyle }}">filter_alt</span></sc-if></div></sc-for>
+</div>
+
+<sc-if value="{{ isRequired }}" hint-placeholder-val="{{ false }}">
+<div style="height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-bottom:1px solid #eceef2">
+<span class="mi" aria-hidden="true" style="font-size:44px;color:#bdc1c6">filter_alt</span>
+<span style="font-size:15px;color:#5f6368">Chọn điều kiện lọc bắt buộc để xem dữ liệu</span>
+<span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#9aa0a6">core.component.table.choose-filter-hint · requireFiltered</span>
+</div>
+</sc-if>
+<sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:110px minmax(170px,1fr) 128px 150px 130px 130px;height:44px;align-items:center;border-bottom:1px solid #eceef2;font-size:13px">
+<div style="padding:0 12px;color:#005cbb;font-weight:500">{{ r.code }}</div>
+<div style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+<div style="padding:0 12px;font-variant-numeric:tabular-nums">{{ r.date }}</div>
+<div style="padding:0 12px"><span style="{{ r.badgeStyle }}">{{ r.status }}</span></div>
+<div style="padding:0 12px;color:#44474e">{{ r.pay }}</div>
+<div style="padding:0 12px;text-align:right;font-variant-numeric:tabular-nums">{{ r.total }}</div>
+</div>
+</sc-for>
+</sc-if>
+<div style="height:44px;padding:0 12px;display:flex;align-items:center;justify-content:flex-end;gap:16px;font-size:13px;color:#5f6368"><span>{{ pageText }}</span><span class="mi" aria-hidden="true" style="font-size:20px;color:#bdc1c6">chevron_left</span><span class="mi" aria-hidden="true" style="font-size:20px">chevron_right</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
+<sc-for list="{{ panels }}" as="p" hint-placeholder-count="3">
+<div style="background:#1a1b1f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0">
+<div style="padding:10px 14px;border-bottom:1px solid #2e3036;display:flex;flex-direction:column;gap:2px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;color:#e8e8e3">{{ p.title }}</span><span style="font-size:12px;line-height:16px;color:{{ p.subColor }}">{{ p.sub }}</span></div>
+<pre style="margin:0;padding:12px 14px;color:#d7d7d0;font:400 12px/1.6 'JetBrains Mono',monospace;overflow-x:auto;white-space:pre">{{ p.code }}</pre>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="chip" data-screen-label="02 Chip" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">02</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Trạng thái chip</h2></div>
+<p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Chip ghim có đuôi ▾ và không có ×. Chip thêm có ×. Ký hiệu toán tử hiện theo <code>showOperatorOnChip: 'auto'</code> (Q10).</p>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px 24px;font-family:Roboto,sans-serif">
+<sc-for list="{{ chipStates }}" as="c" hint-placeholder-count="8">
+<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+<span style="{{ c.chipStyle }}"><span class="mi" aria-hidden="true" style="font-size:14px">{{ c.icon }}</span><span style="font-weight:500">{{ c.label }}</span><sc-if value="{{ c.colon }}" hint-placeholder-val="{{ true }}"><span style="color:#7a7a7a">:</span></sc-if><sc-if value="{{ c.hasOp }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#44474e">{{ c.op }}</span></sc-if><span style="{{ c.valueStyle }}">{{ c.value }}</span><sc-if value="{{ c.caret }}" hint-placeholder-val="{{ true }}"><span class="mi" aria-hidden="true" style="font-size:18px">arrow_drop_down</span></sc-if><sc-if value="{{ c.removable }}" hint-placeholder-val="{{ false }}"><span style="align-self:stretch;width:26px;margin-left:2px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.06)"><span class="mi" aria-hidden="true" style="font-size:14px">close</span></span></sc-if></span>
+<div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><strong style="font-weight:600;font-size:14px;line-height:1.4">{{ c.name }}</strong><span style="font-size:13px;line-height:1.5;color:#3a3c42">{{ c.desc }}</span></div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="header-icon" data-screen-label="03 Icon ở header" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">03</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Icon lọc ở header cột</h2></div>
+<p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Thay cho hàng filter dưới header. Nút 20 × 20px luôn nằm trong DOM; bấm không sort, gọi <code>queryBar.openField(key)</code>. Cột bị external che trỏ tới chip external.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+<div style="height:40px;padding:0 8px 0 12px;display:flex;align-items:center;gap:4px;border-bottom:1px solid #e3e4ea;font:500 13px Roboto,sans-serif;color:#44474e;background:#ffffff">Khách hàng<span style="width:20px;height:20px"></span></div>
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">Lọc được, chưa lọc</strong><span style="font-size:13px;color:#3a3c42">opacity 0, vẫn nhận Tab</span></div>
+</div>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+<div style="height:40px;padding:0 8px 0 12px;display:flex;align-items:center;gap:4px;border-bottom:1px solid #e3e4ea;font:500 13px Roboto,sans-serif;color:#44474e;background:#f7f8fa">Khách hàng<span class="mi" aria-hidden="true" style="font-size:15px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:4px;color:#5f6368;background:#eceef2;outline:2px solid #005cbb;outline-offset:0">filter_alt</span></div>
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">Hover, focus, pointer: coarse</strong><span style="font-size:13px;color:#3a3c42">màu chữ phụ; aria-label "Lọc theo Khách hàng"</span></div>
+</div>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+<div style="height:40px;padding:0 8px 0 12px;display:flex;align-items:center;justify-content:flex-end;gap:4px;border-bottom:1px solid #e3e4ea;font:500 13px Roboto,sans-serif;color:#44474e;background:#ffffff"><span class="mi" aria-hidden="true" style="font-size:15px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:4px;color:#005cbb">filter_alt</span>Tổng tiền</div>
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">Đang lọc (đã áp dụng)</strong><span style="font-size:13px;color:#3a3c42">luôn hiện, màu primary; cột căn phải đặt icon trước tiêu đề; aria-label "Đang lọc theo Tổng tiền"</span></div>
+</div>
+</div>
+</section>
+
+<section id="anh-xa" data-screen-label="04 Ánh xạ" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">04</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Ánh xạ field</h2></div>
+<p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Khoá trong thanh là <code>quick:</code>, <code>external:</code> hoặc <code>column:</code> + field. "Khoá" toán tử nghĩa là chip không có chọn toán tử. Chi tiết ở <code>table-query-bar.md</code> mục 3–5.</p>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:900px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,1.5fr) minmax(0,1fr);gap:16px;padding:10px 16px;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Nguồn</span><span>Trong thanh</span><span>Toán tử</span><span>Ghi về</span></div>
+<sc-for list="{{ mapRows }}" as="m" hint-placeholder-count="14"><div style="{{ m.rowStyle }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#1a1b1f">{{ m.src }}</span><span>{{ m.bar }}</span><span>{{ m.op }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#3a3c42">{{ m.dest }}</span></div></sc-for>
+</div>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { view: 'active' };
+  renderVals() {
+    const v = this.state.view;
+    const VIEWS = [
+      ['idle', 'Mặc định'], ['active', 'Đang lọc'], ['edit', 'Sửa chip'], ['add', 'Thêm điều kiện'],
+      ['header', 'Từ header cột'], ['required', 'Bắt buộc rỗng'], ['manual', 'manualFilter'],
+    ];
+    const applied = ['active', 'edit', 'add'].includes(v);
+    const barActive = applied || v === 'manual';
+
+    const CHIP = 'display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;border-radius:999px;font-size:13px;line-height:1;color:#5f6368;white-space:nowrap;overflow:hidden;font-family:Roboto,sans-serif;';
+    const LOOK = {
+      empty: 'border:1px solid #d6d8db;background:#ffffff;',
+      active: 'border:1px solid #d6e3f7;background:#e3edf9;',
+      required: 'border:1px solid #ba1a1a;background:#fff7f7;',
+      open: 'border:1px solid #005cbb;background:#ffffff;box-shadow:0 0 0 1px #005cbb;',
+      disabled: 'border:1px solid #e2e4e7;background:#f5f6f7;color:#9aa0a6;',
+    };
+    const VAL = {
+      empty: 'color:#7a7a7a', active: 'color:#005cbb;font-weight:500', required: 'color:#ba1a1a;font-weight:500',
+      open: 'color:#7a7a7a', disabled: 'color:#9aa0a6',
+    };
+    const chip = o => ({
+      ...o,
+      chipStyle: CHIP + (o.removable ? 'padding:0 0 0 10px;' : 'padding:0 4px 0 10px;') + LOOK[o.look],
+      valueStyle: VAL[o.valLook || o.look],
+      colon: !o.op && !!o.value, hasOp: !!o.op, caret: !o.removable,
+      removable: !!o.removable, editPop: !!o.editPop, listPop: !!o.listPop,
+    });
+
+    const chips = [
+      v === 'required' ? chip({ icon: 'warehouse', label: 'Kho xuất', value: 'Chọn…', look: 'required' })
+        : barActive ? chip({ icon: 'warehouse', label: 'Kho xuất', value: 'Hà Nội', look: 'active' })
+        : chip({ icon: 'warehouse', label: 'Kho xuất', value: 'Tất cả', look: 'empty' }),
+      barActive ? chip({ icon: 'list', label: 'Trạng thái', value: 'Chờ xác nhận +1', look: 'active' })
+        : chip({ icon: 'list', label: 'Trạng thái', value: 'Tất cả', look: 'empty' }),
+      chip({ icon: 'event', label: 'Ngày tạo', value: '01/10 – 31/10/2026', look: 'active' }),
+    ];
+    if (barActive) chips.push(chip({ icon: 'tag', label: 'Tổng tiền', op: '≥', opTitle: 'Lớn hơn hoặc bằng', value: '5.000.000', look: v === 'edit' ? 'open' : 'active', valLook: 'active', removable: true, editPop: v === 'edit' }));
+    if (v === 'header') chips.push(chip({ icon: 'list', label: 'Thanh toán', value: '', look: 'open', removable: true, listPop: true }));
+
+    const ICON = 'font-size:15px;width:20px;height:20px;line-height:20px;text-align:center;border-radius:4px;flex:none;';
+    const IST = { none: 'opacity:0', hover: 'color:#5f6368;background:#eceef2', active: 'color:#005cbb', open: 'color:#005cbb;background:#e3edf9' };
+    const head = (title, filterable, st, right) => ({
+      title, filterable,
+      tip: st === 'active' ? 'Đang lọc theo ' + title : 'Lọc theo ' + title,
+      iconStyle: ICON + IST[st],
+      cellStyle: 'padding:0 8px 0 12px;display:flex;align-items:center;gap:4px;min-width:0;' + (right ? 'flex-direction:row-reverse;justify-content:flex-start;' : '') + (st === 'hover' ? 'background:#f7f8fa;align-self:stretch;' : ''),
+    });
+    const heads = [
+      head('Mã đơn', true, 'none'),
+      head('Khách hàng', true, v === 'header' ? 'hover' : 'none'),
+      head('Ngày tạo', true, 'active'),
+      head('Trạng thái', true, applied ? 'active' : 'none'),
+      head('Thanh toán', true, v === 'header' ? 'open' : 'none'),
+      head('Tổng tiền', true, applied ? 'active' : 'none', true),
+    ];
+
+    const badge = 'display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;line-height:1;';
+    const B = { 'Chờ xác nhận': 'background:#fff4e0;color:#8a5300', 'Đang giao': 'background:#e3edf9;color:#0b4f9c', 'Hoàn tất': 'background:#e3f4e8;color:#1b6b3a' };
+    const all = [
+      ['DH-24312', 'Đỗ Thu Hà', '28/10/2026', 'Hoàn tất', 'Đã thanh toán', '1.250.000'],
+      ['DH-24301', 'Nguyễn Văn Minh', '26/10/2026', 'Chờ xác nhận', 'Chưa thanh toán', '5.400.000'],
+      ['DH-24298', 'Trần Thị Lan', '24/10/2026', 'Đang giao', 'Đã thanh toán', '12.150.000'],
+      ['DH-24290', 'Vũ Đức Long', '21/10/2026', 'Hoàn tất', 'Hoàn tiền', '3.600.000'],
+      ['DH-24287', 'Lê Minh Châu', '19/10/2026', 'Chờ xác nhận', 'Chưa thanh toán', '7.800.000'],
+    ];
+    const filtered = [
+      ['DH-24301', 'Nguyễn Văn Minh', '26/10/2026', 'Chờ xác nhận', 'Chưa thanh toán', '5.400.000'],
+      ['DH-24398', 'Trần Thị Lan', '24/10/2026', 'Đang giao', 'Đã thanh toán', '12.150.000'],
+      ['DH-24387', 'Lê Minh Châu', '19/10/2026', 'Chờ xác nhận', 'Chưa thanh toán', '7.800.000'],
+      ['DH-24376', 'Phạm Quốc Huy', '15/10/2026', 'Đang giao', 'Đã thanh toán', '6.250.000'],
+      ['DH-24360', 'Hoàng Minh Anh', '09/10/2026', 'Chờ xác nhận', 'Chưa thanh toán', '9.900.000'],
+    ];
+    const rows = (applied ? filtered : all).map(([code, name, date, status, pay, total]) => ({ code, name, date, status, pay, total, badgeStyle: badge + B[status] }));
+
+    const CREATED = `{ field: "external:createdAt", operator: "BETWEEN",
+      data: { from: "2026-10-01", to: "2026-10-31" } }`;
+    const Q_IDLE = `{
+  search: "",
+  filters: [
+    { field: "quick:warehouseId", operator: "EQUAL", data: null },
+    { field: "external:status", operator: "IN", data: [] },
+    ${CREATED}
+  ]
+}`;
+    const Q_ACTIVE = `{
+  search: "DH-243",
+  filters: [
+    { field: "quick:warehouseId", operator: "EQUAL", data: "HN" },
+    { field: "external:status", operator: "IN",
+      data: ["PENDING", "SHIPPING"] },
+    ${CREATED},
+    { field: "column:total", operator: "GREATER_OR_EQUAL",
+      data: 5000000 }
+  ]
+}`;
+    const Q_HEADER = `{
+  search: "",
+  filters: [
+    { field: "quick:warehouseId", operator: "EQUAL", data: null },
+    { field: "external:status", operator: "IN", data: [] },
+    ${CREATED},
+    { field: "column:paymentStatus", operator: "IN", data: [] }
+  ]
+}`;
+    const T_IDLE = `{
+  quickSearch: { term: "", filters: { warehouseId: null } },
+  externalFilter: {
+    status: null,
+    createdAt: { from: "2026-10-01", to: "2026-10-31" },
+    channel: null,
+    staffId: null
+  },
+  columnFilter: {
+    code: null, "customer.name": null,
+    paymentStatus: null, total: null,
+    createdAt: null, status: null   // bị external che
+  },
+  columnOperator: { total: "EQUAL" },
+  filtered: true
+}`;
+    const T_ACTIVE = `{
+  quickSearch: { term: "DH-243", filters: { warehouseId: "HN" } },
+  externalFilter: {
+    status: ["PENDING", "SHIPPING"],
+    createdAt: { from: "2026-10-01", to: "2026-10-31" },
+    channel: null,
+    staffId: null
+  },
+  columnFilter: {
+    code: null, "customer.name": null,
+    paymentStatus: null, total: 5000000,
+    createdAt: null, status: null   // bị external che
+  },
+  columnOperator: { total: "GREATER_OR_EQUAL" },
+  filtered: true
+}`;
+    const P_IDLE = `[
+  { field: "createdAt", operator: "GREATER_OR_EQUAL",
+    data: "2026-09-30T17:00:00.000Z" },
+  { field: "createdAt", operator: "LESS_THAN",
+    data: "2026-10-31T17:00:00.000Z" }
+]`;
+    const P_ACTIVE = `[
+  { field: "status", operator: "IN",
+    data: ["PENDING", "SHIPPING"] },
+  { field: "createdAt", operator: "GREATER_OR_EQUAL",
+    data: "2026-09-30T17:00:00.000Z" },
+  { field: "createdAt", operator: "LESS_THAN",
+    data: "2026-10-31T17:00:00.000Z" },
+  { field: "total", operator: "GREATER_OR_EQUAL", data: 5000000 },
+  { field: "warehouseId", operator: "EQUAL", data: "HN" },
+  { operator: "OR", data: [
+    { field: "code", operator: "CONTAIN", data: "DH-243" },
+    { field: "customer.name", operator: "CONTAIN", data: "DH-243" }
+  ] }
+]`;
+    const P_REQUIRED = `// Không gọi items()
+// quickSearchValid = false → requireFiltered
+// onFilter(…, { quickSearchValid: false })`;
+
+    const OK = '#8fd19e', WARN = '#f0c674', DIM = '#9a9b95';
+    const PANEL = {
+      idle: [[Q_IDLE, 'Ba chip ghim, có mục trong filters kể cả khi rỗng', DIM], [T_IDLE, 'Giống mode default lúc khởi tạo', DIM], [P_IDLE, 'Chỉ default của Ngày tạo', DIM]],
+      active: [[Q_ACTIVE, 'Đã áp dụng', OK], [T_ACTIVE, 'Ghi một lần bằng filterRegister.value.set', OK], [P_ACTIVE, 'Giống hệt khi lọc bằng control cũ', OK]],
+      edit: [[Q_ACTIVE, 'Giá trị nháp nằm trong chip-popover; vào filters khi popover đóng', WARN], [T_ACTIVE, 'Chưa đổi', DIM], [P_ACTIVE, 'Chưa đổi', DIM]],
+      add: [[Q_ACTIVE, 'Chưa đổi; chọn field mới tạo chip rỗng và mở popover', DIM], [T_ACTIVE, 'Chưa đổi', DIM], [P_ACTIVE, 'Chưa đổi', DIM]],
+      header: [[Q_HEADER, 'Chip mới, chưa có giá trị; đóng mà vẫn rỗng thì bị bỏ', WARN], [T_IDLE, 'Chưa đổi', DIM], [P_IDLE, 'Chưa đổi', DIM]],
+      required: [[Q_IDLE, 'quick:warehouseId required, data null', WARN], [T_IDLE, 'Giống mode default', DIM], [P_REQUIRED, 'Bị chặn như mode default', WARN]],
+      manual: [[Q_ACTIVE, 'Nháp: applyOn = "search"', WARN], [T_IDLE, 'Chưa đổi; chờ bấm Tìm kiếm', DIM], [P_IDLE, 'Chưa đổi', DIM]],
+    }[v];
+    const TITLES = ['1 · SdQuery trong thanh', '2 · TableFilterValue (adapter ghi)', '3 · pagingReq.filters (SdConvertToPagingReq, không đổi)'];
+    const panels = PANEL.map(([code, sub, color], i) => ({ title: TITLES[i], code, sub, subColor: color }));
+
+    const NOTES = {
+      idle: 'Ba chip ghim: Kho xuất (quickSearch.filters), Trạng thái (inlineExternal từ defaultShowing), Ngày tạo (inlineExternal). Rỗng hiện "Tất cả". Xoá lọc tắt vì giá trị đang bằng default.',
+      active: 'Đã áp dụng: hai chip ghim có giá trị, chip Tổng tiền thêm từ cột, từ khoá DH-243. Icon ở header bật cho cột có giá trị đã áp dụng; Trạng thái và Ngày tạo trỏ tới chip external.',
+      edit: 'Bấm chip Tổng tiền: popover có chọn toán tử vì cột bật operator.enable. Đóng popover là áp dụng (applyOn: "commit").',
+      add: 'Nút + mở danh sách field chia hai nhóm. Field đã có chip bị làm mờ. Cột Ngày tạo, Trạng thái không có trong nhóm Cột vì external che.',
+      header: 'Bấm icon lọc ở cột Thanh toán: thanh tạo chip và mở popover. Khách hàng đang được hover nên icon hiện màu phụ.',
+      required: 'Kho xuất có required và đang rỗng: chip viền đỏ, dòng nhắc dưới thanh, bảng không gọi items() và hiện trạng thái cần chọn bộ lọc.',
+      manual: 'filter.manualFilter: sửa chip chỉ đổi nháp. Bảng giữ dữ liệu cũ, icon header chưa bật, đến khi bấm Tìm kiếm.',
+    };
+
+    const btn = 'height:32px;padding:0 14px;border:0;border-radius:6px;font:500 13px Roboto,sans-serif;cursor:pointer;';
+    const mapRow = 'display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,1.5fr) minmax(0,1fr);gap:16px;padding:11px 16px;border-bottom:1px solid #f0efea;';
+    const MAP = [
+      ['quickSearch.term', 'Ô tìm bên trái (search)', 'OR theo containFields / equalFields, như cũ', 'quickSearch.term'],
+      ['quickSearch.filters[] values · lazy-values', 'quick:<field> · ghim', 'selection có MULTIPLE → IN; còn lại defaultOperator ?? EQUAL. Khoá', 'quickSearch.filters[f]'],
+      ['externalFilters[] string', 'external:<field> · string', 'defaultOperator ?? CONTAIN. Khoá', 'externalFilter[f]'],
+      ['externalFilters[] number · boolean', 'number · boolean (displayOnTrue/False → trueLabel/falseLabel)', 'defaultOperator ?? EQUAL. Khoá', 'externalFilter[f]'],
+      ['externalFilters[] date · datetime', 'date · datetime, một giá trị', 'defaultOperator GREATER_OR_EQUAL | LESS_OR_EQUAL. Khoá', 'externalFilter[f]'],
+      ['externalFilters[] daterange', 'date (datetime nếu enableTime)', 'BETWEEN. Khoá. Bỏ trống một đầu được', 'externalFilter[f] = {from, to}'],
+      ['externalFilters[] values · lazy-values', 'values · lazy-values', 'selection có MULTIPLE → IN; còn lại defaultOperator ?? EQUAL. Khoá', 'externalFilter[f]'],
+      ['columns[] string · number', 'column:<field>', 'operator.enable → operator.list bỏ BETWEEN, IN, NOT_IN; tắt → khoá default', 'columnFilter[f], columnOperator[f]'],
+      ['columns[] number, split-number', 'number', 'BETWEEN. Khoá. Bỏ trống một đầu được', 'columnFilter[f] = {from, to}'],
+      ['columns[] boolean', 'boolean', 'EQUAL. Khoá', 'columnFilter[f]'],
+      ['columns[] values · lazy-values', 'values · lazy-values', 'MULTIPLE → IN (+ NULL, NOT_NULL nếu có trong list); còn lại list ∩ {EQUAL, NOT_EQUAL, NULL, NOT_NULL}', 'columnFilter[f], columnOperator[f]'],
+      ['columns[] date · datetime, filter.type date', 'date · datetime', 'EQUAL (cả ngày). Khoá', 'columnFilter[f] = Date'],
+      ['columns[] date · datetime, còn lại', 'date · datetime', 'BETWEEN. Khoá. Bỏ trống một đầu được', 'columnFilter[f] = {from, to}'],
+      ['Cột trùng field với external', 'Không vào thanh; icon header trỏ tới chip external', '—', 'columnFilter[f] = null'],
+      ['custom, filterDef, sdTableFilterDef, cột time, cột hidden, filter.disabled của cột, external date thiếu defaultOperator, queryBar.exclude', 'Không vào thanh; cảnh báo dev', '—', 'Giữ giá trị đang có'],
+    ];
+
+    const chipStates = [
+      chip({ icon: 'warehouse', label: 'Kho xuất', value: 'Tất cả', look: 'empty', name: 'Ghim, rỗng', desc: 'Chữ "Tất cả" (core.component.query-bar.all). Không có ×.' }),
+      chip({ icon: 'event', label: 'Ngày tạo', value: '01/10 – 31/10/2026', look: 'active', name: 'Ghim, có giá trị', desc: 'Nền primary nhạt. Khoảng cùng năm rút gọn (Q11).' }),
+      chip({ icon: 'warehouse', label: 'Kho xuất', value: 'Chọn…', look: 'required', name: 'Ghim, required, rỗng', desc: 'Viền và chữ màu lỗi, aria-invalid, aria-describedby trỏ tới dòng nhắc.' }),
+      chip({ icon: 'list', label: 'Kênh bán', value: 'Online +2', look: 'active', removable: true, name: 'Thêm, có giá trị', desc: '× xoá chip; ghi rỗng vào raw và áp dụng.' }),
+      chip({ icon: 'tag', label: 'Tổng tiền', op: '≥', value: '5.000.000', look: 'active', removable: true, name: 'Có chọn toán tử', desc: 'Hiện ký hiệu vì field có hơn một toán tử.' }),
+      chip({ icon: 'event', label: 'Ngày giao', value: 'Từ 01/10/2026', look: 'active', removable: true, name: 'Khoảng thiếu một đầu', desc: 'core.component.query-bar.range.from / range.to (Q11).' }),
+      chip({ icon: 'list', label: 'Thanh toán', value: '', look: 'open', removable: true, name: 'Vừa thêm, popover mở', desc: 'Đóng mà vẫn rỗng thì chip bị bỏ, không áp dụng.' }),
+      chip({ icon: 'list', label: 'Chi nhánh', value: 'Hà Nội', look: 'disabled', name: 'disabled', desc: 'quickSearch.filters[].disabled → field.disabled; không mở popover.' }),
+    ];
+
+    return {
+      views: VIEWS.map(([id, label]) => ({
+        label, pressed: v === id,
+        style: btn + (v === id ? 'background:#1a1b1f;color:#ffffff' : 'background:transparent;color:#3a3c42'),
+        pick: () => this.setState({ view: id }),
+      })),
+      note: NOTES[v],
+      chromeCode: "filter.mode: 'query-bar'" + (v === 'manual' ? ' · manualFilter: true' : ''),
+      chromeNote: v === 'manual' ? "applyOn: 'search' · nút Tìm kiếm hiện" : "applyOn: 'commit' · editor: 'popover'",
+      searchText: barActive ? 'DH-243' : 'Tìm theo mã đơn, khách hàng',
+      searchStyle: 'flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (barActive ? 'color:#212121' : 'color:#7a7a7a'),
+      chips,
+      isAdd: v === 'add', isManual: v === 'manual', isRequired: v === 'required', hasRows: v !== 'required',
+      addStyle: 'width:28px;height:28px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;' +
+        (v === 'add' ? 'border:1px dashed #005cbb;color:#005cbb;background:#eef4fc' : 'border:1px dashed #d6d8db;color:#5f6368'),
+      clearStyle: 'height:28px;padding:0 8px;border-radius:4px;display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500;white-space:nowrap;' + (barActive ? 'color:#005cbb' : 'color:#bdc1c6'),
+      clearLabel: barActive ? 'Xoá lọc (4)' : 'Xoá lọc',
+      heads, rows,
+      pageText: v === 'required' ? '' : applied ? '1–5 / 23' : '1–5 / 128',
+      panels,
+      chipStates,
+      mapRows: MAP.map(([src, bar, op, dest], i) => ({ src, bar, op, dest, rowStyle: mapRow + (i >= MAP.length - 2 ? 'background:#faf9f6;color:#5f6167' : '') })),
+    };
+  }
+}
+</script>
+</body>
+</html>

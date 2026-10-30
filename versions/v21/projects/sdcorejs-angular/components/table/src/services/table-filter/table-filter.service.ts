@@ -15,6 +15,7 @@ import {
   TableFilterValue,
 } from './table-filter.model';
 import { hasQuickSearchValue, initialQuickSearchValue } from './table-quick-search.util';
+import { leafColumns } from '../column-leaf.util';
 
 @Injectable()
 export class SdTableFilterService {
@@ -189,6 +190,12 @@ export class SdTableFilterService {
           remove: () => {
             activeFilterValue.set(this.#defaultValue(args));
           },
+          default: () => {
+            const value = this.#defaultValue(args);
+            // why: `#defaultValue` trả về chính object `args.columnOperator` (dùng chung với bảng) — tách ra để người
+            // đọc không sửa nhầm vào đó.
+            return { ...value, columnOperator: { ...value.columnOperator } };
+          },
           observer: activeFilterValue.observer.pipe(
             // Sử dụng mặc định nếu bị reset
             map(value => value || this.#defaultValue(args))
@@ -260,8 +267,8 @@ export class SdTableFilterService {
     const externalFilter: Record<string, unknown> = {};
     const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
-    // Filter column
-    for (const item of columns || []) {
+    // Filter column — cột lá, kể cả cột con của header nhóm.
+    for (const item of leafColumns(columns)) {
       columnFilter[item.field] = item?.filter?.default;
       if (item?.filter?.operator?.enable && item?.filter?.operator?.default) {
         columnOperator[item.field] = item.filter.operator.default;
@@ -321,8 +328,8 @@ export class SdTableFilterService {
     const externalFilter: Record<string, unknown> = {};
     const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
-    // Filter column
-    for (const item of columns || []) {
+    // Filter column — cột lá, kể cả cột con của header nhóm.
+    for (const item of leafColumns(columns)) {
       // why: null is a deliberate cached clear from SD controls; only a missing key should fall back to default.
       columnFilter[item.field] = this.#hasOwnValue(value?.columnFilter, item.field)
         ? value?.columnFilter?.[item.field]

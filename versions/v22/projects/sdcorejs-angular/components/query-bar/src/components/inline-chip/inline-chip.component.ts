@@ -74,6 +74,15 @@ export class SdQueryInlineChip {
   /** No-data operator (NULL/NOT_NULL) — hide entire value slot when true. */
   readonly isNoData = input(false);
 
+  /** Pinned chip — no × button. */
+  readonly pinned = input(false);
+
+  /** Required chip without a value — error look, `aria-invalid`. */
+  readonly invalid = input(false);
+
+  /** Id set as `aria-describedby` (the host's required hint). */
+  readonly describedBy = input<string | undefined>(undefined);
+
   // ---------------------------------------------------------------------------
   // Outputs
   // ---------------------------------------------------------------------------

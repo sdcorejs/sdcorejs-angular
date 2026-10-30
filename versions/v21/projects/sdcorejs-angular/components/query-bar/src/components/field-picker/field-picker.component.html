@@ -1,17 +1,38 @@
-<mat-menu #m="matMenu" xPosition="after" yPosition="below" class="c-field-picker-menu">
-  @for (field of fields(); track $index) {
-    <button
-      type="button"
-      mat-menu-item
-      [disabled]="isDisabled(field)"
-      (click)="pick.emit(field)">
-      <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
-      <span class="c-field-item-label">{{ field.label }}</span>
-      <span class="c-field-item-type">{{ field.type }}</span>
-      @if (isCurrent(field) || isUsed(field)) {
-        <sd-icon class="c-field-item-check" name="check"></sd-icon>
-      }
-    </button>
+<mat-menu #m="matMenu" xPosition="after" yPosition="below" class="c-field-picker-menu" (closed)="query.set('')">
+  @if (searchable()) {
+    <!-- why: ô lọc nằm trong mat-menu — chặn click (menu tự đóng) và phím gõ (typeahead của menu
+         sẽ nhảy focus sang mục), chỉ để Escape / mũi tên xuống / Tab đi tiếp cho menu. -->
+    <div class="c-field-find" role="group" (click)="$event.stopPropagation()" (keydown)="onFindKeydown($event)">
+      <sd-icon class="c-field-find-icon" name="search"></sd-icon>
+      <input
+        #findInput
+        class="c-field-find-input"
+        type="text"
+        autocomplete="off"
+        [placeholder]="findLabel()"
+        [attr.aria-label]="findLabel()"
+        [value]="query()"
+        (input)="query.set(findInput.value)" />
+    </div>
+  }
+  @for (group of groups(); track group.label) {
+    @if (showGroupHeadings()) {
+      <div class="c-field-group" role="presentation">{{ group.label }}</div>
+    }
+    @for (field of group.fields; track $index) {
+      <button
+        type="button"
+        mat-menu-item
+        [disabled]="isDisabled(field)"
+        (click)="pick.emit(field)">
+        <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
+        <span class="c-field-item-label">{{ field.label }}</span>
+        <span class="c-field-item-type">{{ field.type }}</span>
+        @if (isCurrent(field) || isUsed(field)) {
+          <sd-icon class="c-field-item-check" name="check"></sd-icon>
+        }
+      </button>
+    }
   } @empty {
     <div class="c-field-empty">{{ emptyLabel() }}</div>
   }

@@ -71,4 +71,12 @@ The tests inspect downloaded XLSX bytes, raw worksheet XML, styles and ExcelJS r
 - Compatibility: XLSX consumers now receive numeric/date cells instead of default date strings. This is documented in the existing table/Excel API docs and the Unreleased changelog. Existing numeric display fixes in Core UI are preserved.
 - Runtime verification used ChromeHeadlessCI and real XLSX serialization. Microsoft Excel desktop and a manual showcase interaction were not run; no template/layout changed.
 - Independent review was not performed; the review above is the implementing agent's self-review.
-- Commit, push, PR creation, version bump and publication are not part of this port request.
+- Commit, push, PR creation, version bump and publication were not part of the original 2026-10-29 port request.
+
+## Delivery and main integration: 2026-10-30
+
+The user subsequently authorized committing, pushing the feature branch and creating a PR. The feature commit is `da0a91c86e34bd9ea3e838728d516584c56b2807`. Integration incorporates `origin/main` at `e0789741f7a99aacf330c46fb51698f9f430a3c6`, including the existing 3.4 release preparation. Merge conflicts were limited to the changelog and four sync-status files: the published release notes were retained, this change stays under Unreleased, and the latest upstream sync metadata was kept. All 24 feature TypeScript source/test files remain unchanged from the verified feature commit. The PR diff against main contains 34 files.
+
+Fresh integration checks passed: the canonical v19 production build, **128/128 focused tests**, **280/280 root script tests**, and `check:sync`. The full 8,420-test coverage run, four-line builds/pack checks, lint and consumer/declaration checks above describe the original port tree; they were not all rerun after integrating main.
+
+An unrelated, untracked Select keyboard-listener test introduced concurrently in the shared checkout initially blocked TypeScript compilation. The focused rerun used an OS-temp tsconfig extending the repository spec config and excluding only that untracked file; no repository test configuration, coverage threshold or tracked test was excluded. Concurrent Select edits remain outside this commit and PR. Independent review and desktop Microsoft Excel verification remain pending. This delivery does not authorize merging, a version bump or publication.

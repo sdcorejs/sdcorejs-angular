@@ -27,6 +27,12 @@ export interface ISdTableConfiguration {
     /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này, mặc định là false */
     hideExternalFilterToolbar?: SdTableOptionFilter['hideExternalFilterToolbar'];
 
+    /** Giao diện lọc mặc định cho mọi bảng; `option.filter.mode` thắng. Mặc định là `'default'`. */
+    mode?: SdTableOptionFilter['mode'];
+
+    /** Tuỳ chọn mặc định của mode `'query-bar'`; gộp theo từng field với `option.filter.queryBar`. */
+    queryBar?: SdTableOptionFilter['queryBar'];
+
     operator?: {
       list?: Partial<Record<SdTableColumn['type'], Operator[]>>;
       default?: Partial<Record<SdTableColumn['type'], Operator>>;

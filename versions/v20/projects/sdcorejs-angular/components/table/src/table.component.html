@@ -26,7 +26,11 @@
 @let _rowCommands = rowCommands();
 @let _mobileCards = mobileCards();
 @let _isMobile = isMobile();
+@let _queryBarMode = queryBarMode();
+@let _queryBarKeys = queryBarModel()?.columnKeys;
+@let _queryBarActive = queryBarActiveKeys();
 @let _showInlineFilter =
+  !_queryBarMode &&
   !_isMobile &&
   !_tableOption?.filter?.disabled &&
   _tableOption?.filter?.hideInlineFilter !== true &&
@@ -45,7 +49,7 @@
      trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
 <span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
-  @if (!_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+  @if (!_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
     <external-filter
       class="mb-16"
       [autoId]="_autoId"
@@ -79,6 +83,26 @@
       (filterChange)="onFilterChange()"
       (filterCommit)="onFilterCommit()">
     </column-filter>
+  </ng-template>
+  <!-- Icon lọc ở header cột (mode query-bar): mở chip của field trên thanh. why: nằm cạnh .c-header-title chứ không
+       nằm trong — title sort được là role=button và bắt Enter, lồng button vào sẽ thành nested-interactive và Enter
+       trên icon sẽ sort. Chặn mousedown/click để không sort, không bắt đầu kéo cột. -->
+  <ng-template #queryBarTrigger let-column>
+    @let _triggerKey = _queryBarKeys?.get(column.field);
+    @if (_triggerKey) {
+      @let _triggerActive = _queryBarActive.has(_triggerKey);
+      <button
+        type="button"
+        class="sd-table-filter-trigger"
+        [class.sd-table-filter-trigger--active]="_triggerActive"
+        [attr.data-autoid]="_autoId ? _autoId + '-filter-trigger-' + column.field : null"
+        [attr.aria-label]="filterTriggerLabel(column, _triggerActive)"
+        aria-haspopup="menu"
+        (mousedown)="$event.stopPropagation()"
+        (click)="$event.stopPropagation(); openQueryBarField(_triggerKey, $event.currentTarget)">
+        <sd-icon name="filter_alt" aria-hidden="true"></sd-icon>
+      </button>
+    }
   </ng-template>
   <ng-template #mobileAggregate let-summary="summary">
     <div class="sd-mobile-aggregate p-12" role="region" [attr.aria-label]="'core.component.table.mobile.summary' | sdTranslate">
@@ -159,8 +183,36 @@
   </ng-template>
 
   <ng-content select="[sdTableTop]"></ng-content>
-  <div class="sd-table-surface" [class.sd-table-surface--quick-search]="!!_quickSearch">
-    @if (_quickSearch) {
+  @let _queryBarOption = queryBarOption();
+  <div
+    class="sd-table-surface"
+    [class.sd-table-surface--quick-search]="!!_quickSearch && !_queryBarMode"
+    [class.sd-table-surface--query-bar]="_queryBarMode && !!_queryBarOption">
+    @if (_queryBarMode) {
+      <!-- why: thanh nằm trên .c-container, ngoài lớp loading (làm mờ .c-table) — luôn bấm được khi đang tải. -->
+      @if (_queryBarOption) {
+        @let _queryBarHint = queryBarHint();
+        <sd-query-bar
+          class="sd-table-query-bar"
+          role="search"
+          [attr.aria-label]="'core.component.table.filter' | sdTranslate"
+          [attr.data-autoid]="_autoId ? _autoId + '-query-bar' : null"
+          [option]="_queryBarOption"
+          [(filters)]="barFilters"
+          [(search)]="barSearch"
+          (apply)="onQueryBarApply($event)">
+          @if (sdQuickSearchRightDef(); as _right) {
+            <div sdQueryBarEnd class="sd-table-query-bar-end"><ng-container [ngTemplateOutlet]="_right.templateRef" /></div>
+          }
+        </sd-query-bar>
+        @if (_queryBarHint) {
+          <p class="sd-table-query-bar-hint" [id]="queryBarHintId">
+            <sd-icon name="error_outline" aria-hidden="true"></sd-icon>
+            <span>{{ _queryBarHint }}</span>
+          </p>
+        }
+      }
+    } @else if (_quickSearch) {
       <sd-table-quick-search
         [option]="_quickSearch"
         [value]="quickSearchValue()"
@@ -436,7 +488,9 @@
                   [attr.aria-sort]="
                     _tableOption.sort?.enable && column.type !== 'children' && column.sortable ? getSortAria(column.field) : null
                   ">
-                  <div>
+                  <div
+                    [class.sd-table-header-cell--trigger]="_queryBarMode && column.type !== 'children'"
+                    [class.sd-table-header-cell--end]="_queryBarMode && column.align === 'right'">
                     <!-- why: sort control chỉ ôm title; filter là sibling nên không thành interactive
                        descendant. aria-sort thuộc semantic <th>, không thuộc control này. -->
                     @if (column.type === 'children') {
@@ -459,6 +513,9 @@
                           [class.text-right]="column.align === 'right'">
                           <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                         </div>
+                      }
+                      @if (_queryBarMode) {
+                        <ng-container *ngTemplateOutlet="queryBarTrigger; context: { $implicit: column }"></ng-container>
                       }
                       @if (_showInlineFilter && !_configuration.multipleHeader) {
                         <ng-container *ngTemplateOutlet="inlineColumnFilter; context: { $implicit: column }"></ng-container>
@@ -504,7 +561,9 @@
                   [style.min-width]="column.minWidth || column.width"
                   [style.max-width]="column.maxWidth"
                   [attr.aria-sort]="_tableOption.sort?.enable && column.sortable ? getSortAria(column.field) : null">
-                  <div>
+                  <div
+                    [class.sd-table-header-cell--trigger]="_queryBarMode"
+                    [class.sd-table-header-cell--end]="_queryBarMode && column.align === 'right'">
                     @if (_tableOption.sort?.enable && column.sortable) {
                       <div
                         [sdTableSortHeader]="column.field"
@@ -520,6 +579,9 @@
                         [class.text-right]="column.align === 'right'">
                         <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
                       </div>
+                    }
+                    @if (_queryBarMode) {
+                      <ng-container *ngTemplateOutlet="queryBarTrigger; context: { $implicit: column }"></ng-container>
                     }
                   </div>
                 </th>
@@ -829,6 +891,9 @@
                 class="mr-8"
                 [title]="'core.component.table.setup-short' | sdTranslate"
                 prefixIcon="settings"
+                [indicator]="!_isMobile && hasCustomSetup()"
+                indicatorColor="primary"
+                [indicatorLabel]="'core.component.table.config.customized' | sdTranslate"
                 (click)="_configComponent.open()"
                 type="text">
               </sd-button>
@@ -891,7 +956,7 @@
   </div>
 
   @if (_tableOption.config?.visible) {
-    <config [autoId]="_autoId" [tableOption]="_tableOption" />
+    <config [autoId]="_autoId" [tableOption]="_tableOption" (defaultsRestored)="onConfigDefaultsRestored()" />
   }
   <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
   @if (!_tableOption.filter?.disabled && filterRegister) {

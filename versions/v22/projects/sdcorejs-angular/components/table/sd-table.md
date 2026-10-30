@@ -373,11 +373,27 @@ export interface TableOptionConfig {
 
 | Field       | Type                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ----------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visible`   | `boolean`                             | Shows the column-config (⚙) button in the toolbar. The dialog lets users toggle visibility, drag-reorder columns, and rename headers.                                                                                                                                                                                                                                                                                                          |
+| `visible`   | `boolean`                             | Shows the settings (⚙) button in the footer. The settings modal lets users show, hide, reorder (mouse or keyboard), rename, resize, fix and shorten columns; the button carries a dot while the table uses custom settings. See **Settings modal**.                                                                                                                                                                                         |
 | `resizable` | `boolean`                             | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
-| `onResize`  | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics.                                                                                                                                     |
+| `onResize`  | `(field, width, columnWidth) => void` | Fires once per resize, on `mouseup`; a click on the grip that does not change the width stores nothing and does not fire. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics.                                                                                                                                     |
 
-**Column-config dialog layout:** one row per configurable column, in display order. Each row carries a drag handle (`⠿`, reorders the column), a **Hiển thị** checkbox, the header title and width inputs (`size="sm"`), and **Cố định** / **Giới hạn ký tự** checkboxes. A localized hint above the table (`core.component.table.config.drag-hint`) advertises the drag affordance, which is otherwise invisible. Turning **Hiển thị** off dims the row and disables its title/width/fixed/truncate editors — those settings are meaningless for a hidden column — while the display checkbox itself stays enabled so the column can be brought back.
+#### Settings modal
+
+`sd-modal width="sm"`, columns tab. Stored data, storage key and `loadConfigurationResult` are unchanged.
+
+- **List:** one 44px row per configurable column, in display order: drag handle `⠿`, **Hiện** checkbox, then a button that opens the row. The button shows the title (the renamed one, greyed while hidden), `push_pin` when fixed, `short_text` when shortened, and the width: `120 px`, **Tự động** (no width), the value as written when it is not px (`20%`), or **Đang ẩn**. It carries `aria-expanded` / `aria-controls`; one row is open at a time.
+- **Open row:** **Tiêu đề cột** (`sd-input size="sm"`, the original title as placeholder; when renamed, “Gốc: … · Khôi phục” clears the rename), **Rộng**, and the **Cố định khi cuộn ngang** / **Rút gọn nội dung dài** checkboxes. A hidden column can be opened but its details are locked; its **Hiện** checkbox never is.
+- **Width:** a positive number is stored as `${n}px`, an empty field (or zero / a negative number) as `undefined` (the option width, or auto). A width in another unit (`%`, `rem`) is shown as written, without the px suffix; typing a number turns it into px. On blur and on Apply an edited width is rounded and kept within the column's px `minWidth` / `maxWidth`; a bound in another unit is ignored, and a width nobody edited is saved as it was.
+- **Toolbar:** wraps in a narrow modal. A find box above eight columns (current or original title, accent- and case-insensitive; a row it filters out closes), “Hiện {shown}/{total} cột” and **Hiện tất cả** (disabled when every column is shown). The hint under it (`core.component.table.config.drag-hint`) names both ways to reorder; while searching, reordering is off and the hint says so (`drag-disabled-search`).
+- **Reorder:** drag the handle (pressing the handle of the open row closes it first), or focus it and press Space / Enter to pick the row up, ↑ / ↓ to move it, Space / Enter to drop it, Escape to put the order back. Leaving the handle drops the row. While a row is held, Escape does not close the modal. A live region inside the modal reads each step (`reorder-picked`, `-moved`, `-dropped`, `-cancelled`).
+- **Footer:** **Khôi phục mặc định** on the left (`type="text"`, `restart_alt`), **Bỏ qua** (outline) and **Áp dụng** (filled) on the right, all `size="sm"`. Restore defaults asks for confirmation (`config.confirm-reset`), removes the stored columns and puts the inline external filters back to `defaultShowing`. Skip drops the edits.
+
+**Settings button indicator:** the footer settings button (`-config`) shows a primary dot, labelled “Đang dùng thiết lập riêng” for screen readers (`indicatorLabel`), while the table uses custom settings:
+
+- the stored columns differ from the option in order, or from their stored original in visibility, title, width, fixed or truncate. A width dragged on the table counts (same storage entry);
+- the inline external filters differ from `defaultShowing`.
+
+Columns added to or removed from the option since the settings were stored do not count, and neither does a title changed in code. Without `option.key` it follows the session storage. Restore defaults turns it off at once. Mobile shows no dot (the tools button is unchanged).
 
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
 
@@ -572,6 +588,62 @@ Import **`SdTableQuickSearchRightDefDirective`** in the consumer's standalone `i
 
 The projected checkbox is consumer-owned; it does not automatically add a predicate. Also import `SdCheckbox` and implement its state/handler. Native keyword/clear controls expose `data-autoid="customers-quick-search-term"` and `customers-quick-search-clear`; dropdowns receive `autoId="customers-quick-search-<field>"`. The keyword has a label, placeholder, Enter hint and IME-safe submission.
 
+#### Query bar mode (`filter.mode: 'query-bar'`)
+
+`filter.mode: 'query-bar'` replaces quick search, the external filter section and the column filter row with one `sd-query-bar` at the top of the table surface. It is a view only: the filter state is still `TableFilterValue`, so `items()`, `filterReq`, `pagingReq`, the cache, `required`, `default`, `manualFilter`, `onFilter` and the filter callbacks behave as in the default mode. **The same edit sends the same `pagingReq` in both modes.** Switching modes, or the viewport, keeps the applied values.
+
+```ts
+filter: {
+  mode: 'query-bar',
+  queryBar: { editor: 'popover', pinned: ['warehouseId', 'status'], exclude: ['internalCode'] },
+  quickSearch: { containFields: ['code', 'customer.name'], placeholder: 'Mã đơn, khách hàng…', filters: [/* … */] },
+  externalFilters: [/* … */],
+}
+```
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `mode` | `'default'` | `'query-bar'` turns the mode on. `SD_TABLE_CONFIGURATION.filter.mode` sets it for every table; the option wins. |
+| `queryBar.editor` | `'popover'` | `'inline'` edits chips directly on the bar (`sd-query-bar` mode `'inline'`). |
+| `queryBar.pinned` | visible quick filters + external filters shown inline (`defaultShowing` / user setting) or `required` | Replaces the default list of pinned chips. Items are `field`s of `quickSearch.filters`, `externalFilters` or `columns`. `required` fields are always pinned. |
+| `queryBar.exclude` | — | Fields left off the bar; their values are still sent. |
+
+`SD_TABLE_CONFIGURATION.filter.queryBar` is merged field by field under `option.filter.queryBar`. Mobile (`SdViewportService.isMobile()`) always renders the default controls, quick search and the mobile filter drawer included. `filter.disabled` renders no filter UI, as before.
+
+**Layout.** The bar is flush inside the table card (padding `8px 12px`): search box (quick-search `placeholder`, shown whenever `quickSearch` is set) │ pinned chips │ added chips │ `+` … clear button │ Search (with `manualFilter` only) │ the `sdTableQuickSearchRightDef` template. Chips wrap; the actions stay on the first row. The bar sits outside the loading layer, so it stays usable during `skeleton` and `refresh`. `role="search"`, `aria-label` = `core.component.table.filter`.
+
+**Chips.** Pinned chips (no remove button) read `Tất cả` when empty, `Chọn giá trị` when the field is `required`. Other fields are under `+`, grouped "Bộ lọc" (quick + external) and "Cột"; more than eight fields get a find box. Operators are limited to what the raw record can hold:
+
+| Source | Bar field | Operators | Raw value |
+| --- | --- | --- | --- |
+| `quickSearch.term` | search box | OR over `containFields` / `equalFields` | `quickSearch.term` |
+| `quickSearch.filters[]` | same type | `selection` containing `MULTIPLE` → `IN`; else `defaultOperator ?? EQUAL` | `quickSearch.filters[field]` |
+| external `string` / `number` | same type | `defaultOperator ?? CONTAIN` / `?? EQUAL` | `externalFilter[field]` (`EQUAL` + commas → `IN`, as before) |
+| external `boolean` | `boolean` (`displayOnTrue/False` labels) | `EQUAL` | `true` / `false` |
+| external `date` / `datetime` | same type | its `defaultOperator` (`GREATER_OR_EQUAL` / `LESS_OR_EQUAL`) | one date |
+| external `daterange` | `date` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+| external `values` / `lazy-values` | same type | `MULTIPLE` → `IN`; else `defaultOperator ?? EQUAL` | value or array |
+| column `string` / `number` | same type | `operator.list` without `BETWEEN` / `IN` / `NOT_IN` when `operator.enable`; else `operator.default ?? CONTAIN / EQUAL` | `columnFilter[field]`, `columnOperator[field]` |
+| column `number` + `filter.type: 'split-number'` | `number` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+| column `boolean` | `boolean` | `EQUAL` | `'1'` / `'0'` |
+| column `values` / `lazy-values` | same type | `MULTIPLE` → `IN`; else `operator.list` ∩ `EQUAL`, `NOT_EQUAL` (default `EQUAL`) | value or array |
+| column `date` / `datetime`, `filter.type: 'date'` | `date` | `EQUAL` (whole day) | one date |
+| column `date` / `datetime`, other filter types | `date` | `BETWEEN`, either end may stay empty | `{ from, to }` |
+
+Columns whose `operator.list` holds `NULL` / `NOT_NULL` (default controls) offer them too. Column `date` / `datetime` and external `daterange` use date-only pickers, as the default controls do, since the request covers whole days.
+
+**Not on the bar** (values still sent; a dev-mode `console.warn` lists them once per table): external `type: 'custom'`, fields with an `sdTableFilterDef` or `filter.filterDef` template, `time` columns, `hidden` columns, columns with `filter.disabled`, external `date` / `datetime` without `defaultOperator` `GREATER_OR_EQUAL` / `LESS_OR_EQUAL` (they send no condition in the default mode either), `queryBar.exclude`, and `hidden` quick filters (their value and `required` still apply). With `hideInlineFilter: true` no column goes on the bar; `'auto'` keeps them (they only sit under `+`). A column with the same field as an external filter is covered by it: only the external chip shows and the column value is always cleared. A column hidden through the table settings keeps its chip while it still filters. Children of grouped headers are offered like any other column.
+
+**Applying.** Without `manualFilter`, a chip popover that closes with a changed value or operator, removing a chip that had a value, an inline chip commit and Enter in the search box each apply once (the existing 700 ms read debounce). A popover that closes unchanged reads nothing; an added chip that closes empty is dropped. Changing the operator of an empty column is stored without a read, like the column filter. With `manualFilter: true` edits stay a draft until the Search button (disabled while a `required` field is empty) or Enter. Every apply writes the whole bar in one `filterRegister.value.set`; then column `filter.onChange(value, column, columnFilter)`, `filter.operatorChange(column, operator)`, external `onChange(value)` and quick-filter `onChange(value)` run for the fields the user changed — never on init or for changes from outside. Changes from outside (`setFilter`, a signal `default`, the cache) wait while a chip popover is open and never overwrite unapplied edits of other chips.
+
+**Required.** An empty `required` chip has the error look and `aria-invalid`, and a hint under the bar (`core.component.query-bar.required`, labels joined by commas; also hidden required quick filters and required external filters the bar cannot show) is its `aria-describedby`. An empty required external filter blocks a server read through its value (`onFilter` gets `externalFilterValid: false`); `requireFiltered` and the "choose a filter" state are unchanged.
+
+**Clear.** The clear button (label `core.component.query-bar.clear-all` with the number of chips that hold a value) resets to the defaults (`filterRegister.value.remove()`), calls `filter.onClearFilter` and reads once. It is disabled while the applied state equals the defaults.
+
+**Header icons.** Every leaf column whose field is on the bar, or is covered by an external filter, gets a 20 × 20 `button.sd-table-filter-trigger` (`filter_alt`) beside its title — after it, or before it for `align: 'right'`. It is invisible (still focusable) until the header cell is hovered or focused, or on a coarse pointer, and stays visible in `--sd-primary` while the field filters by an applied value. Clicking it opens that field's chip (adding it when needed) without sorting or resizing; focus returns to the icon when the popover closes. `aria-label`: `core.component.table.filter-by` / `filtering-by` with the column title; `aria-haspopup="menu"` (the chip popover is a menu).
+
+**Ignored in this mode:** `externalFilterPerRow`, `collapsible`, `externalFilterCollapsed`, `hideExternalFilterToolbar`.
+
 #### Inline column filter — commit semantics
 
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
@@ -583,6 +655,11 @@ The projected checkbox is consumer-owned; it does not automatically add a predic
 - **Đổi operator** (chip trong ô hoặc `sd-operator`) khi ô đã có giá trị → commit + reload tức thì; ô trống chỉ lưu operator vào `filterRegister` (notReload:true). `filter.operatorChange` vẫn được gọi trước.
 - **Vị trí operator** (thiết kế đợt 2 · G): với control mặc định (`string`, `number`, `boolean`, `values`, `lazy-values`, `date`, `datetime`, `time`), operator là chip tiền tố bên trong ô — column-filter truyền `[operators]` và `[(operator)]` xuống control, không còn `<sd-operator class="mr-4">` đứng riêng. Cột có `filter.filterDef` (template custom), filter `split-number` / `split-date` (hai ô) và danh sách chỉ một operator vẫn giữ `sd-operator` riêng như cũ (control nhận một operator sẽ tự đặt nó và phát `operatorChange` lúc khởi tạo). `filter.operatorChange`, `filterChange`, `filterCommit` và thời điểm emit không đổi. Chọn `NULL` / `NOT_NULL` trong chip thì control xoá giá trị và khoá ô; `SdConvertToPagingReq` gửi `{ field, operator }` **không có `data`** (kể cả khi ô trống), bảng local giữ dòng có giá trị `null` / `undefined` (NULL) hoặc khác (NOT_NULL), và chọn hay rời khỏi hai operator này đều lọc lại ngay. Cột `filterDef` / split vẫn chỉ lọc khi có giá trị.
 - **Dense controls:** custom `sdTableFilterDef` templates, editable table-cell controls, external-filter custom templates, and dashboard/table toolbar controls must use `size="sm"` where supported and `hideInlineError` on SD form components (`sd-input`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-date-range`, `sd-datetime`, `sd-input-number`, `sd-textarea`, `sd-chip`, `sd-chip-calendar`, `sd-input-color`) so inputs do not inflate row/header/toolbar height or inject inline error text into dense surfaces.
+
+#### Grouped headers and split filters
+
+- **Columns under a grouped header** (`type: 'children'`) filter like flat columns. `SdConvertToPagingReq`, local filtering and local sorting, `filter.default`, the cache and `SD_TABLE_CONFIGURATION.filter.operator` all work on leaf columns; the grouped header itself sends nothing. Before, only top-level `columns` were read, so a child column's filter was never sent, matched or restored. Passing `option.columns` to `SdConvertToPagingReq` by hand now includes the children too. The list of a child `values` column is loaded like a top-level one, for its cells, its filter and the export.
+- **Split filters survive a reset.** Clearing the filters (`clearFilter()`, the external filter's clear button, `setFilter` without the field) can drop the `{ from, to }` of a `split-number` / `split-date` column from the shared `columnFilter`. The column filter now shows both ends empty and recreates `{ from, to }` when one is typed; before, change detection threw `Cannot read properties of undefined (reading 'from')`.
 
 #### Inline column filter — local matching semantics (`type: 'local'`)
 
@@ -1129,13 +1206,14 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 
 ## Visual cues (helps agent map screenshots → component)
 
-The column settings dialog uses compact rows with 4px vertical cell padding and checkboxes centered with the input editors, including the label wrapper used by Angular Material 22. Its table uses the modal body's existing gutters, aligning the outer border with the footer actions.
+The settings modal lists one 44px row per column (handle, **Hiện** checkbox, summary) inside a bordered list that uses the modal body's gutters, aligned with the footer actions; see **Settings modal**.
 
 Colours come from the theme (see `assets/THEME.md`, "Table tokens"): the header band, row dividers, hover, selected, activated and group rows are `color-mix()` of the palette over `--sd-table-bg`, so dark mode and presets follow. Sort arrows are tinted `--sd-text-secondary` at rest and `--sd-text` on the sorted column; the drag preview, reorder handle and hover overlays use theme tokens too.
 
 The desktop table uses subtle 6px outer corners: the existing scroll area rounds the top corners and the paginator rounds the bottom corners. No additional clipping or scroll container is introduced, preserving sticky headers and columns. Mobile cards retain their existing shape.
 
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
+- **Query bar** (`filter.mode: 'query-bar'`, desktop): one chip row flush at the top of the table card instead of quick search, external filter and the filter row; a funnel icon appears beside a filterable column title on hover and stays blue while that column filters.
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
@@ -1156,6 +1234,8 @@ provide: SD_TABLE_CONFIGURATION,
 useValue: {
   paginate: { pageSize: 50, pages: [10, 25, 50, 100], showFirstLastButtons: true },
   filter: { hideInlineFilter: false, operator: { default: { string: 'CONTAIN', ... }, list: { ... } } },
+  // Giao diện lọc mặc định cho mọi bảng (option.filter.mode thắng); queryBar gộp theo từng field.
+  // filter: { mode: 'query-bar', queryBar: { editor: 'popover' } },
   // Ảnh thay cho 3 trạng thái empty mặc định (bỏ trống thì dùng ảnh của core).
   images: { dataEmpty: 'assets/empty.svg', filterEmpty: 'assets/no-results.svg', filterRequired: 'assets/choose-filter.svg' },
   // Lớp loading cho mọi bảng; option.loading của từng bảng thắng theo từng field.
@@ -1384,7 +1464,7 @@ tableOption: SdTableOption<Employee> = {
     resizable: true, // enable drag handle on data columns
     onResize: (field, width, columnWidth) => {
       // Optional: sync to a remote user profile so widths follow the user
-      // across browsers/devices. Fires once per mouseup.
+      // across browsers/devices. Fires once per resize (on mouseup).
       console.log(`User resized '${field}' → ${width}`);
       console.log('Current column widths:', columnWidth);
       // e.g. { code: '120px', name: '320px', salary: '140px' }
@@ -1436,6 +1516,7 @@ Rendered directly on the `<sd-table>` host element:
 | `data-autoid`  | `components-table-<autoId>` | input `autoId`                                                |
 | `data-loading` | `"true"` / `"false"`        | `loading` signal (toggled by paging + external-filter submit) |
 | `data-loading-view` | `"none"` / `"skeleton"` / `"refresh"` | what the loading layer draws (see **Loading**). `skeleton` shows at once and also while `data-loading` is `"false"` (before the configuration, during the first read's debounce); `refresh` starts `showDelay` after `data-loading` and can stay `minDuration` after it |
+| `data-filter-mode` | `"default"` / `"query-bar"` | filter UI on screen: `filter.mode`, except that mobile always renders `"default"` |
 
 Selector example:
 
@@ -1463,7 +1544,10 @@ All interactive children derive their autoId from the table base `components-tab
 | Selector-action: action buttons                       | `components-button-<B>-action-<index>`                                                                       |
 | Selector-action: clear-selection (×)                  | `components-button-<B>-clear-selection`                                                                      |
 | Config modal: skip / reset / apply                    | `components-button-<B>-config-skip` / `-config-reset` / `-config-apply`                                      |
+| Config modal: find box / show all                     | `forms-input-<B>-config-find` / `components-button-<B>-config-show-all`                                      |
 | External filter: clear / setting / submit             | `components-button-<B>clear` / `…setting` / `…submit`                                                        |
+| Query bar (`filter.mode: 'query-bar'`)                | host `<B>-query-bar`; inner controls use it as the `sd-query-bar` autoId prefix                              |
+| Header filter icon (query-bar mode)                   | `<B>-filter-trigger-<field>`                                                                                 |
 
 `<rowId>` / `groupKey` come from `SdTableItem.meta.id` / `meta.group.key`, guaranteeing uniqueness per row/group. **Set `option.rowKey` if you want `<rowId>` to be a readable, deterministic value** (e.g. `…-expand-42`) — without it the id is an internally generated `sd-row-<n>` that changes between page loads and is unusable as a stable E2E selector. See **Row identity** above. Group toggles use `meta.group.key` (a hash of the group field values) and stay deterministic regardless. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
 
@@ -1477,6 +1561,7 @@ All interactive children derive their autoId from the table base `components-tab
 - **Empty state is announced.** When a read ends without rows, `span.sd-table-live` reads the title of the empty block: `core.component.table.no-results` (filtered), `choose-filter-hint` (a required filter is missing) or `no-data`, also after a read faster than `showDelay` and under a custom `sdDataStateTemplate`. The block itself has no live role, because text inserted together with its region is often not read.
 - **Row commands are named.** The per-row command buttons (`desktop-command`) dropped `aria-hidden="true"` — they are real `<button>`s that still took tab focus while announcing nothing, because they render an icon with no text. They now expose `aria-label` from the command title, plus `aria-haspopup="menu"` on the submenu trigger.
 - **Clickable HTML cells are keyboard reachable.** A cell whose display config supplies `click` renders as `role="button"` + `tabindex="0"` with Enter/Space mirroring the click (it previously carried `aria-hidden="true"`). The handler ignores key events bubbling from consumer-supplied markup inside the cell, so nested controls do not double-fire.
+- **Settings modal from the keyboard.** Tab runs find box → **Hiện tất cả** → per row handle, **Hiện**, open button → the details of the open row → footer. The handle reorders with Space / Enter, ↑ / ↓ and Escape, and a live region inside the modal (`aria-live="assertive"`) reads each step; one outside an `aria-modal` dialog can be skipped by screen readers. Each handle is named “Kéo để đổi thứ tự cột: {title}” and each **Hiện** checkbox “Hiển thị: {title}” (a visually hidden label); the fixed / shortened flags are named for screen readers. The settings button dot is described by `indicatorLabel`.
 
 ## Related
 

@@ -669,10 +669,141 @@
   gap: 6px;
 }
 
-:host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile) {
+:host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile),
+:host .sd-table-surface--query-bar > .c-container:not(.sd-table-mobile) {
   > .c-table {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+  }
+}
+
+// Query bar (filter.mode 'query-bar'): thanh flush nằm liền trong card bảng, nền trắng cố định như quick search; viền
+// ngăn với bảng là viền trên sẵn có của .c-table. Đệm 8px 12px thuộc appearance 'flush' của sd-query-bar.
+:host .sd-table-query-bar {
+  display: block;
+  flex: 0 0 auto;
+  min-width: 0;
+  background: var(--sd-table-bg, #ffffff);
+  border-top-left-radius: var(--sd-radius-6, 6px);
+  border-top-right-radius: var(--sd-radius-6, 6px);
+  --sd-control-label-bg: var(--sd-table-bg, #ffffff);
+}
+
+// why: slot cuối giữ đủ rộng cho nội dung của consumer; vùng chip (.c-query-bar__main) là phần co lại và xuống dòng.
+:host .sd-table-query-bar-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  // Đứng ở hàng chip đầu như cụm nút của thanh, dù chip xuống nhiều hàng.
+  align-self: flex-start;
+  padding-left: 8px;
+}
+
+// Icon lọc ở header (mode query-bar). Tiêu đề co theo chữ, icon nằm sát sau nó; cột căn phải đảo chiều để icon đứng
+// trước, nên mép chữ không dịch khi icon hiện ra.
+:host .sd-table-header-cell--trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+
+  > .c-header-title {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  &.sd-table-header-cell--end {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+}
+
+:host .sd-table-filter-trigger {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  cursor: pointer;
+  // why: ẩn bằng opacity chứ không display:none — vẫn chiếm chỗ (tiêu đề không nhảy) và vẫn nhận Tab.
+  opacity: 0;
+  transition:
+    opacity var(--sd-duration-fast, 120ms) ease,
+    background-color var(--sd-duration-fast, 120ms) ease;
+
+  sd-icon {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+  }
+
+  &:hover {
+    background: var(--sd-table-row-hover-bg);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: 1px;
+  }
+
+  // Đang lọc theo giá trị đã áp dụng: luôn hiện, màu primary.
+  &.sd-table-filter-trigger--active {
+    opacity: 1;
+    color: var(--sd-primary);
+  }
+}
+
+:host th:hover .sd-table-filter-trigger,
+:host th:focus-within .sd-table-filter-trigger {
+  opacity: 1;
+}
+
+// Màn chạm không có hover: icon luôn hiện.
+@media (pointer: coarse) {
+  :host .sd-table-filter-trigger {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host .sd-table-filter-trigger {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  :host .sd-table-filter-trigger {
+    color: ButtonText;
+  }
+
+  :host .sd-table-filter-trigger--active {
+    color: Highlight;
+  }
+}
+
+:host .sd-table-query-bar-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 12px 8px;
+  background: var(--sd-table-bg, #ffffff);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-18, 18px);
+  color: var(--sd-error);
+
+  sd-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    font-size: var(--sd-font-size-16, 16px);
   }
 }
 
