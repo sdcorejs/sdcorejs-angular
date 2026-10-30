@@ -4,8 +4,7 @@ import { SdExcelService, SdNotifyService } from '@sdcorejs/angular/services';
 import { SdTableOption } from '../../models/table-option.model';
 import { SdTableExportContext, TableExportService } from './table-export.service';
 
-// Excel export writes date, datetime and time cells as the wall clock of
-// ISdCoreConfiguration.timeZone, the same text the table cells show.
+// CSV keeps wall-clock text; XLSX uses numeric date/time cells in the same zone.
 
 describe('TableExportService with ISdCoreConfiguration.timeZone', () => {
   const option = {
@@ -24,7 +23,7 @@ describe('TableExportService with ISdCoreConfiguration.timeZone', () => {
     plain: '1960/05/20 08:00:00',
   };
 
-  const exportRow = async (timeZone?: string): Promise<Record<string, unknown>> => {
+  const exportRow = async (timeZone?: string, xlsx = false): Promise<Record<string, unknown>> => {
     const excel = { export: jasmine.createSpy('export').and.resolveTo(), exportCSV: jasmine.createSpy('exportCSV').and.resolveTo() };
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -42,8 +41,9 @@ describe('TableExportService with ISdCoreConfiguration.timeZone', () => {
       fetchChunk: async () => [row],
       getFilterInfo: () => ({ filters: [] }) as never,
     };
-    await TestBed.inject(TableExportService).exportExcel(context);
-    return excel.export.calls.mostRecent().args[0].items[0];
+    const service = TestBed.inject(TableExportService);
+    await (xlsx ? service.exportExcel : service.exportCSV)(context);
+    return (xlsx ? excel.export : excel.exportCSV).calls.mostRecent().args[0].items[0];
   };
 
   afterEach(() => TestBed.resetTestingModule());
@@ -58,5 +58,21 @@ describe('TableExportService with ISdCoreConfiguration.timeZone', () => {
     expect(await exportRow('Asia/Bangkok')).toEqual(
       jasmine.objectContaining({ created: '1960/05/19', updated: '1960/05/19 23:00:00', at: '23:00:00', plain: '1960/05/20 08:00:00' })
     );
+  });
+
+  it('writes typed XLSX values in historical Ho Chi Minh time (AC-004)', async () => {
+    const result = await exportRow('Asia/Ho_Chi_Minh', true);
+    expect(result['created']).toBe(22056);
+    expect(result['updated']).toBe(22056);
+    expect(result['at']).toBe(0);
+    expect(result['plain'] as number).toBeCloseTo(22056 + 8 / 24, 9);
+  });
+
+  it('writes typed XLSX values in historical Bangkok time (AC-004)', async () => {
+    const result = await exportRow('Asia/Bangkok', true);
+    expect(result['created']).toBe(22055);
+    expect(result['updated'] as number).toBeCloseTo(22055 + 23 / 24, 9);
+    expect(result['at'] as number).toBeCloseTo(23 / 24, 12);
+    expect(result['plain'] as number).toBeCloseTo(22056 + 8 / 24, 9);
   });
 });

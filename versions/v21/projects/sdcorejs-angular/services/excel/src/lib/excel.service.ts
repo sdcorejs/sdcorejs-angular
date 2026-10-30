@@ -237,6 +237,36 @@ export class SdExcelService {
     BrowserUtilities.downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
   };
 
+  /**
+   * Serializes tabular values to an XLSX workbook and starts a browser download.
+   * The main `data` sheet contains field keys, titles, optional descriptions,
+   * then data. This browser API lazily loads ExcelJS; it does not mutate rows or
+   * column options and does not convert application timezones.
+   *
+   * @param option Columns, rows, optional filename and additional sheets. Each
+   * column requires a nonempty field and title. Empty columns/rows are allowed.
+   * A nonempty `column.numFmt` applies only to number/Date data cells in the main
+   * sheet; omitted or empty formats preserve existing behavior. Strings stay
+   * text and are neutralized for spreadsheet formula injection. Nullish data
+   * values remain blank. ExcelJS handles Date serialization in the 1900 system;
+   * the caller owns valid serials, date ranges and timezone conversion.
+   * @returns A promise resolving after serialization and the download trigger,
+   * not after the user saves the file. There is no cancellation or timeout API.
+   * @throws Rejects if a column lacks its field/title, or if loading ExcelJS,
+   * serialization or the browser download helper fails.
+   * @example
+   * ```ts
+   * import { inject } from '@angular/core';
+   * import { SdExcelService } from '@sdcorejs/angular/services/excel';
+   * // Inside an Angular injection context:
+   * const excel = inject(SdExcelService);
+   * await excel.export({
+   *   columns: [{ field: 'day', title: 'Day', numFmt: 'dd/mm/yyyy' }],
+   *   items: [{ day: 46323 }],
+   *   fileName: 'dates.xlsx',
+   * }); // Excel displays a date cell as 28/10/2026.
+   * ```
+   */
   export = async (option: SdExcelExportOption) => {
     const { columns, items, fileName, sheets } = option;
     let hasDescription = false;
@@ -309,6 +339,10 @@ export class SdExcelService {
         } else {
           cell.value = neutralizeSpreadsheetFormula(raw) as CellValue;
           cell.style = { ...this.#cellStyle };
+        }
+        // Apply the explicit format last so styling cannot replace it; never parse text as dates.
+        if (column.numFmt && (typeof raw === 'number' || raw instanceof Date)) {
+          cell.numFmt = column.numFmt;
         }
       });
     });

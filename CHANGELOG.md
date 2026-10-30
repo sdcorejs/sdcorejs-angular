@@ -34,7 +34,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+
+#### Table
+
+- Default client XLSX export now writes untransformed `date`, `datetime` and `time` columns as Excel numeric date/time cells, displayed as `dd/MM/yyyy`, `dd/MM/yyyy HH:mm:ss` and `HH:mm:ss`.
+  - **Migration:** code reading these XLSX files must accept numeric/date cells instead of the previous date strings. Existing transforms still take priority; their strings remain text. CSV retains its existing string formats.
+  - Configured timezone, column selection, export limits and unknown-total paging are preserved. Invalid values remain blank; valid dates outside 1900–9999 stay formatted text.
+
 ### Added
+
+#### Excel
+
+- `SdExcelColumn.numFmt` sets an Excel number format for numeric or `Date` data cells in `SdExcelService.export()`. Strings are never parsed as dates. Omitted or empty formats preserve integer `0` / decimal General defaults; templates, CSV and additional sheets retain their existing behavior.
 
 #### Pattern
 
