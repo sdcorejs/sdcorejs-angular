@@ -38,6 +38,7 @@ interface SdExcelColumn {
   title: string;       // required — used as header row 2 (display label)
   description?: string;
   width?: string;      // e.g. '120px' (converted to ~width/7 chars; falls back to 20)
+  numFmt?: string;     // Excel number-format code; export() data cells only
 }
 
 interface SdExcelTemplateColumn extends SdExcelColumn {
@@ -70,7 +71,20 @@ interface SdExcelExportOption<T = any> {
 }
 ```
 
-**Numeric handling**: JS `number` values are written as real numbers. Whole numbers carry `numFmt: '0'` (so `0` renders as "0"); decimals keep Excel's General format so their fractional part is not visually rounded. (Older releases set `numFmt = '#'` and then overwrote the whole `style` object, so no format was ever applied.)
+**Number and date formats**: `column.numFmt` is an optional Excel format code
+applied after cell styling, only to numeric or `Date` data cells in the main
+`data` sheet. Examples: `dd/mm/yyyy`, `dd/mm/yyyy hh:mm:ss`, `hh:mm:ss`, `0.00`.
+Use Excel codes, not DateUtilities tokens. Nonempty strings are passed through
+without semantic validation. Omitted, `undefined` or empty formats preserve the
+Core UI defaults: integers use the zero format (including zero and negative integers),
+while decimals retain Excel's General format.
+
+Formatting changes display, not the stored value. Date-looking strings remain
+text and keep formula-injection neutralization. Header/description cells,
+additional sheets, `generateTemplate()` and `exportCSV()` ignore `numFmt`.
+There is no timezone conversion or date-string parsing here. The caller owns
+valid values, calendar serials and timezone interpretation. New workbooks use
+Excel's 1900 date system; a time without a date is seconds since midnight / 86400.
 
 **Throws**: `'Column N: Field is required'`, `'Column N: Title is required'` (same validation as `generateTemplate`).
 
@@ -162,6 +176,35 @@ await excel.exportCSV({
   items: orders,
 });
 ```
+
+### Typed calendar and clock values
+
+```typescript
+import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services/excel';
+import { inject } from '@angular/core';
+
+// Run inside an Angular injection context.
+const excel = inject(SdExcelService);
+const dayColumn: SdExcelColumn = { field: 'day', title: 'Day', numFmt: 'dd/mm/yyyy' };
+await excel.export({
+  fileName: 'dates.xlsx',
+  columns: [
+    dayColumn,
+    { field: 'at', title: 'At', numFmt: 'hh:mm:ss' },
+    { field: 'label', title: 'Label', numFmt: 'dd/mm/yyyy' },
+  ],
+  items: [{ day: 46323, at: 50709 / 86400, label: '28/10/2026' }],
+});
+// day: date cell displaying 28/10/2026.
+// at: time cell displaying 14:05:09, without a hidden date.
+// label: text, even though numFmt was supplied.
+```
+
+`sd-table` prepares these serials and formats automatically for its untransformed
+date/datetime/time columns. For a standalone `Date`, ExcelJS serializes the
+instant; it does not adopt `ISdCoreConfiguration.timeZone`. Its handling of
+`Date` values before March 1900 differs from Excel's fictitious leap-day rule;
+use correctly computed numeric serials when that range matters.
 
 ### 4. User-driven import
 ```typescript

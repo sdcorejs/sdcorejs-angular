@@ -1003,6 +1003,50 @@ Inside `sd-page-list`, the main table runs in **fill mode**: the page list provi
 
 The minimum is measured from the rendered header and the fixed parts of the table (quick search, external filter, selection bar, footer). Tables outside `sd-page-list`, and other tables on a page list, keep their own height. See `modules/layout/components/page-list/sd-page-list.md`.
 
+### Date and time cells in client XLSX export
+
+Default `exportExcel()` writes untransformed date/time columns as numeric Excel
+date/time cells. No opt-in option is needed:
+
+| Column type | Excel format | Stored value | Example display |
+| --- | --- | --- | --- |
+| `date` | `dd/mm/yyyy` | Whole calendar-day serial; time removed | `28/10/2026` |
+| `datetime` | `dd/mm/yyyy hh:mm:ss` | Calendar-day serial plus time fraction; milliseconds removed | `28/10/2026 14:05:09` |
+| `time` | `hh:mm:ss` | Seconds since midnight / 86400, in `[0, 1)`; no hidden date | `14:05:09` |
+
+Parsing and timezone interpretation still come from `SdDateTimeService` and
+`ISdCoreConfiguration.timeZone`. Instants (`Date`, epoch milliseconds including
+`0`, strings with offsets) are converted to the configured wall clock once;
+accepted zone-less strings retain the existing parser behavior. The default zone
+is `local`. This does not add parsing for `dd/MM/yyyy` strings or bare clock
+strings: supply values already accepted by the date service.
+
+`null`, `undefined`, empty strings and parser-invalid values produce blank cells.
+Date/datetime values from `1900-01-01` through `9999-12-31` use the Excel 1900
+calendar: January 1 = serial 1, February 28 = 59, March 1 = 61. No real date maps
+to Excel's fictitious February 29, 1900 (serial 60). Valid dates outside that
+range stay formatted text (`dd/MM/yyyy` or `dd/MM/yyyy HH:mm:ss`); time-only
+exports use the valid input's clock independently of its year.
+
+Existing transforms keep priority: an effective `export.columns[].transform`
+wins over `column.transform`, then the default conversion applies only when
+neither transform handles the field. A transformed string such as `28/10/2026`
+stays text; date-looking transform results are never reparsed. Preserve the
+legacy distinction that export-column transforms are resolved only with explicit
+`export.type: 'default'`; omitting `type` does not activate those transforms.
+Column transforms retain their supported async behavior. Source rows and column
+options are not mutated.
+
+CSV remains text in `yyyy/MM/dd`, `yyyy/MM/dd HH:mm:ss`, and `HH:mm:ss`; CSV has no
+cell-type metadata. Custom export callbacks and other column types keep their
+existing behavior.
+
+**Migration:** consumers reading generated XLSX files must accept numeric/date
+cells instead of relying on the previous date strings. ExcelJS readers may
+interpret the earliest 1900 serials differently because of the fictitious leap
+day; the exported numeric serials follow Excel's calendar. The table still owns
+timezone conversion; `SdExcelService` only writes the supplied values and format.
+
 ## Content projection (slots / directive children)
 
 - `[sdTableCellDef]="'<field>'"` — custom cell template per column. Inside `<ng-template sdTableCellDef="fieldName" let-row>...</ng-template>`.

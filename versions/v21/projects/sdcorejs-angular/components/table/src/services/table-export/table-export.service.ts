@@ -45,7 +45,7 @@ export class TableExportService {
   #excelService = inject(SdExcelService);
   #i18n = inject(I18nService);
   #injector = inject(Injector);
-  // Cells export as the wall clock of ISdCoreConfiguration.timeZone, the same text the table shows.
+  // Export the configured wall clock: CSV text or XLSX numeric date/time cells.
   #dateTime = inject(SdDateTimeService);
 
   // ==========================================
@@ -223,11 +223,11 @@ export class TableExportService {
                 obj[fieldStr] = column.option?.displayOnFalse || 'False';
               }
             } else if (column.type === 'date') {
-              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd');
+              obj[fieldStr] = isCSV ? this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd') : this.#toExcelDate(itemValue, column.type);
             } else if (column.type === 'datetime') {
-              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd HH:mm:ss');
+              obj[fieldStr] = isCSV ? this.#dateTime.toFormat(itemValue, 'yyyy/MM/dd HH:mm:ss') : this.#toExcelDate(itemValue, column.type);
             } else if (column.type === 'time') {
-              obj[fieldStr] = this.#dateTime.toFormat(itemValue, 'HH:mm:ss');
+              obj[fieldStr] = isCSV ? this.#dateTime.toFormat(itemValue, 'HH:mm:ss') : this.#toExcelDate(itemValue, column.type);
             } else if (column.type === 'values' || column.type === 'lazy-values') {
               const vals = (Array.isArray(itemValue) ? itemValue : [itemValue]).filter(e => !!e?.toString());
               obj[fieldStr] = vals.map(val => cacheObjValues[fieldStr]?.[val]?.[column.option.displayField as any] || val)?.join(', ');
@@ -284,8 +284,21 @@ export class TableExportService {
         }
       }
 
+      const allColumns = this.#allColumns(option);
+      const allExportedColumns = this.#allExportedColumns(option);
+      const dateFormats = { date: 'dd/mm/yyyy', datetime: 'dd/mm/yyyy hh:mm:ss', time: 'hh:mm:ss' };
+      const excelColumns = columns.map(exportColumn => {
+        const column = allColumns.find(e => e.field === exportColumn.field);
+        const exportedColumn = allExportedColumns.find(e => e.field === exportColumn.field);
+        if (!column || column.transform || exportedColumn?.transform) return { ...exportColumn };
+        if (column.type === 'date' || column.type === 'datetime' || column.type === 'time') {
+          return { ...exportColumn, numFmt: dateFormats[column.type] };
+        }
+        return { ...exportColumn };
+      });
+
       await this.#excelService.export({
-        columns,
+        columns: excelColumns,
         items,
         fileName: option.export?.fileName,
         sheets,
@@ -306,6 +319,28 @@ export class TableExportService {
     // why: resolve lười qua Injector — inject sẵn sẽ buộc mọi sd-table dựng SdNotifyService (kèm toast
     // container gắn vào <body>) ngay khi khởi tạo, dù không bao giờ vượt giới hạn.
     this.#injector.get(SdNotifyService).warning(this.#i18n.t('core.component.table.export-max-exceeded', { max: limit, total }));
+  }
+
+  /** Convert the existing formatter's wall clock to an Excel 1900 serial, never reparsing user text. */
+  #toExcelDate(value: unknown, type: 'date' | 'datetime' | 'time'): number | string {
+    const formatted = this.#dateTime.toFormat(value, type === 'time' ? 'HH:mm:ss' : 'yyyy/MM/dd HH:mm:ss');
+    if (!formatted) return '';
+
+    const [calendar, clock] = type === 'time' ? ['', formatted] : formatted.split(' ');
+    const [hour, minute, second] = clock.split(':').map(Number);
+    const fraction = (hour * 3600 + minute * 60 + second) / 86400;
+    if (type === 'time') return fraction;
+
+    const [year, month, day] = calendar.split('/').map(Number);
+    if (year < 1900 || year > 9999) {
+      return this.#dateTime.toFormat(value, type === 'date' ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm:ss');
+    }
+
+    // why: tính từ thành phần UTC để DST của máy không làm lệch wall clock đã được formatter xác định.
+    const days = (Date.UTC(year, month - 1, day) - Date.UTC(1899, 11, 31)) / 86400000;
+    // why: Excel giữ ngày 29/02/1900 không có thật ở serial 60; ngày thực từ 01/03/1900 phải cộng 1.
+    const serial = days + (days >= 60 ? 1 : 0);
+    return type === 'date' ? serial : serial + fraction;
   }
 
   #getExportColumns(context: SdTableExportContext, explicitColumns?: SdExcelColumn[]): SdExcelColumn[] {
