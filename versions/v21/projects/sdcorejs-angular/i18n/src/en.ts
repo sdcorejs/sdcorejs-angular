@@ -583,6 +583,7 @@ export const EN_MESSAGES = {
   'core.component.table.config.origin': 'Original: {title}',
   'core.component.table.config.restore': 'Restore',
   'core.component.table.config.fixed-label': 'Keep visible when scrolling horizontally',
+  'core.component.table.config.fixed-hint': 'Stays at the left edge when you scroll sideways.',
   'core.component.table.config.truncate-label': 'Shorten long content',
   'core.component.table.config.truncate-hint': 'Cut with "…"; hover to see it all.',
   'core.component.table.config.reorder-picked': 'Picked up {title}, position {index} of {total}.',

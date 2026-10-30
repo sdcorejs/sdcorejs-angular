@@ -584,6 +584,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.origin': '原始：{title}',
   'core.component.table.config.restore': '恢复',
   'core.component.table.config.fixed-label': '横向滚动时固定',
+  'core.component.table.config.fixed-hint': '横向滚动时固定在左侧。',
   'core.component.table.config.truncate-label': '缩短长内容',
   'core.component.table.config.truncate-hint': '以"…"截断，悬停可查看全部。',
   'core.component.table.config.reorder-picked': '已选中{title}，位置 {index}/{total}。',

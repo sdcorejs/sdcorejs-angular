@@ -585,6 +585,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.origin': '원래: {title}',
   'core.component.table.config.restore': '복원',
   'core.component.table.config.fixed-label': '가로 스크롤 시 고정',
+  'core.component.table.config.fixed-hint': '가로로 스크롤해도 왼쪽 끝에 고정됩니다.',
   'core.component.table.config.truncate-label': '긴 내용 줄이기',
   'core.component.table.config.truncate-hint': '"…"로 줄이고 마우스를 올리면 전체가 보입니다.',
   'core.component.table.config.reorder-picked': '{title}을(를) 선택했습니다. 위치 {index}/{total}.',

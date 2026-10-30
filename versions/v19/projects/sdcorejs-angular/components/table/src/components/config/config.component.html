@@ -150,23 +150,30 @@
                     </sd-input>
                   </div>
                 </div>
-                <div class="c-checks">
-                  <sd-checkbox
-                    class="c-fixed"
-                    [label]="'core.component.table.config.fixed-label' | sdTranslate"
-                    [model]="!!item.fixed"
-                    [disabled]="_hidden"
-                    (modelChange)="setFixed(_field, !!$event)">
-                  </sd-checkbox>
-                  <div class="c-truncate-field">
-                    <sd-checkbox
+                <!-- why: mỗi tuỳ chọn một hàng — nhãn và mô tả bên trái, switch bên phải — để mô tả có chỗ riêng và không đẩy
+                     lệch tuỳ chọn bên cạnh. Nhãn nằm trong switch nên bấm cả hàng chữ cũng bật/tắt được. -->
+                <div class="c-options">
+                  <div class="c-option">
+                    <sd-switch
+                      class="c-fixed"
+                      size="sm"
+                      [label]="'core.component.table.config.fixed-label' | sdTranslate"
+                      [model]="!!item.fixed"
+                      [disabled]="_hidden"
+                      (modelChange)="setFixed(_field, !!$event)">
+                    </sd-switch>
+                    <span class="c-option-hint">{{ 'core.component.table.config.fixed-hint' | sdTranslate }}</span>
+                  </div>
+                  <div class="c-option">
+                    <sd-switch
                       class="c-truncate"
+                      size="sm"
                       [label]="'core.component.table.config.truncate-label' | sdTranslate"
                       [model]="!!(item.truncate ?? item.origin.truncate)"
                       [disabled]="_hidden"
                       (modelChange)="setTruncate(_field, !!$event)">
-                    </sd-checkbox>
-                    <span class="c-check-hint">{{ 'core.component.table.config.truncate-hint' | sdTranslate }}</span>
+                    </sd-switch>
+                    <span class="c-option-hint">{{ 'core.component.table.config.truncate-hint' | sdTranslate }}</span>
                   </div>
                 </div>
               </div>

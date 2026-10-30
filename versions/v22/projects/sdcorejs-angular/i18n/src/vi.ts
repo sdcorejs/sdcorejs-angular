@@ -584,6 +584,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.origin': 'Gốc: {title}',
   'core.component.table.config.restore': 'Khôi phục',
   'core.component.table.config.fixed-label': 'Cố định khi cuộn ngang',
+  'core.component.table.config.fixed-hint': 'Cột dính ở mép trái khi cuộn ngang.',
   'core.component.table.config.truncate-label': 'Rút gọn nội dung dài',
   'core.component.table.config.truncate-hint': 'Cắt bằng "…", rê chuột để xem đủ.',
   'core.component.table.config.reorder-picked': 'Đã nhấc {title}, vị trí {index}/{total}.',

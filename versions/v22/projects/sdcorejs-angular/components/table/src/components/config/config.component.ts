@@ -19,6 +19,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdSwitch } from '@sdcorejs/angular/forms/switch';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdStorageWithDefault } from '@sdcorejs/angular/services';
@@ -40,7 +41,7 @@ let nextId = 0;
   templateUrl: './config.component.html',
   styleUrl: './config.component.scss',
   standalone: true,
-  imports: [DragDropModule, SdButton, SdCheckbox, SdIcon, SdInput, SdModal, SdSuffixDefDirective, SdTranslatePipe],
+  imports: [DragDropModule, SdButton, SdCheckbox, SdIcon, SdInput, SdModal, SdSuffixDefDirective, SdSwitch, SdTranslatePipe],
   providers: [ConfigService],
 })
 export class ConfigComponent {

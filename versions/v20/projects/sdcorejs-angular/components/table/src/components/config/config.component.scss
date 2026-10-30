@@ -287,20 +287,51 @@ sd-checkbox {
   font-size: var(--sd-font-size-12);
 }
 
-.c-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
+.c-options {
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8);
+  background: var(--sd-surface);
 }
 
-.c-truncate-field {
+.c-option {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+
+  & + & {
+    border-top: 1px solid var(--sd-border);
+  }
+
+  // why: nhãn bên trái, switch bên phải, cả hàng là một vùng bấm — đảo thứ tự của form field trong mat-slide-toggle
+  // và kéo nó đủ chiều ngang hàng.
+  sd-switch {
+    display: block;
+
+    ::ng-deep .mat-mdc-slide-toggle {
+      display: block;
+    }
+
+    ::ng-deep .mat-internal-form-field {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      margin: 0;
+    }
+
+    ::ng-deep .mdc-label {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      color: var(--sd-text);
+      font-size: var(--sd-font-size-14);
+    }
+  }
 }
 
-// why: thẳng hàng với chữ của nhãn checkbox (vùng chạm 40px của checkbox đứng trước nhãn).
-.c-check-hint {
-  padding-left: 40px;
+.c-option-hint {
   color: var(--sd-text-secondary);
   font-size: var(--sd-font-size-12);
   line-height: var(--sd-line-height-16);

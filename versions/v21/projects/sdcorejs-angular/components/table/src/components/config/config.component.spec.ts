@@ -122,6 +122,18 @@ describe('ConfigComponent (table setup dialog)', () => {
     render();
   }
 
+  /** The control of an sd-switch (mat-slide-toggle renders a `button[role=switch]`). */
+  function switchOf(host: Element | null): HTMLButtonElement {
+    const control = host?.querySelector<HTMLButtonElement>('button[role="switch"]');
+    if (!control) throw new Error('no switch');
+    return control;
+  }
+
+  function clickSwitch(host: Element | null): void {
+    switchOf(host).click();
+    render();
+  }
+
   function input(host: Element | null): HTMLInputElement {
     const el = host?.querySelector<HTMLInputElement>('input');
     if (!el) throw new Error('no input');
@@ -309,7 +321,7 @@ describe('ConfigComponent (table setup dialog)', () => {
       expect(item('dept').querySelector('.c-details')).not.toBeNull();
     }));
 
-    it('edits with compact labelled inputs and two labelled checkboxes', fakeAsync(() => {
+    it('edits with compact labelled inputs and two labelled switches', fakeAsync(() => {
       open();
       toggle('name');
       const details = item('name').querySelector<HTMLElement>('.c-details')!;
@@ -318,9 +330,44 @@ describe('ConfigComponent (table setup dialog)', () => {
       inputs.forEach(host => expect(host.querySelector('mat-form-field.sd-sm')).not.toBeNull());
       expect(details.querySelector('.c-field-title mat-label')?.textContent).toContain('Tiêu đề cột');
       expect(details.querySelector('.c-field-width mat-label')?.textContent).toContain('Rộng');
+      expect(details.querySelector('sd-checkbox')).withContext('no checkbox left in the details').toBeNull();
+      expect(details.querySelectorAll('sd-switch').length).toBe(2);
       expect(details.querySelector('.c-fixed label')?.textContent).toContain('Cố định khi cuộn ngang');
       expect(details.querySelector('.c-truncate label')?.textContent).toContain('Rút gọn nội dung dài');
-      expect(details.querySelector('.c-check-hint')?.textContent).toContain('rê chuột');
+    }));
+
+    it('gives each switch row a description under its label', fakeAsync(() => {
+      open();
+      toggle('name');
+      const rows = Array.from(item('name').querySelectorAll<HTMLElement>('.c-option'));
+      expect(rows.length).toBe(2);
+      expect(rows[0].querySelector('.c-option-hint')?.textContent).toContain('mép trái');
+      expect(rows[1].querySelector('.c-option-hint')?.textContent).toContain('rê chuột');
+    }));
+
+    it('lines the switches up on the right and keeps the rows apart', fakeAsync(() => {
+      open();
+      toggle('name');
+      const details = item('name').querySelector<HTMLElement>('.c-details')!;
+      const list = details.querySelector<HTMLElement>('.c-options')!.getBoundingClientRect();
+      const [fixed, truncate] = [switchOf(details.querySelector('.c-fixed')), switchOf(details.querySelector('.c-truncate'))].map(control =>
+        control.getBoundingClientRect()
+      );
+      expect(Math.abs(fixed.right - truncate.right))
+        .withContext('switches share one right edge')
+        .toBeLessThanOrEqual(1);
+      expect(list.right - fixed.right)
+        .withContext('switch sits at the right of its row')
+        .toBeLessThanOrEqual(20);
+      const labels = Array.from(details.querySelectorAll<HTMLElement>('.c-option label')).map(label => label.getBoundingClientRect());
+      expect(Math.abs(labels[0].left - labels[1].left))
+        .withContext('labels share one left edge')
+        .toBeLessThanOrEqual(1);
+      expect(labels[0].right).withContext('label left of its switch').toBeLessThanOrEqual(fixed.left);
+      const [first, second] = Array.from(details.querySelectorAll<HTMLElement>('.c-option')).map(row => row.getBoundingClientRect());
+      expect(second.top)
+        .withContext('rows do not overlap')
+        .toBeGreaterThanOrEqual(first.bottom - 1);
     }));
 
     it('uses the original title as the title placeholder', fakeAsync(() => {
@@ -346,8 +393,9 @@ describe('ConfigComponent (table setup dialog)', () => {
     it('toggles fixed and truncate from the details', fakeAsync(() => {
       open();
       toggle('email');
-      clickCheckbox(item('email').querySelector('.c-fixed')!);
-      clickCheckbox(item('email').querySelector('.c-truncate')!);
+      clickSwitch(item('email').querySelector('.c-fixed'));
+      clickSwitch(item('email').querySelector('.c-truncate'));
+      expect(switchOf(item('email').querySelector('.c-fixed')).getAttribute('aria-checked')).toBe('true');
       expect(columnOf('email').fixed).toBe(true);
       expect(columnOf('email').truncate).toBe(true);
       expect(item('email').querySelector('.c-pin')).not.toBeNull();
@@ -373,7 +421,8 @@ describe('ConfigComponent (table setup dialog)', () => {
       toggle('email');
       const details = item('email').querySelector<HTMLElement>('.c-details')!;
       details.querySelectorAll<HTMLInputElement>('sd-input input').forEach(el => expect(el.disabled).toBe(true));
-      details.querySelectorAll<HTMLInputElement>('sd-checkbox input').forEach(el => expect(el.disabled).toBe(true));
+      expect(details.querySelectorAll('button[role="switch"]').length).toBe(2);
+      details.querySelectorAll<HTMLButtonElement>('button[role="switch"]').forEach(el => expect(el.disabled).toBe(true));
       expect(input(item('email').querySelector('.c-show')).disabled).toBe(false);
 
       clickCheckbox(item('email').querySelector('.c-show')!);

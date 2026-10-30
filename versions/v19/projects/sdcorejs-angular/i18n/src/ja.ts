@@ -586,6 +586,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.origin': '元: {title}',
   'core.component.table.config.restore': '戻す',
   'core.component.table.config.fixed-label': '横スクロール時に固定',
+  'core.component.table.config.fixed-hint': '横スクロールしても左端に表示されます。',
   'core.component.table.config.truncate-label': '長い内容を省略',
   'core.component.table.config.truncate-hint': '「…」で省略し、ホバーで全体を表示します。',
   'core.component.table.config.reorder-picked': '{title}を選択しました。位置 {index}/{total}。',
