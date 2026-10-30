@@ -34,6 +34,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.4] - 2026-10-30
+
+Packages `19.3.4` · `20.3.4` · `21.3.4` · `22.3.4`, validated against `*.3.3`.
+
+> [!IMPORTANT]
+> **Before upgrading:** no public API is removed or renamed. Defaults that change: the table settings modal is a list, and its **Khôi phục mặc định** (was **Mặc định**) also restores the inline external filters; a click on a column resize grip that does not change the width no longer stores a width or calls `config.onResize`. `SD_API_CONFIG`, `SD_CACHE_CONFIG` and `SD_STORAGE_CONFIG` are deprecated: use `SD_API_CONFIGURATION`, `SD_CACHE_CONFIGURATION` and `SD_STORAGE_CONFIGURATION`.
+
+**Highlights**
+
+- Table `filter.mode: 'query-bar'`: one query bar for quick search, external and column filters, with a filter icon in each column header
+- Table settings modal: an expandable column list with a find box, keyboard reorder, and a dot on the settings button while custom settings are in use
+- Query bar: pinned, required and grouped fields, `applyOn`, `openField()` and a field-picker find box
+- Pattern order form: order lines built with `<sd-table>` as well as `<table>`
+
 ### Added
 
 #### Pattern
@@ -2789,7 +2803,8 @@ Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
 ---
 
-[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...HEAD
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.4...HEAD
+[3.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...v3.4
 [3.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...v3.3
 [3.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.1...v3.2
 [3.1]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.0...v3.1
