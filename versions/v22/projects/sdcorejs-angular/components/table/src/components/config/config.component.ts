@@ -28,10 +28,39 @@ import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOption } from '../../models/table-option.model';
 import { ConfigService } from '../../services/config.service';
+import { SdTableOptionFilter, TableFilterConfiguration } from '../../services/table-filter/table-filter.model';
 import { configWidthClamp, configWidthFromInput, configWidthPx } from './config-width.util';
 
 /** The find box shows only past this many columns. */
 const FIND_THRESHOLD = 8;
+
+type FilterMode = NonNullable<SdTableOptionFilter['mode']>;
+type ConfigTab = 'columns' | 'filters';
+
+interface ConfigFilterRow {
+  field: string;
+  title: string;
+  on: boolean;
+  locked: boolean;
+  /** i18n key of the text under the title. */
+  note?: string;
+}
+
+/** What the "Bộ lọc" tab shows; the table builds it, and `undefined` hides the tab. */
+export interface ConfigFilterSetup {
+  /** `filter.mode` after `SD_TABLE_CONFIGURATION`: the kind without a stored choice. */
+  mode: FilterMode;
+  /** The stored choice of the user (`TableFilterConfiguration.mode`). */
+  storedMode?: FilterMode;
+  /** `filter.modeSelectable !== false`: the kinds are offered. */
+  modeSelectable: boolean;
+  /** Stored `TableFilterConfiguration.inlineExternal`. */
+  inlineExternal: Record<string, boolean>;
+  /** External filters in option order; `offBar`: the query bar cannot show it. */
+  externalFilters: { field: string; title: string; required: boolean; offBar: boolean }[];
+  /** `filter.queryBar.pinned`: the app picks the pinned chips, so the list cannot change them on the bar. */
+  pinned?: string[];
+}
 
 let nextId = 0;
 
@@ -53,6 +82,10 @@ export class ConfigComponent {
   changes = output<ConfiguredTableResult>();
   /** Restore defaults was confirmed and the stored setup removed. */
   defaultsRestored = output<void>();
+  /** The "Bộ lọc" tab; `undefined` hides it. */
+  filterSetup = input<ConfigFilterSetup | undefined>(undefined);
+  /** Apply with a changed "Bộ lọc" tab: the filter setup to store. `mode` is left out when the kind cannot be picked. */
+  filterApplied = output<Partial<TableFilterConfiguration>>();
 
   // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
   autoId = computed(() => this.autoIdInput() || '');
@@ -115,6 +148,44 @@ export class ConfigComponent {
   readonly shownCount = computed(() => this.#allColumns().filter(column => !column.invisible).length);
   readonly allShown = computed(() => this.shownCount() === this.totalCount());
 
+  // why: tab "Bộ lọc" giữ nháp riêng như danh sách cột — Áp dụng ghi cả hai tab, Bỏ qua bỏ cả hai.
+  readonly #tab = signal<ConfigTab>('columns');
+  /** Tab on screen; Cột when the table gives no "Bộ lọc" tab. */
+  readonly tab = computed<ConfigTab>(() => (this.filterSetup() ? this.#tab() : 'columns'));
+  readonly tabs: readonly ConfigTab[] = ['columns', 'filters'];
+  readonly modes: readonly FilterMode[] = ['default', 'query-bar'];
+  /** Picked filter kind (draft until Apply). */
+  readonly filterMode = signal<FilterMode>('default');
+  /** Inline external filters (draft until Apply). */
+  readonly inlineExternal = signal<Record<string, boolean>>({});
+  /**
+   * One row per external filter. In the panel the switch shows it there; on the bar it pins it as a chip, so a filter
+   * the bar cannot show is off, a required one is always pinned, and `queryBar.pinned` decides for the app.
+   */
+  readonly filterRows = computed<ConfigFilterRow[]>(() => {
+    const setup = this.filterSetup();
+    if (!setup) return [];
+    const bar = this.filterMode() === 'query-bar';
+    const inline = this.inlineExternal();
+    return setup.externalFilters.map(({ field, title, required, offBar }) => {
+      if (bar && offBar) return { field, title, on: false, locked: true, note: 'core.component.table.config.filter-off-bar' };
+      if (bar && required) return { field, title, on: true, locked: true, note: 'core.component.table.config.filter-required' };
+      if (bar && setup.pinned) return { field, title, on: setup.pinned.includes(field), locked: true };
+      return {
+        field,
+        title,
+        on: !!inline[field],
+        locked: required,
+        note: required ? 'core.component.table.config.filter-required' : undefined,
+      };
+    });
+  });
+  /** Text under the filter list: what its switches do for the picked kind. */
+  readonly filterListHint = computed(() => {
+    if (this.filterMode() !== 'query-bar') return 'core.component.table.config.filters-hint-panel';
+    return this.filterSetup()?.pinned ? 'core.component.table.config.filters-hint-pinned' : 'core.component.table.config.filters-hint-bar';
+  });
+
   // ==========================================
   // 5. PUBLIC API
   // ==========================================
@@ -129,6 +200,10 @@ export class ConfigComponent {
     this.#textWidthField.set(null);
     this.picked.set(null);
     this.announcement.set('');
+    this.#tab.set('columns');
+    const filter = this.filterSetup();
+    this.filterMode.set((filter?.modeSelectable ? filter.storedMode : undefined) ?? filter?.mode ?? 'default');
+    this.inlineExternal.set({ ...filter?.inlineExternal });
     this.modal()?.open();
   };
 
@@ -139,6 +214,7 @@ export class ConfigComponent {
   onSave = () => {
     const cfg = this.configuration();
     if (cfg) this.#setting?.set({ ...cfg, columns: cfg.columns?.map(column => ({ ...column, width: this.#settledWidth(column) })) });
+    this.#applyFilter();
     this.modal()?.close();
     this.#ref.detectChanges();
   };
@@ -159,7 +235,59 @@ export class ConfigComponent {
   isRowDisabled = (item: ConfiguredColumn): boolean => !!item?.invisible;
 
   // ==========================================
-  // 6. LIST
+  // 6. TABS AND FILTERS
+  // ==========================================
+  readonly tabId = (tab: ConfigTab): string => `${this.#id}-tab-${tab}`;
+
+  readonly panelId = (tab: ConfigTab): string => `${this.#id}-panel-${tab}`;
+
+  readonly modeName = `${this.#id}-mode`;
+
+  selectTab = (tab: ConfigTab) => this.#tab.set(tab);
+
+  /** ← → move between the tabs, Home / End go to the first / last (tablist pattern of the APG, roving tabindex). */
+  onTabKeydown = (event: KeyboardEvent) => {
+    const index = this.tabs.indexOf(this.tab());
+    const count = this.tabs.length;
+    const next =
+      event.key === 'ArrowRight' || event.key === 'ArrowLeft'
+        ? this.tabs[(index + (event.key === 'ArrowRight' ? 1 : count - 1)) % count]
+        : event.key === 'Home'
+          ? this.tabs[0]
+          : event.key === 'End'
+            ? this.tabs[count - 1]
+            : undefined;
+    if (!next) return;
+    event.preventDefault();
+    // why: lấy tablist ngay — `currentTarget` về null khi sự kiện dispatch xong.
+    const tablist = event.currentTarget as HTMLElement | null;
+    this.selectTab(next);
+    afterNextRender(() => tablist?.querySelector<HTMLElement>(`[data-tab="${next}"]`)?.focus(), { injector: this.#injector });
+  };
+
+  pickMode = (mode: FilterMode) => this.filterMode.set(mode);
+
+  setInline = (field: string, on: boolean) => this.inlineExternal.update(current => ({ ...current, [field]: on }));
+
+  /**
+   * Sends the "Bộ lọc" tab to the table when it changed. A kind equal to `filter.mode` is not stored, so the table keeps
+   * following the option; without `modeSelectable` the stored kind is left alone.
+   */
+  #applyFilter = () => {
+    const setup = this.filterSetup();
+    if (!setup) return;
+    const inlineExternal = this.inlineExternal();
+    const inlineChanged = setup.externalFilters.some(({ field }) => !!inlineExternal[field] !== !!setup.inlineExternal[field]);
+    if (!setup.modeSelectable) {
+      if (inlineChanged) this.filterApplied.emit({ inlineExternal });
+      return;
+    }
+    const mode = this.filterMode() === setup.mode ? undefined : this.filterMode();
+    if (inlineChanged || mode !== setup.storedMode) this.filterApplied.emit({ inlineExternal, mode });
+  };
+
+  // ==========================================
+  // 7. LIST
   // ==========================================
   onFind = (value: unknown) => {
     this.query.set(String(value ?? ''));
@@ -195,7 +323,7 @@ export class ConfigComponent {
   setTruncate = (field: string, truncate: boolean) => this.#patch(field, { truncate });
 
   // ==========================================
-  // 7. KEYBOARD REORDER
+  // 8. KEYBOARD REORDER
   // ==========================================
   /** Space / Enter picks up and drops, ↑ / ↓ move the picked row, Escape puts the order back. */
   onHandleKeydown = (event: KeyboardEvent, field: string) => {
@@ -282,7 +410,7 @@ export class ConfigComponent {
   };
 
   // ==========================================
-  // 8. TITLE
+  // 9. TITLE
   // ==========================================
   titleOf = (item: ConfiguredColumn): string => item.title || item.origin.title;
 
@@ -293,7 +421,7 @@ export class ConfigComponent {
   restoreTitle = (field: string) => this.#patch(field, { title: undefined });
 
   // ==========================================
-  // 9. WIDTH
+  // 10. WIDTH
   // ==========================================
   /** A width in another unit than px is edited as text, verbatim. */
   widthIsText = (item: ConfiguredColumn): boolean =>

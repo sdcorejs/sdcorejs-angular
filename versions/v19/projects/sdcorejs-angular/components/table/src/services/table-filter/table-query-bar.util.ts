@@ -148,6 +148,27 @@ const valuesField = (
     : { type, option: { items, valueField: option.valueField, displayField: option.displayField } };
 
 /**
+ * Why the query bar cannot show an external filter, or `undefined` when it can. Also tells the settings modal which
+ * filters are "not on the bar".
+ */
+export const sdTableExternalOffBar = (
+  item: SdTableExternalFilter,
+  args: { exclude: ReadonlySet<string>; filterDefs: ReadonlySet<string> }
+): string | undefined => {
+  if (item.type === 'custom') return 'custom external filter';
+  if (args.filterDefs.has(item.field)) return 'sdTableFilterDef template';
+  if (args.exclude.has(item.field)) return 'listed in filter.queryBar.exclude';
+  if (
+    (item.type === 'date' || item.type === 'datetime') &&
+    item.defaultOperator !== 'GREATER_OR_EQUAL' &&
+    item.defaultOperator !== 'LESS_OR_EQUAL'
+  ) {
+    return 'date external filter without defaultOperator GREATER_OR_EQUAL or LESS_OR_EQUAL (sends no condition)';
+  }
+  return undefined;
+};
+
+/**
  * Fields of the query bar for a table (handoff section 3): keys, groups, pinned chips, operators, and the filters
  * left out. Order: `quickSearch.filters`, `externalFilters`, then the leaf columns given (children flattened).
  */
@@ -219,24 +240,9 @@ export const sdTableQueryFields = (args: {
   const externalKeys = new Set<string>();
   for (const item of args.externalFilters ?? []) {
     const key = `external:${item.field}`;
-    if (item.type === 'custom') {
-      skip(key, 'custom external filter');
-      continue;
-    }
-    if (filterDefs.has(item.field)) {
-      skip(key, 'sdTableFilterDef template');
-      continue;
-    }
-    if (exclude.has(item.field)) {
-      skip(key, 'listed in filter.queryBar.exclude');
-      continue;
-    }
-    if (
-      (item.type === 'date' || item.type === 'datetime') &&
-      item.defaultOperator !== 'GREATER_OR_EQUAL' &&
-      item.defaultOperator !== 'LESS_OR_EQUAL'
-    ) {
-      skip(key, 'date external filter without defaultOperator GREATER_OR_EQUAL or LESS_OR_EQUAL (sends no condition)');
+    const offBar = sdTableExternalOffBar(item, { exclude, filterDefs });
+    if (offBar) {
+      skip(key, offBar);
       continue;
     }
     const base = {

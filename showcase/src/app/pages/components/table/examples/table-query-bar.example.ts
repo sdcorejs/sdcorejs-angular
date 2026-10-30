@@ -98,6 +98,8 @@ export class TableQueryBarExampleComponent {
       return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
     },
     paginate: { pageSize: 8, pages: [8, 16, 36] },
+    // Thiết lập > Bộ lọc: người dùng tự chọn khung hay thanh bộ lọc, và bộ lọc nào hiện / ghim.
+    config: { visible: true },
     sort: { enable: true },
     filter: {
       mode: this.mode(),

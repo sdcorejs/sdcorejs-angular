@@ -2,185 +2,282 @@
 @let _autoId = autoId();
 @let _searching = searching();
 @let _expanded = expanded();
+@let _filterSetup = filterSetup();
+@let _tab = tab();
 
 <sd-modal width="sm" [title]="'core.component.table.setup' | sdTranslate" #modal>
   @if (_configuration) {
     <div class="c-container sd-table-config">
-      <div class="c-toolbar">
-        @if (searchable()) {
-          <sd-input
-            class="c-find"
-            size="sm"
-            hideInlineError
-            [autoId]="_autoId ? _autoId + '-config-find' : null"
-            [placeholder]="'core.component.table.config.find-column' | sdTranslate"
-            [model]="query()"
-            (modelChange)="onFind($event)">
-            <ng-template sdSuffixDef>
-              <sd-icon class="c-find-icon" name="search" size="18px" aria-hidden="true"></sd-icon>
-            </ng-template>
-          </sd-input>
-        }
-        <div class="c-toolbar-end">
-          <span class="c-shown-count">
-            {{ 'core.component.table.config.shown-count' | sdTranslate: { shown: shownCount(), total: totalCount() } }}
-          </span>
-          <sd-button
-            [autoId]="_autoId ? _autoId + '-config-show-all' : null"
-            type="text"
-            color="primary"
-            size="sm"
-            [title]="'core.component.table.config.show-all' | sdTranslate"
-            [disabled]="allShown()"
-            (click)="showAll()">
-          </sd-button>
+      @if (_filterSetup) {
+        <!-- why: phím mũi tên nổi bọt từ tab đang focus (roving tabindex, mẫu tablist của APG). -->
+        <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+        <div class="c-tabs" role="tablist" [attr.aria-label]="'core.component.table.setup' | sdTranslate" (keydown)="onTabKeydown($event)">
+          @for (tabKey of tabs; track tabKey) {
+            <button
+              type="button"
+              role="tab"
+              class="c-tab"
+              [id]="tabId(tabKey)"
+              [attr.data-tab]="tabKey"
+              [attr.data-autoid]="_autoId ? _autoId + '-config-tab-' + tabKey : null"
+              [attr.aria-controls]="panelId(tabKey)"
+              [attr.aria-selected]="_tab === tabKey"
+              [attr.tabindex]="_tab === tabKey ? 0 : -1"
+              [class.c-tab--active]="_tab === tabKey"
+              (click)="selectTab(tabKey)">
+              {{ (tabKey === 'columns' ? 'core.component.table.config.tab-columns' : 'core.component.table.filter') | sdTranslate }}
+            </button>
+          }
         </div>
-      </div>
-
-      <!-- why: handle ⠿ là cách duy nhất để đổi thứ tự cột và tự nó không nói ra điều đó — dòng gợi ý tránh việc người
-           dùng không bao giờ phát hiện tính năng. Ký hiệu ⠿ nằm sẵn trong chuỗi i18n nên không kèm icon riêng. -->
-      <p class="c-hint" [id]="hintId">
-        {{ (_searching ? 'core.component.table.config.drag-disabled-search' : 'core.component.table.config.drag-hint') | sdTranslate }}
-      </p>
-
-      <!-- why: vùng live nằm TRONG modal — vùng nằm ngoài một hộp thoại aria-modal có thể bị trình đọc màn hình bỏ qua. -->
-      <div class="c-live sd-visually-hidden" aria-live="assertive" aria-atomic="true">{{ announcement() }}</div>
-
-      <div
-        class="c-list"
-        cdkDropList
-        cdkDropListLockAxis="y"
-        [cdkDropListData]="columns()"
-        [cdkDropListDisabled]="_searching"
-        (cdkDropListDropped)="drop($event)">
-        @for (item of columns(); track item.origin.field) {
-          @let _field = item.origin.field;
-          @let _open = _expanded === _field;
-          @let _hidden = isRowDisabled(item);
-          @let _title = titleOf(item);
-          <div
-            class="c-item"
-            cdkDrag
-            [cdkDragData]="item"
-            [attr.data-field]="_field"
-            [class.c-item--open]="_open"
-            [class.c-item--hidden]="_hidden"
-            [class.c-item--picked]="picked()?.field === _field">
-            <div class="c-row">
-              <button
-                #handle
-                type="button"
-                class="c-handle"
-                cdkDragHandle
-                [disabled]="_searching"
-                [title]="'core.component.table.config.drag-handle' | sdTranslate"
-                [attr.aria-label]="('core.component.table.config.drag-handle' | sdTranslate) + ': ' + _title"
-                [attr.aria-describedby]="hintId"
-                (pointerdown)="onHandlePointerDown(_field)"
-                (keydown)="onHandleKeydown($event, _field)"
-                (blur)="onHandleBlur(_field)">
-                <sd-icon name="drag_indicator" size="20px" aria-hidden="true"></sd-icon>
-              </button>
-              <!-- why: ô "Hiện" KHÔNG bao giờ bị khoá — nó là đường duy nhất để bật lại một cột đã tắt. Nhãn bị ẩn
-                   khỏi màn hình nhưng vẫn là tên của ô cho trình đọc màn hình. -->
-              <sd-checkbox
-                class="c-show"
-                [label]="('core.component.form-builder.display' | sdTranslate) + ': ' + _title"
-                [model]="!item.invisible"
-                (modelChange)="setShown(_field, !!$event)">
-              </sd-checkbox>
-              <button
-                type="button"
-                class="c-toggle"
-                [attr.aria-expanded]="_open"
-                [attr.aria-controls]="_open ? detailsId(_field) : null"
-                (click)="toggleRow(_field)">
-                <span class="c-title">{{ _title }}</span>
-                @if (!_hidden && item.fixed) {
-                  @let _fixedLabel = 'core.component.table.config.fixed-label' | sdTranslate;
-                  <sd-icon class="c-pin" name="push_pin" size="16px" [title]="_fixedLabel" [ariaLabel]="_fixedLabel"></sd-icon>
-                }
-                @if (!_hidden && (item.truncate ?? item.origin.truncate)) {
-                  @let _truncateLabel = 'core.component.table.config.truncate-label' | sdTranslate;
-                  <sd-icon class="c-trunc" name="short_text" size="16px" [title]="_truncateLabel" [ariaLabel]="_truncateLabel"></sd-icon>
-                }
-                <span class="c-width-meta">{{ widthSummary(item) }}</span>
-                <sd-icon class="c-chevron" size="20px" [name]="_open ? 'expand_less' : 'expand_more'" aria-hidden="true"></sd-icon>
-              </button>
+      }
+      @if (_tab === 'columns') {
+        <div
+          class="c-panel"
+          [attr.role]="_filterSetup ? 'tabpanel' : null"
+          [attr.id]="_filterSetup ? panelId('columns') : null"
+          [attr.aria-labelledby]="_filterSetup ? tabId('columns') : null">
+          <div class="c-toolbar">
+            @if (searchable()) {
+              <sd-input
+                class="c-find"
+                size="sm"
+                hideInlineError
+                [autoId]="_autoId ? _autoId + '-config-find' : null"
+                [placeholder]="'core.component.table.config.find-column' | sdTranslate"
+                [model]="query()"
+                (modelChange)="onFind($event)">
+                <ng-template sdSuffixDef>
+                  <sd-icon class="c-find-icon" name="search" size="18px" aria-hidden="true"></sd-icon>
+                </ng-template>
+              </sd-input>
+            }
+            <div class="c-toolbar-end">
+              <span class="c-shown-count">
+                {{ 'core.component.table.config.shown-count' | sdTranslate: { shown: shownCount(), total: totalCount() } }}
+              </span>
+              <sd-button
+                [autoId]="_autoId ? _autoId + '-config-show-all' : null"
+                type="text"
+                color="primary"
+                size="sm"
+                [title]="'core.component.table.config.show-all' | sdTranslate"
+                [disabled]="allShown()"
+                (click)="showAll()">
+              </sd-button>
             </div>
+          </div>
 
-            @if (_open) {
-              <div class="c-details" [id]="detailsId(_field)">
-                <div class="c-fields">
-                  <div class="c-field-title">
-                    <sd-input
-                      size="sm"
-                      hideInlineError
-                      [label]="'core.component.table.column-header' | sdTranslate"
-                      [placeholder]="item.origin.title"
-                      [model]="item.title"
-                      [disabled]="_hidden"
-                      (modelChange)="setTitle(_field, $event)">
-                    </sd-input>
-                    @if (renamed(item)) {
-                      <div class="c-origin">
-                        {{ 'core.component.table.config.origin' | sdTranslate: { title: item.origin.title } }} ·
-                        <button type="button" class="c-restore" [disabled]="_hidden" (click)="restoreTitle(_field)">
-                          {{ 'core.component.table.config.restore' | sdTranslate }}
-                        </button>
-                      </div>
+          <!-- why: handle ⠿ là cách duy nhất để đổi thứ tự cột và tự nó không nói ra điều đó — dòng gợi ý tránh việc người
+           dùng không bao giờ phát hiện tính năng. Ký hiệu ⠿ nằm sẵn trong chuỗi i18n nên không kèm icon riêng. -->
+          <p class="c-hint" [id]="hintId">
+            {{ (_searching ? 'core.component.table.config.drag-disabled-search' : 'core.component.table.config.drag-hint') | sdTranslate }}
+          </p>
+
+          <!-- why: vùng live nằm TRONG modal — vùng nằm ngoài một hộp thoại aria-modal có thể bị trình đọc màn hình bỏ qua. -->
+          <div class="c-live sd-visually-hidden" aria-live="assertive" aria-atomic="true">{{ announcement() }}</div>
+
+          <div
+            class="c-list"
+            cdkDropList
+            cdkDropListLockAxis="y"
+            [cdkDropListData]="columns()"
+            [cdkDropListDisabled]="_searching"
+            (cdkDropListDropped)="drop($event)">
+            @for (item of columns(); track item.origin.field) {
+              @let _field = item.origin.field;
+              @let _open = _expanded === _field;
+              @let _hidden = isRowDisabled(item);
+              @let _title = titleOf(item);
+              <div
+                class="c-item"
+                cdkDrag
+                [cdkDragData]="item"
+                [attr.data-field]="_field"
+                [class.c-item--open]="_open"
+                [class.c-item--hidden]="_hidden"
+                [class.c-item--picked]="picked()?.field === _field">
+                <div class="c-row">
+                  <button
+                    #handle
+                    type="button"
+                    class="c-handle"
+                    cdkDragHandle
+                    [disabled]="_searching"
+                    [title]="'core.component.table.config.drag-handle' | sdTranslate"
+                    [attr.aria-label]="('core.component.table.config.drag-handle' | sdTranslate) + ': ' + _title"
+                    [attr.aria-describedby]="hintId"
+                    (pointerdown)="onHandlePointerDown(_field)"
+                    (keydown)="onHandleKeydown($event, _field)"
+                    (blur)="onHandleBlur(_field)">
+                    <sd-icon name="drag_indicator" size="20px" aria-hidden="true"></sd-icon>
+                  </button>
+                  <!-- why: ô "Hiện" KHÔNG bao giờ bị khoá — nó là đường duy nhất để bật lại một cột đã tắt. Nhãn bị ẩn
+                   khỏi màn hình nhưng vẫn là tên của ô cho trình đọc màn hình. -->
+                  <sd-checkbox
+                    class="c-show"
+                    [label]="('core.component.form-builder.display' | sdTranslate) + ': ' + _title"
+                    [model]="!item.invisible"
+                    (modelChange)="setShown(_field, !!$event)">
+                  </sd-checkbox>
+                  <button
+                    type="button"
+                    class="c-toggle"
+                    [attr.aria-expanded]="_open"
+                    [attr.aria-controls]="_open ? detailsId(_field) : null"
+                    (click)="toggleRow(_field)">
+                    <span class="c-title">{{ _title }}</span>
+                    @if (!_hidden && item.fixed) {
+                      @let _fixedLabel = 'core.component.table.config.fixed-label' | sdTranslate;
+                      <sd-icon class="c-pin" name="push_pin" size="16px" [title]="_fixedLabel" [ariaLabel]="_fixedLabel"></sd-icon>
                     }
-                  </div>
-                  <div class="c-field-width">
-                    @let _textWidth = widthIsText(item);
-                    <sd-input
-                      size="sm"
-                      hideInlineError
-                      [type]="_textWidth ? 'text' : 'number'"
-                      [label]="'core.component.table.width' | sdTranslate"
-                      [placeholder]="widthPlaceholder(item)"
-                      [model]="widthValue(item)"
-                      [disabled]="_hidden"
-                      (sdFocus)="onWidthFocus(item)"
-                      (modelChange)="setWidth(_field, $event)"
-                      (sdBlur)="commitWidth(_field)">
-                      @if (!_textWidth) {
-                        <ng-template sdSuffixDef><span class="c-px">px</span></ng-template>
-                      }
-                    </sd-input>
-                  </div>
+                    @if (!_hidden && (item.truncate ?? item.origin.truncate)) {
+                      @let _truncateLabel = 'core.component.table.config.truncate-label' | sdTranslate;
+                      <sd-icon
+                        class="c-trunc"
+                        name="short_text"
+                        size="16px"
+                        [title]="_truncateLabel"
+                        [ariaLabel]="_truncateLabel"></sd-icon>
+                    }
+                    <span class="c-width-meta">{{ widthSummary(item) }}</span>
+                    <sd-icon class="c-chevron" size="20px" [name]="_open ? 'expand_less' : 'expand_more'" aria-hidden="true"></sd-icon>
+                  </button>
                 </div>
-                <!-- why: mỗi tuỳ chọn một hàng — nhãn và mô tả bên trái, switch bên phải — để mô tả có chỗ riêng và không đẩy
+
+                @if (_open) {
+                  <div class="c-details" [id]="detailsId(_field)">
+                    <div class="c-fields">
+                      <div class="c-field-title">
+                        <sd-input
+                          size="sm"
+                          hideInlineError
+                          [label]="'core.component.table.column-header' | sdTranslate"
+                          [placeholder]="item.origin.title"
+                          [model]="item.title"
+                          [disabled]="_hidden"
+                          (modelChange)="setTitle(_field, $event)">
+                        </sd-input>
+                        @if (renamed(item)) {
+                          <div class="c-origin">
+                            {{ 'core.component.table.config.origin' | sdTranslate: { title: item.origin.title } }} ·
+                            <button type="button" class="c-restore" [disabled]="_hidden" (click)="restoreTitle(_field)">
+                              {{ 'core.component.table.config.restore' | sdTranslate }}
+                            </button>
+                          </div>
+                        }
+                      </div>
+                      <div class="c-field-width">
+                        @let _textWidth = widthIsText(item);
+                        <sd-input
+                          size="sm"
+                          hideInlineError
+                          [type]="_textWidth ? 'text' : 'number'"
+                          [label]="'core.component.table.width' | sdTranslate"
+                          [placeholder]="widthPlaceholder(item)"
+                          [model]="widthValue(item)"
+                          [disabled]="_hidden"
+                          (sdFocus)="onWidthFocus(item)"
+                          (modelChange)="setWidth(_field, $event)"
+                          (sdBlur)="commitWidth(_field)">
+                          @if (!_textWidth) {
+                            <ng-template sdSuffixDef><span class="c-px">px</span></ng-template>
+                          }
+                        </sd-input>
+                      </div>
+                    </div>
+                    <!-- why: mỗi tuỳ chọn một hàng — nhãn và mô tả bên trái, switch bên phải — để mô tả có chỗ riêng và không đẩy
                      lệch tuỳ chọn bên cạnh. Nhãn nằm trong switch nên bấm cả hàng chữ cũng bật/tắt được. -->
-                <div class="c-options">
-                  <div class="c-option">
-                    <sd-switch
-                      class="c-fixed"
-                      size="sm"
-                      [label]="'core.component.table.config.fixed-label' | sdTranslate"
-                      [model]="!!item.fixed"
-                      [disabled]="_hidden"
-                      (modelChange)="setFixed(_field, !!$event)">
-                    </sd-switch>
-                    <span class="c-option-hint">{{ 'core.component.table.config.fixed-hint' | sdTranslate }}</span>
+                    <div class="c-options">
+                      <div class="c-option">
+                        <sd-switch
+                          class="c-fixed"
+                          size="sm"
+                          [label]="'core.component.table.config.fixed-label' | sdTranslate"
+                          [model]="!!item.fixed"
+                          [disabled]="_hidden"
+                          (modelChange)="setFixed(_field, !!$event)">
+                        </sd-switch>
+                        <span class="c-option-hint">{{ 'core.component.table.config.fixed-hint' | sdTranslate }}</span>
+                      </div>
+                      <div class="c-option">
+                        <sd-switch
+                          class="c-truncate"
+                          size="sm"
+                          [label]="'core.component.table.config.truncate-label' | sdTranslate"
+                          [model]="!!(item.truncate ?? item.origin.truncate)"
+                          [disabled]="_hidden"
+                          (modelChange)="setTruncate(_field, !!$event)">
+                        </sd-switch>
+                        <span class="c-option-hint">{{ 'core.component.table.config.truncate-hint' | sdTranslate }}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="c-option">
-                    <sd-switch
-                      class="c-truncate"
-                      size="sm"
-                      [label]="'core.component.table.config.truncate-label' | sdTranslate"
-                      [model]="!!(item.truncate ?? item.origin.truncate)"
-                      [disabled]="_hidden"
-                      (modelChange)="setTruncate(_field, !!$event)">
-                    </sd-switch>
-                    <span class="c-option-hint">{{ 'core.component.table.config.truncate-hint' | sdTranslate }}</span>
-                  </div>
-                </div>
+                }
               </div>
             }
           </div>
-        }
-      </div>
+        </div>
+      } @else {
+        <div class="c-panel c-filter-panel" role="tabpanel" [id]="panelId('filters')" [attr.aria-labelledby]="tabId('filters')">
+          @if (_filterSetup?.modeSelectable) {
+            <!-- why: radio thật trong từng thẻ — ← → / ↑ ↓ đổi lựa chọn và trình đọc màn hình đọc "1 trên 2" không cần code
+                 riêng. Tên là tiêu đề thẻ, mô tả là dòng phụ. -->
+            <fieldset class="c-modes">
+              <legend class="c-section-title">{{ 'core.component.table.config.filter-kind' | sdTranslate }}</legend>
+              <div class="c-mode-cards">
+                @for (mode of modes; track mode) {
+                  @let _on = filterMode() === mode;
+                  <label class="c-mode" [class.c-mode--on]="_on" [attr.data-mode]="mode">
+                    <input
+                      type="radio"
+                      class="c-mode-radio"
+                      [name]="modeName"
+                      [value]="mode"
+                      [checked]="_on"
+                      [attr.data-autoid]="_autoId ? _autoId + '-config-mode-' + mode : null"
+                      [attr.aria-labelledby]="modeName + '-' + mode"
+                      [attr.aria-describedby]="modeName + '-' + mode + '-hint'"
+                      (change)="pickMode(mode)" />
+                    <span class="c-mode-text">
+                      <span class="c-mode-title" [id]="modeName + '-' + mode">
+                        {{ 'core.component.table.config.mode-' + mode | sdTranslate }}
+                      </span>
+                      <span class="c-mode-desc" [id]="modeName + '-' + mode + '-hint'">
+                        {{ 'core.component.table.config.mode-' + mode + '-hint' | sdTranslate }}
+                      </span>
+                    </span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+          }
+          @if (filterRows().length) {
+            <section class="c-filter-list" [attr.aria-labelledby]="panelId('filters') + '-list'">
+              <h3 class="c-section-title" [id]="panelId('filters') + '-list'">
+                {{ 'core.component.table.config.filter-list' | sdTranslate }}
+              </h3>
+              <p class="c-hint c-filter-desc">{{ filterListHint() | sdTranslate }}</p>
+              <div class="c-options">
+                @for (row of filterRows(); track row.field) {
+                  <div class="c-option c-filter-row" [attr.data-field]="row.field">
+                    <sd-switch
+                      size="sm"
+                      [autoId]="_autoId ? _autoId + '-config-filter-' + row.field : null"
+                      [label]="row.title"
+                      [model]="row.on"
+                      [disabled]="row.locked"
+                      (modelChange)="setInline(row.field, !!$event)">
+                    </sd-switch>
+                    @if (row.note) {
+                      <span class="c-option-hint">{{ row.note | sdTranslate }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      }
     </div>
   }
   <ng-container sdFooterLeft>

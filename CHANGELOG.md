@@ -64,6 +64,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Table
 
+- The settings modal gets a **Bộ lọc** tab next to **Cột**, with one footer for both: Apply stores both tabs, Skip drops both, **Khôi phục mặc định** resets both.
+  - **Kiểu lọc:** two radio cards, **Khung bộ lọc** and **Thanh bộ lọc**, to pick the filter mode (hidden with `filter.modeSelectable: false`).
+  - **Bộ lọc hiển thị:** one switch row per external filter: shown in the panel, or pinned as a chip on the bar. Required filters are locked; on the bar, a filter the bar cannot show is off and locked, and `queryBar.pinned` locks the list.
+  - The tab shows on desktop when filtering is on and the table has a filter. New i18n keys `core.component.table.config.tab-columns`, `filter-kind`, `mode-default`, `mode-default-hint`, `mode-query-bar`, `mode-query-bar-hint`, `filter-list`, `filters-hint-panel`, `filters-hint-bar`, `filters-hint-pinned`, `filter-required`, `filter-off-bar` and `fixed-hint` in all five languages.
 - The filter mode can be a user setting: `TableFilterConfiguration.mode` stores the mode the user picks, next to the inline external filters, and wins over `filter.mode`.
   - `filter.modeSelectable` (default `true`, also in `SD_TABLE_CONFIGURATION.filter`): `false` always uses `filter.mode` and ignores a stored choice.
   - The stored mode turns on the dot of the settings button while it differs from `filter.mode`, and **Khôi phục mặc định** clears it. Mobile still renders the default controls.

@@ -287,6 +287,76 @@ describe('SdTable settings button indicator', () => {
     }));
   });
 
+  // The "Bộ lọc" tab of the settings modal: the table hands it the filter setup and stores what Apply sends back.
+  describe('filter tab', () => {
+    const mode = () => (fixture.nativeElement.querySelector('sd-table') as HTMLElement).getAttribute('data-filter-mode');
+
+    it('hands the modal the filter kinds and the external filters', fakeAsync(() => {
+      configure();
+      const option = buildOption();
+      option.filter!.externalFilters!.push({ field: 'area', title: 'Khu vực', type: 'custom' });
+      mount(option);
+      expect(config().filterSetup()).toEqual({
+        mode: 'default',
+        storedMode: undefined,
+        modeSelectable: true,
+        inlineExternal: { status: true, note: false, area: false },
+        externalFilters: [
+          { field: 'status', title: 'Trạng thái', required: false, offBar: false },
+          { field: 'note', title: 'Ghi chú', required: false, offBar: false },
+          { field: 'area', title: 'Khu vực', required: false, offBar: true },
+        ],
+        pinned: undefined,
+      });
+    }));
+
+    it('stores what Apply sends, and the table follows it', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, key } }));
+      apply(component => {
+        component.selectTab('filters');
+        component.pickMode('query-bar');
+        component.setInline('note', true);
+      });
+      expect(mode()).toBe('query-bar');
+      expect(table.filterRegister!.configuration.get()).toEqual({ inlineExternal: { status: true, note: true }, mode: 'query-bar' });
+      expect(indicator()).not.toBeNull();
+
+      restoreDefaults();
+      expect(mode()).toBe('default');
+      expect(table.filterRegister!.configuration.get()).toEqual({ inlineExternal: { status: true, note: false } });
+    }));
+
+    it('gives the modal no filter tab with filter.disabled or without any filter', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, disabled: true } }));
+      expect(config().filterSetup()).toBeUndefined();
+      fixture.destroy();
+      mount(
+        buildOption({
+          columns: buildOption().columns.map(column => ({ ...column, filter: { disabled: true } })) as LocalOption['columns'],
+          filter: {},
+        })
+      );
+      expect(config().filterSetup()).toBeUndefined();
+    }));
+
+    it('gives the modal no filter tab with modeSelectable false and no external filter', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { modeSelectable: false } }));
+      expect(config().filterSetup()).toBeUndefined();
+      fixture.destroy();
+      mount(buildOption({ filter: { ...buildOption().filter, modeSelectable: false } }));
+      expect(config().filterSetup()?.modeSelectable).toBeFalse();
+    }));
+
+    it('gives the modal no filter tab on mobile', fakeAsync(() => {
+      configure(true);
+      mount(buildOption());
+      expect(table.configFilter()).toBeUndefined();
+    }));
+  });
+
   describe('mobile', () => {
     beforeEach(() => configure(true));
 
