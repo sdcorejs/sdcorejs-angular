@@ -458,6 +458,9 @@ screen reader landed on it and announced nothing.
 
 ## Anti-patterns
 
+The document `keydown` listener used to focus the read-error retry button is registered only while the panel is open, outside Angular's zone. Closing the panel, replacing the inner select (`viewed` or virtual mode), or destroying the component removes it. Closed selects do not register this listener, even in large editable grids. Tab to retry, Escape, and Shift+Tab retain their existing behavior.
+
+
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
 - ❌ Using `<sd-select>` for ≤ 6 short options — use `<sd-radio>` so all options are visible without a click.
 - ❌ Subscribing to `sdChange` and expecting it to fire on every click in `[multiple]` mode — it ONLY fires when the panel CLOSES, by design. For per-toggle reactions, derive from `[(model)]`.

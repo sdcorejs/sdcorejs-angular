@@ -652,6 +652,8 @@ catalogue: those are developer diagnostics, not user-facing copy (marked `@i18n-
 
 ## Related
 
+The shared account menu listens for document Escape and outside pointer events only while open. Closing or destroying the menu removes both listeners; closed account menus do not process page-wide events.
+
 - [Auth module](../auth/sd-auth.md) supplies the user and sign-out actions.
 - [Permission module](../permission/sd-permission.md) resolves string permission codes used by menus.
 - [Keycloak module](../keycloak/sd-keycloak.md) can feed authenticated identity and roles into both configurations.
