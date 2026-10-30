@@ -20,6 +20,7 @@ import {
   grayPng,
   near,
   parkable,
+  ENCODE_TIMEOUT,
   parkPending,
   pixel,
   quadrantJpeg,
@@ -77,14 +78,8 @@ function editor(): SdImageEditor {
  */
 const LARGE_IMAGE_TIMEOUT = 30_000;
 
-/**
- * Budget of a spec in which the editor encodes (Apply, `getResult()`, the size shown in the panel). Chrome encodes
- * `toBlob()` PNG and JPEG on the main thread in idle time only: when a busy run leaves none, each encode waits 1 s
- * before Chrome forces it, whatever the image size — measured 1.0–1.1 s per encode with the main thread kept busy, so
- * a spec with two encodes took 2.2 s there before any CI slowdown. The sources themselves are written as bytes, so
- * the specs that only load and edit never wait for an encode.
- */
-const ENCODE_TIMEOUT = 15_000;
+// The sources are written as bytes, so the specs that only load and edit never wait for an encode; the specs in which the
+// editor encodes get ENCODE_TIMEOUT (see the fixtures).
 
 // Every await in these specs goes through `parkable()` (directly or via the fixtures), so a spec that timed out stops
 // at its next await instead of running into the next spec.

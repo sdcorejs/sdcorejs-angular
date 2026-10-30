@@ -328,6 +328,15 @@ export async function truncatedPng(): Promise<Blob> {
   return new Blob([png.subarray(0, 40)], { type: 'image/png' });
 }
 
+/**
+ * Budget of a spec that encodes through `canvas.toBlob()` (the editor's Apply, `getResult()`, the size shown in the
+ * panel, `sdImageEditorExport`, the `quadrantBlob()` fixtures). Chrome encodes `toBlob()` PNG and JPEG on the main
+ * thread in idle time only: when a busy run leaves none, each encode waits 1 s before Chrome forces it, whatever the image
+ * size, and a forced encode may take up to 5.7 s more — measured 1.0–1.1 s per encode with the main thread kept busy, so
+ * a spec with two encodes took 2.2 s there before any CI slowdown, and one encode can pass Jasmine's 5 s default on CI.
+ */
+export const ENCODE_TIMEOUT = 15_000;
+
 export function wait(ms: number): Promise<void> {
   return parkable(new Promise(resolve => setTimeout(resolve, ms)));
 }
