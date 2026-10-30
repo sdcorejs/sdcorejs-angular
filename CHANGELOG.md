@@ -128,6 +128,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The filter of a column under a grouped header (`type: 'children'`) is sent, matched and restored. Before, only top-level `columns` were read: the value was left out of `pagingReq`, ignored by local filtering and sorting, and the column's `filter.default`, cached value and `SD_TABLE_CONFIGURATION.filter.operator` were never applied.
   - `SdConvertToPagingReq` reads leaf columns, so passing `option.columns` by hand now sends child columns too; a grouped header itself sends nothing (it used to send its own field when `rawColumnFilter` held one).
+- A `values` column under a grouped header shows the display text of its values and offers its list in the column filter. Before, the table loaded the lists of top-level columns only: the cells (and the export) showed the raw codes, and with `items` as a function the filter list was empty.
 - Clearing the filters of a table with a `split-number` or `split-date` column no longer throws `Cannot read properties of undefined (reading 'from')`. Both ends show empty, and typing one end recreates `{ from, to }`.
 
 ## [3.3] - 2026-10-29

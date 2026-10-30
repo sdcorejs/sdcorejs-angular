@@ -1508,8 +1508,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // why: lookup cũ có thể hoàn tất sau cấu hình/scope mới; chỉ commit cache của lần hydrate còn hiệu lực.
       const values = cloneReadRequest(this.cacheValues);
       const objectValues = cloneReadRequest(this.#cacheObjValues);
+      // why: cột lá — cột `values` nằm dưới header nhóm (`type: 'children'`) cũng cần danh sách để hiện nhãn và để lọc.
       await this.#tableFormatService.loadValues(
-        option.columns.filter(column => result.displayedColumns.includes(column.field)),
+        leafColumns(option.columns).filter(column => result.displayedColumns.includes(column.field)),
         values,
         objectValues
       );
