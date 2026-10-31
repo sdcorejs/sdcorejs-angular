@@ -8,6 +8,193 @@
 }
 
 // ---------------------------------------------------------------------------
+// Tab Cột | Bộ lọc
+// ---------------------------------------------------------------------------
+
+.c-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--sd-border);
+}
+
+.c-tab {
+  position: relative;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--sd-radius-4) var(--sd-radius-4) 0 0;
+  background: transparent;
+  color: var(--sd-text-secondary);
+  font: inherit;
+  font-size: var(--sd-font-size-14);
+  font-weight: var(--sd-font-weight-medium);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--sd-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.c-tab--active {
+  color: var(--sd-primary);
+
+  &:hover {
+    color: var(--sd-primary);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    bottom: -1px;
+    left: 8px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--sd-primary);
+  }
+
+  // why: forced-colors bỏ nền của gạch chân — viền dưới vẫn còn.
+  @media (forced-colors: active) {
+    &::after {
+      border-bottom: 2px solid Highlight;
+    }
+  }
+}
+
+.c-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// ---------------------------------------------------------------------------
+// Tab Bộ lọc: kiểu lọc (2 thẻ radio) · bộ lọc hiển thị (hàng switch)
+// ---------------------------------------------------------------------------
+
+.c-filter-panel {
+  gap: 16px;
+}
+
+.c-section-title {
+  margin: 0;
+  padding: 0;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14);
+  font-weight: var(--sd-font-weight-medium);
+  line-height: var(--sd-line-height-20);
+}
+
+.c-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+// why: modal sm hẹp (40vw) — hai thẻ cạnh nhau khi đủ chỗ, xếp dọc khi không.
+.c-mode-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.c-mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8);
+  background: var(--sd-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--sd-duration-fast) var(--sd-ease-standard),
+    background-color var(--sd-duration-fast) var(--sd-ease-standard);
+
+  &:hover {
+    border-color: var(--sd-border-strong);
+  }
+
+  // why: vòng focus vẽ quanh cả thẻ — chấm radio 18px quá nhỏ để thấy vòng của riêng nó.
+  &:has(.c-mode-radio:focus-visible) {
+    outline: 2px solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+
+// why: viền 1px cộng bóng trong 1px thành viền 2px mà không đổi kích thước thẻ khi chọn.
+.c-mode--on,
+.c-mode--on:hover {
+  border-color: var(--sd-primary);
+  background: var(--sd-primary-light);
+  box-shadow: inset 0 0 0 1px var(--sd-primary);
+}
+
+.c-mode-radio {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  border: 2px solid var(--sd-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+
+  &:checked {
+    border-color: var(--sd-primary);
+    background: radial-gradient(circle, var(--sd-primary) 0 4px, transparent 4.5px);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  // why: forced-colors không vẽ nền gradient — trả lại radio của hệ thống.
+  @media (forced-colors: active) {
+    appearance: auto;
+  }
+}
+
+.c-mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.c-mode-title {
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14);
+  font-weight: var(--sd-font-weight-medium);
+  line-height: var(--sd-line-height-20);
+}
+
+.c-mode-desc {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-16);
+}
+
+.c-filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .c-filter-desc {
+    margin-bottom: 4px;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Thanh công cụ: ô tìm · số cột đang hiện · Hiện tất cả
 // ---------------------------------------------------------------------------
 
@@ -287,20 +474,51 @@ sd-checkbox {
   font-size: var(--sd-font-size-12);
 }
 
-.c-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
+.c-options {
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8);
+  background: var(--sd-surface);
 }
 
-.c-truncate-field {
+.c-option {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+
+  & + & {
+    border-top: 1px solid var(--sd-border);
+  }
+
+  // why: nhãn bên trái, switch bên phải, cả hàng là một vùng bấm — đảo thứ tự của form field trong mat-slide-toggle
+  // và kéo nó đủ chiều ngang hàng.
+  sd-switch {
+    display: block;
+
+    ::ng-deep .mat-mdc-slide-toggle {
+      display: block;
+    }
+
+    ::ng-deep .mat-internal-form-field {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      margin: 0;
+    }
+
+    ::ng-deep .mdc-label {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      color: var(--sd-text);
+      font-size: var(--sd-font-size-14);
+    }
+  }
 }
 
-// why: thẳng hàng với chữ của nhãn checkbox (vùng chạm 40px của checkbox đứng trước nhãn).
-.c-check-hint {
-  padding-left: 40px;
+.c-option-hint {
   color: var(--sd-text-secondary);
   font-size: var(--sd-font-size-12);
   line-height: var(--sd-line-height-16);

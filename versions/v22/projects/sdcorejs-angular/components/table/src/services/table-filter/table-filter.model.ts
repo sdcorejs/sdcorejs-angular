@@ -28,6 +28,8 @@ export interface TableFilterConfiguration {
   // columnFilter?: Record<string, any>; // Giá trị filter column
   inlineExternal: Record<string, boolean>; // Ẩn hiện filter external
   // externalFilter?: Record<string, any>; // Giá trị filter external
+  /** Giao diện lọc người dùng chọn trong modal Thiết lập; thắng `filter.mode` khi `filter.modeSelectable` khác `false`. */
+  mode?: SdTableOptionFilter['mode'];
 }
 
 export interface TableFilterValue {
@@ -106,6 +108,14 @@ export interface SdTableOptionFilter<T = unknown> {
    */
   mode?: 'default' | 'query-bar';
 
+  /**
+   * Cho người dùng chọn giao diện lọc trong modal Thiết lập. Lựa chọn được lưu cùng thiết lập bộ lọc (theo `filter.key`)
+   * và thắng `mode`; **Khôi phục mặc định** xoá nó. `false`: luôn dùng `mode` và bỏ qua lựa chọn đã lưu.
+   * `SD_TABLE_CONFIGURATION.filter.modeSelectable` đặt cho mọi bảng; option thắng.
+   * @defaultValue true
+   */
+  modeSelectable?: boolean;
+
   /** Chỉ dùng khi `mode` là `'query-bar'`. */
   queryBar?: SdTableOptionFilterQueryBar;
 }
@@ -113,8 +123,9 @@ export interface SdTableOptionFilter<T = unknown> {
 /** Tuỳ chọn của `filter.mode: 'query-bar'`. */
 export interface SdTableOptionFilterQueryBar {
   /**
-   * Cách sửa chip: popover hoặc control ngay trên thanh (`sd-query-bar` mode `'inline'`).
-   * @defaultValue 'popover'
+   * Cách sửa chip: control ngay trên thanh (`sd-query-bar` mode `'inline'`) hoặc popover. `sd-query-bar` đứng riêng
+   * vẫn mặc định `'popover'`.
+   * @defaultValue 'inline'
    */
   editor?: 'popover' | 'inline';
   /**

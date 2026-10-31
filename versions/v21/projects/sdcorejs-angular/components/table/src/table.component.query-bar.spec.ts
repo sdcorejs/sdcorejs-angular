@@ -102,6 +102,9 @@ describe('SdTable filter.mode query-bar', () => {
       operatorChange: spies.operator,
       onClearFilter: spies.clear,
       ...filter,
+      // why: `commit` và các spec chip bên dưới đi qua popover của chip; spec của editor mặc định (inline) nằm trong
+      // describe 'chip editor' và bỏ ghim này.
+      queryBar: { editor: 'popover', ...filter.queryBar },
     } as ServerOption['filter'],
   });
 
@@ -261,6 +264,85 @@ describe('SdTable filter.mode query-bar', () => {
           .filters()
           .map(filter => (filter as { field: string }).field)
       ).toEqual(['external:note']);
+    }));
+  });
+
+  // The bar of sd-table edits chips on the bar by default; `queryBar.editor: 'popover'` keeps the popover chips.
+  describe('chip editor', () => {
+    const inlineChips = () => el().querySelectorAll('sd-query-bar sd-query-inline-value-chip, sd-query-bar sd-query-inline-chip');
+    /** `buildOption` without the popover pin: the editor comes from the table default or SD_TABLE_CONFIGURATION. */
+    const defaultEditor = (option = buildOption()) => {
+      delete option.filter!.queryBar!.editor;
+      return option;
+    };
+
+    it('edits chips on the bar by default', fakeAsync(() => {
+      configure();
+      mount(defaultEditor());
+      expect(table.queryBarOption()!.mode).toBe('inline');
+      expect(bar().resolvedMode()).toBe('inline');
+      expect(inlineChips().length).toBe(bar().filters().length);
+      expect(bar().popoverChips().length).toBe(0);
+    }));
+
+    it('keeps the popover chips with queryBar.editor popover', fakeAsync(() => {
+      configure();
+      mount(buildOption({ queryBar: { editor: 'popover' } }));
+      expect(bar().resolvedMode()).toBe('popover');
+      expect(inlineChips().length).toBe(0);
+      expect(bar().popoverChips().length).toBe(bar().filters().length);
+    }));
+
+    it('takes queryBar.editor from SD_TABLE_CONFIGURATION, and the option wins', fakeAsync(() => {
+      mobile.set(false);
+      TestBed.configureTestingModule({
+        imports: [QueryBarHost, NoopAnimationsModule],
+        providers: [
+          { provide: SdViewportService, useValue: { isMobile: mobile } },
+          { provide: SD_TABLE_CONFIGURATION, useValue: { filter: { queryBar: { editor: 'popover' } } } },
+        ],
+      });
+      mount(defaultEditor());
+      expect(bar().resolvedMode()).toBe('popover');
+      fixture.destroy();
+      mount(buildOption({ queryBar: { editor: 'inline' } }));
+      expect(bar().resolvedMode()).toBe('inline');
+    }));
+
+    it('marks an empty required chip invalid and points it at the hint', fakeAsync(() => {
+      configure();
+      const option = defaultEditor();
+      option.filter!.quickSearch!.filters![0].required = true;
+      mount(option);
+      const control = inlineChips()[indexOf('quick:warehouseId')].querySelector('[aria-invalid="true"]') as HTMLElement;
+      const hint = el().querySelector('.sd-table-query-bar-hint') as HTMLElement;
+      expect(control).not.toBeNull();
+      expect(control.getAttribute('aria-describedby')!.split(' ')).toContain(hint.id);
+    }));
+
+    it('reads once when an inline chip commits a change, and not when nothing changed', fakeAsync(() => {
+      configure();
+      mount(defaultEditor());
+      loader.calls.reset();
+      bar().onInlineCommit(indexOf('external:status'), ['new']);
+      settle();
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(table.getFilterRequest().rawExternalFilter).toEqual(jasmine.objectContaining({ status: ['new'] }));
+      bar().onInlineCommit(indexOf('external:status'), ['new']);
+      settle();
+      expect(loader).toHaveBeenCalledTimes(1);
+    }));
+
+    it('focuses the chip of a column from its header filter icon, which opens no popup', fakeAsync(() => {
+      configure();
+      mount(defaultEditor());
+      const trigger = el().querySelector('[data-autoid="components-table-orders-filter-trigger-status"]') as HTMLButtonElement;
+      expect(trigger.hasAttribute('aria-haspopup')).toBeFalse();
+      trigger.click();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(inlineChips()[indexOf('external:status')].contains(document.activeElement)).toBeTrue();
     }));
   });
 

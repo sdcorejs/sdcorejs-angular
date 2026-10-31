@@ -30,6 +30,9 @@ export interface ISdTableConfiguration {
     /** Giao diện lọc mặc định cho mọi bảng; `option.filter.mode` thắng. Mặc định là `'default'`. */
     mode?: SdTableOptionFilter['mode'];
 
+    /** Cho người dùng chọn giao diện lọc trong modal Thiết lập; `option.filter.modeSelectable` thắng. Mặc định là `true`. */
+    modeSelectable?: SdTableOptionFilter['modeSelectable'];
+
     /** Tuỳ chọn mặc định của mode `'query-bar'`; gộp theo từng field với `option.filter.queryBar`. */
     queryBar?: SdTableOptionFilter['queryBar'];
 

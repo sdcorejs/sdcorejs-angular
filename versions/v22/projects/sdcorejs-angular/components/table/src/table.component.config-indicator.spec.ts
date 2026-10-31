@@ -6,6 +6,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { ConfigComponent } from './components/config/config.component';
+import { SD_TABLE_CONFIGURATION } from './configurations';
 import { SdTableOption } from './models/table-option.model';
 import { SdTable } from './table.component';
 
@@ -192,12 +193,169 @@ describe('SdTable settings button indicator', () => {
       expect(indicator()).not.toBeNull();
     }));
 
+    it('turns on when the stored filter mode differs from the option, and off when it matches', fakeAsync(() => {
+      mount(buildOption());
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      expect(indicator()).not.toBeNull();
+      table.filterRegister!.configuration.set({ mode: 'default' });
+      settle();
+      expect(indicator()).toBeNull();
+    }));
+
     it('follows the session storage when the option has no key', fakeAsync(() => {
       mount(buildOption({ key: undefined }));
       expect(indicator()).toBeNull();
       table.onColumnResize('total', '200px');
       settle();
       expect(indicator()).not.toBeNull();
+    }));
+  });
+
+  // The filter mode the user picks in the settings modal wins over filter.mode, unless filter.modeSelectable is false.
+  describe('stored filter mode', () => {
+    const mode = () => (fixture.nativeElement.querySelector('sd-table') as HTMLElement).getAttribute('data-filter-mode');
+
+    it('wins over the option, and follows the option again when cleared', fakeAsync(() => {
+      configure();
+      mount(buildOption());
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      expect(mode()).toBe('query-bar');
+      expect(fixture.nativeElement.querySelector('sd-query-bar')).not.toBeNull();
+      table.filterRegister!.configuration.set({ mode: undefined });
+      settle();
+      expect(mode()).toBe('default');
+    }));
+
+    it('is read back after a reload when the filter has a key', fakeAsync(() => {
+      configure();
+      const withKey = () => buildOption({ filter: { ...buildOption().filter, key } });
+      mount(withKey());
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      fixture.destroy();
+      mount(withKey());
+      expect(mode()).toBe('query-bar');
+    }));
+
+    it('is cleared by Restore defaults', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, mode: 'query-bar' } }));
+      table.filterRegister!.configuration.set({ mode: 'default' });
+      settle();
+      expect(mode()).toBe('default');
+      expect(indicator()).not.toBeNull();
+
+      restoreDefaults();
+      expect(mode()).toBe('query-bar');
+      expect(table.filterRegister!.configuration.get().mode).toBeUndefined();
+      expect(indicator()).toBeNull();
+    }));
+
+    it('is ignored with filter.modeSelectable false', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, modeSelectable: false } }));
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      expect(mode()).toBe('default');
+      expect(indicator()).toBeNull();
+    }));
+
+    it('takes filter.modeSelectable from SD_TABLE_CONFIGURATION, and the option wins', fakeAsync(() => {
+      mobile.set(false);
+      TestBed.configureTestingModule({
+        imports: [SettingsHost, NoopAnimationsModule],
+        providers: [
+          { provide: SdViewportService, useValue: { isMobile: mobile } },
+          { provide: SD_TABLE_CONFIGURATION, useValue: { filter: { modeSelectable: false } } },
+        ],
+      });
+      mount(buildOption({ filter: { ...buildOption().filter, key } }));
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      expect(mode()).toBe('default');
+      fixture.destroy();
+      mount(buildOption({ filter: { ...buildOption().filter, key, modeSelectable: true } }));
+      expect(mode()).toBe('query-bar');
+    }));
+
+    it('keeps the default controls on mobile', fakeAsync(() => {
+      configure(true);
+      mount(buildOption());
+      table.filterRegister!.configuration.set({ mode: 'query-bar' });
+      settle();
+      expect(mode()).toBe('default');
+    }));
+  });
+
+  // The "Bộ lọc" tab of the settings modal: the table hands it the filter setup and stores what Apply sends back.
+  describe('filter tab', () => {
+    const mode = () => (fixture.nativeElement.querySelector('sd-table') as HTMLElement).getAttribute('data-filter-mode');
+
+    it('hands the modal the filter kinds and the external filters', fakeAsync(() => {
+      configure();
+      const option = buildOption();
+      option.filter!.externalFilters!.push({ field: 'area', title: 'Khu vực', type: 'custom' });
+      mount(option);
+      expect(config().filterSetup()).toEqual({
+        mode: 'default',
+        storedMode: undefined,
+        modeSelectable: true,
+        inlineExternal: { status: true, note: false, area: false },
+        externalFilters: [
+          { field: 'status', title: 'Trạng thái', required: false, offBar: false },
+          { field: 'note', title: 'Ghi chú', required: false, offBar: false },
+          { field: 'area', title: 'Khu vực', required: false, offBar: true },
+        ],
+        pinned: undefined,
+      });
+    }));
+
+    it('stores what Apply sends, and the table follows it', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, key } }));
+      apply(component => {
+        component.selectTab('filters');
+        component.pickMode('query-bar');
+        component.setInline('note', true);
+      });
+      expect(mode()).toBe('query-bar');
+      expect(table.filterRegister!.configuration.get()).toEqual({ inlineExternal: { status: true, note: true }, mode: 'query-bar' });
+      expect(indicator()).not.toBeNull();
+
+      restoreDefaults();
+      expect(mode()).toBe('default');
+      expect(table.filterRegister!.configuration.get()).toEqual({ inlineExternal: { status: true, note: false } });
+    }));
+
+    it('gives the modal no filter tab with filter.disabled or without any filter', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { ...buildOption().filter, disabled: true } }));
+      expect(config().filterSetup()).toBeUndefined();
+      fixture.destroy();
+      mount(
+        buildOption({
+          columns: buildOption().columns.map(column => ({ ...column, filter: { disabled: true } })) as LocalOption['columns'],
+          filter: {},
+        })
+      );
+      expect(config().filterSetup()).toBeUndefined();
+    }));
+
+    it('gives the modal no filter tab with modeSelectable false and no external filter', fakeAsync(() => {
+      configure();
+      mount(buildOption({ filter: { modeSelectable: false } }));
+      expect(config().filterSetup()).toBeUndefined();
+      fixture.destroy();
+      mount(buildOption({ filter: { ...buildOption().filter, modeSelectable: false } }));
+      expect(config().filterSetup()?.modeSelectable).toBeFalse();
+    }));
+
+    it('gives the modal no filter tab on mobile', fakeAsync(() => {
+      configure(true);
+      mount(buildOption());
+      expect(table.configFilter()).toBeUndefined();
     }));
   });
 

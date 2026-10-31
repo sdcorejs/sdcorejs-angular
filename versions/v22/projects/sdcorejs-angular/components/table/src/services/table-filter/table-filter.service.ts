@@ -17,6 +17,9 @@ import {
 import { hasQuickSearchValue, initialQuickSearchValue } from './table-quick-search.util';
 import { leafColumns } from '../column-leaf.util';
 
+/** Giá trị `mode` hợp lệ của thiết lập bộ lọc; giá trị lạ trong storage (bản cũ, sửa tay) bị bỏ. */
+const isFilterMode = (value: unknown): value is NonNullable<SdTableOptionFilter['mode']> => value === 'default' || value === 'query-bar';
+
 @Injectable()
 export class SdTableFilterService {
   private storageService = inject(SdStorageService);
@@ -140,13 +143,16 @@ export class SdTableFilterService {
             return filterConfiguration.get();
           },
           set: (configuration: Partial<TableFilterConfiguration>): TableFilterConfiguration => {
-            const { inlineExternal } = configuration;
-            filterConfiguration.set({
-              inlineExternal: inlineExternal!,
-            });
-            return {
-              inlineExternal: inlineExternal!,
+            // why: mỗi nơi chỉ ghi phần của mình (external filter ghi inlineExternal, modal Thiết lập ghi mode) — phần
+            // không truyền giữ nguyên; `mode: undefined` truyền tường minh thì xoá lựa chọn.
+            const current = filterConfiguration.get();
+            const mode = 'mode' in configuration ? configuration.mode : current?.mode;
+            const next: TableFilterConfiguration = {
+              inlineExternal: configuration.inlineExternal ?? current?.inlineExternal ?? {},
+              ...(isFilterMode(mode) ? { mode } : {}),
             };
+            filterConfiguration.set(next);
+            return next;
           },
           remove: () => {
             filterConfiguration.set(this.#defaultConfiguration(args));
@@ -308,9 +314,11 @@ export class SdTableFilterService {
     for (const item of externalFilters || []) {
       inlineExternal[item.field] = configuration?.inlineExternal?.[item.field] ?? item?.defaultShowing;
     }
+    const mode = configuration?.mode;
     return {
       // Filter external
       inlineExternal,
+      ...(isFilterMode(mode) ? { mode } : {}),
     };
   };
 
