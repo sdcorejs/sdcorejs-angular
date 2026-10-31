@@ -14,9 +14,26 @@ specs first, commit only when the user says so. No design handoff: the decisions
   `sd-switch` on the right (the truncate hint no longer pushes the checkboxes out of line).
 
 ## Steps
-1. Column details as switch rows (`config.component`), new i18n key `config.fixed-hint`.
-2. `filter.queryBar.editor` default `'inline'` in sd-table; CHANGELOG Changed + Before upgrading.
+1. Column details as switch rows (`config.component`), new i18n key `config.fixed-hint`. Done: ddd7c075f.
+2. `filter.queryBar.editor` default `'inline'` in sd-table; CHANGELOG Changed + Before upgrading. Done: d568a8ded.
 3. `TableFilterConfiguration.mode?` stored with `inlineExternal`; effective mode = user choice → option → configuration;
-   Restore defaults clears it; the settings dot counts it; `filter.modeSelectable`.
+   Restore defaults clears it; the settings dot counts it; `filter.modeSelectable`. Done: 3c87e5396.
 4. Settings modal tabs Cột | Bộ lọc; filter tab UI; shared footer (Apply saves both, Skip drops both, Restore resets both).
+   Done: 53c6ed54d.
 5. Docs, CHANGELOG, showcase, screenshots.
+
+## Deviations and notes
+- Step 2: the header filter icon declares `aria-haspopup="menu"` only with the popover editor (the inline editor focuses
+  the chip). The existing query-bar specs pin `editor: 'popover'` in their option builder; the default has its own specs.
+- Step 3: `configuration.set()` now merges, which also fixes a set without `inlineExternal` dropping it. The stored
+  mode survives a reload only with `filter.key`, like `inlineExternal`.
+- Step 4: the filter list holds the external filters only (what `inlineExternal` controls); quick filters are always
+  shown in both kinds, so they are not listed. A kind equal to `filter.mode` is not stored. The tab bar follows the
+  tablist of the form-builder inspector (APG pattern); the kind cards are native radios. The modal height changes
+  with the tab.
+- Step 5: the showcase query-bar demo drops its Mode buttons (a stored choice wins over `filter.mode`, so they would
+  stop working after a pick in the settings) for Editor inline / popover buttons, and shows the settings button.
+
+## Screenshots (`.sdcorejs/handoff/screenshots/`)
+17–18 switch rows (light, dark) · 19–20 inline query bar (light, dark) · 21–23 filter tab (panel, bar, dark) ·
+24 showcase query-bar demo after step 5.

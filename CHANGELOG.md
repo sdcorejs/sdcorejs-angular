@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** the table query bar (`filter.mode: 'query-bar'`) now edits chips inline on the bar; set `filter.queryBar.editor: 'popover'` (per table or in `SD_TABLE_CONFIGURATION`) to keep the popover chips.
+> **Before upgrading:** the table query bar (`filter.mode: 'query-bar'`) now edits chips inline on the bar; set `filter.queryBar.editor: 'popover'` (per table or in `SD_TABLE_CONFIGURATION`) to keep the popover chips. The table settings modal gets a **Bộ lọc** tab where users can switch between the filter panel and the query bar; set `filter.modeSelectable: false` to keep `filter.mode` fixed.
 
 ### Changed (BREAKING for consumers)
 
@@ -72,6 +72,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `filter.modeSelectable` (default `true`, also in `SD_TABLE_CONFIGURATION.filter`): `false` always uses `filter.mode` and ignores a stored choice.
   - The stored mode turns on the dot of the settings button while it differs from `filter.mode`, and **Khôi phục mặc định** clears it. Mobile still renders the default controls.
   - `filterRegister.configuration.set()` keeps the fields it is not given: setting only `inlineExternal` keeps the mode, and `mode: undefined` clears it.
+
+### Changed
+
+#### Table
+
+- The **Cố định khi cuộn ngang** and **Rút gọn nội dung dài** options of an open row in the settings modal are rows with the label and a description on the left and an `sd-switch` on the right (were checkboxes); the description no longer pushes the other option out of line.
 
 ## [3.4] - 2026-10-30
 
