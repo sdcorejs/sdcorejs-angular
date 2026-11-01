@@ -34,6 +34,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': '拖动以调整行顺序',
   'core.component.table.mobile.details': '详情',
   'core.component.table.mobile.summary': '汇总',
+  'core.component.table.mobile.more-fields': '另外 {count} 个字段',
+  'core.component.table.mobile.show-less': '收起',
   'core.common.back': '返回',
   'core.common.cancel': '取消',
   'core.common.close': '关闭',

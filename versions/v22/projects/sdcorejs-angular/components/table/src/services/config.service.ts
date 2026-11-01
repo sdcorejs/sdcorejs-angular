@@ -44,7 +44,11 @@ export class ConfigService {
   #loadConfiguredTable = (option: SdTableOption): SdStorageWithDefault<ConfiguredTable> => {
     // Nếu không có key thì không lấy được setting
     if (!option?.key) {
-      return this.storageService.create<ConfiguredTable>(Utilities.hash({ ...option, columns: storageColumns(option.columns) }), {
+      // why: `mobile.template` can be a TemplateRef, whose object graph cannot be hashed; leaving it out keeps the key of
+      // every option without a template unchanged.
+      const { template: _template, ...mobile } = option.mobile ?? {};
+      const hashed = { ...option, columns: storageColumns(option.columns), ...(option.mobile ? { mobile } : {}) };
+      return this.storageService.create<ConfiguredTable>(Utilities.hash(hashed), {
         type: 'session', // Nếu không có key thì lưu theo session
         default: this.#default(option),
       });

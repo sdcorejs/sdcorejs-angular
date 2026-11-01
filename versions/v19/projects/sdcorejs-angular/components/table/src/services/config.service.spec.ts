@@ -169,3 +169,29 @@ describe('ConfigService.loadConfigurationResult — filler column', () => {
     expect(fillerIdx).toBeGreaterThan(idxIdx);
   });
 });
+
+describe('ConfigService storage key without option.key', () => {
+  let service: ConfigService;
+  const base = (): SdTableOption => ({
+    type: 'local',
+    items: () => [],
+    columns: [{ field: 'name', title: 'Name', type: 'string' }],
+    mobile: { rowLabel: (row: { name: string }) => row.name },
+  });
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [ConfigService, SdStorageService, { provide: SD_TABLE_CONFIGURATION, useValue: null }],
+    });
+    service = TestBed.inject(ConfigService);
+  });
+
+  it('leaves mobile.template out of the hash: a TemplateRef has a graph too deep to hash', () => {
+    const deep: Record<string, unknown> = {};
+    let node = deep;
+    for (let depth = 0; depth < 200; depth++) node = node['next'] = {};
+    const withTemplate = { ...base(), mobile: { ...base().mobile, template: deep as never } };
+    expect(() => service.init(withTemplate)).not.toThrow();
+  });
+});

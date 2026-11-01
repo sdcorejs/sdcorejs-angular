@@ -13,6 +13,7 @@ import { SdTableOptionSelector } from './table-option-selector.model';
 import { SdTableOptionSort } from './table-option-sort.model';
 import { SdTableOptionStyle } from './table-option-style.model';
 import { SdTableOptionTree } from './table-option-tree.model';
+import type { SdTableMobileTemplate } from './table-mobile.model';
 import type { SdTableOptionAggregate } from './table-aggregate.model';
 
 export type SdTableOption<T = any> = SdTableLocalOption<T> | SdTableServerOption<T>;
@@ -45,10 +46,19 @@ interface SdTableBaseOption<T = any> {
    * cần autoId theo dòng ổn định cho E2E.
    */
   rowKey?: string;
-  /** Mobile cards activate automatically when sdTableRowMobileDef is projected. */
+  /**
+   * Phone layout. Cards activate when the table has a card body: a projected `sdTableRowMobileDef` (wins, with a dev
+   * warning when `template` is set too), `template`, or `SD_TABLE_CONFIGURATION.mobile.autoTemplate`.
+   */
   mobile?: {
     /** Row command title and accessible labels; falls back to rowKey, then row number. */
     rowLabel?: (row: T) => string;
+    /**
+     * Card body on phones: a `TemplateRef`, or `{ data }` to build the card from row values. `false` keeps the desktop
+     * table on phones even with `autoTemplate`.
+     * @example `template: { data: row => ({ title: 'code', badge: 'status', highlight: 'total' }) }`
+     */
+    template?: SdTableMobileTemplate<T> | false;
   };
   /**
    * Cấu hình hiển thị/phục hồi config của table.

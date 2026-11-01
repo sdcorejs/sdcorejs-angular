@@ -34,6 +34,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': 'Kéo để đổi thứ tự dòng',
   'core.component.table.mobile.details': 'Chi tiết',
   'core.component.table.mobile.summary': 'Tổng hợp',
+  'core.component.table.mobile.more-fields': 'Thêm {count} trường',
+  'core.component.table.mobile.show-less': 'Thu gọn',
   'core.common.back': 'Quay lại',
   'core.common.cancel': 'Hủy',
   'core.common.close': 'Đóng',

@@ -32,6 +32,8 @@ export const EN_MESSAGES = {
   'core.component.table.mobile.reorder': 'Drag to reorder row',
   'core.component.table.mobile.details': 'Details',
   'core.component.table.mobile.summary': 'Summary',
+  'core.component.table.mobile.more-fields': '{count} more fields',
+  'core.component.table.mobile.show-less': 'Show less',
   'core.common.back': 'Back',
   'core.common.cancel': 'Cancel',
   'core.common.close': 'Close',

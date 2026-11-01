@@ -24,6 +24,7 @@ import {
   isSignal,
   output,
   signal,
+  TemplateRef,
   untracked,
   viewChild,
 } from '@angular/core';
@@ -60,6 +61,7 @@ import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-d
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
+import { type SdTableMobileBody, warnMobileOnce } from './services/mobile/mobile-view.util';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTableColumn, SdTableColumnNormal } from './models/table-column.model';
@@ -396,7 +398,33 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   sdTitleDefs = contentChildren(SdTableTitleDefDirective);
   readonly sdRowMobileDef = contentChild<SdTableRowMobileDefDirective<T>>(SdTableRowMobileDefDirective, { descendants: false });
   readonly isMobile = inject(SdViewportService).isMobile;
-  readonly mobileCards = computed(() => this.isMobile() && !!this.sdRowMobileDef());
+  /**
+   * Body of the phone cards, by priority: `sdTableRowMobileDef`, then `mobile.template` (a template or `{ data }`),
+   * then `SD_TABLE_CONFIGURATION.mobile.autoTemplate`. `undefined`: phones show the desktop table.
+   */
+  readonly mobileBody = computed<SdTableMobileBody<T> | undefined>(() => {
+    const directive = this.sdRowMobileDef();
+    const template = this.tableOption()?.mobile?.template;
+    if (directive) {
+      if (template !== undefined && template !== false)
+        untracked(() =>
+          warnMobileOnce(this, 'directive-and-template', 'sdTableRowMobileDef and mobile.template are both set; the directive is used.')
+        );
+      return { kind: 'template', templateRef: directive.templateRef };
+    }
+    if (template === false) return undefined;
+    if (template instanceof TemplateRef) return { kind: 'template', templateRef: template };
+    if (template && typeof template === 'object' && typeof template.data === 'function')
+      return { kind: 'data', layout: template.layout, data: template.data };
+    if (template !== undefined && template !== null) {
+      untracked(() =>
+        warnMobileOnce(this, 'template', 'mobile.template must be a TemplateRef, { data } or false; the desktop table is used.', template)
+      );
+      return undefined;
+    }
+    return this.tableConfiguration?.mobile?.autoTemplate ? { kind: 'auto' } : undefined;
+  });
+  readonly mobileCards = computed(() => this.isMobile() && !!this.mobileBody());
   /**
    * The footer settings button carries a dot while the table uses a setup of its own: stored columns that differ from
    * the option (settings modal or a resize on the table), inline external filters that differ from `defaultShowing`, or

@@ -34,6 +34,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': 'ドラッグして行を並べ替え',
   'core.component.table.mobile.details': '詳細',
   'core.component.table.mobile.summary': '集計',
+  'core.component.table.mobile.more-fields': '他 {count} 項目',
+  'core.component.table.mobile.show-less': '閉じる',
   'core.common.back': '戻る',
   'core.common.cancel': 'キャンセル',
   'core.common.close': '閉じる',

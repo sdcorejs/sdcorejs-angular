@@ -34,6 +34,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.reorder': '드래그하여 행 순서 변경',
   'core.component.table.mobile.details': '세부 정보',
   'core.component.table.mobile.summary': '요약',
+  'core.component.table.mobile.more-fields': '필드 {count}개 더 보기',
+  'core.component.table.mobile.show-less': '접기',
   'core.common.back': '뒤로',
   'core.common.cancel': '취소',
   'core.common.close': '닫기',

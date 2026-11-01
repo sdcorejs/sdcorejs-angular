@@ -8,6 +8,7 @@
 @let _expandTemplate = _table.sdSubInformation();
 @let _skeletonCards = skeletonCards();
 @let _hasSelector = !!_option.selector?.visible;
+@let _cellDef = _table.cellDef();
 @let _endColumn = !_selectionMode && _table.rowCommands().length > 0;
 
 @if (_option.selector?.visible) {
@@ -128,7 +129,16 @@
             </div>
           }
           <div class="sd-mobile-card-body">
-            <ng-container *ngTemplateOutlet="_table.sdRowMobileDef()!.templateRef; context: card.context"></ng-container>
+            @if (card.body?.kind === 'data') {
+              <sd-table-mobile-card-data
+                [view]="$any(card.body).view"
+                [row]="$any(_row)"
+                [label]="card.label"
+                [cellDef]="_cellDef"
+                [autoId]="card.context.autoId"></sd-table-mobile-card-data>
+            } @else if (card.body?.kind === 'template') {
+              <ng-container *ngTemplateOutlet="$any(card.body).templateRef; context: card.context"></ng-container>
+            }
           </div>
           @if (_expandTemplate && !_option.expand?.always) {
             <!-- why: the Details line comes before the block it discloses, at the end of the card. -->
