@@ -48,8 +48,9 @@ describe('table custom setup', () => {
       configuration: ConfiguredTable | undefined,
       columns: unknown[] = COLUMNS,
       inlineExternal?: Record<string, boolean>,
-      filter?: unknown
-    ) => sdTableHasCustomSetup({ option: option(columns, filter), configuration, inlineExternal });
+      filter?: unknown,
+      filterMode?: 'default' | 'query-bar'
+    ) => sdTableHasCustomSetup({ option: option(columns, filter), configuration, inlineExternal, filterMode });
 
     it('is false for the defaults and for nothing stored', () => {
       expect(has(stored())).toBe(false);
@@ -127,6 +128,23 @@ describe('table custom setup', () => {
     it('ignores inline external filters when filtering is off', () => {
       const filter = { disabled: true, externalFilters: [{ field: 'status', defaultShowing: true }] };
       expect(has(stored(), COLUMNS, { status: false }, filter)).toBe(false);
+    });
+
+    it('is true when the stored filter mode differs from the option', () => {
+      expect(has(stored(), COLUMNS, undefined, {}, 'query-bar')).toBe(true);
+      expect(has(stored(), COLUMNS, undefined, { mode: 'query-bar' }, 'default')).toBe(true);
+      expect(has(stored(), COLUMNS, undefined, {}, 'default'))
+        .withContext('same as the default mode')
+        .toBe(false);
+      expect(has(stored(), COLUMNS, undefined, { mode: 'query-bar' }, 'query-bar')).toBe(false);
+      expect(has(stored(), COLUMNS, undefined, {}, undefined))
+        .withContext('nothing stored')
+        .toBe(false);
+    });
+
+    it('ignores the stored filter mode when it cannot be picked or filtering is off', () => {
+      expect(has(stored(), COLUMNS, undefined, { modeSelectable: false }, 'query-bar')).toBe(false);
+      expect(has(stored(), COLUMNS, undefined, { disabled: true }, 'query-bar')).toBe(false);
     });
   });
 });

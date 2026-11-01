@@ -1,6 +1,6 @@
 <div class="d-flex align-items-center flex-wrap gap-8 mb-16">
-  <sd-button title="Mode default" size="sm" [type]="mode() === 'default' ? 'fill' : 'outline'" (click)="mode.set('default')" />
-  <sd-button title="Mode query-bar" size="sm" [type]="mode() === 'query-bar' ? 'fill' : 'outline'" (click)="mode.set('query-bar')" />
+  <sd-button title="Editor inline" size="sm" [type]="editor() === 'inline' ? 'fill' : 'outline'" (click)="editor.set('inline')" />
+  <sd-button title="Editor popover" size="sm" [type]="editor() === 'popover' ? 'fill' : 'outline'" (click)="editor.set('popover')" />
   <sd-checkbox label="manualFilter" size="sm" [model]="manualFilter()" (sdChange)="manualFilter.set(!!$event)" />
 </div>
 @let _option = option();
@@ -9,5 +9,5 @@
     <sd-button title="Xuất" size="sm" type="outline" prefixIcon="download" />
   </ng-template>
 </sd-table>
-<p class="table-note">pagingReq gửi đi (cùng thao tác cho ra cùng payload ở hai mode):</p>
+<p class="table-note">pagingReq gửi đi (đổi Khung / Thanh bộ lọc trong Thiết lập › Bộ lọc: cùng thao tác cho ra cùng payload):</p>
 <pre class="table-paging-req" data-autoid="query-bar-demo-paging-req">{{ pagingReq()?.filters | json }}</pre>

@@ -34,9 +34,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+> [!IMPORTANT]
+> **Before upgrading:** the table query bar (`filter.mode: 'query-bar'`) now edits chips inline on the bar; set `filter.queryBar.editor: 'popover'` (per table or in `SD_TABLE_CONFIGURATION`) to keep the popover chips. The table settings modal gets a **Bộ lọc** tab where users can switch between the filter panel and the query bar; set `filter.modeSelectable: false` to keep `filter.mode` fixed. Default client XLSX export writes untransformed `date`, `datetime` and `time` columns as Excel date/time cells instead of date strings.
+
 ### Changed (BREAKING for consumers)
 
 #### Table
+
+- `filter.queryBar.editor` defaults to `'inline'` (was `'popover'`): each chip's operator and value are edited directly on the bar. A standalone `sd-query-bar` still defaults to `'popover'`.
+  - The header filter icon focuses the field's chip, or starts building one when the field has none. Its `aria-haspopup` follows what opens: `menu` with the popover editor; with the inline editor nothing for a field with a chip, else `menu` (operator menu), `listbox` (value picker) or `dialog` (date picker).
+  - **Migration:** to keep the previous look, set the editor per table or for every table.
+
+    ```diff
+      filter: {
+        mode: 'query-bar',
+    +   queryBar: { editor: 'popover' },
+      },
+    ```
 
 - Default client XLSX export now writes untransformed `date`, `datetime` and `time` columns as Excel numeric date/time cells, displayed as `dd/MM/yyyy`, `dd/MM/yyyy HH:mm:ss` and `HH:mm:ss`.
   - **Migration:** code reading these XLSX files must accept numeric/date cells instead of the previous date strings. Existing transforms still take priority; their strings remain text. CSV retains its existing string formats.
@@ -47,6 +61,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Excel
 
 - `SdExcelColumn.numFmt` sets an Excel number format for numeric or `Date` data cells in `SdExcelService.export()`. Strings are never parsed as dates. Omitted or empty formats preserve integer `0` / decimal General defaults; templates, CSV and additional sheets retain their existing behavior.
+
+#### Table
+
+- The settings modal gets a **Bộ lọc** tab next to **Cột**, with one footer for both: Apply stores both tabs, Skip drops both, **Khôi phục mặc định** resets both.
+  - **Kiểu lọc:** two radio cards, **Khung bộ lọc** and **Thanh bộ lọc**, to pick the filter mode (hidden with `filter.modeSelectable: false`).
+  - **Bộ lọc hiển thị:** one switch row per external filter: shown in the panel, or pinned as a chip on the bar. Required filters are locked; on the bar, a filter the bar cannot show is off and locked, and `queryBar.pinned` locks the list. With the bar picked, a warning says that filters not on the bar still filter by their value.
+  - **Thanh bộ lọc** is disabled, with a note naming them, while a `required` external filter cannot go on the bar.
+  - The tab shows on desktop when filtering is on and the table has a filter. New i18n keys `core.component.table.config.tab-columns`, `filter-kind`, `mode-default`, `mode-default-hint`, `mode-query-bar`, `mode-query-bar-hint`, `filter-list`, `filters-hint-panel`, `filters-hint-bar`, `filters-hint-pinned`, `filter-required`, `filter-off-bar`, `mode-query-bar-blocked`, `filters-off-bar-warning` and `fixed-hint` in all five languages.
+- The filter mode can be a user setting: `TableFilterConfiguration.mode` stores the mode the user picks, next to the inline external filters, and wins over `filter.mode`.
+  - `filter.modeSelectable` (default `true`, also in `SD_TABLE_CONFIGURATION.filter`): `false` always uses `filter.mode` and ignores a stored choice.
+  - The stored mode turns on the dot of the settings button while it differs from `filter.mode`, and **Khôi phục mặc định** clears it. Mobile still renders the default controls.
+  - With `filter.key` the choice survives reloads; without it, it lasts until the table gets a new option object (as `inlineExternal`).
+
+### Changed
+
+#### Table
+
+- `filterRegister.configuration.set()` keeps the fields it is not given (it used to replace the whole filter setup): setting only `inlineExternal` keeps the mode, and `mode: undefined` clears it.
+- The **Cố định khi cuộn ngang** and **Rút gọn nội dung dài** options of an open row in the settings modal are rows with the label and a description on the left and an `sd-switch` on the right (were checkboxes); the description no longer pushes the other option out of line.
 
 ## [3.4] - 2026-10-30
 

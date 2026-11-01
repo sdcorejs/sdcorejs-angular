@@ -13163,8 +13163,8 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-bang-query-bar') {
       <demo-section heading="Lọc bằng query bar"
         data-example-typescript="./examples/table-query-bar.example.ts" data-example-template="./examples/table-query-bar.example.html" data-example-style="./examples/table-pattern-example.scss"
-        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
-        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
+        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar.editor', value: 'inline (mặc định) / popover' }, { name: 'filter.manualFilter', value: 'true' }, { name: 'config.visible', value: 'true' }]"
+        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip; chip sửa ngay trên thanh (editor mặc định inline), nút Editor popover đổi sang popover. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Thiết lập › Bộ lọc cho người dùng chọn Khung hay Thanh bộ lọc và bộ lọc nào hiện / ghim; lựa chọn được lưu theo key, Khôi phục mặc định xoá nó. Đổi kiểu lọc để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
         <app-table-query-bar-example />
       </demo-section>
       }
@@ -13173,7 +13173,7 @@ const TASKS: Task[] = [
       <demo-section heading="Thiết lập cột"
         data-example-typescript="./examples/table-settings.example.ts" data-example-template="./examples/table-settings.example.html"
         [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
-        note="Nút Thiết lập ở footer mở modal: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng, cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
+        note="Nút Thiết lập ở footer mở modal hai tab. Cột: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng và bật / tắt cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Bộ lọc: chọn Khung hay Thanh bộ lọc. Áp dụng lưu cả hai tab. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
         <app-table-settings-example />
       </demo-section>
       }
@@ -15220,12 +15220,13 @@ const ORDERS: Order[] = Array.from({ length: 36 }, (_, index) => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableQueryBarExampleComponent {
-  readonly mode = signal<'default' | 'query-bar'>('query-bar');
+  /** Chip editor of the bar; sd-table defaults to \`'inline'\`. */
+  readonly editor = signal<'inline' | 'popover'>('inline');
   readonly manualFilter = signal(false);
   /** Last \`pagingReq\` sent by the table — the same edit must give the same payload in both modes. */
   readonly pagingReq = signal<PagingReq | undefined>(undefined);
 
-  // why: option mới mỗi lần đổi mode → bảng dựng lại; cùng \`filter.key\` + \`cacheable\` nên giá trị đã lọc được giữ.
+  // why: option mới mỗi lần đổi editor → bảng dựng lại; cùng \`filter.key\` + \`cacheable\` nên giá trị đã lọc được giữ.
   readonly option = computed<SdTableOption<Order>>(() => ({
     type: 'server',
     rowKey: 'id',
@@ -15238,9 +15239,13 @@ export class TableQueryBarExampleComponent {
       return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
     },
     paginate: { pageSize: 8, pages: [8, 16, 36] },
+    // Thiết lập > Bộ lọc: người dùng tự chọn khung hay thanh bộ lọc, và bộ lọc nào hiện / ghim.
+    config: { visible: true },
     sort: { enable: true },
     filter: {
-      mode: this.mode(),
+      // why: kiểu lọc là mặc định của ứng dụng; người dùng đổi trong Thiết lập › Bộ lọc và lựa chọn đó được lưu theo \`key\`.
+      mode: 'query-bar',
+      queryBar: { editor: this.editor() },
       manualFilter: this.manualFilter(),
       key: 'showcase-table-query-bar',
       cacheable: true,
@@ -30199,8 +30204,8 @@ Bởi Nguyễn Văn A"></sd-badge>
   "components/table/example-loc-bang-query-bar": {
     ...SHOWCASE_PAGE_SOURCES["components/table/example-loc-bang-query-bar"],
     html: `<div class="d-flex align-items-center flex-wrap gap-8 mb-16">
-  <sd-button title="Mode default" size="sm" [type]="mode() === 'default' ? 'fill' : 'outline'" (click)="mode.set('default')" />
-  <sd-button title="Mode query-bar" size="sm" [type]="mode() === 'query-bar' ? 'fill' : 'outline'" (click)="mode.set('query-bar')" />
+  <sd-button title="Editor inline" size="sm" [type]="editor() === 'inline' ? 'fill' : 'outline'" (click)="editor.set('inline')" />
+  <sd-button title="Editor popover" size="sm" [type]="editor() === 'popover' ? 'fill' : 'outline'" (click)="editor.set('popover')" />
   <sd-checkbox label="manualFilter" size="sm" [model]="manualFilter()" (sdChange)="manualFilter.set(!!$event)" />
 </div>
 @let _option = option();
@@ -30209,7 +30214,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     <sd-button title="Xuất" size="sm" type="outline" prefixIcon="download" />
   </ng-template>
 </sd-table>
-<p class="table-note">pagingReq gửi đi (cùng thao tác cho ra cùng payload ở hai mode):</p>
+<p class="table-note">pagingReq gửi đi (đổi Khung / Thanh bộ lọc trong Thiết lập › Bộ lọc: cùng thao tác cho ra cùng payload):</p>
 <pre class="table-paging-req" data-autoid="query-bar-demo-paging-req">{{ pagingReq()?.filters | json }}</pre>`,
   },
   "components/table/example-mobile-chon-du-lieu": {

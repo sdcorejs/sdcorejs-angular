@@ -86,7 +86,9 @@
   </ng-template>
   <!-- Icon lọc ở header cột (mode query-bar): mở chip của field trên thanh. why: nằm cạnh .c-header-title chứ không
        nằm trong — title sort được là role=button và bắt Enter, lồng button vào sẽ thành nested-interactive và Enter
-       trên icon sẽ sort. Chặn mousedown/click để không sort, không bắt đầu kéo cột. -->
+       trên icon sẽ sort. Chặn mousedown/click để không sort, không bắt đầu kéo cột. aria-haspopup theo đúng thứ mở ra:
+       menu của chip (popover), hoặc với editor inline thì không gì (chip đã có, chỉ focus) / menu toán tử / bộ chọn
+       giá trị của chip đang dựng. -->
   <ng-template #queryBarTrigger let-column>
     @let _triggerKey = _queryBarKeys?.get(column.field);
     @if (_triggerKey) {
@@ -97,7 +99,7 @@
         [class.sd-table-filter-trigger--active]="_triggerActive"
         [attr.data-autoid]="_autoId ? _autoId + '-filter-trigger-' + column.field : null"
         [attr.aria-label]="filterTriggerLabel(column, _triggerActive)"
-        aria-haspopup="menu"
+        [attr.aria-haspopup]="queryBarTriggerPopup(_triggerKey)"
         (mousedown)="$event.stopPropagation()"
         (click)="$event.stopPropagation(); openQueryBarField(_triggerKey, $event.currentTarget)">
         <sd-icon name="filter_alt" aria-hidden="true"></sd-icon>
@@ -956,7 +958,12 @@
   </div>
 
   @if (_tableOption.config?.visible) {
-    <config [autoId]="_autoId" [tableOption]="_tableOption" (defaultsRestored)="onConfigDefaultsRestored()" />
+    <config
+      [autoId]="_autoId"
+      [tableOption]="_tableOption"
+      [filterSetup]="configFilter()"
+      (defaultsRestored)="onConfigDefaultsRestored()"
+      (filterApplied)="onConfigFilterApplied($event)" />
   }
   <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
   @if (!_tableOption.filter?.disabled && filterRegister) {

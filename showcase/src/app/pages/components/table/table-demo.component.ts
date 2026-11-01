@@ -235,8 +235,8 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-bang-query-bar') {
       <demo-section heading="Lọc bằng query bar"
         data-example-typescript="./examples/table-query-bar.example.ts" data-example-template="./examples/table-query-bar.example.html" data-example-style="./examples/table-pattern-example.scss"
-        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar', value: 'editor / pinned / exclude' }, { name: 'filter.manualFilter', value: 'true' }]"
-        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Đổi mode để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
+        [props]="[{ name: 'filter.mode', value: 'query-bar' },{ name: 'filter.queryBar.editor', value: 'inline (mặc định) / popover' }, { name: 'filter.manualFilter', value: 'true' }, { name: 'config.visible', value: 'true' }]"
+        note="Quick search, external filter và filter dưới cột gộp vào một thanh chip; chip sửa ngay trên thanh (editor mặc định inline), nút Editor popover đổi sang popover. Kho xuất, Ưu tiên, Trạng thái và Ngày tạo ghim sẵn; các field khác ở nút +. Icon phễu cạnh tiêu đề cột mở chip của cột đó. Thiết lập › Bộ lọc cho người dùng chọn Khung hay Thanh bộ lọc và bộ lọc nào hiện / ghim; lựa chọn được lưu theo key, Khôi phục mặc định xoá nó. Đổi kiểu lọc để so pagingReq: cùng thao tác cho ra cùng payload. Giá trị được cache, tải lại trang vẫn còn. Trên mobile bảng giữ giao diện mặc định.">
         <app-table-query-bar-example />
       </demo-section>
       }
@@ -245,7 +245,7 @@ const TASKS: Task[] = [
       <demo-section heading="Thiết lập cột"
         data-example-typescript="./examples/table-settings.example.ts" data-example-template="./examples/table-settings.example.html"
         [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
-        note="Nút Thiết lập ở footer mở modal: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng, cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
+        note="Nút Thiết lập ở footer mở modal hai tab. Cột: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng và bật / tắt cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Bộ lọc: chọn Khung hay Thanh bộ lọc. Áp dụng lưu cả hai tab. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
         <app-table-settings-example />
       </demo-section>
       }

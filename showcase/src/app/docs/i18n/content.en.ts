@@ -732,6 +732,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     description:
       'Uses the SdTable loading flow: skeleton rows while there are no rows yet, a progress bar over dimmed rows when a reload takes longer than 300 ms, empty/no-results from the returned result, and an error with a retry that keeps the query. Customize the content with sdDataStateTemplate and SdDataState.',
   },
+  'components/table/example-loc-bang-query-bar': {
+    title: 'Filtering with the query bar',
+    description:
+      'Quick search, external filters and column filters share one chip bar; chips are edited right on the bar (the inline editor is the default), and Editor popover switches to popovers. The warehouse, priority, status and created-date filters are pinned; other fields are under +. The funnel icon beside a column title opens the chip of that column. Settings › Filters lets users pick the filter panel or the filter bar and which filters show or are pinned; the choice is stored by key, and Restore defaults clears it. Switch the layout to compare pagingReq: the same edits send the same payload. Values are cached and survive a reload. On mobile the table keeps the default layout.',
+  },
   'components/table/example-mobile-chon-du-lieu': {
     title: 'Mobile data selection',
     description: 'Three independent tables: single selection with a default; multiple selection without bulk actions; row commands only.',
@@ -770,6 +775,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     title: 'Mobile cards and actions',
     description:
       'The Add button is centered above the cards. The card margins on both sides are fixed, and the small checkbox overlaps the right corner of the border. The selection bar leaves 16px at both ends; many actions wrap evenly onto new rows. Tapping a card opens the row actions sheet; the Tools button in the footer opens the sheet for reload, export, filter and sort.',
+  },
+  'components/table/example-thiet-lap-cot': {
+    title: 'Column settings',
+    description:
+      'The Settings button in the footer opens a modal with two tabs. Columns: find a column (tables with more than 8 columns), press a row to edit its title and width and to switch fixed and shortened on or off; drag ⠿, or pick ⠿ and use ↑ ↓, to reorder. Filters: pick the filter panel or the filter bar. Apply stores both tabs. The button carries a dot while the table uses its own settings; Restore defaults turns it off. The customer column has minWidth/maxWidth, and the note column is 20% wide.',
   },
   'components/table/example-toi-gian': { title: 'Minimal' },
   'components/table/example-tra-cuu-co-ban': {

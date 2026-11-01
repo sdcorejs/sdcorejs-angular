@@ -80,12 +80,13 @@ const ORDERS: Order[] = Array.from({ length: 36 }, (_, index) => ({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableQueryBarExampleComponent {
-  readonly mode = signal<'default' | 'query-bar'>('query-bar');
+  /** Chip editor of the bar; sd-table defaults to `'inline'`. */
+  readonly editor = signal<'inline' | 'popover'>('inline');
   readonly manualFilter = signal(false);
   /** Last `pagingReq` sent by the table — the same edit must give the same payload in both modes. */
   readonly pagingReq = signal<PagingReq | undefined>(undefined);
 
-  // why: option mới mỗi lần đổi mode → bảng dựng lại; cùng `filter.key` + `cacheable` nên giá trị đã lọc được giữ.
+  // why: option mới mỗi lần đổi editor → bảng dựng lại; cùng `filter.key` + `cacheable` nên giá trị đã lọc được giữ.
   readonly option = computed<SdTableOption<Order>>(() => ({
     type: 'server',
     rowKey: 'id',
@@ -98,9 +99,13 @@ export class TableQueryBarExampleComponent {
       return { items: rows.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: rows.length };
     },
     paginate: { pageSize: 8, pages: [8, 16, 36] },
+    // Thiết lập > Bộ lọc: người dùng tự chọn khung hay thanh bộ lọc, và bộ lọc nào hiện / ghim.
+    config: { visible: true },
     sort: { enable: true },
     filter: {
-      mode: this.mode(),
+      // why: kiểu lọc là mặc định của ứng dụng; người dùng đổi trong Thiết lập › Bộ lọc và lựa chọn đó được lưu theo `key`.
+      mode: 'query-bar',
+      queryBar: { editor: this.editor() },
       manualFilter: this.manualFilter(),
       key: 'showcase-table-query-bar',
       cacheable: true,

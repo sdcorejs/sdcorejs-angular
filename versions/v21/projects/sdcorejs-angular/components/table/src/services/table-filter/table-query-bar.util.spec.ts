@@ -11,6 +11,7 @@ import {
   queryToTableFilter,
   sdTableActiveQueryKeys,
   sdTableQueryFields,
+  sdTableQueryTriggerPopup,
   tableFilterToQuery,
 } from './table-query-bar.util';
 
@@ -548,6 +549,40 @@ describe('table-query-bar.util', () => {
         'column:code',
         'column:total',
       ]);
+    });
+  });
+
+  // What the header filter icon opens (its aria-haspopup): the same steps as SdQueryBar.openField / beginBuild.
+  describe('sdTableQueryTriggerPopup', () => {
+    const field = (patch: Partial<SdQueryField>) => ({ key: 'column:x', label: 'X', type: 'string', ...patch }) as SdQueryField;
+
+    it('is the chip menu with the popover editor', () => {
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', true)).toBe('menu');
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', false)).toBe('menu');
+    });
+
+    it('is nothing with the inline editor when the field has a chip, which only gets focus', () => {
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN', 'EQUAL'] }), 'inline', true)).toBeNull();
+    });
+
+    it('is what building a chip opens with the inline editor', () => {
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN', 'EQUAL'] }), 'inline', false))
+        .withContext('operator menu')
+        .toBe('menu');
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'inline', false))
+        .withContext('typed straight into the chip')
+        .toBeNull();
+      expect(sdTableQueryTriggerPopup(field({ type: 'number', operators: ['EQUAL'] }), 'inline', false)).toBeNull();
+      const values = { type: 'values', items: [], valueField: 'id', displayField: 'name' } as Partial<SdQueryField>;
+      expect(sdTableQueryTriggerPopup(field({ ...values, operators: ['IN'] }), 'inline', false))
+        .withContext('value picker')
+        .toBe('listbox');
+      expect(sdTableQueryTriggerPopup(field({ type: 'date', operators: ['BETWEEN', 'EQUAL'] }), 'inline', false))
+        .withContext('a date skips the operator step')
+        .toBe('dialog');
+      expect(sdTableQueryTriggerPopup(field({ operators: ['NULL'] }), 'inline', false))
+        .withContext('a no-data operator adds the chip at once')
+        .toBeNull();
     });
   });
 
