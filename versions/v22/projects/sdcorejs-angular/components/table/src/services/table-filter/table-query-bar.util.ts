@@ -1,5 +1,11 @@
 import { isSignal, Signal } from '@angular/core';
-import type { SdQuery, SdQueryField } from '@sdcorejs/angular/components/query-bar';
+import {
+  SD_QUERY_NO_DATA_OPERATORS,
+  sdQueryAllowedOperators,
+  sdQueryDefaultOperator,
+  type SdQuery,
+  type SdQueryField,
+} from '@sdcorejs/angular/components/query-bar';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 import { SdTableColumnAnyRow } from '../../models/table-column.model';
@@ -146,6 +152,28 @@ const valuesField = (
         },
       }
     : { type, option: { items, valueField: option.valueField, displayField: option.displayField } };
+
+/**
+ * `aria-haspopup` of the header filter icon: what `SdQueryBar.openField` shows for `field` (same steps as `beginBuild`).
+ * The popover editor opens the chip menu. The inline editor only focuses an existing chip; for a field without a chip it
+ * builds one, which opens the operator menu, or the value picker of a values / date field (a date skips the operator
+ * step when its default operator is allowed).
+ */
+export const sdTableQueryTriggerPopup = (
+  field: SdQueryField,
+  editor: 'popover' | 'inline',
+  hasChip: boolean
+): 'menu' | 'listbox' | 'dialog' | null => {
+  if (editor === 'popover') return 'menu';
+  if (hasChip) return null;
+  const allowed = sdQueryAllowedOperators(field);
+  const date = field.type === 'date' || field.type === 'datetime';
+  if (date && allowed.includes(sdQueryDefaultOperator(field))) return 'dialog';
+  if (allowed.length > 1) return 'menu';
+  if (SD_QUERY_NO_DATA_OPERATORS.includes(allowed[0] ?? sdQueryDefaultOperator(field))) return null;
+  if (field.type === 'values' || field.type === 'lazy-values') return 'listbox';
+  return date ? 'dialog' : null;
+};
 
 /**
  * Why the query bar cannot show an external filter, or `undefined` when it can. Also tells the settings modal which

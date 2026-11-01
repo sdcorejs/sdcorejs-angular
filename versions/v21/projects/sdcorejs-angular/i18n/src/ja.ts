@@ -606,6 +606,9 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.filters-hint-pinned': 'バーに固定するフィルターはアプリで設定されています。',
   'core.component.table.config.filter-required': '必須',
   'core.component.table.config.filter-off-bar': 'バーには表示されません',
+  'core.component.table.config.mode-query-bar-blocked': '使用できません: 必須フィルター {titles} はバーに表示できません。',
+  'core.component.table.config.filters-off-bar-warning':
+    'バーにないフィルターも現在の値で絞り込みます。変更するにはフィルターパネルに切り替えてください。',
   'core.component.table.popup-export.select-columns': 'エクスポートする列を選択してください',
   'core.component.table.selector-action.selected': '{count} 件選択中',
   'core.component.table.selector-action.more': 'その他',

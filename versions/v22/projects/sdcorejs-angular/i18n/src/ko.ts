@@ -605,6 +605,9 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.filters-hint-pinned': '바에 고정할 필터는 앱에서 정해져 있습니다.',
   'core.component.table.config.filter-required': '필수',
   'core.component.table.config.filter-off-bar': '바에 없음',
+  'core.component.table.config.mode-query-bar-blocked': '사용할 수 없음: 필수 필터 {titles}을(를) 바에 표시할 수 없습니다.',
+  'core.component.table.config.filters-off-bar-warning':
+    '바에 없는 필터도 현재 값으로 계속 필터링합니다. 변경하려면 필터 패널로 전환하세요.',
   'core.component.table.popup-export.select-columns': '내보낼 열을 선택해 주세요',
   'core.component.table.selector-action.selected': '{count}개 선택됨',
   'core.component.table.selector-action.more': '더 보기',

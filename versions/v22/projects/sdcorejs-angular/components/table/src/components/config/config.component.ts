@@ -60,6 +60,11 @@ export interface ConfigFilterSetup {
   externalFilters: { field: string; title: string; required: boolean; offBar: boolean }[];
   /** `filter.queryBar.pinned`: the app picks the pinned chips, so the list cannot change them on the bar. */
   pinned?: string[];
+  /**
+   * Titles of the required external filters the bar cannot show. The bar would block the read with no place to fill
+   * them, so the bar card is off while there is any.
+   */
+  barBlockedBy: string[];
 }
 
 let nextId = 0;
@@ -185,6 +190,12 @@ export class ConfigComponent {
     if (this.filterMode() !== 'query-bar') return 'core.component.table.config.filters-hint-panel';
     return this.filterSetup()?.pinned ? 'core.component.table.config.filters-hint-pinned' : 'core.component.table.config.filters-hint-bar';
   });
+  /** Titles that keep the bar card off, joined for its note; '' when the bar can be picked. */
+  readonly barBlockedBy = computed(() => (this.filterSetup()?.barBlockedBy ?? []).join(', '));
+  /** On the bar, a filter it cannot show still filters by its value, with no chip to clear it. */
+  readonly offBarWarning = computed(
+    () => this.filterMode() === 'query-bar' && !!this.filterSetup()?.externalFilters.some(item => item.offBar)
+  );
 
   // ==========================================
   // 5. PUBLIC API

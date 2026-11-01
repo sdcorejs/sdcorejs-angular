@@ -604,6 +604,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.filters-hint-pinned': '栏上固定的筛选项由应用设定。',
   'core.component.table.config.filter-required': '必填',
   'core.component.table.config.filter-off-bar': '不在筛选栏中',
+  'core.component.table.config.mode-query-bar-blocked': '暂不可用：必填筛选项 {titles} 无法显示在筛选栏中。',
+  'core.component.table.config.filters-off-bar-warning': '不在筛选栏中的筛选项仍按当前值筛选。如需修改，请切换到筛选面板。',
   'core.component.table.popup-export.select-columns': '请选择要导出的列',
   'core.component.table.selector-action.selected': '已选择 {count} 项',
   'core.component.table.selector-action.more': '更多',

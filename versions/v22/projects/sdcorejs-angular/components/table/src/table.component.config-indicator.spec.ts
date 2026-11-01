@@ -309,7 +309,16 @@ describe('SdTable settings button indicator', () => {
           { field: 'area', title: 'Khu vực', required: false, offBar: true },
         ],
         pinned: undefined,
+        barBlockedBy: [],
       });
+    }));
+
+    it('names the required filters the bar cannot show', fakeAsync(() => {
+      configure();
+      const option = buildOption();
+      option.filter!.externalFilters!.push({ field: 'area', title: 'Khu vực', type: 'custom', required: true });
+      mount(option);
+      expect(config().filterSetup()!.barBlockedBy).toEqual(['Khu vực']);
     }));
 
     it('stores what Apply sends, and the table follows it', fakeAsync(() => {
@@ -355,7 +364,7 @@ describe('SdTable settings button indicator', () => {
     it('gives the modal no filter tab on mobile', fakeAsync(() => {
       configure(true);
       mount(buildOption());
-      expect(table.configFilter()).toBeUndefined();
+      expect(config().filterSetup()).toBeUndefined();
     }));
   });
 

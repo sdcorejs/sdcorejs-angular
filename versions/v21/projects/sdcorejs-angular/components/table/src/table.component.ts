@@ -53,6 +53,7 @@ import {
   sdTableActiveQueryKeys,
   sdTableExternalOffBar,
   sdTableQueryFields,
+  sdTableQueryTriggerPopup,
   tableFilterToQuery,
 } from './services/table-filter/table-query-bar.util';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
@@ -732,9 +733,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /**
    * Tab "Bộ lọc" của modal Thiết lập: kiểu lọc và external filter hiện ở khung / ghim trên thanh. Không có tab khi
    * `filter.disabled`, trên mobile (luôn dùng giao diện mặc định), khi bảng không có bộ lọc nào, hoặc khi không chọn
-   * được kiểu lọc mà cũng không có external filter.
+   * được kiểu lọc mà cũng không có external filter. `barBlockedBy`: external filter bắt buộc mà thanh không hiển thị
+   * được — thanh sẽ chặn đọc dữ liệu mà người dùng không có chỗ nhập, nên modal không cho chọn thanh.
    */
-  readonly configFilter = computed<ConfigFilterSetup | undefined>(() => {
+  protected readonly configFilter = computed<ConfigFilterSetup | undefined>(() => {
     const option = this.tableOption();
     const filter = option?.filter;
     if (!option || !filter || filter.disabled || this.isMobile()) return undefined;
@@ -746,18 +748,20 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (!modeSelectable && !externals.length) return undefined;
     const exclude = new Set(filter.queryBar?.exclude ?? []);
     const filterDefs = new Set(this.sdFilterDefs().map(def => def.sdTableFilterDef()));
+    const externalFilters = externals.map(item => ({
+      field: item.field,
+      title: item.title,
+      required: !!item.required,
+      offBar: !!sdTableExternalOffBar(item, { exclude, filterDefs }),
+    }));
     return {
       mode: filter.mode ?? 'default',
       storedMode: this.#filterModeSetup(),
       modeSelectable,
       inlineExternal: this.#inlineExternal(),
-      externalFilters: externals.map(item => ({
-        field: item.field,
-        title: item.title,
-        required: !!item.required,
-        offBar: !!sdTableExternalOffBar(item, { exclude, filterDefs }),
-      })),
+      externalFilters,
       pinned: filter.queryBar?.pinned,
+      barBlockedBy: externalFilters.filter(item => item.required && item.offBar).map(item => item.title),
     };
   });
   /** Giao diện lọc người dùng đã lưu (modal Thiết lập), theo lần phát gần nhất của thiết lập bộ lọc. */
@@ -890,6 +894,16 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const value = this.#appliedFilter();
     return ctx && value ? sdTableActiveQueryKeys(value, ctx) : new Set<string>();
   });
+
+  /** `aria-haspopup` của icon lọc ở header, theo khoá thanh: cái mà mở field trên thanh sẽ hiện ra. */
+  readonly #queryBarTriggerPopups = computed(() => {
+    const ctx = this.queryBarModel();
+    const editor = this.queryBarOption()?.mode ?? 'popover';
+    const chips = new Set(this.barFilters().map(filter => (filter as { field?: string }).field));
+    return new Map(ctx?.fields.map(field => [field.key, sdTableQueryTriggerPopup(field, editor, chips.has(field.key))]));
+  });
+
+  queryBarTriggerPopup = (key: string) => this.#queryBarTriggerPopups().get(key) ?? null;
 
   /** `aria-label` của icon lọc ở header: "Lọc theo …" / "Đang lọc theo …". */
   filterTriggerLabel(column: SdTableColumn, active: boolean): string {

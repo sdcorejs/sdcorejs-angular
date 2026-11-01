@@ -34,6 +34,14 @@ specs first, commit only when the user says so. No design handoff: the decisions
 - Step 5: the showcase query-bar demo drops its Mode buttons (a stored choice wins over `filter.mode`, so they would
   stop working after a pick in the settings) for Editor inline / popover buttons, and shows the settings button.
 
+## Independent review of PR #130 (2026-11-01)
+No blocker. Fixed: the bar card is disabled while a required external filter cannot go on the bar, and a warning
+shows on the bar when a filter it cannot show still filters; the header icon's `aria-haspopup` follows what opens
+(`sdTableQueryTriggerPopup`, mirrors `SdQueryBar.beginBuild`); only the selected tab has `aria-controls`, panels take
+focus; `configFilter` is protected; the storage spec writes a bad mode straight into storage; docs and CHANGELOG
+wording. Kept on purpose: the filter list ignores `hideExternalFilterToolbar` (documented). Left for later: the notes
+under the switches are not tied to them with `aria-describedby` (needs a new `sd-switch` input).
+
 ## Screenshots (`.sdcorejs/handoff/screenshots/`)
 17–18 switch rows (light, dark) · 19–20 inline query bar (light, dark) · 21–23 filter tab (panel, bar, dark) ·
 24 showcase query-bar demo after step 5.

@@ -156,11 +156,21 @@ describe('SdTableFilterService configuration.mode', () => {
     expect(configuration.get()).toEqual({ inlineExternal: { status: false, note: true } });
   });
 
-  it('reads the stored mode back after a reload, and drops a value it does not know', () => {
+  it('reads the stored mode back after a reload', () => {
     register().configuration.set({ mode: 'query-bar' });
     expect(register(true).configuration.get().mode).toBe('query-bar');
-    register().configuration.set({ mode: 'grid' as never });
-    expect(register(true).configuration.get().mode).toBeUndefined();
+  });
+
+  it('drops a stored mode it does not know when it reads the storage', () => {
+    // why: set() đã bỏ giá trị lạ — ghi thẳng vào storage (bản cũ, sửa tay) để đi đúng nhánh đọc lại. `default` là một
+    // phần identity của entry nên phải trùng với default mà service dùng.
+    const raw = TestBed.inject(SdStorageService).create<unknown>(
+      { prefix: 'GRID-FILTER-CONFIGURATION', key },
+      { default: { inlineExternal: { status: true, note: false } } }
+    );
+    raw.set({ inlineExternal: { status: false, note: true }, mode: 'grid' });
+    raw.destroy();
+    expect(register().configuration.get()).toEqual({ inlineExternal: { status: false, note: true } });
   });
 
   it('removes the mode with the inline external filters', () => {

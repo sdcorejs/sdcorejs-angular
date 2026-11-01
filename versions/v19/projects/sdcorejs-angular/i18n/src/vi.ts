@@ -604,6 +604,9 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.config.filters-hint-pinned': 'Ứng dụng đã chọn sẵn bộ lọc ghim trên thanh.',
   'core.component.table.config.filter-required': 'Bắt buộc',
   'core.component.table.config.filter-off-bar': 'Không có trên thanh',
+  'core.component.table.config.mode-query-bar-blocked': 'Chưa dùng được: {titles} là bộ lọc bắt buộc nhưng không có trên thanh.',
+  'core.component.table.config.filters-off-bar-warning':
+    'Bộ lọc không có trên thanh vẫn lọc theo giá trị đang có. Đổi về Khung bộ lọc để sửa.',
   'core.component.table.popup-export.select-columns': 'Vui lòng chọn cột dữ liệu để xuất',
   'core.component.table.selector-action.selected': 'Đã chọn {count}',
   'core.component.table.selector-action.more': 'Thêm',

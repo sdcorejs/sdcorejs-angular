@@ -20,7 +20,7 @@
               [id]="tabId(tabKey)"
               [attr.data-tab]="tabKey"
               [attr.data-autoid]="_autoId ? _autoId + '-config-tab-' + tabKey : null"
-              [attr.aria-controls]="panelId(tabKey)"
+              [attr.aria-controls]="_tab === tabKey ? panelId(tabKey) : null"
               [attr.aria-selected]="_tab === tabKey"
               [attr.tabindex]="_tab === tabKey ? 0 : -1"
               [class.c-tab--active]="_tab === tabKey"
@@ -35,7 +35,8 @@
           class="c-panel"
           [attr.role]="_filterSetup ? 'tabpanel' : null"
           [attr.id]="_filterSetup ? panelId('columns') : null"
-          [attr.aria-labelledby]="_filterSetup ? tabId('columns') : null">
+          [attr.aria-labelledby]="_filterSetup ? tabId('columns') : null"
+          [attr.tabindex]="_filterSetup ? 0 : null">
           <div class="c-toolbar">
             @if (searchable()) {
               <sd-input
@@ -218,7 +219,13 @@
           </div>
         </div>
       } @else {
-        <div class="c-panel c-filter-panel" role="tabpanel" [id]="panelId('filters')" [attr.aria-labelledby]="tabId('filters')">
+        <!-- why: tabindex 0 — panel vẫn nhận focus khi mọi switch đều bị khoá (APG tabs). -->
+        <div
+          class="c-panel c-filter-panel"
+          role="tabpanel"
+          tabindex="0"
+          [id]="panelId('filters')"
+          [attr.aria-labelledby]="tabId('filters')">
           @if (_filterSetup?.modeSelectable) {
             <!-- why: radio thật trong từng thẻ — ← → / ↑ ↓ đổi lựa chọn và trình đọc màn hình đọc "1 trên 2" không cần code
                  riêng. Tên là tiêu đề thẻ, mô tả là dòng phụ. -->
@@ -227,16 +234,18 @@
               <div class="c-mode-cards">
                 @for (mode of modes; track mode) {
                   @let _on = filterMode() === mode;
-                  <label class="c-mode" [class.c-mode--on]="_on" [attr.data-mode]="mode">
+                  @let _blocked = mode === 'query-bar' && barBlockedBy();
+                  <label class="c-mode" [class.c-mode--on]="_on" [class.c-mode--disabled]="!!_blocked" [attr.data-mode]="mode">
                     <input
                       type="radio"
                       class="c-mode-radio"
                       [name]="modeName"
                       [value]="mode"
                       [checked]="_on"
+                      [disabled]="!!_blocked"
                       [attr.data-autoid]="_autoId ? _autoId + '-config-mode-' + mode : null"
                       [attr.aria-labelledby]="modeName + '-' + mode"
-                      [attr.aria-describedby]="modeName + '-' + mode + '-hint'"
+                      [attr.aria-describedby]="modeName + '-' + mode + '-hint' + (_blocked ? ' ' + modeName + '-blocked' : '')"
                       (change)="pickMode(mode)" />
                     <span class="c-mode-text">
                       <span class="c-mode-title" [id]="modeName + '-' + mode">
@@ -245,6 +254,11 @@
                       <span class="c-mode-desc" [id]="modeName + '-' + mode + '-hint'">
                         {{ 'core.component.table.config.mode-' + mode + '-hint' | sdTranslate }}
                       </span>
+                      @if (_blocked) {
+                        <span class="c-mode-blocked" [id]="modeName + '-blocked'">
+                          {{ 'core.component.table.config.mode-query-bar-blocked' | sdTranslate: { titles: _blocked } }}
+                        </span>
+                      }
                     </span>
                   </label>
                 }
@@ -257,6 +271,12 @@
                 {{ 'core.component.table.config.filter-list' | sdTranslate }}
               </h3>
               <p class="c-hint c-filter-desc">{{ filterListHint() | sdTranslate }}</p>
+              @if (offBarWarning()) {
+                <p class="c-filter-warning">
+                  <sd-icon name="info" size="16px" aria-hidden="true"></sd-icon>
+                  <span>{{ 'core.component.table.config.filters-off-bar-warning' | sdTranslate }}</span>
+                </p>
+              }
               <div class="c-options">
                 @for (row of filterRows(); track row.field) {
                   <div class="c-option c-filter-row" [attr.data-field]="row.field">

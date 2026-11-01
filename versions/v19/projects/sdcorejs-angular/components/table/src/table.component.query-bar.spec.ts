@@ -344,6 +344,24 @@ describe('SdTable filter.mode query-bar', () => {
       fixture.detectChanges();
       expect(inlineChips()[indexOf('external:status')].contains(document.activeElement)).toBeTrue();
     }));
+
+    it('declares the menu the header filter icon opens for a column without a chip', fakeAsync(() => {
+      configure();
+      mount(defaultEditor());
+      const trigger = el().querySelector('[data-autoid="components-table-orders-filter-trigger-code"]') as HTMLButtonElement;
+      const total = el().querySelector('[data-autoid="components-table-orders-filter-trigger-total"]') as HTMLButtonElement;
+      expect(indexOf('column:code')).toBe(-1);
+      expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+      expect(total.hasAttribute('aria-haspopup')).withContext('one operator: the value is typed into the new chip').toBeFalse();
+      trigger.click();
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(bar().building()?.field.key).toBe('column:code');
+      expect(bar().building()?.step).toBe('operator');
+      bar().cancelBuild();
+      settle();
+    }));
   });
 
   describe('applying', () => {

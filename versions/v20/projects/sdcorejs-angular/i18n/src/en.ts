@@ -603,6 +603,9 @@ export const EN_MESSAGES = {
   'core.component.table.config.filters-hint-pinned': 'The app sets the filters pinned on the bar.',
   'core.component.table.config.filter-required': 'Required',
   'core.component.table.config.filter-off-bar': 'Not on the bar',
+  'core.component.table.config.mode-query-bar-blocked': 'Not available: {titles} is a required filter that the bar cannot show.',
+  'core.component.table.config.filters-off-bar-warning':
+    'Filters that are not on the bar still filter by their current value. Switch to the filter panel to change them.',
   'core.component.table.popup-export.select-columns': 'Please select columns to export',
   'core.component.table.selector-action.selected': 'Selected {count}',
   'core.component.table.selector-action.more': 'More',

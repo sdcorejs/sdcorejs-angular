@@ -26,6 +26,7 @@ const SETUP: ConfigFilterSetup = {
     { field: 'channel', title: 'Kênh bán', required: false, offBar: false },
     { field: 'area', title: 'Khu vực', required: false, offBar: true },
   ],
+  barBlockedBy: [],
 };
 
 function panel(): HTMLElement {
@@ -117,6 +118,8 @@ describe('ConfigComponent filter tab', () => {
       const shown = activePanel()!;
       expect(shown.getAttribute('aria-labelledby')).toBe(tabs[0].id);
       expect(tabs[0].getAttribute('aria-controls')).toBe(shown.id);
+      expect(tabs[1].hasAttribute('aria-controls')).withContext('only the selected tab points at a rendered panel').toBeFalse();
+      expect(shown.tabIndex).withContext('the panel takes focus when nothing in it can').toBe(0);
       expect(shown.querySelector('.c-list')).not.toBeNull();
     }));
 
@@ -182,6 +185,21 @@ describe('ConfigComponent filter tab', () => {
       expect(component.filterMode()).toBe('query-bar');
     }));
 
+    it('cannot pick the bar while a required filter cannot go on it, and names the filter', fakeAsync(() => {
+      setup({ ...SETUP, barBlockedBy: ['Khu vực'] });
+      openFilters();
+      expect(radioOf('query-bar')!.disabled).toBeTrue();
+      expect(radioOf('default')!.disabled).toBeFalse();
+      const card = panel().querySelector<HTMLElement>('.c-mode[data-mode="query-bar"]')!;
+      expect(card.classList).toContain('c-mode--disabled');
+      const note = card.querySelector<HTMLElement>('.c-mode-blocked')!;
+      expect(note.textContent).toContain('Khu vực');
+      expect(radioOf('query-bar')!.getAttribute('aria-describedby')!.split(' ')).toContain(note.id);
+      card.click();
+      render();
+      expect(component.filterMode()).toBe('default');
+    }));
+
     it('is not offered with modeSelectable false', fakeAsync(() => {
       setup({ ...SETUP, modeSelectable: false });
       openFilters();
@@ -230,6 +248,21 @@ describe('ConfigComponent filter tab', () => {
       expect(switchOf('area').disabled).toBeTrue();
       expect(noteOf('area')).toBe('Không có trên thanh');
       expect(switchOf('status').disabled).toBeFalse();
+    }));
+
+    it('warns on the bar that a filter it cannot show still filters', fakeAsync(() => {
+      setup();
+      openFilters();
+      expect(panel().querySelector('.c-filter-warning')).toBeNull();
+      radioOf('query-bar')!.click();
+      render();
+      expect(panel().querySelector('.c-filter-warning')!.textContent).toContain('vẫn lọc');
+      fixture.componentRef.setInput('filterSetup', {
+        ...SETUP,
+        externalFilters: SETUP.externalFilters.filter(item => !item.offBar),
+      });
+      render();
+      expect(panel().querySelector('.c-filter-warning')).toBeNull();
     }));
 
     it('keeps the panel choice of a filter the bar cannot show', fakeAsync(() => {

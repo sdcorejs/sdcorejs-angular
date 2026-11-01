@@ -184,6 +184,47 @@
   line-height: var(--sd-line-height-16);
 }
 
+// why: thẻ khoá vẫn đọc được lý do — chỉ làm nhạt phần chọn, không làm nhạt dòng giải thích.
+.c-mode--disabled {
+  cursor: default;
+
+  &:hover {
+    border-color: var(--sd-border);
+  }
+
+  .c-mode-radio {
+    border-color: var(--sd-disabled-text);
+    cursor: default;
+  }
+
+  .c-mode-title,
+  .c-mode-desc {
+    color: var(--sd-disabled-text);
+  }
+}
+
+.c-mode-blocked {
+  margin-top: 2px;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-16);
+}
+
+.c-filter-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 0 4px;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-12);
+  line-height: var(--sd-line-height-16);
+
+  sd-icon {
+    flex: none;
+    color: var(--sd-warning);
+  }
+}
+
 .c-filter-list {
   display: flex;
   flex-direction: column;
