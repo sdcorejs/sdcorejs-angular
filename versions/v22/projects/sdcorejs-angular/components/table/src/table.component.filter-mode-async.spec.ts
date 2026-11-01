@@ -311,9 +311,9 @@ describe('SdTable filter mode with asynchronous reads', () => {
       settle();
     };
 
-    // why: Áp dụng / Khôi phục mặc định ghi thiết lập cột, và mỗi lần ghi đó hydrate lại cấu hình rồi đọc lại đúng một
-    // lần (có từ trước tab Bộ lọc). Tab Bộ lọc không được thêm lượt đọc của riêng nó.
-    it('pins a filter on the bar from the settings with only the one read of Apply', fakeAsync(() => {
+    // why: Áp dụng chỉ ghi thiết lập cột khi nó đổi; tab Bộ lọc không đọc lại. Khôi phục mặc định luôn hydrate lại cấu
+    // hình và đọc lại đúng một lần.
+    it('pins a filter on the bar from the settings without a read', fakeAsync(() => {
       mount(buildOption({ mode: 'query-bar' }));
       answer(0, [row('DH-1')]);
       expect(indexOf('external:note')).toBe(-1);
@@ -324,15 +324,13 @@ describe('SdTable filter mode with asynchronous reads', () => {
       config().onSave();
       settle();
       expect(indexOf('external:note')).toBeGreaterThan(-1);
-      expect(loader).toHaveBeenCalledTimes(2);
-      answer(1, [row('DH-2')]);
-      expect(codes()).toEqual(['DH-2']);
+      expect(loader).toHaveBeenCalledTimes(1);
+      expect(codes()).toEqual(['DH-1']);
       expect(mode()).toBe('query-bar');
     }));
 
-    it('switches the mode from the settings with only the one read of Apply', fakeAsync(() => {
+    it('switches the mode from the settings without a read, and the read in flight still renders', fakeAsync(() => {
       mount(buildOption());
-      answer(0, [row('DH-1')]);
       config().open();
       settle();
       config().selectTab('filters');
@@ -340,7 +338,9 @@ describe('SdTable filter mode with asynchronous reads', () => {
       config().onSave();
       settle();
       expect(mode()).toBe('query-bar');
-      expect(loader).toHaveBeenCalledTimes(2);
+      expect(loader).toHaveBeenCalledTimes(1);
+      answer(0, [row('DH-1')]);
+      expect(codes()).toEqual(['DH-1']);
     }));
 
     it('restores defaults while a read is in flight: the late answer is dropped and the new read renders', fakeAsync(() => {

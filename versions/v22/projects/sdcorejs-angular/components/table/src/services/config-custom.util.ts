@@ -37,6 +37,35 @@ const changedFromOrigin = (column: ConfiguredColumn): boolean => {
   );
 };
 
+/** What `loadConfigurationResult` reads from a stored column: empty values fall back to `origin`. */
+const effectiveColumn = (column: ConfiguredColumn) => {
+  const { origin } = column;
+  return [
+    origin.field,
+    column.title || origin.title,
+    column.width || origin.width,
+    !!column.invisible,
+    !!column.fixed,
+    !!(column.truncate ?? origin.truncate),
+  ];
+};
+
+/**
+ * Whether two column setups build the same table: the same columns in the same order, with the same title, width,
+ * visibility, fixed and truncate. A value set back to its original counts as unchanged.
+ */
+export const sdTableSameColumnSetup = (left: ConfiguredTable | undefined, right: ConfiguredTable | undefined): boolean => {
+  const a = left?.columns ?? [];
+  const b = right?.columns ?? [];
+  return (
+    a.length === b.length &&
+    a.every((column, index) => {
+      const other = effectiveColumn(b[index]);
+      return effectiveColumn(column).every((value, part) => value === other[part]);
+    })
+  );
+};
+
 /**
  * Whether the table uses a setup of its own: the stored columns differ from the defaults in order, visibility, title,
  * width (the settings modal or a resize on the table), fixed or truncate, the inline external filters differ from

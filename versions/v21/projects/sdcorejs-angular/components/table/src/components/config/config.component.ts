@@ -27,6 +27,7 @@ import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOption } from '../../models/table-option.model';
 import { ConfigService } from '../../services/config.service';
+import { sdTableSameColumnSetup } from '../../services/config-custom.util';
 import { SdTableOptionFilter, TableFilterConfiguration } from '../../services/table-filter/table-filter.model';
 import { configWidthClamp, configWidthFromInput, configWidthPx } from './config-width.util';
 
@@ -222,7 +223,10 @@ export class ConfigComponent {
 
   onSave = () => {
     const cfg = this.configuration();
-    if (cfg) this.#setting?.set({ ...cfg, columns: cfg.columns?.map(column => ({ ...column, width: this.#settledWidth(column) })) });
+    const next = cfg && { ...cfg, columns: cfg.columns?.map(column => ({ ...column, width: this.#settledWidth(column) })) };
+    // why: mỗi lần ghi, bảng hydrate lại cấu hình và đọc lại dữ liệu (bỏ cả lượt đọc đang chạy); thiết lập cột không đổi
+    // thì không ghi, để chỉ đổi tab Bộ lọc hay bấm Áp dụng suông không đọc lại.
+    if (next && !sdTableSameColumnSetup(next, this.#setting?.get())) this.#setting?.set(next);
     this.#applyFilter();
     this.modal()?.close();
     this.#ref.detectChanges();
