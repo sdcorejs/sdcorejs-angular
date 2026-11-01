@@ -59,6 +59,8 @@ import {
 } from './services/table-filter/table-query-bar.util';
 import { type SdTableMobileFilterItem, sdTableMobileFilterItems } from './services/table-filter/table-mobile-filter.util';
 import { SdTableMobileFilterChipsComponent } from './components/mobile-toolbar/mobile-filter-chips.component';
+import { SdTablePullRefreshComponent } from './components/mobile-toolbar/pull-refresh.component';
+import { SdTableMobileSortSheetComponent } from './components/mobile-sort/mobile-sort-sheet.component';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
@@ -351,6 +353,8 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdTranslatePipe,
     SdTableMobileCardsComponent,
     SdTableMobileFilterChipsComponent,
+    SdTablePullRefreshComponent,
+    SdTableMobileSortSheetComponent,
     SdTableMobileActionsComponent,
     SdTableUnknownTotalPaginator,
   ],
@@ -652,24 +656,36 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   isSelectAll = signal(false);
   isSelectIndeterminate = signal(false);
   readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
+  /**
+   * Columns of the phone sort sheet: sortable leaf columns of the option in their order, hidden and settings-hidden
+   * ones included (handoff table-mobile 6), with the settings title when the column is on screen.
+   */
   readonly mobileSortColumns = computed(() => {
-    const config = this.configuration();
+    const configured = new Map(this.mobileColumns().map(column => [column.field, column]));
     const state = this.sortState();
-    return [...(config?.firstColumns ?? []), ...(config?.secondColumns ?? [])]
-      .filter(column => column.type !== 'children' && column.sortable)
-      .map(column => ({
-        field: column.field,
-        title: typeof column.title === 'string' ? column.title : column.title.title,
-        direction: state.active === column.field ? state.direction : '',
-      }));
+    return leafColumns(this.tableOption()?.columns ?? [])
+      .filter(column => column.sortable && !column.hidden)
+      .map(column => {
+        const shown = configured.get(column.field) ?? column;
+        return {
+          field: column.field as string,
+          title: typeof shown.title === 'string' ? shown.title : shown.title.title,
+          direction: state.active === column.field ? state.direction : '',
+        };
+      });
   });
+  /** The phone shows a sort chip / button: `sort.enable` and at least one sortable column. */
+  readonly mobileSortAvailable = computed(() => !!this.tableOption()?.sort?.enable && this.mobileSortColumns().length > 0);
 
+  /**
+   * Tools sheet of the phone (⋮): export and settings, plus what the consumer adds. Filter, sort and reload live in
+   * the chip row, the sort sheet and pull to refresh. Up to two exports are laid out flat.
+   */
   readonly mobileToolsActions = computed<SdTableMobileAction[]>(() => {
     const option = this.tableOption();
     if (!option) return [];
     const t = (key: string) => this.#i18n.t('core.component.table.' + key);
     const actions: SdTableMobileAction[] = [];
-    if (option.reload?.visible) actions.push({ key: 'tool-reload', title: t('reload'), icon: 'refresh', run: () => this.reload() });
     const exporting = option.export;
     if (exporting && this.items().length) {
       if (exporting.type === 'custom')
@@ -680,28 +696,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
           children.push({ key: 'tool-export-excel', title: t('export-excel'), icon: 'table_view', run: () => this.exportExcel() });
         if (exporting.visible === 'ALL' || exporting.visible === 'CSV')
           children.push({ key: 'tool-export-csv', title: t('export-csv'), icon: 'description', run: () => this.exportCSV() });
-        actions.push({ key: 'tool-export', title: this.exportTitle(), disabled: this.exporting(), children });
+        if (children.length <= 2) actions.push(...children.map(child => ({ ...child, disabled: this.exporting() })));
+        else actions.push({ key: 'tool-export', title: this.exportTitle(), disabled: this.exporting(), children });
       }
     }
-    if (!option.filter?.disabled && this.mobileFilter())
-      actions.push({
-        key: 'tool-filter',
-        title: t('filter'),
-        icon: 'filter_alt',
-        closeBeforeRun: true,
-        run: () => this.mobileFilter()?.open(),
-      });
-    if (option.sort?.enable && this.mobileSortColumns().length)
-      actions.push({
-        key: 'tool-sort',
-        title: t('mobile.sort'),
-        children: this.mobileSortColumns().map(column => ({
-          key: 'tool-sort-' + column.field,
-          title: column.title,
-          icon: column.direction === 'asc' ? 'arrow_upward' : column.direction === 'desc' ? 'arrow_downward' : 'sort',
-          run: () => this.sort()?.sort({ id: column.field, start: 'asc', disableClear: false }),
-        })),
-      });
     if (this.configComponent())
       actions.push({
         key: 'tool-config',

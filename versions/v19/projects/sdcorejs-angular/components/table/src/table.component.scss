@@ -344,13 +344,6 @@
     align-items: center;
     min-width: 0;
   }
-  .sd-mobile-tools-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 44px;
-  }
   .sd-mobile-paginator {
     margin-inline-start: auto;
   }
@@ -663,10 +656,41 @@
   }
 }
 
-:host ::ng-deep .sd-mobile-tools-trigger .mdc-button__label {
-  display: inline-flex;
+// Phone top row (handoff table-mobile 2): search, then 44px icon buttons. With a chip row below, the row gives up 6px of
+// its bottom padding to the chips' touch area, so the visible gap stays 10px.
+:host .sd-mobile-top {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 4px 10px 16px;
+}
+:host .sd-mobile-top--chips {
+  padding-bottom: 4px;
+}
+:host .sd-mobile-top--no-search {
+  justify-content: flex-end;
+}
+:host .sd-mobile-top-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+:host .sd-mobile-top-button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--sd-text-secondary);
+  --mat-icon-button-state-layer-size: 44px;
+  --mdc-icon-button-state-layer-size: 44px;
+}
+// Reload for keyboards and screen readers: out of sight until it has keyboard focus (pull to refresh is the touch path).
+:host .sd-mobile-reload:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 :host .sd-table-surface--quick-search > .c-container:not(.sd-table-mobile),

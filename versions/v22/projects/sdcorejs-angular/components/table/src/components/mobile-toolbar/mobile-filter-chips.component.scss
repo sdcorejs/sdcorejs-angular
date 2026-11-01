@@ -69,6 +69,25 @@
     color: var(--sd-primary);
   }
 }
+// Sort chip: a 32px square icon while not sorted; arrow (primary) and column once sorted, outlined, not filled.
+.sd-mobile-chip--sort {
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+
+  sd-icon {
+    color: var(--sd-text-secondary);
+  }
+}
+.sd-mobile-chip--sorted {
+  width: auto;
+  padding: 0 10px 0 6px;
+  color: var(--sd-text);
+
+  sd-icon {
+    color: var(--sd-primary);
+  }
+}
 .sd-mobile-chip-count {
   display: inline-flex;
   align-items: center;

@@ -15,7 +15,22 @@
       <span class="sd-mobile-chip-count" aria-hidden="true">{{ _count }}</span>
     }
   </button>
-  <ng-content></ng-content>
+  @if (sort(); as _sort) {
+    <button
+      mat-button
+      type="button"
+      class="sd-mobile-chip sd-mobile-chip--sort"
+      [class.sd-mobile-chip--sorted]="_sort.active"
+      aria-haspopup="dialog"
+      [attr.aria-label]="_sort.label"
+      [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null"
+      (click)="sortOpen.emit()">
+      <sd-icon [name]="_sort.icon" size="18px"></sd-icon>
+      @if (_sort.active) {
+        <span class="sd-mobile-chip-text">{{ _sort.title }}</span>
+      }
+    </button>
+  }
   @if (chips().length) {
     <span class="sd-mobile-chip-divider" aria-hidden="true"></span>
   }

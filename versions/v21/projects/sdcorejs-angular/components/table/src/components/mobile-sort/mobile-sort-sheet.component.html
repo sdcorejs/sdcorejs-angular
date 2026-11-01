@@ -1,0 +1,46 @@
+@let _autoId = table().autoId();
+@let _active = active();
+<sd-modal
+  #sheet
+  view="bottom-sheet"
+  [title]="'core.component.table.mobile.sort' | sdTranslate"
+  [autoId]="_autoId ? _autoId + '-mobile-sort-sheet' : undefined"
+  hideClose
+  [disableBackdropClose]="false"
+  [closeOnNavigation]="false"
+  modalClass="sd-table-mobile-filter-sheet sd-table-mobile-sort-sheet"
+  (sdClosed)="onClosed()">
+  <div sdHeaderLeft #head class="sd-mobile-sheet-head">
+    <span class="sd-mobile-sheet-handle" aria-hidden="true"></span>
+    <div class="sd-mobile-sheet-title-row">
+      <h2 class="sd-mobile-sheet-title">{{ 'core.component.table.mobile.sort' | sdTranslate }}</h2>
+      <sd-button
+        [autoId]="_autoId ? _autoId + '-mobile-sort-clear' : null"
+        type="text"
+        color="primary"
+        size="md"
+        [disabled]="!_active"
+        [title]="'core.component.table.mobile.sort-clear' | sdTranslate"
+        (click)="clear()"></sd-button>
+    </div>
+  </div>
+  <div class="sd-mobile-sheet-body sd-mobile-sort-body">
+    <sd-segmented
+      class="sd-mobile-sort-direction"
+      [autoId]="_autoId ? _autoId + '-mobile-sort-direction' : null"
+      [ariaLabel]="'core.component.table.mobile.sort' | sdTranslate"
+      [items]="directions()"
+      [option]="{ stretch: true }"
+      [model]="direction()"
+      (sdChange)="pickDirection($event)"></sd-segmented>
+    <sd-radio
+      class="sd-mobile-sort-columns"
+      [autoId]="_autoId ? _autoId + '-mobile-sort-columns' : null"
+      display="column"
+      [items]="columns()"
+      valueField="value"
+      displayField="label"
+      [model]="_active || null"
+      (modelChange)="pickColumn($event)"></sd-radio>
+  </div>
+</sd-modal>

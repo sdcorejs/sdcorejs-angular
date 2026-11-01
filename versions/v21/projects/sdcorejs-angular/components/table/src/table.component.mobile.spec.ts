@@ -178,9 +178,10 @@ describe('SdTable mobile cards', () => {
     expect(table.table()).toBeDefined();
   }));
 
-  it('opens footer tools in a titled Core modal sheet and keeps the command header above cards', fakeAsync(() => {
+  it('opens ⋮ tools from the top row in a titled Core modal sheet and keeps the command header above cards', fakeAsync(() => {
     create(h => {
       h.features = true;
+      h.option.export = { type: 'default', visible: 'ALL' };
     });
     const element: HTMLElement = fixture.nativeElement;
     const footer = element.querySelector('.c-paginator')!;
@@ -191,14 +192,15 @@ describe('SdTable mobile cards', () => {
     ).toBeTruthy();
     expect(
       footer.querySelectorAll('button:not(.mat-mdc-paginator-navigation-next):not(.mat-mdc-paginator-navigation-previous)').length
-    ).toBe(1);
+    ).toBe(0);
     expect(element.querySelector('.sd-mobile-select-page')).toBeNull();
-    footer.querySelector<HTMLButtonElement>('[data-autoid$="-mobile-tools"]')!.click();
+    element.querySelector<HTMLButtonElement>('.sd-mobile-top [data-autoid$="-mobile-tools"]')!.click();
     settle();
     const overlay = TestBed.inject(OverlayContainer).getContainerElement();
     expect(overlay.querySelector('.sd-modal-bottom-sheet-panel .sd-modal-title')?.textContent?.trim()).toBeTruthy();
-    expect(overlay.querySelector('[data-autoid$="-mobile-tool-sort-name"]')).not.toBeNull();
-    expect(overlay.querySelector('[data-autoid$="-mobile-tool-filter"]')).not.toBeNull();
+    expect(overlay.querySelector('[data-autoid$="-mobile-tool-export-excel"]')).not.toBeNull();
+    expect(overlay.querySelector('[data-autoid*="-mobile-tool-sort"]')).toBeNull();
+    expect(overlay.querySelector('[data-autoid$="-mobile-tool-filter"]')).toBeNull();
   }));
 
   it('uses a Core modal sheet for row commands and reserves compact QuickAction for selection', fakeAsync(() => {
@@ -217,14 +219,14 @@ describe('SdTable mobile cards', () => {
     expect(fixture.nativeElement.querySelector('.sd-mobile-select-page')).toBeNull();
   }));
 
-  it('omits the footer tools trigger when every tool is disabled', fakeAsync(() => {
+  it('omits the ⋮ tools button when every tool is disabled', fakeAsync(() => {
     create(h => {
       h.option.filter = { disabled: true };
       h.option.sort = { enable: false };
       h.option.reload = { visible: false };
       h.option.export = undefined;
     });
-    expect(fixture.nativeElement.querySelector('.sd-mobile-tools-trigger')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-autoid$="-mobile-tools"]')).toBeNull();
   }));
 
   it('keeps external filters in the mobile drawer and restores the desktop filter form on resize', fakeAsync(() => {
@@ -697,22 +699,25 @@ describe('SdTable mobile cards', () => {
     expect(table.loadError()).toBeFalse();
   }));
 
-  it('cycles mobile sort through ascending, descending and clear on the shared pipeline', fakeAsync(() => {
+  it('sorts from the sort sheet on the shared pipeline: column, direction, clear', fakeAsync(() => {
     create();
-    const sort = () => {
-      fixture.nativeElement.querySelector('.c-paginator [data-autoid$="-mobile-tools"]').click();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const open = () => {
+      fixture.nativeElement.querySelector('[data-autoid$="-mobile-sort"]').click();
       settle();
-      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-      overlay.querySelector<HTMLButtonElement>('[data-autoid$="-mobile-tool-sort-name"]')!.click();
     };
-    sort();
+    open();
+    overlay.querySelector<HTMLInputElement>('.sd-mobile-sort-columns input[type=radio]')!.click();
     settle();
     expect(cards()[0].textContent).toContain('Locked');
     expect(table.getFilterRequest().orderDirection).toBe('ASC');
-    sort();
+    open();
+    overlay.querySelectorAll<HTMLButtonElement>('.sd-mobile-sort-direction button')[1].click();
     settle();
     expect(cards()[0].textContent).toContain('Two');
-    sort();
+    overlay
+      .querySelector<HTMLButtonElement>('[data-autoid$="-mobile-sort-clear"] button, button[data-autoid$="-mobile-sort-clear"]')!
+      .click();
     settle();
     expect(table.getFilterRequest().orderDirection).toBeUndefined();
     expect(host.fetch).toHaveBeenCalledTimes(1);

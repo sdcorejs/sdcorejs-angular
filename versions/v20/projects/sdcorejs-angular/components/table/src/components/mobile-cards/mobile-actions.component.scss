@@ -186,3 +186,18 @@ button:focus-visible {
     height: 40px;
   }
 }
+// Tools sheet (handoff table-mobile 2): rows of 56px, 20px side padding, 22px icon and 16px gap.
+::ng-deep .sd-table-mobile-tools-panel .sd-mobile-sheet-action {
+  min-height: 56px;
+  padding: 0 20px;
+  border-radius: 0;
+
+  .mdc-button__label {
+    gap: 16px;
+  }
+
+  sd-icon {
+    flex-basis: 22px;
+    font-size: 22px;
+  }
+}

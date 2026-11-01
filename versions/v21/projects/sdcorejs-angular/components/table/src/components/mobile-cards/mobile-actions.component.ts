@@ -34,6 +34,8 @@ export class SdTableMobileActionsComponent implements OnDestroy {
   readonly count = input(0);
   readonly autoOpen = input(true);
   readonly autoId = input<string>();
+  /** Extra panel class of the sheet (the Tools sheet uses taller rows). */
+  readonly sheetClass = input('');
   readonly end = output<void>();
   readonly busy = signal(false);
   readonly error = signal('');

@@ -59,7 +59,7 @@
   [title]="_title"
   view="bottom-sheet"
   [disableBackdropClose]="false"
-  modalClass="sd-table-mobile-sheet-panel"
+  [modalClass]="'sd-table-mobile-sheet-panel ' + sheetClass()"
   (sdClosed)="onSheetClosed()">
   <div class="sd-mobile-sheet">
     @for (action of sheetActions(); track action.key) {
