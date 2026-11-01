@@ -3,8 +3,9 @@
 @include sheet.chrome;
 @include sheet.panel('sd-table-mobile-filter-sheet');
 
-// The full filter sheet is as tall as the viewport less 40px (handoff table-mobile 5).
-::ng-deep .sd-table-mobile-filter-sheet--full {
+// The full filter sheet is as tall as the viewport less 40px (handoff table-mobile 5). why: both classes — the 85dvh
+// cap of the other phone sheets has the same weight and may load later.
+::ng-deep .sd-table-mobile-filter-sheet.sd-table-mobile-filter-sheet--full {
   &.mat-bottom-sheet-container,
   &.mat-mdc-bottom-sheet-container,
   .mat-bottom-sheet-container,
@@ -14,6 +15,13 @@
   }
   .sd-modal-header {
     border-bottom: 1px solid var(--sd-border);
+  }
+  // The list or page fills the sheet; the footer stays at the bottom.
+  .sd-modal-root {
+    height: 100%;
+  }
+  .sd-modal-body {
+    max-height: none;
   }
 }
 .sd-mobile-filter-head {

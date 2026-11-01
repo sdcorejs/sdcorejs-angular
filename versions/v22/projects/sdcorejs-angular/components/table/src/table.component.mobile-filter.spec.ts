@@ -25,12 +25,14 @@ const STATUSES = Array.from({ length: 10 }, (_, index) => ({ id: `s${index}`, na
   changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   imports: [SdTable, SdTableRowMobileDefDirective],
   template: `
-    <div style="width: 360px; padding-top: 40px">
-      <sd-table autoId="orders" [option]="option">
-        <ng-template [sdTableRowMobileDef]="option" let-row="item"
-          ><span>{{ row.code }}</span></ng-template
-        >
-      </sd-table>
+    <div class="flex-parent" style="display: flex; width: 360px; padding-top: 40px">
+      <div class="flex-item">
+        <sd-table autoId="orders" [option]="option">
+          <ng-template [sdTableRowMobileDef]="option" let-row="item"
+            ><span>{{ row.code }}</span></ng-template
+          >
+        </sd-table>
+      </div>
     </div>
   `,
 })
@@ -115,6 +117,14 @@ describe('SdTable mobile filter chips', () => {
   );
 
   describe('chip row', () => {
+    it('scrolls inside the table instead of widening it in a flex parent', fakeAsync(() => {
+      create();
+      const item = element().querySelector<HTMLElement>('.flex-item')!;
+      expect(item.getBoundingClientRect().width).toBeLessThanOrEqual(360);
+      const row = chipRow()!;
+      expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
+    }));
+
     it('has no chip row when the table has no filter', fakeAsync(() => {
       create(h => {
         h.option.filter = { disabled: true };

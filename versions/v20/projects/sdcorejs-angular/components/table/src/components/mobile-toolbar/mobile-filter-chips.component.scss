@@ -3,6 +3,9 @@
   display: block;
   min-width: 0;
   border-bottom: 1px solid var(--sd-border);
+  // why: the row scrolls; without containment its chips still count in the min-content width of the table, which
+  // then grows past a flex parent (the whole table became as wide as all chips).
+  contain: inline-size;
 }
 .sd-mobile-chips {
   display: flex;
