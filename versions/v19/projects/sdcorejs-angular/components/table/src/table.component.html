@@ -969,7 +969,7 @@
       (defaultsRestored)="onConfigDefaultsRestored()"
       (filterApplied)="onConfigFilterApplied($event)" />
   }
-  <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
+  <!-- Mobile filter sheet (bottom sheet, two levels) — opened by the Filters chip or the footer filter button -->
   @if (!_tableOption.filter?.disabled && filterRegister) {
     <mobile-filter
       [autoId]="_autoId"
@@ -978,7 +978,8 @@
       [columns]="mobileColumns()"
       [filterDefs]="sdFilterDefs()"
       [filterRegister]="filterRegister"
-      [cacheValues]="cacheValues">
+      [cacheValues]="cacheValues"
+      [model]="mobileFilterModel()">
     </mobile-filter>
   }
 } @else if (_readState.status === 'error' && !_hideReadError) {

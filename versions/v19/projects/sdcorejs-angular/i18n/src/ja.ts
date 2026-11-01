@@ -41,6 +41,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.search-options': '選択肢を検索',
   'core.component.table.mobile.date-from': '開始日',
   'core.component.table.mobile.date-to': '終了日',
+  'core.component.table.mobile.filter-count': '{count} 件適用中',
+  'core.component.table.mobile.done': '完了',
   'core.common.back': '戻る',
   'core.common.cancel': 'キャンセル',
   'core.common.close': '閉じる',

@@ -41,6 +41,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.search-options': '옵션 검색',
   'core.component.table.mobile.date-from': '시작일',
   'core.component.table.mobile.date-to': '종료일',
+  'core.component.table.mobile.filter-count': '{count}개 적용됨',
+  'core.component.table.mobile.done': '완료',
   'core.common.back': '뒤로',
   'core.common.cancel': '취소',
   'core.common.close': '닫기',

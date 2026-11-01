@@ -41,6 +41,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.search-options': 'Tìm lựa chọn',
   'core.component.table.mobile.date-from': 'Từ ngày',
   'core.component.table.mobile.date-to': 'Đến ngày',
+  'core.component.table.mobile.filter-count': '{count} đang lọc',
+  'core.component.table.mobile.done': 'Xong',
   'core.common.back': 'Quay lại',
   'core.common.cancel': 'Hủy',
   'core.common.close': 'Đóng',

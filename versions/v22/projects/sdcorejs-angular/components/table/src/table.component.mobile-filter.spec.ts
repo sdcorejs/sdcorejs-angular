@@ -173,6 +173,8 @@ describe('SdTable mobile filter chips', () => {
     it('gives 32px chips a 44px touch area without a taller row', fakeAsync(() => {
       create();
       const button = chip('customer');
+      // why: in the full suite, DOM left by other specs can push the row below the small Karma frame.
+      button.scrollIntoView({ block: 'center' });
       const box = button.getBoundingClientRect();
       expect(box.height).toBe(32);
       expect(button.contains(document.elementFromPoint(box.left + 10, box.top - 5))).toBeTrue();
@@ -254,6 +256,125 @@ describe('SdTable mobile filter chips', () => {
       chip('warehouse').click();
       settle();
       expect(overlay().querySelector('[data-autoid*="-mobile-filter-warehouse-search"]')).toBeNull();
+    }));
+  });
+
+  describe('full filter sheet', () => {
+    const openAll = () => {
+      element().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter"]')!.click();
+      settle();
+    };
+    const sheet = (): HTMLElement | null => overlay().querySelector('.sd-table-mobile-filter-sheet--full');
+    const row = (field: string): HTMLButtonElement =>
+      overlay().querySelector<HTMLButtonElement>(`[data-autoid$="-mobile-filter-row-${field}"]`)!;
+    const button = (suffix: string): HTMLButtonElement =>
+      overlay().querySelector<HTMLButtonElement>(
+        `[data-autoid$="-mobile-filter-${suffix}"] button, button[data-autoid$="-mobile-filter-${suffix}"]`
+      )!;
+    const tickOption = (index: number) => {
+      overlay().querySelectorAll<HTMLInputElement>('sd-checkbox input[type=checkbox]')[index].click();
+      settle();
+    };
+    const emissions = () => {
+      let count = 0;
+      const subscription = table.filterRegister!.value.observer.subscribe(() => count++);
+      count = 0;
+      return { count: () => count, stop: () => subscription.unsubscribe() };
+    };
+
+    it('replaces the side drawer with a bottom sheet listing every filter', fakeAsync(() => {
+      create();
+      expect(element().querySelector('mobile-filter sd-side-drawer')).toBeNull();
+      openAll();
+      expect(sheet()).not.toBeNull();
+      expect(row('customer')).not.toBeNull();
+      expect(row('status').textContent).toContain('Tất cả');
+    }));
+
+    it('keeps the page edits in the copy after Done; the applied value does not change yet', fakeAsync(() => {
+      create();
+      openAll();
+      row('status').click();
+      settle();
+      expect(overlay().querySelector('.sd-mobile-sheet-title')?.textContent).toContain('Trạng thái');
+      tickOption(2);
+      button('done').click();
+      settle();
+      expect(row('status').textContent).toContain('Status 2');
+      expect(row('status').querySelector('.sd-mobile-filter-row-summary--active')).not.toBeNull();
+      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+    }));
+
+    it('drops edits of several filters on Cancel', fakeAsync(() => {
+      create();
+      openAll();
+      for (const field of ['status', 'warehouse']) {
+        row(field).click();
+        settle();
+        overlay().querySelector<HTMLInputElement>('sd-checkbox input, sd-radio input')!.click();
+        settle();
+        button('done').click();
+        settle();
+      }
+      button('cancel').click();
+      settle();
+      expect(sheet()).toBeNull();
+      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+      expect(table.filterRegister!.value.get().columnFilter?.['warehouse'] ?? null).toBeNull();
+    }));
+
+    it('shows "{n} đang lọc", enables Clear all only with a filter, and Clear all + Apply empties everything in one read', fakeAsync(() => {
+      create();
+      apply({ columnFilter: { status: ['s1'], warehouse: 'HN' }, externalFilter: { customer: 'An' } });
+      openAll();
+      expect(overlay().querySelector('.sd-mobile-sheet-subtitle')?.textContent).toContain('3');
+      expect(button('clear-all').disabled).toBeFalse();
+      button('clear-all').click();
+      settle();
+      expect(overlay().querySelector('.sd-mobile-sheet-subtitle')).toBeNull();
+      expect(button('clear-all').disabled).toBeTrue();
+      const emitted = emissions();
+      button('apply').click();
+      settle();
+      emitted.stop();
+      expect(emitted.count()).toBe(1);
+      const value = table.filterRegister!.value.get();
+      expect(value.columnFilter?.['status']).toEqual([]);
+      expect(value.columnFilter?.['warehouse']).toBeNull();
+      expect(value.externalFilter?.['customer']).toBeNull();
+    }));
+
+    it('goes back from a page with Escape and Back, then Back closes the sheet', fakeAsync(() => {
+      // why: a real history.go() fires popstate later, outside fakeAsync; play it at once so the order is known.
+      spyOn(history, 'pushState');
+      spyOn(history, 'go').and.callFake(() => window.dispatchEvent(new PopStateEvent('popstate')));
+      create();
+      openAll();
+      row('status').click();
+      settle();
+      overlay()
+        .querySelector('.sd-mobile-filter-body')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+      settle();
+      expect(sheet()).not.toBeNull();
+      expect(row('status')).not.toBeNull();
+      expect(document.activeElement).toBe(row('status'));
+      row('status').click();
+      settle();
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      settle();
+      expect(row('status')).not.toBeNull();
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      settle();
+      expect(sheet()).toBeNull();
+    }));
+
+    it('moves focus to the page title when a page opens', fakeAsync(() => {
+      create();
+      openAll();
+      row('warehouse').click();
+      settle();
+      expect(document.activeElement?.classList).toContain('sd-mobile-sheet-title');
     }));
   });
 });

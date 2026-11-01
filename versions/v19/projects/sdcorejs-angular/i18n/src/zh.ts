@@ -41,6 +41,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.mobile.search-options': '搜索选项',
   'core.component.table.mobile.date-from': '开始日期',
   'core.component.table.mobile.date-to': '结束日期',
+  'core.component.table.mobile.filter-count': '已筛选 {count} 项',
+  'core.component.table.mobile.done': '完成',
   'core.common.back': '返回',
   'core.common.cancel': '取消',
   'core.common.close': '关闭',

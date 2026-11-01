@@ -39,6 +39,8 @@ export const EN_MESSAGES = {
   'core.component.table.mobile.search-options': 'Search options',
   'core.component.table.mobile.date-from': 'From',
   'core.component.table.mobile.date-to': 'To',
+  'core.component.table.mobile.filter-count': '{count} active',
+  'core.component.table.mobile.done': 'Done',
   'core.common.back': 'Back',
   'core.common.cancel': 'Cancel',
   'core.common.close': 'Close',
