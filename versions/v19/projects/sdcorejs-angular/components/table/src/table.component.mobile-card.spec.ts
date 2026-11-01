@@ -179,6 +179,8 @@ describe('SdTable mobile card frame', () => {
   it('selects once when the tap lands in the 44px zone outside the checkbox box', fakeAsync(() => {
     create();
     const zone = cards()[0].querySelector<HTMLElement>('.sd-mobile-card-select')!;
+    // why: in the full suite, DOM left by other specs can push the card below the small Karma frame.
+    zone.scrollIntoView({ block: 'center' });
     const box = zone.getBoundingClientRect();
     const target = document.elementFromPoint(box.left + 2, box.top + 2) as HTMLElement;
     expect(zone.contains(target)).toBeTrue();

@@ -1,0 +1,95 @@
+// Filter chips (handoff table-mobile 3): one scrolling row, 32px chips with a 44px touch area, the right edge fading.
+:host {
+  display: block;
+  min-width: 0;
+  border-bottom: 1px solid var(--sd-border);
+}
+.sd-mobile-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  // why: the 44px touch area reaches 6px above the chip; the top padding keeps it inside the scroller (which clips),
+  // and the top row above gives up 6px of its bottom padding, so the gap the eye sees stays 10px (handoff 15.3).
+  padding: 6px 16px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  // The last 48px fade out; the border below sits on the host, so it does not fade.
+  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+.sd-mobile-chip {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 240px;
+  height: 32px;
+  min-width: 32px;
+  margin: 0;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-8, 8px);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-14, 14px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  --mat-text-button-container-height: 32px;
+  --mdc-text-button-container-height: 32px;
+
+  // 44px touch area without a taller row. why: ::after — Material's focus indicator owns ::before (pointer-events: none).
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -6px -4px;
+    pointer-events: auto;
+  }
+
+  ::ng-deep .mdc-button__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+}
+.sd-mobile-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sd-mobile-chip--filter {
+  padding: 0 8px;
+  color: var(--sd-text);
+
+  sd-icon {
+    color: var(--sd-primary);
+  }
+}
+.sd-mobile-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--sd-primary);
+  color: var(--sd-primary-contrast);
+  font-size: var(--sd-font-size-11, 11px);
+  font-weight: var(--sd-font-weight-medium, 500);
+}
+.sd-mobile-chip--active {
+  border-color: transparent;
+  background: var(--sd-primary-light);
+  color: var(--sd-primary-dark);
+}
+.sd-mobile-chip-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 20px;
+  background: var(--sd-border);
+}

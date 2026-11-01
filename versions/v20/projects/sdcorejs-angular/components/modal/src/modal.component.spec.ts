@@ -23,6 +23,7 @@ import { SdModal } from './modal.component';
       [hideClose]="hideClose"
       [modalClass]="modalClass"
       [disableBackdropClose]="disableBackdropClose"
+      [closeOnNavigation]="closeOnNavigation"
       [beforeClose]="beforeClose"
       (sdCloseError)="onCloseError($event)"
       (sdClosed)="onClosed()">
@@ -37,6 +38,7 @@ class HostComponent {
   hideClose = false;
   modalClass: string | string[] | Record<string, boolean> = '';
   disableBackdropClose = true;
+  closeOnNavigation = true;
   beforeClose: (() => boolean | Promise<boolean>) | undefined;
   closedCount = 0;
   closeErrors: unknown[] = [];
@@ -273,6 +275,18 @@ describe('SdModal', () => {
       component.open();
       const opts = dialogOpenSpy.calls.mostRecent().args[1] as any;
       expect(opts.disableClose).toBeFalse();
+    });
+
+    it('closes on navigation by default', () => {
+      component.open();
+      expect((dialogOpenSpy.calls.mostRecent().args[1] as any).closeOnNavigation).toBeTrue();
+    });
+
+    it('passes closeOnNavigation=false through, so the content can handle Back', () => {
+      host.closeOnNavigation = false;
+      fixture.detectChanges();
+      component.open();
+      expect((dialogOpenSpy.calls.mostRecent().args[1] as any).closeOnNavigation).toBeFalse();
     });
 
     it('adds the default dialog panel class and preserves custom classes', () => {

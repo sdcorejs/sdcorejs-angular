@@ -1,0 +1,63 @@
+// Controls of one phone filter (handoff table-mobile 4–5): 44px controls, rows of 48px, operator as a text button.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  // why: field controls take the coarse height (44px) inside the phone sheets.
+  --sd-control-height-md: var(--sd-control-height-coarse, 44px);
+}
+.sd-mobile-field-operator {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding-inline: 0;
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-primary);
+}
+.sd-mobile-field-operator-text {
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  color: var(--sd-text-secondary);
+}
+.sd-mobile-field-operator-icon {
+  display: inline-flex;
+  margin-inline-end: 12px;
+}
+.sd-mobile-field-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sd-mobile-field-row {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+}
+// sd-radio rows reach 48px like the checkbox rows.
+.sd-mobile-field-radio ::ng-deep .mat-mdc-radio-button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+}
+.sd-mobile-field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.sd-mobile-field-pair--dash {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+.sd-mobile-field-dash {
+  color: var(--sd-text-secondary);
+}
+.sd-mobile-field-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}

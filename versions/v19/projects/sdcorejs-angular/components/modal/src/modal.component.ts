@@ -72,6 +72,11 @@ export class SdModal implements OnDestroy {
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute }); // default to true to keep backward compatibility
   beforeClose = input<SdModalBeforeClose | undefined>(undefined);
+  /**
+   * Close when the browser history changes (Back, a route change). `false` lets the content handle Back itself, e.g.
+   * a sheet with pages. Same name as `MatDialogConfig.closeOnNavigation`.
+   */
+  closeOnNavigation = input(true, { transform: booleanAttribute });
 
   sdClosed = output<void>();
   sdCloseError = output<unknown>();
@@ -157,6 +162,7 @@ export class SdModal implements OnDestroy {
         panelClass: this.#resolvePanelClass('sd-modal-bottom-sheet-panel'),
         ariaLabel: this.title() || undefined,
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
+        closeOnNavigation: this.closeOnNavigation(),
       });
       this.#bindGuardedDismiss(this.#bottomSheetRef);
       this.#bottomSheetRef.afterDismissed().pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(this.#markClosed);
@@ -167,6 +173,7 @@ export class SdModal implements OnDestroy {
         panelClass: this.#resolvePanelClass('sd-modal-panel'),
         ariaLabelledBy: this.title() ? this.titleId : undefined,
         disableClose: this.disableBackdropClose() || !!this.beforeClose(),
+        closeOnNavigation: this.closeOnNavigation(),
       });
       this.#bindGuardedDismiss(this.#dialogRef);
       this.#dialogRef.afterClosed().pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(this.#markClosed);

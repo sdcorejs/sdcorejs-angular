@@ -57,6 +57,8 @@ import {
   sdTableQueryTriggerPopup,
   tableFilterToQuery,
 } from './services/table-filter/table-query-bar.util';
+import { type SdTableMobileFilterItem, sdTableMobileFilterItems } from './services/table-filter/table-mobile-filter.util';
+import { SdTableMobileFilterChipsComponent } from './components/mobile-toolbar/mobile-filter-chips.component';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
@@ -348,6 +350,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdTableSortHeaderDirective,
     SdTranslatePipe,
     SdTableMobileCardsComponent,
+    SdTableMobileFilterChipsComponent,
     SdTableMobileActionsComponent,
     SdTableUnknownTotalPaginator,
   ],
@@ -878,6 +881,37 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     });
     return { ...fields, defaultColumnOperator: untracked(() => this.filterRegister?.value.default?.().columnOperator) };
   });
+
+  /**
+   * Filters of the phone UI (chip row and filter sheets), in the fixed order external → `sdTableFilterDef` → columns.
+   * `undefined` on desktop, with `filter.disabled`, or before the configuration is known.
+   */
+  readonly mobileFilterModel = computed<{ ctx: SdTableQueryContext; items: SdTableMobileFilterItem[] } | undefined>(() => {
+    if (!this.isMobile()) return undefined;
+    const option = this.tableOption();
+    const config = this.configuration();
+    if (!option || !config || option.filter?.disabled) return undefined;
+    this.#filterRegisterRevision();
+    const columns = this.mobileColumns();
+    const externalFilters = option.filter?.externalFilters;
+    const filterDefs = this.sdFilterDefs();
+    const fields = sdTableQueryFields({
+      columns,
+      externalFilters,
+      inlineExternal: {},
+      hideColumns: false,
+      labels: {
+        filters: this.#i18n.t('core.component.table.query-bar.filters'),
+        columns: this.#i18n.t('core.component.table.query-bar.columns'),
+      },
+      filterDefs: filterDefs.map(def => def.sdTableFilterDef()),
+      cacheValues: this.cacheValues,
+    });
+    const ctx = { ...fields, defaultColumnOperator: untracked(() => this.filterRegister?.value.default?.().columnOperator) };
+    return { ctx, items: sdTableMobileFilterItems({ ctx, columns, externalFilters, filterDefs }) };
+  });
+  /** Applied filter value (last emission of the filter register); the phone chips summarise it. */
+  readonly mobileFilterValue = computed(() => this.#appliedFilter());
 
   /** Giá trị đã áp dụng khác default (so trên các field của thanh) — bật nút Xoá lọc. */
   readonly #queryBarDirty = computed(() => {

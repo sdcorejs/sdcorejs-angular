@@ -1,0 +1,157 @@
+@let _kind = kind();
+@let _item = item();
+@let _value = value();
+@let _autoId = autoId();
+@let _operatorItems = operatorItems();
+@let _raw = raw();
+@if (_kind !== 'custom') {
+  <!-- Operator line: a text button with the operator menu when the field offers a choice. -->
+  @if (_operatorItems.length > 1) {
+    <button
+      mat-button
+      type="button"
+      class="sd-mobile-field-operator"
+      [matMenuTriggerFor]="operatorMenu"
+      [attr.data-autoid]="_autoId ? _autoId + '-operator' : null">
+      {{ operatorLabel() }}
+      <sd-icon name="arrow_drop_down" size="18px"></sd-icon>
+    </button>
+    <mat-menu #operatorMenu="matMenu" class="sd-table-mobile-operator-menu">
+      @for (entry of _operatorItems; track entry.value) {
+        <button mat-menu-item type="button" (click)="setOperator(entry.value)">
+          <span class="sd-mobile-field-operator-icon" [innerHTML]="entry.icon"></span>
+          <span>{{ entry.display }}</span>
+        </button>
+      }
+    </mat-menu>
+  } @else if (operatorLabel()) {
+    <div class="sd-mobile-field-operator-text">{{ operatorLabel() }}</div>
+  }
+}
+@if (!noData()) {
+  @switch (_kind) {
+    @case ('options') {
+      @if (showSearch()) {
+        <sd-input
+          class="sd-mobile-field-search"
+          [autoId]="_autoId ? _autoId + '-search' : null"
+          [placeholder]="'core.component.table.mobile.search-options' | sdTranslate"
+          [model]="search()"
+          (modelChange)="onSearch($event)"
+          hideInlineError
+          clearable></sd-input>
+      }
+      @if (multiple()) {
+        <div class="sd-mobile-field-list" role="group" [attr.aria-label]="_item.label">
+          @for (option of shownOptions(); track option.value) {
+            <sd-checkbox
+              class="sd-mobile-field-row"
+              [autoId]="_autoId ? _autoId + '-option-' + $index : null"
+              [label]="option.label"
+              [model]="isChecked(option.value)"
+              (modelChange)="toggle(option.value, $event)"></sd-checkbox>
+          }
+        </div>
+      } @else {
+        <sd-radio
+          class="sd-mobile-field-list sd-mobile-field-radio"
+          [autoId]="_autoId ? _autoId + '-options' : null"
+          display="column"
+          [items]="shownOptions()"
+          valueField="value"
+          displayField="label"
+          [model]="$any(_raw)"
+          (modelChange)="setRaw($event)"></sd-radio>
+      }
+    }
+    @case ('boolean') {
+      <sd-radio
+        class="sd-mobile-field-list sd-mobile-field-radio"
+        [autoId]="_autoId ? _autoId + '-options' : null"
+        display="column"
+        [items]="booleanOptions()"
+        valueField="value"
+        displayField="label"
+        [model]="$any(_raw)"
+        (modelChange)="setRaw($event)"></sd-radio>
+    }
+    @case ('date-range') {
+      <div class="sd-mobile-field-pair">
+        <sd-date
+          labelPlacement="top"
+          [label]="'core.component.table.mobile.date-from' | sdTranslate"
+          [autoId]="_autoId ? _autoId + '-from' : null"
+          [model]="_raw?.from"
+          (modelChange)="setRange('from', $event)"
+          hideInlineError></sd-date>
+        <sd-date
+          labelPlacement="top"
+          [label]="'core.component.table.mobile.date-to' | sdTranslate"
+          [autoId]="_autoId ? _autoId + '-to' : null"
+          [model]="_raw?.to"
+          (modelChange)="setRange('to', $event)"
+          hideInlineError></sd-date>
+      </div>
+    }
+    @case ('number-range') {
+      <div class="sd-mobile-field-pair sd-mobile-field-pair--dash">
+        <sd-input-number
+          [autoId]="_autoId ? _autoId + '-from' : null"
+          [model]="_raw?.from"
+          (modelChange)="setRange('from', $event)"
+          hideInlineError></sd-input-number>
+        <span class="sd-mobile-field-dash" aria-hidden="true">–</span>
+        <sd-input-number
+          [autoId]="_autoId ? _autoId + '-to' : null"
+          [model]="_raw?.to"
+          (modelChange)="setRange('to', $event)"
+          hideInlineError></sd-input-number>
+      </div>
+    }
+    @case ('date') {
+      <sd-date [autoId]="_autoId ? _autoId + '-value' : null" [model]="_raw" (modelChange)="setRaw($event)" hideInlineError></sd-date>
+    }
+    @case ('datetime') {
+      <sd-datetime
+        [autoId]="_autoId ? _autoId + '-value' : null"
+        [model]="_raw"
+        (modelChange)="setRaw($event)"
+        hideInlineError></sd-datetime>
+    }
+    @case ('number') {
+      <sd-input-number
+        [autoId]="_autoId ? _autoId + '-value' : null"
+        [model]="_raw"
+        (modelChange)="setRaw($event)"
+        hideInlineError></sd-input-number>
+    }
+    @case ('text') {
+      <sd-input [autoId]="_autoId ? _autoId + '-value' : null" [model]="_raw" (modelChange)="setRaw($event)" hideInlineError></sd-input>
+    }
+    @case ('custom') {
+      @if (_item.custom; as custom) {
+        <div class="sd-mobile-field-custom" (input)="onCustomChange()" (change)="onCustomChange()">
+          @switch (custom.kind) {
+            @case ('column') {
+              <column-filter
+                [autoId]="_autoId"
+                [column]="$any(custom).column"
+                [columnFilter]="_value.columnFilter!"
+                [operator]="$any(_value.columnOperator?.[$any(custom).column.field])"
+                (operatorChange)="_value.columnOperator![$any(custom).column.field] = $event!; onCustomChange()"
+                (filterChange)="onCustomChange()"
+                isMobile></column-filter>
+            }
+            @case ('external') {
+              <ng-container
+                *ngTemplateOutlet="$any(custom).external.filterDef; context: { externalFilter: _value.externalFilter, autoId: _autoId }"></ng-container>
+            }
+            @case ('def') {
+              <ng-container *ngTemplateOutlet="$any(custom).def.templateRef; context: { externalFilter: _value.externalFilter }"></ng-container>
+            }
+          }
+        </div>
+      }
+    }
+  }
+}

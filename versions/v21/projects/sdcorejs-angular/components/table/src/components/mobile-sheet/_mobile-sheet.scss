@@ -1,0 +1,118 @@
+// Phone sheets of sd-table (handoff table-mobile 4–6): `sd-modal view="bottom-sheet"` with a handle, a title row with
+// a text action, and Cancel / Apply in the footer. `chrome` styles the markup a sheet projects (its own view);
+// `panel` reaches the sd-modal frame through the panel class.
+
+@mixin chrome {
+  .sd-mobile-sheet-head {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    // why: the header drags the sheet down; without this the browser would scroll instead.
+    touch-action: none;
+  }
+  .sd-mobile-sheet-handle {
+    display: block;
+    width: 32px;
+    height: 4px;
+    margin: 10px auto 4px;
+    border-radius: 2px;
+    background: var(--sd-border);
+  }
+  .sd-mobile-sheet-title-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 48px;
+    padding: 0 8px 0 20px;
+  }
+  .sd-mobile-sheet-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--sd-font-size-20, 20px);
+    line-height: var(--sd-line-height-28, 28px);
+    font-weight: var(--sd-font-weight-medium, 500);
+    color: var(--sd-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    outline: none;
+  }
+  .sd-mobile-sheet-subtitle {
+    font-size: var(--sd-font-size-13, 13px);
+    line-height: var(--sd-line-height-18, 18px);
+    color: var(--sd-text-secondary);
+  }
+  .sd-mobile-sheet-icon {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--sd-text-secondary);
+    --mat-icon-button-state-layer-size: 44px;
+    --mdc-icon-button-state-layer-size: 44px;
+  }
+  .sd-mobile-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 20px 16px;
+  }
+  .sd-mobile-sheet-footer {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  // Cancel takes one part, the main action two; both 40px pills.
+  .sd-mobile-sheet-cancel {
+    flex: 1 1 0;
+  }
+  .sd-mobile-sheet-apply {
+    flex: 2 1 0;
+  }
+  .sd-mobile-sheet-cancel,
+  .sd-mobile-sheet-apply {
+    min-width: 0;
+
+    ::ng-deep button {
+      width: 100%;
+      height: 40px;
+      border-radius: var(--sd-radius-999, 999px);
+    }
+  }
+}
+
+@mixin panel($class) {
+  ::ng-deep .#{$class} {
+    &.mat-bottom-sheet-container,
+    &.mat-mdc-bottom-sheet-container,
+    .mat-bottom-sheet-container,
+    .mat-mdc-bottom-sheet-container {
+      max-height: 85dvh;
+      border-radius: 28px 28px 0 0 !important;
+    }
+    .sd-modal-header {
+      padding: 0;
+      border-bottom: 0;
+    }
+    .sd-modal-header-left {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .sd-modal-body {
+      padding: 0;
+    }
+    .sd-modal-footer {
+      min-height: 0;
+      padding: 12px 16px 16px;
+    }
+    .sd-modal-footer-left {
+      display: none;
+    }
+    .sd-modal-footer-right {
+      flex: 1 1 auto;
+      margin-left: 0;
+    }
+  }
+}

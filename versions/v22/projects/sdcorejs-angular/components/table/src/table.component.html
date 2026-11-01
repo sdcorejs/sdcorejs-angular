@@ -222,6 +222,10 @@
         [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
         (valueChange)="onQuickSearchChange($event)" />
     }
+    @if (_mobileCards && mobileFilterModel()?.items?.length) {
+      <!-- Phone: filter chips under the search (handoff table-mobile 3). -->
+      <sd-table-mobile-filter-chips [table]="this"></sd-table-mobile-filter-chips>
+    }
     <div class="c-container" [class.sd-table-mobile]="_mobileCards">
       <!-- why: lớp loading không phủ lên bảng: header, filter, sort và thanh cuộn luôn dùng được. Chưa có dòng thì
            khung xương (matNoDataRow); đã có dòng thì giữ dòng cũ, quá showDelay mới làm mờ dòng và hiện thanh tiến

@@ -10,7 +10,6 @@ import {
   inject,
   Injector,
   input,
-  isSignal,
   model,
   output,
   signal,
@@ -25,7 +24,6 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Filter, Operator } from '@sdcorejs/utils/models';
-import { firstValueFrom, isObservable } from 'rxjs';
 
 import { SdQueryActionsBar } from './components/actions-bar/actions-bar.component';
 import { SdQueryBuildChip } from './components/build-chip/build-chip.component';
@@ -35,6 +33,7 @@ import { SdQueryInlineChip } from './components/inline-chip/inline-chip.componen
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
 import { SdQueryPopoverChip } from './components/popover-chip/popover-chip.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { ɵSdQueryChipLabels, ɵsdQueryChipValueText } from './query-bar-chip-text';
 import {
   BuildingChip,
   SD_QUERY_DEFAULT_OPERATOR_BY_TYPE,
@@ -58,10 +57,6 @@ interface Range {
 
 /** Shared empty array — stable reference so template bindings don't churn change detection. */
 const EMPTY_ARRAY: any[] = [];
-
-/** Chip date formats — the `dd/MM/yyyy` that sd-date / sd-datetime show in their input. */
-const DATE_FORMAT = 'dd/MM/yyyy';
-const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
 
 const hasValue = (value: unknown): boolean => value !== null && value !== undefined && value !== '';
 
@@ -91,6 +86,8 @@ export class SdQueryBar {
   readonly #injector = inject(Injector);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #dateTime = inject(SdDateTimeService);
+  /** Labels of restored values (values with an items function, lazy-values). */
+  readonly #labels = new ɵSdQueryChipLabels();
 
   /** All popover-mode chips in order — used to auto-open after addFilter / close before removeFilter. */
   readonly popoverChips = viewChildren(SdQueryPopoverChip);
@@ -276,7 +273,7 @@ export class SdQueryBar {
       const filters = this.filters();
       const fields = this.fieldByKey();
       untracked(() => {
-        for (const filter of filters) this.#resolveLabels(filter, fields);
+        for (const filter of filters) this.#labels.resolve(filter, 'field' in filter ? fields[filter.field as string] : undefined);
       });
     });
   }
@@ -428,18 +425,13 @@ export class SdQueryBar {
 
   /** Rendered value text on a chip. */
   chipValueText(filter: Filter): string {
-    if (SD_QUERY_NO_DATA_OPERATORS.includes(filter.operator as Operator)) return '';
-    const data = (filter as any).data;
-    if (data === null || data === undefined) return '';
-    if (filter.operator === 'BETWEEN' && data && typeof data === 'object' && !Array.isArray(data)) {
-      return this.#rangeText(filter, data);
-    }
-    if (Array.isArray(data)) {
-      if (data.length === 0) return '';
-      const head = this.#displayOne(filter, data[0]);
-      return data.length > 1 ? `${head} +${data.length - 1}` : head;
-    }
-    return this.#displayOne(filter, data);
+    const field = this.fieldOf(filter);
+    return ɵsdQueryChipValueText(filter, field, {
+      t: (key, params) => this.#i18n.t(key, params),
+      toFormat: (value, format) => this.#dateTime.toFormat(value, format),
+      options: this.chipPopover()?.editingOptions() ?? [],
+      labels: field ? this.#labels.get(field.key as string) : undefined,
+    });
   }
 
   /** The field of a chip, or `undefined` for a key the bar does not know. */
@@ -840,125 +832,5 @@ export class SdQueryBar {
   #focusInlineChip(index: number): void {
     const chips = this.#host.nativeElement.querySelectorAll('sd-query-inline-value-chip, sd-query-inline-chip');
     chips[index]?.querySelector<HTMLElement>('input, button, [tabindex]:not([tabindex="-1"])')?.focus();
-  }
-
-  /** `01/10 – 31/10/2026` inside one year, `From …` / `To …` when one end is open. */
-  #rangeText(filter: Filter, range: Range): string {
-    const field = this.fieldOf(filter);
-    const hasFrom = hasValue(range.from);
-    const hasTo = hasValue(range.to);
-    if (field?.type === 'date' && hasFrom && hasTo) {
-      const year = this.#dateTime.toFormat(range.from, 'yyyy');
-      if (year && year === this.#dateTime.toFormat(range.to, 'yyyy')) {
-        return `${this.#dateTime.toFormat(range.from, 'dd/MM')} – ${this.#dateTime.toFormat(range.to, DATE_FORMAT)}`;
-      }
-    }
-    const from = hasFrom ? this.#displayOne(filter, range.from) : '';
-    const to = hasTo ? this.#displayOne(filter, range.to) : '';
-    if (hasFrom && hasTo) return `${from} – ${to}`;
-    if (hasFrom) return this.#i18n.t('core.component.query-bar.range.from', { value: from });
-    if (hasTo) return this.#i18n.t('core.component.query-bar.range.to', { value: to });
-    return '';
-  }
-
-  #displayOne(filter: Filter, raw: any): string {
-    const fieldKey = 'field' in filter ? (filter.field as string) : '';
-    const field = this.fieldByKey()[fieldKey];
-    if (!field) return String(raw);
-    if (field.type === 'boolean') {
-      // why: nhãn mặc định của field boolean phải theo ngôn ngữ đang chọn; consumer vẫn override
-      // được bằng `trueLabel` / `falseLabel` trên chính field.
-      const trueLabel = (field as any).trueLabel ?? this.#i18n.t('core.component.query-bar.boolean.true');
-      const falseLabel = (field as any).falseLabel ?? this.#i18n.t('core.component.query-bar.boolean.false');
-      return raw ? trueLabel : falseLabel;
-    }
-    if (field.type === 'date' || field.type === 'datetime') {
-      // why: chip in đúng định dạng của sd-date / sd-datetime, không in chuỗi model `yyyy/MM/dd` hay ISO.
-      return this.#dateTime.toFormat(raw, field.type === 'date' ? DATE_FORMAT : DATETIME_FORMAT) || String(raw);
-    }
-    if (field.type === 'values' || field.type === 'lazy-values') {
-      const opt = (field as any).option;
-      const cachedOptions = this.chipPopover()?.editingOptions() ?? [];
-      const items = this.#resolveSyncItems(opt?.items) ?? cachedOptions;
-      const match = items.find((i: any) => i?.[opt.valueField] === raw);
-      if (match) return String(match[opt.displayField]);
-      const cached = cachedOptions.find((i: any) => i?.[opt.valueField] === raw);
-      if (cached) return String(cached[opt.displayField]);
-      return this.#labels().get(fieldKey)?.get(raw) ?? String(raw);
-    }
-    return String(raw);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Labels of restored values (values with an items function, lazy-values)
-  // ---------------------------------------------------------------------------
-
-  /** `field.key` → value → label, filled by #resolveLabels. Replaced (not mutated) so chips re-render. */
-  readonly #labels = signal<ReadonlyMap<string, ReadonlyMap<unknown, string>>>(new Map());
-  /** Lookups already started — each runs once per field (values) or per field + value (lazy-values). */
-  readonly #labelRequests = new Set<string>();
-
-  #resolveLabels(filter: Filter, fields: Record<string, SdQueryField>): void {
-    if (!('field' in filter) || SD_QUERY_NO_DATA_OPERATORS.includes(filter.operator as Operator)) return;
-    const field = fields[filter.field as string];
-    if (field?.type !== 'values' && field?.type !== 'lazy-values') return;
-    const data = (filter as any).data;
-    const values: unknown[] = Array.isArray(data) ? data : hasValue(data) ? [data] : [];
-    if (!values.length) return;
-    const key = field.key as string;
-    if (field.type === 'values') {
-      const items = field.option.items;
-      // why: mảng / signal đã đọc đồng bộ trong #displayOne; chỉ hàm (Promise) mới cần nạp.
-      if (typeof items !== 'function' || isSignal(items) || this.#labelRequests.has(key)) return;
-      this.#labelRequests.add(key);
-      this.#loadLabels(field, () => (items as () => Promise<unknown[]>)());
-      return;
-    }
-    const known = this.#labels().get(key);
-    if (values.every(value => known?.has(value))) return;
-    const request = `${key}|${this.#stringify(data)}`;
-    if (this.#labelRequests.has(request)) return;
-    this.#labelRequests.add(request);
-    const option = field.option;
-    this.#loadLabels(field, () => (option.views ? option.views(values) : option.search({ type: 'VALUE', value: data })));
-  }
-
-  #loadLabels(field: SdQueryField, load: () => unknown): void {
-    const option = (field as any).option;
-    let result: unknown;
-    try {
-      result = load();
-    } catch {
-      return;
-    }
-    const items = isObservable(result) ? firstValueFrom(result) : Promise.resolve(result);
-    items
-      .then(list => {
-        if (!Array.isArray(list) || !list.length) return;
-        const next = new Map(this.#labels());
-        const labels = new Map(next.get(field.key as string) ?? []);
-        for (const item of list) {
-          const value = item?.[option.valueField];
-          if (value !== undefined) labels.set(value, String(item[option.displayField]));
-        }
-        next.set(field.key as string, labels);
-        this.#labels.set(next);
-      })
-      // why: tra nhãn thất bại thì chip giữ giá trị thô — không phải lỗi của thanh.
-      .catch(() => undefined);
-  }
-
-  #stringify(value: unknown): string {
-    try {
-      return Utilities.canonicalStringify(value);
-    } catch {
-      return String(value);
-    }
-  }
-
-  #resolveSyncItems(items: any): any[] | null {
-    if (Array.isArray(items)) return items;
-    if (isSignal(items)) return (items as any)();
-    return null;
   }
 }
