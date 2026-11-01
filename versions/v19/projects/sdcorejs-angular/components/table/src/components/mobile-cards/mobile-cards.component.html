@@ -7,6 +7,8 @@
 @let _active = active();
 @let _expandTemplate = _table.sdSubInformation();
 @let _skeletonCards = skeletonCards();
+@let _hasSelector = !!_option.selector?.visible;
+@let _endColumn = !_selectionMode && _table.rowCommands().length > 0;
 
 @if (_option.selector?.visible) {
   <span class="sd-mobile-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ selectionSummary() }}</span>
@@ -51,7 +53,8 @@
         [attr.aria-label]="card.label"
         [attr.data-autoid]="card.context.autoId"
         [class.selected]="_meta.selector?.isSelected"
-        [class.sd-mobile-card-commandable]="!_selectionMode && _commands.get(_row)?.length"
+        [class.sd-mobile-card--select]="_hasSelector"
+        [class.sd-mobile-card--commands]="_endColumn"
         [class.sd-mobile-card-active]="_active?.row === _row"
         [ngStyle]="_meta.rowStyle"
         [style.margin-inline-start.px]="_option.tree ? (_meta.tree?.level ?? 0) * (_option.tree?.indentSize ?? 20) : 0"
@@ -64,102 +67,110 @@
         [cdkDragData]="_row"
         [cdkDragDisabled]="!_option.rowReorder?.enabled || card.reorderDisabled"
         (cdkDragStarted)="dragStart()">
-        <div class="sd-mobile-card-controls d-flex align-items-center gap-8">
-          @if (_option.selector?.visible && _meta.selector?.visible) {
-            @if (_option.selector?.single) {
-              <mat-radio-button
-                class="sd-mobile-card-selector"
-                [checked]="_meta.selector?.isSelected"
-                [disabled]="_meta.selector?.disabled"
-                [aria-label]="card.selectLabel"
-                (change)="select(card)"></mat-radio-button>
-            } @else {
-              <mat-checkbox
-                class="sd-mobile-card-selector"
-                [checked]="_meta.selector?.isSelected"
-                [disabled]="_meta.selector?.disabled"
-                [aria-label]="card.selectLabel"
-                (change)="select(card)"></mat-checkbox>
+        <!-- Card grid: [selector 44px] | content | ⋯ 44px (12px while selecting or without row commands). -->
+        @if (_hasSelector) {
+          <div class="sd-mobile-card-select">
+            @if (_meta.selector?.visible) {
+              @if (_option.selector?.single) {
+                <mat-radio-button
+                  class="sd-mobile-card-selector"
+                  [checked]="_meta.selector?.isSelected"
+                  [disabled]="_meta.selector?.disabled"
+                  [aria-label]="card.selectLabel"
+                  (change)="select(card)"></mat-radio-button>
+              } @else {
+                <mat-checkbox
+                  class="sd-mobile-card-selector"
+                  [checked]="_meta.selector?.isSelected"
+                  [disabled]="_meta.selector?.disabled"
+                  [aria-label]="card.selectLabel"
+                  (change)="select(card)"></mat-checkbox>
+              }
             }
-          }
-          @if (_option.tree) {
-            <span class="sd-mobile-sr-only">{{ card.treeLabel }}</span>
-            @if (_meta.tree?.hasChildren) {
-              <button
-                mat-icon-button
-                type="button"
-                [disabled]="_meta.tree?.isExpanding"
-                [attr.aria-busy]="_meta.tree?.isExpanding ? 'true' : null"
-                [attr.aria-label]="card.expandLabel"
-                [attr.aria-expanded]="_meta.tree?.isExpanded"
-                [attr.data-autoid]="_autoId ? _autoId + '-tree-toggle-' + _meta.id : null"
-                (click)="_table.onTreeToggle(_row)">
-                @if (_meta.tree?.isExpanding) {
-                  <span class="sd-table-spinner" aria-hidden="true"></span>
-                } @else {
-                  <sd-icon [name]="_meta.tree?.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+          </div>
+        }
+        <div class="sd-mobile-card-main">
+          @if (_option.tree || _option.rowReorder?.enabled) {
+            <div class="sd-mobile-card-controls d-flex align-items-center gap-8">
+              @if (_option.tree) {
+                <span class="sd-mobile-sr-only">{{ card.treeLabel }}</span>
+                @if (_meta.tree?.hasChildren) {
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [disabled]="_meta.tree?.isExpanding"
+                    [attr.aria-busy]="_meta.tree?.isExpanding ? 'true' : null"
+                    [attr.aria-label]="card.expandLabel"
+                    [attr.aria-expanded]="_meta.tree?.isExpanded"
+                    [attr.data-autoid]="_autoId ? _autoId + '-tree-toggle-' + _meta.id : null"
+                    (click)="_table.onTreeToggle(_row)">
+                    @if (_meta.tree?.isExpanding) {
+                      <span class="sd-table-spinner" aria-hidden="true"></span>
+                    } @else {
+                      <sd-icon [name]="_meta.tree?.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+                    }
+                  </button>
                 }
-              </button>
-            }
-            @if (_option.index?.enabled) {
-              <span>{{ _meta.tree?.indexPath?.join('.') }}</span>
-            }
+                @if (_option.index?.enabled) {
+                  <span>{{ _meta.tree?.indexPath?.join('.') }}</span>
+                }
+              }
+              @if (_option.rowReorder?.enabled) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  cdkDragHandle
+                  [disabled]="card.reorderDisabled"
+                  [attr.aria-label]="'core.component.table.mobile.reorder' | sdTranslate">
+                  <sd-icon [name]="_option.rowReorder?.icon || 'drag_indicator'"></sd-icon>
+                </button>
+              }
+            </div>
           }
-          @if (_option.rowReorder?.enabled) {
+          <div class="sd-mobile-card-body">
+            <ng-container *ngTemplateOutlet="_table.sdRowMobileDef()!.templateRef; context: card.context"></ng-container>
+          </div>
+          @if (_expandTemplate && !_option.expand?.always) {
+            <!-- why: the Details line comes before the block it discloses, at the end of the card. -->
+            <button
+              mat-button
+              type="button"
+              class="sd-mobile-card-details"
+              [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
+              [attr.aria-busy]="_meta.expand?.isExpanding ? 'true' : null"
+              [attr.aria-expanded]="_meta.expand?.isExpanded"
+              [attr.aria-label]="card.expandLabel"
+              [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
+              (click)="_table.onExpand(_row)">
+              @if (_meta.expand?.isExpanding) {
+                <span class="sd-table-spinner" aria-hidden="true"></span>
+              } @else {
+                <sd-icon [name]="_meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
+              }
+              {{ 'core.component.table.mobile.details' | sdTranslate }}
+            </button>
+          }
+          @if (_expandTemplate && (_option.expand?.always || _meta.expand?.isExpanded)) {
+            <div class="sd-mobile-expand">
+              <ng-container *ngTemplateOutlet="_expandTemplate.templateRef; context: { item: _row }"></ng-container>
+            </div>
+          }
+        </div>
+        <div class="sd-mobile-card-end">
+          @if (!_selectionMode && _commands.get(_row)?.length) {
             <button
               mat-icon-button
               type="button"
-              cdkDragHandle
-              [disabled]="card.reorderDisabled"
-              [attr.aria-label]="'core.component.table.mobile.reorder' | sdTranslate">
-              <sd-icon [name]="_option.rowReorder?.icon || 'drag_indicator'"></sd-icon>
+              class="sd-mobile-command-trigger"
+              aria-haspopup="dialog"
+              (click)="openCommand(card, $event)"
+              [attr.aria-label]="card.commandLabel"
+              [attr.aria-expanded]="_active?.row === _row"
+              [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
+              <sd-icon name="more_horiz" size="20px"></sd-icon>
             </button>
           }
-          <span class="flex-1"></span>
         </div>
-        <div class="sd-mobile-card-body">
-          <ng-container *ngTemplateOutlet="_table.sdRowMobileDef()!.templateRef; context: card.context"></ng-container>
-        </div>
-        @if ((_expandTemplate && !_option.expand?.always) || (!_selectionMode && _commands.get(_row)?.length)) {
-          <div class="sd-mobile-card-actions">
-            @if (_expandTemplate && !_option.expand?.always) {
-              <button
-                mat-button
-                type="button"
-                [disabled]="card.expandDisabled || _meta.expand?.isExpanding"
-                [attr.aria-busy]="_meta.expand?.isExpanding ? 'true' : null"
-                [attr.aria-expanded]="_meta.expand?.isExpanded"
-                [attr.aria-label]="card.expandLabel"
-                [attr.data-autoid]="_autoId ? _autoId + '-expand-' + _meta.id : null"
-                (click)="_table.onExpand(_row)">
-                @if (_meta.expand?.isExpanding) {
-                  <span class="sd-table-spinner" aria-hidden="true"></span>
-                } @else {
-                  <sd-icon [name]="_meta.expand?.isExpanded ? 'expand_less' : 'expand_more'"></sd-icon>
-                }
-                {{ 'core.component.table.mobile.details' | sdTranslate }}
-              </button>
-            }
-            @if (!_selectionMode && _commands.get(_row)?.length) {
-              <button
-                mat-icon-button
-                type="button"
-                class="sd-mobile-command-trigger"
-                aria-haspopup="dialog"
-                (click)="openCommand(card, $event)"
-                [attr.aria-label]="card.commandLabel"
-                [attr.aria-expanded]="_active?.row === _row"
-                [attr.data-autoid]="card.context.autoId ? card.context.autoId + '-commands' : null">
-                <sd-icon name="more_horiz"></sd-icon>
-              </button>
-            }
-          </div>
-        }
-        @if (_expandTemplate && (_option.expand?.always || _meta.expand?.isExpanded)) {
-          <div class="sd-mobile-expand">
-            <ng-container *ngTemplateOutlet="_expandTemplate.templateRef; context: { item: _row }"></ng-container>
-          </div>
-        }
       </article>
     }
   }

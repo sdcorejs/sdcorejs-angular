@@ -48,8 +48,10 @@ interface Card<T> {
   expandDisabled: boolean;
 }
 
+// why: `.sd-mobile-card-select` — the checkbox touch target fills the 44px zone outside the input; a tap there must
+// not also reach the card, which would toggle the row back in selection mode.
 const INTERACTIVE =
-  'a[href],button,input,select,textarea,summary,label,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="textbox"],[tabindex]:not([tabindex="-1"]),sd-button,sd-table,[cdkDragHandle]';
+  'a[href],button,input,select,textarea,summary,label,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="textbox"],[tabindex]:not([tabindex="-1"]),sd-button,sd-table,[cdkDragHandle],.sd-mobile-card-select';
 
 @Component({
   selector: 'sd-table-mobile-cards',
