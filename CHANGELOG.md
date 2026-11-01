@@ -81,6 +81,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `filterRegister.configuration.set()` keeps the fields it is not given (it used to replace the whole filter setup): setting only `inlineExternal` keeps the mode, and `mode: undefined` clears it.
 - The **Cố định khi cuộn ngang** and **Rút gọn nội dung dài** options of an open row in the settings modal are rows with the label and a description on the left and an `sd-switch` on the right (were checkboxes); the description no longer pushes the other option out of line.
 
+### Fixed
+
+#### Table
+
+- Apply in the settings modal no longer reads the data again when the column setup did not change, for example when only the **Bộ lọc** tab changed or nothing changed at all; a read in flight keeps going and renders. A column set back to its original value counts as unchanged.
+  - A changed column setup (shown, hidden, reordered, renamed, resized, fixed or truncated columns) still reads once, as does **Khôi phục mặc định**; both drop a read in flight.
+
 ## [3.4] - 2026-10-30
 
 Packages `19.3.4` · `20.3.4` · `21.3.4` · `22.3.4`, validated against `*.3.3`.

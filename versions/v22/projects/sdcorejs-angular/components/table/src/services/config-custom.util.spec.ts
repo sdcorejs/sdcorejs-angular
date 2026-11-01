@@ -1,6 +1,6 @@
 import { ConfiguredColumn, ConfiguredTable } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
-import { defaultConfiguredTable, sdTableHasCustomSetup } from './config-custom.util';
+import { defaultConfiguredTable, sdTableHasCustomSetup, sdTableSameColumnSetup } from './config-custom.util';
 
 const option = (columns: unknown[], filter?: unknown): SdTableOption =>
   ({ type: 'local', key: 'custom-setup', items: () => [], columns, filter }) as unknown as SdTableOption;
@@ -145,6 +145,45 @@ describe('table custom setup', () => {
     it('ignores the stored filter mode when it cannot be picked or filtering is off', () => {
       expect(has(stored(), COLUMNS, undefined, { modeSelectable: false }, 'query-bar')).toBe(false);
       expect(has(stored(), COLUMNS, undefined, { disabled: true }, 'query-bar')).toBe(false);
+    });
+  });
+
+  describe('sdTableSameColumnSetup', () => {
+    it('is true for the same setup, also when nothing is stored on either side', () => {
+      expect(sdTableSameColumnSetup(stored(), stored())).toBe(true);
+      expect(sdTableSameColumnSetup(undefined, {})).toBe(true);
+    });
+
+    it('is true when a value is set back to its original', () => {
+      expect(sdTableSameColumnSetup(stored(), edit(stored(), 'code', { title: '', width: undefined }))).toBe(true);
+      expect(sdTableSameColumnSetup(stored(), edit(stored(), 'code', { invisible: false }))).toBe(true);
+      expect(sdTableSameColumnSetup(stored(), edit(stored(), 'customer', { truncate: undefined }))).toBe(true);
+      expect(sdTableSameColumnSetup(edit(stored(), 'code', { fixed: undefined }), edit(stored(), 'code', { fixed: false }))).toBe(true);
+    });
+
+    it('is false when the order or a column differs', () => {
+      const table = stored();
+      expect(sdTableSameColumnSetup(table, { columns: [table.columns![1], table.columns![0], table.columns![2]] }))
+        .withContext('order')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, { columns: table.columns!.slice(1) }))
+        .withContext('column count')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, edit(table, 'note', { invisible: false })))
+        .withContext('shown')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, edit(table, 'code', { title: 'Mã' })))
+        .withContext('title')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, edit(table, 'code', { width: '200px' })))
+        .withContext('width')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, edit(table, 'code', { fixed: false })))
+        .withContext('fixed')
+        .toBe(false);
+      expect(sdTableSameColumnSetup(table, edit(table, 'customer', { truncate: false })))
+        .withContext('truncate')
+        .toBe(false);
     });
   });
 });
