@@ -15526,7 +15526,7 @@ export class TableMobileDataDemoComponent {
     selector: {
       visible: true,
       disabled: row => !!row?.locked,
-      actions: [{ title: 'Duyệt', icon: 'check', click: rows => this.log.set(\`Duyệt \${rows.length} đơn\`) }],
+      actions: [{ title: 'Duyệt', icon: 'check', click: (rows = []) => this.log.set(\`Duyệt \${rows.length} đơn\`) }],
     },
     command: {
       commands: [
@@ -15554,8 +15554,8 @@ export class TableMobileDataDemoComponent {
         title: 'Trạng thái',
         sortable: true,
         option: { items: [...STATUSES], valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
-        useBadge: (value, _row, items) => {
-          const status = items.find(item => item.id === value);
+        useBadge: value => {
+          const status = STATUSES.find(entry => entry.id === value);
           return { title: status?.name ?? value, color: status?.color ?? 'secondary', type: 'round' };
         },
       },
