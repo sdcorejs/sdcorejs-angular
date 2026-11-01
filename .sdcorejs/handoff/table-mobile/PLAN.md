@@ -217,6 +217,44 @@ lint, `test:theme`, `check:scss-hex`, `sync` + `check:sync` xanh. Ảnh `table-m
 - Docs (`sd-table.md` "Card lists keep equal 20px side gutters…", "checkbox… straddles the border") và ghi chú demo showcase
   còn tả khung cũ; sửa ở bước 6.
 
+Từ bước 2, người dùng yêu cầu làm hết các bước không dừng chờ duyệt: mỗi bước commit sau khi full Karma, lint, scss-hex,
+i18n parity, theme, sync + check:sync xanh. Spec các bước 2–5 viết cùng lúc với code (không chạy RED riêng như bước 1).
+Ảnh 360 × 720 chụp gộp ở bước 6, khi showcase có demo.
+
+**Bước 2 — `mobile.template`** (a4d49ada1).
+- Khoá cache của `data` thêm tham chiếu object dòng: `dataRevision` chỉ tăng khi `table.detectChanges()`, nên một lần đọc
+  lại trả object mới cùng `meta.id` phải gọi lại `data`.
+- Field `hidden: true` không được bảng định dạng (`TableFormatService` bỏ qua), thẻ hiện giá trị thô.
+- Tự suy chọn badge trước subtitle, để cột trạng thái `string` có `useBadge` thành badge.
+- Sửa lỗi: khoá lưu Thiết lập khi không có `option.key` băm cả option; `TemplateRef` trong `mobile.template` vượt độ sâu
+  khi băm. Nay bỏ `mobile.template` khỏi phần băm (khoá cũ không đổi).
+
+**Bước 3 — hàng chip, sheet một trường** (6543e86d5).
+- Vùng chạm 44px dùng `::after` (Material giữ `::before` với `pointer-events: none`); hàng chip có `padding-top: 6px`, hàng
+  đầu (bước 5) giảm `padding-bottom` còn 4px khi có hàng chip, khoảng cách nhìn thấy vẫn 10px.
+- Tóm tắt `string` / `number` có operator đứng trước giá trị (`Chứa abc`), `NULL` / `NOT_NULL` hiện tên operator.
+- Sheet dùng `SdTableSheetHistory` (đẩy một mục history mỗi cấp, `sd-modal` `closeOnNavigation: false`) và vuốt xuống trên
+  tay nắm + header (`sdTableSheetSwipe`, listener passive, `touch-action: none`).
+
+**Bước 4 — sheet bộ lọc đầy đủ** (4ce8e61bd).
+- Escape ở trang con bắt bằng listener TS trên thân sheet (lint không cho `(keydown)` trên `div` không focus được).
+- Bộ lọc tự viết có dòng mở trang con chứa control riêng, không có dòng tóm tắt; chỉ bộ lọc đã biết hiện "Tất cả".
+
+**Bước 5 — sắp xếp, Công cụ, chân trang, kéo để làm mới.**
+- Nút chia đôi là `sd-segmented` (`stretch`), bên đang chọn có icon `check`. Danh sách cột là `sd-radio`.
+- Dòng sheet Công cụ cao 56px qua input nội bộ `sheetClass` của `sd-table-mobile-actions`; sheet hành động dòng giữ nguyên.
+- Kéo để làm mới: `sd-table-pull-refresh` trên `.c-table`, chỉ báo giữ đến khi `loading` tắt (thêm hạn 300ms cho lần đọc không
+  bật loading). Chỉ nhận kéo khi danh sách, mọi phần tử cuộn bên trên và trang đều ở đầu.
+
+**Bước 6 — docs, showcase, ảnh.** `sd-table.md` (Card body, Filters/sort/tools on phones, bảng mapping, autoId), CHANGELOG,
+showcase 2 mục mới ("Lọc và sắp xếp trên điện thoại", "Thẻ tự suy từ cột"; registry 37 → 39, tổng 496 → 498), ghi chú mục
+"Thẻ mobile và thao tác". Ảnh `table-mobile-04..14` chụp ở 360 × 720 với demo đặt trong một khung toàn màn hình (khung demo
+của trang docs chỉ rộng 282px).
+- Kiểm trên showcase tìm ra hai lỗi lib, sửa trong commit riêng có spec: hàng chip cuộn ngang vẫn góp bề rộng min-content nên
+  bảng trong container flex giãn theo tổng bề rộng chip (sửa: `contain: inline-size`); sheet lọc đầy đủ chưa cao viewport − 40px
+  và chân không sát đáy (rule 85dvh của sheet khác cùng độ ưu tiên, thân sheet không giãn).
+- Nút chia đôi dùng giao diện mặc định của `sd-segmented` (bên chọn nền sáng + ✓), không phải nền secondary-container.
+
 ## CHANGELOG (`## [Unreleased]`)
 
 - Changed (BREAKING cho E2E): autoId `{autoId}-mobile-tool-filter`, `-mobile-tool-sort-<field>`, `-mobile-tool-reload` không

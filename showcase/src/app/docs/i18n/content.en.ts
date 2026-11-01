@@ -774,7 +774,17 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'components/table/example-the-mobile-va-thao-tac': {
     title: 'Mobile cards and actions',
     description:
-      'The Add button is centered above the cards. The card margins on both sides are fixed, and the small checkbox overlaps the right corner of the border. The selection bar leaves 16px at both ends; many actions wrap evenly onto new rows. Tapping a card opens the row actions sheet; the Tools button in the footer opens the sheet for reload, export, filter and sort.',
+      'The Add button is centered above the cards. The checkbox sits in the left column of the card, ⋯ in the top-right corner and Details on the last line. The selection bar leaves 16px at both ends; many actions wrap evenly onto new rows. Tapping a card opens the row actions sheet. The chip row under the search opens the filters; ⋮ in the top row opens Tools (export, settings); pull the list down to reload.',
+  },
+  'components/table/example-loc-va-sap-xep-tren-dien-thoai': {
+    title: 'Filters and sort on phones',
+    description:
+      'View at phone width. Cards built from data (title, badge, highlight, fields, More button). Chip row: Filters, Sort, then one chip per filter; a chip opens the sheet of that filter, Filters opens the two-level sheet. Sort picks one column, hidden ones included. ⋮ opens Tools; pull the list down to reload.',
+  },
+  'components/table/example-the-tu-suy-tu-cot': {
+    title: 'Cards derived from columns',
+    description:
+      'The table declares no card: autoTemplate takes the rowKey column as the title, a useBadge column as the badge, the next string column as the subtitle and the rest as grid fields. The table only sorts, so the sort button sits in the top row.',
   },
   'components/table/example-thiet-lap-cot': {
     title: 'Column settings',

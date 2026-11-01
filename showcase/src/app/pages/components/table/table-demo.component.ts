@@ -6,6 +6,8 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { TableAggregateDemoComponent } from './table-aggregate-example.component';
+import { TableMobileAutoDemoComponent } from './table-mobile-auto-example.component';
+import { TableMobileDataDemoComponent } from './table-mobile-data-example.component';
 import { TableUnknownTotalDemoComponent } from './table-unknown-total-example.component';
 import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.example';
 import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
@@ -188,6 +190,8 @@ const TASKS: Task[] = [
     SdCheckbox,
     SdTableQuickSearchRightDefDirective,
     TableAggregateDemoComponent,
+    TableMobileDataDemoComponent,
+    TableMobileAutoDemoComponent,
     TableUnknownTotalDemoComponent,
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
@@ -253,7 +257,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
         [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-        note="Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
+        note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (xuất, thiết lập); kéo danh sách xuống để tải lại.">
         <sd-table autoId="mobile-employees" [option]="mobileOption">
           <ng-template sdTableCommandHeaderDef>
             <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
@@ -271,6 +275,24 @@ const TASKS: Task[] = [
           <ng-template sdTableFooterDef="salary" let-items="items"><strong>{{ totalSalary(items) | number }} ₫ / trang</strong></ng-template>
         </sd-table>
         <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-va-sap-xep-tren-dien-thoai') {
+      <demo-section heading="Lọc và sắp xếp trên điện thoại"
+        [props]="[{ name: 'mobile.template', value: '{ data }' }, { name: 'filter.externalFilters', value: '[…]' }, { name: 'sort.enable', value: 'true' }, { name: 'reload.visible', value: 'true' }]"
+        data-example-typescript="./table-mobile-data-example.component.ts" data-example-template="./table-mobile-data-example.component.html"
+        note="Xem ở bề rộng điện thoại. Thẻ dựng từ data (title, badge, highlight, fields, nút Thêm). Hàng chip: Bộ lọc, Sắp xếp, rồi từng trường; chip mở sheet một trường, Bộ lọc mở sheet hai cấp. Sắp xếp chọn một cột, kể cả cột ẩn. ⋮ mở Công cụ; kéo danh sách xuống để tải lại.">
+        <app-table-mobile-data-demo />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-tu-suy-tu-cot') {
+      <demo-section heading="Thẻ tự suy từ cột"
+        [props]="[{ name: 'SD_TABLE_CONFIGURATION.mobile.autoTemplate', value: 'true' }, { name: 'filter.disabled', value: 'true' }]"
+        data-example-typescript="./table-mobile-auto-example.component.ts" data-example-template="./table-mobile-auto-example.component.html"
+        note="Bảng không khai báo thẻ: autoTemplate lấy cột rowKey làm tiêu đề, cột có useBadge làm badge, cột chuỗi kế tiếp làm dòng phụ, các cột còn lại vào lưới. Bảng chỉ có sắp xếp nên nút sắp xếp nằm ở hàng đầu.">
+        <app-table-mobile-auto-demo />
       </demo-section>
       }
 
