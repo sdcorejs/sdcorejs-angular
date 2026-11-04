@@ -37,7 +37,7 @@ export class SdTableMobileSortSheetComponent<T = unknown> {
   readonly sheet = viewChild.required<SdModal>('sheet');
   protected readonly head = viewChild<ElementRef<HTMLElement>>('head');
   readonly #i18n = inject(I18nService);
-  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView);
+  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView, inject(ElementRef).nativeElement);
   /** Direction for the next column pick while no column is sorted. */
   readonly #direction = signal<'asc' | 'desc'>('asc');
 

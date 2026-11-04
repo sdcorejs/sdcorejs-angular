@@ -657,8 +657,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   isSelectIndeterminate = signal(false);
   readonly sortState = signal<{ active: string; direction: SortDirection }>({ active: '', direction: '' });
   /**
-   * Columns of the phone sort sheet: sortable leaf columns of the option in their order, hidden and settings-hidden
-   * ones included (handoff table-mobile 6), with the settings title when the column is on screen.
+   * Columns of the phone sort sheet: sortable leaf columns of the option in their order, `invisible` and
+   * settings-hidden ones included, `hidden: true` ones left out (handoff table-mobile 6), with the settings title when
+   * the column is on screen.
    */
   readonly mobileSortColumns = computed(() => {
     const configured = new Map(this.mobileColumns().map(column => [column.field, column]));
@@ -669,17 +670,25 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         const shown = configured.get(column.field) ?? column;
         return {
           field: column.field as string,
-          title: typeof shown.title === 'string' ? shown.title : shown.title.title,
+          title: (typeof shown.title === 'string' ? shown.title : shown.title?.title) || column.field,
           direction: state.active === column.field ? state.direction : '',
         };
       });
   });
   /** The phone shows a sort chip / button: `sort.enable` and at least one sortable column. */
   readonly mobileSortAvailable = computed(() => !!this.tableOption()?.sort?.enable && this.mobileSortColumns().length > 0);
+  /** Accessible name of the phone sort chip / button: "Sort", or the column and direction while sorted. */
+  readonly mobileSortLabel = computed(() => {
+    const state = this.sortState();
+    const column = state.direction ? this.mobileSortColumns().find(entry => entry.field === state.active) : undefined;
+    if (!column) return this.#i18n.t('core.component.table.mobile.sort');
+    const direction = this.#i18n.t(`core.component.table.mobile.sort-${state.direction}`);
+    return this.#i18n.t('core.component.table.mobile.sort-active', { column: column.title, direction });
+  });
 
   /**
-   * Tools sheet of the phone (⋮): export and settings, plus what the consumer adds. Filter, sort and reload live in
-   * the chip row, the sort sheet and pull to refresh. Up to two exports are laid out flat.
+   * Tools sheet of the phone (⋮): export and settings. Filter, sort and reload live in the chip row, the sort sheet and
+   * pull to refresh. The exports are laid out flat (two at most).
    */
   readonly mobileToolsActions = computed<SdTableMobileAction[]>(() => {
     const option = this.tableOption();
@@ -691,13 +700,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       if (exporting.type === 'custom')
         actions.push({ key: 'tool-export', title: this.exportTitle(), icon: 'download', run: () => this.exportCustom() });
       else if (exporting.visible) {
-        const children: SdTableMobileAction[] = [];
+        const disabled = this.exporting();
         if (exporting.visible === 'ALL' || exporting.visible === 'EXCEL')
-          children.push({ key: 'tool-export-excel', title: t('export-excel'), icon: 'table_view', run: () => this.exportExcel() });
+          actions.push({ key: 'tool-export-excel', title: t('export-excel'), icon: 'table_view', disabled, run: () => this.exportExcel() });
         if (exporting.visible === 'ALL' || exporting.visible === 'CSV')
-          children.push({ key: 'tool-export-csv', title: t('export-csv'), icon: 'description', run: () => this.exportCSV() });
-        if (children.length <= 2) actions.push(...children.map(child => ({ ...child, disabled: this.exporting() })));
-        else actions.push({ key: 'tool-export', title: this.exportTitle(), disabled: this.exporting(), children });
+          actions.push({ key: 'tool-export-csv', title: t('export-csv'), icon: 'description', disabled, run: () => this.exportCSV() });
       }
     }
     if (this.configComponent())
@@ -880,6 +887,22 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return { ...fields, defaultColumnOperator: untracked(() => this.filterRegister?.value.default?.().columnOperator) };
   });
 
+  /** Columns hidden through the settings that still filter: the phone keeps their filter, as the query bar its chip. */
+  readonly #mobileHiddenFiltered = computed(
+    () => {
+      const value = this.#appliedFilter();
+      if (!value || !this.isMobile()) return [] as SdTableColumnNormal<T>[];
+      const shown = new Set(this.mobileColumns().map(column => column.field));
+      return leafColumns(this.tableOption()?.columns ?? []).filter(
+        column =>
+          !column.hidden &&
+          !shown.has(column.field) &&
+          (isRawFilterSet(value.columnFilter?.[column.field]) || isNoDataOperator(value.columnOperator?.[column.field]))
+      );
+    },
+    { equal: (a, b) => a.length === b.length && a.every((column, index) => column === b[index]) }
+  );
+
   /**
    * Filters of the phone UI (chip row and filter sheets), in the fixed order external → `sdTableFilterDef` → columns.
    * `undefined` on desktop, with `filter.disabled`, or before the configuration is known.
@@ -890,7 +913,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const config = this.configuration();
     if (!option || !config || option.filter?.disabled) return undefined;
     this.#filterRegisterRevision();
-    const columns = this.mobileColumns();
+    const columns = [...this.mobileColumns(), ...this.#mobileHiddenFiltered()];
     const externalFilters = option.filter?.externalFilters;
     const filterDefs = this.sdFilterDefs();
     const fields = sdTableQueryFields({

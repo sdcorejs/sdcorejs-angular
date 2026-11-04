@@ -107,7 +107,8 @@ export const resolveMobileView = (
       badge,
       fields,
       highlight: !!highlight,
-      maxFields: typeof max === 'number' && Number.isFinite(max) && max >= 0 ? Math.floor(max) : SD_TABLE_MOBILE_MAX_FIELDS,
+      // why: `Infinity` asks for every field; NaN and negative numbers fall back to the default.
+      maxFields: typeof max === 'number' && max >= 0 ? Math.floor(max) : SD_TABLE_MOBILE_MAX_FIELDS,
     },
     issues,
   };
@@ -116,11 +117,11 @@ export const resolveMobileView = (
 /**
  * Card built from the columns on screen (`SD_TABLE_CONFIGURATION.mobile.autoTemplate`, or a row whose `data` threw).
  * Title: the `rowKey` column, else the first column. Badge: the first other column with `useBadge`. Subtitle: the
- * first other `string` column. Fields: the rest, in column order. Hidden, invisible and settings-hidden columns are
- * left out — pass the columns on screen.
+ * first other `string` column. Fields: the rest, in column order. Pass the columns on screen (`shownLeafColumns`):
+ * `invisible` there is the option's default, not the settings, so only `hidden` columns are left out here.
  */
 export const autoMobileView = (columns: readonly SdTableColumnAnyRow[], rowKey?: string): SdTableMobileView => {
-  const shown = leafColumns(columns).filter(column => !column.hidden && !column.invisible);
+  const shown = leafColumns(columns).filter(column => !column.hidden);
   const used = new Set<SdTableColumnAnyRow>();
   const take = (found: SdTableColumnAnyRow | undefined): SdTableColumnAnyRow | undefined => {
     if (found) used.add(found);

@@ -7,10 +7,16 @@ export const SD_TABLE_SHEET_DISMISS_DISTANCE = 80;
  * page. When the UI closes levels itself, `release` takes their entries back off the history.
  *
  * The sheets open `sd-modal` with `closeOnNavigation: false`, otherwise Material would close them on that popstate.
+ *
+ * Off while the table sits in an overlay (a dialog, a bottom sheet): every popstate, the ones `release` causes
+ * included, makes Material close that overlay (`closeOnNavigation`). Back then closes the overlay, as before.
  */
 export class SdTableSheetHistory {
   readonly #window: Window | null;
+  readonly #owner: Element | null;
   readonly #levels: (() => void)[] = [];
+  /** URL when the first level opened; `release` leaves the history alone once the page moved on. */
+  #href?: string;
   /** `popstate` events caused by `release` (history.go), not by the user. */
   #ignore = 0;
   #listening = false;
@@ -25,8 +31,10 @@ export class SdTableSheetHistory {
     back?.();
   };
 
-  constructor(window: Window | null) {
+  /** `owner`: an element of the table, to tell whether it sits in an overlay. */
+  constructor(window: Window | null, owner?: Element | null) {
     this.#window = window;
+    this.#owner = owner ?? null;
   }
 
   get depth(): number {
@@ -36,25 +44,34 @@ export class SdTableSheetHistory {
   /** Opens a level: Back now runs `onBack` (which must not call `release`). */
   push(onBack: () => void): void {
     const window = this.#window;
-    if (!window) return;
+    if (!window || this.#owner?.closest('.cdk-overlay-pane')) return;
+    if (!this.#levels.length) this.#href = window.location.href;
     this.#levels.push(onBack);
     this.#sync();
     window.history.pushState(window.history.state, '');
   }
 
-  /** The UI closed `count` levels itself (all by default): drop their entries from the history. */
+  /**
+   * The UI closed `count` levels itself (all by default): drop their entries from the history. When the URL changed
+   * since the first level opened (the router navigated, the app wrote query params), the entries are only forgotten:
+   * going back would undo that navigation.
+   */
   release(count = this.#levels.length): void {
     const window = this.#window;
     const levels = Math.min(count, this.#levels.length);
     if (!window || !levels) return;
     this.#levels.splice(this.#levels.length - levels, levels);
+    if (window.location.href !== this.#href) {
+      this.#sync();
+      return;
+    }
     // why: history.go() is asynchronous; the popstate it causes must not run another level's handler.
     this.#ignore++;
     this.#sync();
     window.history.go(-levels);
   }
 
-  /** Destroy: forget the levels without touching the history (the page may be leaving). */
+  /** Destroy: stop listening. A sheet that was open has already released its levels when its modal closed. */
   dispose(): void {
     this.#levels.length = 0;
     this.#ignore = 0;

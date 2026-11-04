@@ -156,6 +156,32 @@ describe('SdTable mobile.template', () => {
       expect(table.table()).toBeDefined();
     }));
 
+    it('adds a column the settings turned on to the derived card', fakeAsync(() => {
+      create(h => (h.option.mobile = undefined), { mobile: { autoTemplate: true } });
+      const config = table.configuration()!;
+      const createdBy = host.option.columns.find(column => column.field === 'createdBy') as (typeof config.firstColumns)[number];
+      table.configuration.set({ ...config, firstColumns: [...config.firstColumns, createdBy] });
+      settle();
+      expect(labels(cards()[0])).toEqual(['Tổng tiền', 'Kho', 'Người tạo']);
+    }));
+
+    it('keeps the desktop table for a template of another shape and warns once', fakeAsync(() => {
+      const warn = spyOn(console, 'warn');
+      create(h => (h.option.mobile = { template: { layout: 'card' } as never }), { mobile: { autoTemplate: true } });
+      expect(cards().length).toBe(0);
+      expect(table.table()).toBeDefined();
+      table.detectChanges();
+      settle();
+      expect(warn.calls.allArgs().filter(args => String(args[0]).includes('must be a TemplateRef')).length).toBe(1);
+    }));
+
+    it('draws a card for an unsupported layout and warns once', fakeAsync(() => {
+      const warn = spyOn(console, 'warn');
+      create(h => (h.option.mobile = { template: { layout: 'list' as 'card', data: h.data } }));
+      expect(cards().length).toBe(2);
+      expect(warn.calls.allArgs().filter(args => args.includes('list')).length).toBe(1);
+    }));
+
     it('derives the card from the visible columns with autoTemplate', fakeAsync(() => {
       create(h => (h.option.mobile = undefined), { mobile: { autoTemplate: true } });
       const card = cards()[0];
@@ -206,6 +232,55 @@ describe('SdTable mobile.template', () => {
       expect(cells[3].textContent).toContain('Gấp');
     }));
 
+    it('shows a badge field without useBadge as text and warns once', fakeAsync(() => {
+      const warn = spyOn(console, 'warn');
+      create(h => h.data.and.returnValue({ title: 'code', badge: 'customer' }));
+      const card = cards()[0];
+      expect(card.querySelector('sd-badge')).toBeNull();
+      expect(text(card, '.sd-mobile-data-badge-text')).toBe('An');
+      table.detectChanges();
+      settle();
+      expect(warn.calls.allArgs().filter(args => String(args[0]).includes('useBadge')).length).toBe(1);
+    }));
+
+    it('draws no badge for an empty value, as the desktop cell', fakeAsync(() => {
+      create(h => {
+        h.rows[1].status = '';
+        h.data.and.returnValue({ title: 'code', badge: 'status' });
+      });
+      expect(cards()[0].querySelector('sd-badge')).not.toBeNull();
+      expect(cards()[1].querySelector('sd-badge, .sd-mobile-data-badge-text')).toBeNull();
+    }));
+
+    it('formats the raw date of a hidden column', fakeAsync(() => {
+      create(h => {
+        h.option.columns.push({ field: 'paidAt' as 'note', type: 'date', title: 'Ngày trả', hidden: true });
+        (h.rows[0] as Order & { paidAt?: Date }).paidAt = new Date(2026, 9, 5);
+        h.data.and.returnValue({ title: 'code', fields: ['paidAt' as 'note'] });
+      });
+      expect(text(cards()[0], '.sd-mobile-data-cell dd')).toMatch(/05\/10\/2026/);
+    }));
+
+    it('draws a fixed badge as given', fakeAsync(() => {
+      create(h =>
+        h.data.and.callFake((row: Order) => ({ title: 'code', badge: row.id === 1 ? { title: 'Đã khóa', color: 'error' } : 'status' }))
+      );
+      expect(cards()[0].querySelector('sd-badge')?.textContent).toContain('Đã khóa');
+      expect(cards()[1].querySelector('sd-badge')?.textContent).toContain('done');
+    }));
+
+    it('shows the text of an htmlTemplate column without its tags', fakeAsync(() => {
+      create(h => {
+        h.option.columns[1] = {
+          ...h.option.columns[1],
+          htmlTemplate: (value: string) => `<b class="name">${value}</b> <i>VIP</i>`,
+        } as never;
+        h.data.and.returnValue({ title: 'code', subtitle: 'customer' });
+      });
+      expect(text(cards()[0], '.sd-mobile-data-subtitle')).toBe('An VIP');
+      expect(cards()[0].querySelector('.sd-mobile-data-subtitle b')).toBeNull();
+    }));
+
     it('falls back to the row label when the title field is unknown, and warns once per field', fakeAsync(() => {
       const warn = spyOn(console, 'warn');
       create(h => h.data.and.returnValue({ title: 'cod' as 'code' }));
@@ -213,6 +288,25 @@ describe('SdTable mobile.template', () => {
       table.detectChanges();
       settle();
       expect(warn.calls.allArgs().filter(args => args.includes('cod')).length).toBe(1);
+    }));
+
+    it('uses the derived card for a row whose data returns no object', fakeAsync(() => {
+      const warn = spyOn(console, 'warn');
+      create(h => h.data.and.returnValue(null as never));
+      expect(text(cards()[0], '.sd-mobile-data-title')).toBe('DH-1');
+      expect(text(cards()[0], '.sd-mobile-data-subtitle')).toBe('An');
+      expect(warn.calls.allArgs().filter(args => String(args[0]).includes('threw')).length).toBe(1);
+    }));
+
+    it('follows a new option that switches the card body', fakeAsync(() => {
+      create();
+      host.option = { ...host.option, mobile: { template: false } };
+      settle();
+      expect(cards().length).toBe(0);
+      expect(table.table()).toBeDefined();
+      host.option = { ...host.option, mobile: { template: { data: host.data } } };
+      settle();
+      expect(text(cards()[0], '.sd-mobile-data-title')).toBe('DH-1');
     }));
 
     it('uses the derived card for a row whose data throws', fakeAsync(() => {
@@ -245,6 +339,30 @@ describe('SdTable mobile.template', () => {
       settle();
       expect(host.data.calls.count()).toBe(4);
       expect(text(cards()[0], '.sd-mobile-data-title')).toBe('Anh');
+    }));
+
+    it('calls data again after a reload that returns the same row objects', fakeAsync(() => {
+      create(h => h.data.and.callFake((row: Order) => ({ title: { text: row.customer } })));
+      host.rows[0].customer = 'Anh';
+      void table.reload();
+      settle();
+      expect(text(cards()[0], '.sd-mobile-data-title')).toBe('Anh');
+    }));
+
+    it('calls data again with the new index when the rows move', fakeAsync(() => {
+      create(h => {
+        h.option.sort = { enable: true };
+        h.option.columns[0] = { ...h.option.columns[0], sortable: true };
+      });
+      host.data.calls.reset();
+      table.sort()!.sort({ id: 'code', start: 'desc', disableClear: false });
+      settle();
+      expect(host.data.calls.allArgs().map(([row, context]) => [row.id, context.index])).toEqual(
+        jasmine.arrayWithExactContents([
+          [2, 0],
+          [1, 1],
+        ])
+      );
     }));
 
     it('calls data again only for the row whose selection changed', fakeAsync(() => {

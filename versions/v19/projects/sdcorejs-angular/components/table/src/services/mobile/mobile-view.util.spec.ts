@@ -1,5 +1,5 @@
 import type { SdTableColumnAnyRow } from '../../models/table-column.model';
-import { autoMobileView, resolveMobileView, SD_TABLE_MOBILE_MAX_FIELDS, warnMobileOnce } from './mobile-view.util';
+import { autoMobileView, resolveMobileView, SD_TABLE_MOBILE_MAX_FIELDS, shownLeafColumns, warnMobileOnce } from './mobile-view.util';
 
 const columns: SdTableColumnAnyRow[] = [
   { field: 'code', type: 'string', title: 'Code' },
@@ -87,6 +87,8 @@ describe('resolveMobileView', () => {
     expect(view.maxFields).toBe(2);
     expect(resolveMobileView(columns, 'card', { title: 'code', maxFields: -1 }).view.maxFields).toBe(SD_TABLE_MOBILE_MAX_FIELDS);
     expect(resolveMobileView(columns, 'card', { title: 'code', maxFields: 0 }).view.maxFields).toBe(0);
+    expect(resolveMobileView(columns, 'card', { title: 'code', maxFields: Infinity }).view.maxFields).toBe(Infinity);
+    expect(resolveMobileView(columns, 'card', { title: 'code', maxFields: NaN }).view.maxFields).toBe(SD_TABLE_MOBILE_MAX_FIELDS);
   });
 });
 
@@ -96,16 +98,19 @@ describe('autoMobileView', () => {
     expect(field(view.title)).toBe('total');
     expect(view.badge).toEqual({ column: columns[2], badge: true });
     expect(field(view.subtitle)).toBe('code');
-    expect(view.fields.map(column => column.field)).toEqual(['customer', 'createdAt']);
+    expect(view.fields.map(column => column.field)).toEqual(['customer', 'createdAt', 'createdBy']);
     expect(view.highlight).toBeFalse();
   });
 
-  it('falls back to the first column and leaves hidden and invisible columns out', () => {
+  it('falls back to the first column and leaves hidden columns out', () => {
     const view = autoMobileView(columns, 'missing');
     expect(field(view.title)).toBe('code');
     expect(field(view.subtitle)).toBe('customer');
     expect(view.fields.map(column => column.field)).not.toContain('note');
-    expect(view.fields.map(column => column.field)).not.toContain('createdBy');
+  });
+
+  it('keeps an invisible column it is given: on screen, the settings turned it on', () => {
+    expect(autoMobileView(columns).fields.map(column => column.field)).toContain('createdBy');
   });
 
   it('has no slots without columns', () => {
@@ -132,5 +137,22 @@ describe('warnMobileOnce', () => {
     warnMobileOnce(b, 'unknown-field:cod', 'unknown field', 'cod');
     expect(warn).toHaveBeenCalledTimes(3);
     expect(warn.calls.first().args).toEqual(['[sd-table] unknown field', 'cod']);
+  });
+});
+
+describe('shownLeafColumns', () => {
+  const a = { field: 'a', type: 'string', title: 'A' } as SdTableColumnAnyRow;
+  const b = { field: 'b', type: 'string', title: 'B' } as SdTableColumnAnyRow;
+  const c = { field: 'c', type: 'string', title: 'C' } as SdTableColumnAnyRow;
+  const group = { field: 'group', type: 'children', title: 'Group', children: [b, c] } as unknown as SdTableColumnAnyRow;
+
+  it('replaces a grouped header with its children on screen, in the order of the second row', () => {
+    expect(shownLeafColumns([a, group], [c, b]).map(column => column.field)).toEqual(['a', 'c', 'b']);
+  });
+
+  it('drops a grouped header whose children are all hidden, and takes missing rows as empty', () => {
+    expect(shownLeafColumns([group, a], [b]).map(column => column.field)).toEqual(['b', 'a']);
+    expect(shownLeafColumns([group, a], undefined).map(column => column.field)).toEqual(['a']);
+    expect(shownLeafColumns(undefined, [b])).toEqual([]);
   });
 });

@@ -52,6 +52,8 @@ export const sdTableMobileFilterItems = (args: {
 
   for (const external of args.externalFilters ?? []) {
     if (known(`external:${external.field}`, external.title) || defFields.has(external.field)) continue;
+    // why: a `custom` filter without a template has no control to open (the side drawer showed nothing either).
+    if (external.type === 'custom' && !external.filterDef) continue;
     items.push({ key: `custom-external:${external.field}`, label: external.title, custom: { kind: 'external', external } });
   }
   for (const def of defs) {

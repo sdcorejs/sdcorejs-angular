@@ -1,4 +1,4 @@
-import { inject } from '@angular/core';
+import { inject, untracked } from '@angular/core';
 import { ɵSdQueryChipLabels, ɵsdQueryChipValueText } from '@sdcorejs/angular/components/query-bar';
 import { ɵsdOperatorResolver } from '@sdcorejs/angular/components/operator';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -30,7 +30,8 @@ export function sdTableMobileFilterSummary(): (
     if (!chip?.active || !field) return '';
     const operator = chip.filter.operator as Operator;
     if (NO_DATA.includes(operator)) return operators.label(operator);
-    labels.resolve(chip.filter, field);
+    // why: callers are computeds; the lookup runs consumer code (views / search) that may write signals.
+    untracked(() => labels.resolve(chip.filter, field));
     const text = ɵsdQueryChipValueText(chip.filter, field, {
       t: (key, params) => i18n.t(key, params),
       toFormat: (raw, format) => dateTime.toFormat(raw, format),

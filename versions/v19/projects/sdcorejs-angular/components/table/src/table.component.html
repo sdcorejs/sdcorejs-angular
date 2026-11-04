@@ -49,7 +49,9 @@
      trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
 <span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
-  @if (!_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+  @if (
+    !_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister
+  ) {
     <external-filter
       class="mb-16"
       [autoId]="_autoId"
@@ -228,7 +230,11 @@
       @let _sortable = mobileSortAvailable();
       <!-- Phone top row (handoff table-mobile 2): the search, Reload for keyboards (shown on focus), the sort button
            when there is no chip row, and ⋮ Tools. -->
-      <div class="sd-mobile-top" [class.sd-mobile-top--chips]="_hasChips" [class.sd-mobile-top--no-search]="!_quickSearch">
+      <div
+        class="sd-mobile-top"
+        [class.sd-mobile-top--chips]="_hasChips"
+        [class.sd-mobile-top--no-search]="!_quickSearch"
+        [class.sd-mobile-top--empty]="!_quickSearch && (_hasChips || !_sortable) && !_tools.length">
         @if (_quickSearch) {
           <sd-table-quick-search
             class="sd-mobile-top-search"
@@ -255,7 +261,7 @@
             type="button"
             class="sd-mobile-top-button"
             aria-haspopup="dialog"
-            [attr.aria-label]="'core.component.table.mobile.sort' | sdTranslate"
+            [attr.aria-label]="mobileSortLabel()"
             [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null"
             (click)="mobileSortSheet.open()">
             <sd-icon name="swap_vert" size="22px"></sd-icon>

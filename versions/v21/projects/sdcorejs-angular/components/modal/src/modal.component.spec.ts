@@ -485,6 +485,25 @@ describe('SdModal', () => {
       expect(ref.dismiss as jasmine.Spy).toHaveBeenCalled();
     });
 
+    it('passes closeOnNavigation to the bottom sheet as well', () => {
+      let open: jasmine.Spy | undefined;
+      const openSheet = (closeOnNavigation?: boolean): boolean => {
+        const bsFixture = TestBed.createComponent(SdModal);
+        bsFixture.componentRef.setInput('view', 'bottom-sheet');
+        if (closeOnNavigation !== undefined) bsFixture.componentRef.setInput('closeOnNavigation', closeOnNavigation);
+        bsFixture.detectChanges();
+        // why: both fixtures share the standalone injector of SdModal, so one spy serves both.
+        open ??= spyOn(bsFixture.debugElement.injector.get(MatBottomSheet), 'open').and.returnValue(makeFakeBottomSheetRef().ref);
+        bsFixture.componentInstance.open();
+        const passed = (open.calls.mostRecent().args[1] as any).closeOnNavigation;
+        bsFixture.destroy();
+        return passed;
+      };
+
+      expect(openSheet()).toBeTrue();
+      expect(openSheet(false)).toBeFalse();
+    });
+
     it('does not throw when destroyed without ever opening', () => {
       expect(() => fixture.destroy()).not.toThrow();
     });

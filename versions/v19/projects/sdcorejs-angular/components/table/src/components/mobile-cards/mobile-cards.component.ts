@@ -55,7 +55,10 @@ type CardBody<T> =
 /** Last `mobile.template.data` result of a row, and the card resolved from it. */
 interface DataEntry {
   fn: unknown;
+  /** The table item: a reload builds new ones, also around the same row objects. */
+  row: unknown;
   item: unknown;
+  index: number;
   revision: number;
   selected: boolean;
   /** `undefined` when the function threw or returned no object: the row uses the derived card. */
@@ -157,7 +160,7 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     const config = this.table().configuration();
     return autoMobileView(shownLeafColumns(config?.firstColumns, config?.secondColumns), this.option().rowKey);
   });
-  /** `mobile.template.data` cache by row id: called again only when the item, `dataRevision` or selection changes. */
+  /** `mobile.template.data` cache by row id: called again only when the row, its index or its selection changes. */
   #dataCache = new Map<string, DataEntry>();
 
   readonly cards = computed<Card<T>[]>(() => {
@@ -225,8 +228,8 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   });
 
   /**
-   * Card of one row from `mobile.template.data`. The function runs only when the row object, `dataRevision` or the
-   * selection of the row changed (or the function itself); a change of columns or settings only re-checks the slots.
+   * Card of one row from `mobile.template.data`. The function runs again when the row (a reload, `dataRevision`), its
+   * index, its selection or the function itself changed; a change of columns or settings only re-checks the slots.
    */
   #dataEntry(
     cached: DataEntry | undefined,
@@ -237,7 +240,15 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     revision: number
   ): DataEntry {
     const columns = this.#dataColumns();
-    if (cached && cached.fn === body.data && cached.item === row.data && cached.revision === revision && cached.selected === selected) {
+    if (
+      cached &&
+      cached.fn === body.data &&
+      cached.row === row &&
+      cached.item === row.data &&
+      cached.index === index &&
+      cached.revision === revision &&
+      cached.selected === selected
+    ) {
       if (cached.columns !== columns) return { ...cached, columns, view: this.#viewOf(cached.raw, body.layout, columns) };
       return cached;
     }
@@ -250,7 +261,7 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     } catch (error) {
       warnMobileOnce(this.table(), 'data-error', 'mobile.template.data threw; those rows use the card derived from the columns.', error);
     }
-    return { fn: body.data, item: row.data, revision, selected, raw, columns, view: this.#viewOf(raw, body.layout, columns) };
+    return { fn: body.data, row, item: row.data, index, revision, selected, raw, columns, view: this.#viewOf(raw, body.layout, columns) };
   }
 
   #viewOf(raw: Record<string, unknown> | undefined, layout: unknown, columns: readonly SdTableColumnAnyRow[]): SdTableMobileView {

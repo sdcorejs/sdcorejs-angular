@@ -255,6 +255,45 @@ của trang docs chỉ rộng 282px).
   và chân không sát đáy (rule 85dvh của sheet khác cùng độ ưu tiên, thân sheet không giãn).
 - Nút chia đôi dùng giao diện mặc định của `sd-segmented` (bên chọn nền sáng + ✓), không phải nền secondary-container.
 
+## Review độc lập (2026-11-04)
+
+Ba reviewer độc lập (subagent, chỉ đọc code; không có kết luận của tác giả) chia theo vùng: thẻ + `mobile.template`; bộ lọc;
+sắp xếp, Công cụ, kéo để làm mới và API. Kết quả và cách xử lý:
+
+Đã sửa (có spec):
+- Đóng sheet bằng UI gọi `history.go(-n)`; `popstate` đó làm Material đóng luôn dialog / sheet đang chứa bảng
+  (`closeOnNavigation` mặc định). `SdTableSheetHistory` không thêm mục lịch sử khi bảng nằm trong `.cdk-overlay-pane`.
+- `release()` khi URL đã đổi (router điều hướng, app ghi query param lúc sheet mở) từng `go(-n)` kéo ngược điều hướng đó. Giờ
+  chỉ quên các mức đã mở.
+- Escape khi focus ở tiêu đề trang / ← (header) đóng cả sheet. Listener chuyển lên `.sd-modal-root`.
+- `labels.resolve()` chạy trong `computed` (gọi `views` / `search` của consumer). Bọc `untracked`.
+- Cache `data`: so cả `SdTableItem` (reload trả cùng object vẫn gọi lại) và `index` (quyết định 4 cũ để `index` cũ được nhận,
+  nay bỏ: chi phí chỉ là gọi lại khi thứ tự đổi).
+- Thẻ tự suy bỏ cột `invisible` mà Settings đã bật: chỉ lọc `hidden` (cột trên màn hình đã theo Settings).
+- Badge rỗng: không vẽ (như ô desktop), tooltip của cột đứng trước tooltip của `useBadge`. Ngày thô của cột `hidden` được định
+  dạng. `maxFields: Infinity` nhận nguyên.
+- Bộ lọc ngoài `date` / `datetime` không có `GREATER_OR_EQUAL` / `LESS_OR_EQUAL` (thanh bỏ qua) có trang trống trong khi drawer cũ
+  có ô ngày: thêm ô ngày ghi giá trị thô. Bộ lọc ngoài `custom` không có `filterDef` không còn hàng trống. Trang của bộ lọc ngoài
+  custom có **Bỏ chọn**.
+- Cột ẩn qua Settings vẫn đang lọc: giữ hàng + chip (như thanh query-bar giữ chip), đếm và Xóa tất cả được.
+- Kéo để làm mới: `overscroll-behavior-y: contain` trên trang trong lúc kéo (Chrome Android không tự tải lại trang); bỏ qua
+  touch bắt đầu ở tay nắm kéo; `touchcancel` không còn là thả tay.
+- Nhánh xuất nhóm (> 2 mục) là code chết, đã bỏ. Hàng đầu không còn dải trống khi không có gì hiện. Nút sort ở hàng đầu có tên
+  theo sort đang bật; danh sách cột của sheet sắp xếp có tên. `sd-modal` `closeOnNavigation` khai kiểu như các input boolean khác.
+- Docs/CHANGELOG: autoId cũ của drawer lọc (`-mobile-filter-ext-`, `-col-`, `-def-`) vào BREAKING; Back trên trang lọc quay về
+  danh sách; mục lịch sử và `onSameUrlNavigation: 'reload'`; bỏ "plus your own entries"; "hidden ones included" sửa thành
+  `invisible` và ẩn qua Settings; `sd-modal.md` nói rõ chỉ `popstate` / `hashchange`.
+
+Không sửa, ghi lại:
+- Tên `mobile.template` khác quy ước `templateRef` của option khác: handoff (mục 9, bảng ở dòng 220) đặt đúng tên này cho cả
+  `TemplateRef` lẫn `{ data }` và `false`; đổi tên là quyết định API của chủ dự án, chưa phát hành nên còn đổi được.
+- Member public mới của `SdTable` (`mobileBody`, `mobileFilterModel`, …) dùng kiểu không export, như `mobileToolsActions` sẵn có.
+- `aria-labelledby` của `sd-modal` trỏ cả khối header-left (gồm ✕ / ← và nút); sửa ở `sd-modal` ảnh hưởng mọi modal.
+- Nút More cao 36px theo spec (không mở rộng vùng chạm), không có `aria-controls`; thẻ không có `rowLabel` / `rowKey` vẫn tên
+  "Dòng n".
+- Chip và sheet giữ hai bộ nhớ nhãn riêng nên `lazy-values` tra nhãn hai lần; `values` một giá trị với `NOT_EQUAL` mất toán tử
+  trong tóm tắt (chuỗi của thanh query-bar).
+
 ## CHANGELOG (`## [Unreleased]`)
 
 - Changed (BREAKING cho E2E): autoId `{autoId}-mobile-tool-filter`, `-mobile-tool-sort-<field>`, `-mobile-tool-reload` không

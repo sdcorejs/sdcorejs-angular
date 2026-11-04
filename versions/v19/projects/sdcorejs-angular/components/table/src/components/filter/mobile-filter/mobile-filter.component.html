@@ -27,7 +27,7 @@
           <sd-icon name="arrow_back" size="22px"></sd-icon>
         </button>
         <h2 class="sd-mobile-sheet-title" tabindex="-1">{{ _page.label }}</h2>
-        @if (_page.source || _page.custom?.kind === 'column') {
+        @if (_page.source || _page.custom?.kind === 'column' || _page.custom?.kind === 'external') {
           <sd-button
             [autoId]="_autoId ? _autoId + 'clear' : null"
             type="text"

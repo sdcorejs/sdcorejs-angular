@@ -89,7 +89,7 @@ export class MobileFilterComponent {
   readonly #summary = sdTableMobileFilterSummary();
   readonly #i18n = inject(I18nService);
   readonly #injector = inject(Injector);
-  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView);
+  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView, inject(ElementRef).nativeElement);
 
   // ==========================================
   // 4. COMPUTED
@@ -129,13 +129,13 @@ export class MobileFilterComponent {
       const head = this.head()?.nativeElement;
       if (head) onCleanup(sdTableSheetSwipe(head, () => this.close()));
     });
-    // Escape on a page goes back to the list (listener here: the body is not focusable itself).
+    // Escape on a page goes back to the list. Focus is on the page title, ← or Clear in the header, or a control in the
+    // body, so both listen (neither is focusable itself; a template listener fails the a11y lint).
     effect(onCleanup => {
-      const body = this.body()?.nativeElement;
-      if (!body) return;
+      const parts = [this.head()?.nativeElement, this.body()?.nativeElement].filter((part): part is HTMLElement => !!part);
       const listener = (event: KeyboardEvent) => this.onKeydown(event);
-      body.addEventListener('keydown', listener);
-      onCleanup(() => body.removeEventListener('keydown', listener));
+      for (const part of parts) part.addEventListener('keydown', listener);
+      onCleanup(() => parts.forEach(part => part.removeEventListener('keydown', listener)));
     });
     inject(DestroyRef).onDestroy(() => this.#history.dispose());
   }

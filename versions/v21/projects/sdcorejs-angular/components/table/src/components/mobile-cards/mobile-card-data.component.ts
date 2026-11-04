@@ -3,6 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdFormatDatePipe } from '@sdcorejs/angular/pipes';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import type { SdTableCellDefDirective } from '../../directives/sd-table-cell-def.directive';
 import type { SdTableColumnAnyRow } from '../../models/table-column.model';
@@ -41,6 +42,7 @@ export class SdTableMobileCardDataComponent {
   readonly autoId = input<string>();
   readonly expanded = signal(false);
   readonly #document = inject(DOCUMENT);
+  readonly #formatDate = inject(SdFormatDatePipe);
 
   readonly title = computed(() => this.#text(this.view().title) || this.label());
   readonly subtitle = computed(() => this.#text(this.view().subtitle));
@@ -49,8 +51,12 @@ export class SdTableMobileCardDataComponent {
     if (!slot) return undefined;
     if ('data' in slot) return { kind: 'badge', data: slot.data, title: String(slot.data.title ?? '') };
     const display = this.row().meta.display[slot.column.field];
-    if (slot.badge && display?.badge)
-      return { kind: 'badge', data: display.badge as SdBadgeData, title: this.#plain(display.data, !!display.isHtml) };
+    if (slot.badge && display) {
+      // As on the desktop cell: no badge for an empty value, and the column tooltip before the useBadge one.
+      if (!display.badge || !display.data) return undefined;
+      const data = { ...display.badge, tooltip: display.tooltip || display.badge.tooltip } as SdBadgeData;
+      return { kind: 'badge', data, title: this.#plain(display.data, !!display.isHtml) };
+    }
     const text = this.#text({ column: slot.column });
     return text ? { kind: 'text', text } : undefined;
   });
@@ -87,6 +93,7 @@ export class SdTableMobileCardDataComponent {
 
   #raw(value: unknown): string {
     return (Array.isArray(value) ? value : [value])
+      .map(entry => (entry instanceof Date ? this.#formatDate.transform(entry) : entry))
       .filter(entry => entry !== null && entry !== undefined && entry !== '' && typeof entry !== 'object')
       .map(entry => String(entry))
       .join(', ');

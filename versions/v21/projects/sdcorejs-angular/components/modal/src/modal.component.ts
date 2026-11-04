@@ -76,7 +76,7 @@ export class SdModal implements OnDestroy {
    * Close when the browser history changes (Back, a route change). `false` lets the content handle Back itself, e.g.
    * a sheet with pages. Same name as `MatDialogConfig.closeOnNavigation`.
    */
-  closeOnNavigation = input(true, { transform: booleanAttribute });
+  closeOnNavigation = input<boolean, boolean | ''>(true, { transform: booleanAttribute });
 
   sdClosed = output<void>();
   sdCloseError = output<unknown>();

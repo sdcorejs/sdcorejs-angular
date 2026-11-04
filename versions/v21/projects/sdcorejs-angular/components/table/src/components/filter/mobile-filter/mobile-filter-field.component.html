@@ -143,11 +143,35 @@
                 isMobile></column-filter>
             }
             @case ('external') {
-              <ng-container
-                *ngTemplateOutlet="$any(custom).external.filterDef; context: { externalFilter: _value.externalFilter, autoId: _autoId }"></ng-container>
+              @let external = $any(custom).external;
+              @if (external.filterDef) {
+                <ng-container
+                  *ngTemplateOutlet="
+                    external.filterDef;
+                    context: { externalFilter: _value.externalFilter, autoId: _autoId }
+                  "></ng-container>
+              } @else if (external.type === 'date') {
+                <!-- why: a date without GREATER_OR_EQUAL / LESS_OR_EQUAL is off the bar, but its raw value still reaches onFilter. -->
+                <sd-date
+                  [autoId]="_autoId ? _autoId + '-value' : null"
+                  [model]="_value.externalFilter?.[external.field]"
+                  [min]="external.minDate"
+                  [max]="external.maxDate"
+                  (modelChange)="setExternal(external.field, $event)"
+                  hideInlineError></sd-date>
+              } @else if (external.type === 'datetime') {
+                <sd-datetime
+                  [autoId]="_autoId ? _autoId + '-value' : null"
+                  [model]="_value.externalFilter?.[external.field]"
+                  [min]="external.minDate"
+                  [max]="external.maxDate"
+                  (modelChange)="setExternal(external.field, $event)"
+                  hideInlineError></sd-datetime>
+              }
             }
             @case ('def') {
-              <ng-container *ngTemplateOutlet="$any(custom).def.templateRef; context: { externalFilter: _value.externalFilter }"></ng-container>
+              <ng-container
+                *ngTemplateOutlet="$any(custom).def.templateRef; context: { externalFilter: _value.externalFilter }"></ng-container>
             }
           }
         </div>

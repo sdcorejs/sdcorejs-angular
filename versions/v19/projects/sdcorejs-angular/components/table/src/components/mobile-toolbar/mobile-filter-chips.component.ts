@@ -59,14 +59,9 @@ export class SdTableMobileFilterChipsComponent<T = unknown> {
     if (!table.mobileSortAvailable()) return undefined;
     const state = table.sortState();
     const column = state.direction ? table.mobileSortColumns().find(entry => entry.field === state.active) : undefined;
-    if (!column) return { active: false, title: '', icon: 'swap_vert', label: this.#i18n.t('core.component.table.mobile.sort') };
-    const direction = this.#i18n.t(`core.component.table.mobile.sort-${state.direction}`);
-    return {
-      active: true,
-      title: column.title,
-      icon: state.direction === 'asc' ? 'arrow_upward' : 'arrow_downward',
-      label: this.#i18n.t('core.component.table.mobile.sort-active', { column: column.title, direction }),
-    };
+    const label = table.mobileSortLabel();
+    if (!column) return { active: false, title: '', icon: 'swap_vert', label };
+    return { active: true, title: column.title, icon: state.direction === 'asc' ? 'arrow_upward' : 'arrow_downward', label };
   });
 
   openAll(): void {

@@ -4,12 +4,20 @@ import { SD_TABLE_SHEET_DISMISS_DISTANCE, SdTableSheetHistory, sdTableSheetSwipe
 const fakeWindow = () => {
   const listeners = new Set<() => void>();
   const history = { state: { navigationId: 3 }, pushState: jasmine.createSpy('pushState'), go: jasmine.createSpy('go') };
+  const location = { href: 'https://app.test/orders' };
   const window = {
     history,
+    location,
     addEventListener: (_: string, listener: () => void) => listeners.add(listener),
     removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
   };
-  return { window: window as unknown as Window, history, popstate: () => [...listeners].forEach(listener => listener()), listeners };
+  return {
+    window: window as unknown as Window,
+    history,
+    location,
+    popstate: () => [...listeners].forEach(listener => listener()),
+    listeners,
+  };
 };
 
 describe('SdTableSheetHistory', () => {
@@ -59,6 +67,57 @@ describe('SdTableSheetHistory', () => {
     expect(closeSheet).toHaveBeenCalledTimes(1);
   });
 
+  it('only forgets the levels when the URL changed since they opened', () => {
+    const { window, history, location, popstate, listeners } = fakeWindow();
+    const sheet = new SdTableSheetHistory(window);
+    const back = jasmine.createSpy('back');
+    sheet.push(back);
+    sheet.push(back);
+    // The router navigated (or the app wrote query params) while the sheet was open.
+    location.href = 'https://app.test/orders?status=new';
+    sheet.release();
+    expect(history.go).not.toHaveBeenCalled();
+    expect(sheet.depth).toBe(0);
+    expect(listeners.size).toBe(0);
+    popstate();
+    expect(back).not.toHaveBeenCalled();
+  });
+
+  it('compares with the URL of the first level, not of a later one', () => {
+    const { window, history, location } = fakeWindow();
+    const sheet = new SdTableSheetHistory(window);
+    sheet.push(() => undefined);
+    location.href = 'https://app.test/other';
+    sheet.push(() => undefined);
+    location.href = 'https://app.test/orders';
+    sheet.release();
+    expect(history.go).toHaveBeenCalledOnceWith(-2);
+  });
+
+  it('adds no entries while the table sits in an overlay', () => {
+    const { window, history, popstate } = fakeWindow();
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    const owner = document.createElement('sd-table');
+    pane.appendChild(owner);
+    const sheet = new SdTableSheetHistory(window, owner);
+    const back = jasmine.createSpy('back');
+    sheet.push(back);
+    sheet.release();
+    popstate();
+    expect(history.pushState).not.toHaveBeenCalled();
+    expect(history.go).not.toHaveBeenCalled();
+    expect(back).not.toHaveBeenCalled();
+    expect(sheet.depth).toBe(0);
+  });
+
+  it('does nothing without a window', () => {
+    const sheet = new SdTableSheetHistory(null);
+    sheet.push(() => undefined);
+    expect(() => sheet.release()).not.toThrow();
+    expect(sheet.depth).toBe(0);
+  });
+
   it('stops listening on dispose', () => {
     const { window, listeners } = fakeWindow();
     const sheet = new SdTableSheetHistory(window);
@@ -93,6 +152,36 @@ describe('sdTableSheetSwipe', () => {
     pointer('pointerup', 100 + SD_TABLE_SHEET_DISMISS_DISTANCE + 1);
     expect(dismiss).toHaveBeenCalledTimes(1);
     expect(container.style.transform).toBe('');
+    cleanup();
+  });
+
+  it('ignores a drag that starts on a button, a link or an input, or with another mouse button', () => {
+    const dismiss = jasmine.createSpy('dismiss');
+    const button = document.createElement('button');
+    handle.appendChild(button);
+    const cleanup = sdTableSheetSwipe(handle, dismiss);
+    button.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, button: 0, pointerId: 1, bubbles: true }));
+    pointer('pointermove', 300);
+    pointer('pointerup', 300);
+    handle.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, button: 2, pointerId: 1, bubbles: true }));
+    pointer('pointermove', 300);
+    pointer('pointerup', 300);
+    expect(container.style.transform).toBe('');
+    expect(dismiss).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it('puts the sheet back on pointercancel, and drags without pointer capture', () => {
+    const dismiss = jasmine.createSpy('dismiss');
+    spyOn(handle, 'setPointerCapture').and.throwError(new DOMException('not active', 'NotFoundError'));
+    const cleanup = sdTableSheetSwipe(handle, dismiss);
+    pointer('pointerdown', 100);
+    pointer('pointermove', 300);
+    expect(container.style.transform).toBe('translateY(200px)');
+    pointer('pointercancel', 300);
+    expect(container.style.transform).toBe('');
+    pointer('pointerup', 300);
+    expect(dismiss).not.toHaveBeenCalled();
     cleanup();
   });
 

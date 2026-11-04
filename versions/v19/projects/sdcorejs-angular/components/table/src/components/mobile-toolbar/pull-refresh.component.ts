@@ -52,8 +52,25 @@ export class SdTablePullRefreshComponent {
       const target = this.target();
       if (!target || !this.enabled()) return;
       const options: AddEventListenerOptions = { passive: true };
+      // why: during our pull the browser must not run its own pull to refresh (Chrome reloads the page) or bounce (iOS).
+      const page = target.ownerDocument.documentElement;
+      let overscroll: string | undefined;
+      const hold = () => {
+        if (overscroll !== undefined) return;
+        overscroll = page.style.overscrollBehaviorY;
+        page.style.overscrollBehaviorY = 'contain';
+      };
+      const free = () => {
+        if (overscroll === undefined) return;
+        page.style.overscrollBehaviorY = overscroll;
+        overscroll = undefined;
+      };
       const start = (event: TouchEvent) => {
-        this.#start = this.#atTop(target) && !this.#sheetOpen() && event.touches.length === 1 ? event.touches[0].clientY : undefined;
+        // why: a drag handle starts a reorder (CDK moves the card out of the list), not a pull.
+        const handle = (event.target as Element | null)?.closest?.('.cdk-drag-handle');
+        const pull = !handle && this.#atTop(target) && !this.#sheetOpen() && event.touches.length === 1;
+        this.#start = pull ? event.touches[0].clientY : undefined;
+        if (pull) hold();
       };
       const move = (event: TouchEvent) => {
         if (this.#start === undefined || this.refreshing()) return;
@@ -69,21 +86,29 @@ export class SdTablePullRefreshComponent {
         const ready = this.distance() >= SD_TABLE_PULL_DISTANCE;
         this.#start = undefined;
         this.distance.set(0);
+        free();
         if (!ready) return;
         this.refreshing.set(true);
         this.refresh.emit();
         // why: a read that never shows as loading (nothing to fetch) must not leave the indicator spinning.
         setTimeout(() => !this.loading() && this.refreshing.set(false), 300);
       };
+      // why: the browser cancels a touch it takes over (zoom, a system gesture); that is not a release.
+      const cancel = () => {
+        this.#start = undefined;
+        this.distance.set(0);
+        free();
+      };
       target.addEventListener('touchstart', start, options);
       target.addEventListener('touchmove', move, options);
       target.addEventListener('touchend', end, options);
-      target.addEventListener('touchcancel', end, options);
+      target.addEventListener('touchcancel', cancel, options);
       onCleanup(() => {
+        free();
         target.removeEventListener('touchstart', start);
         target.removeEventListener('touchmove', move);
         target.removeEventListener('touchend', end);
-        target.removeEventListener('touchcancel', end);
+        target.removeEventListener('touchcancel', cancel);
       });
     });
     // The indicator stays until the read it started is done.

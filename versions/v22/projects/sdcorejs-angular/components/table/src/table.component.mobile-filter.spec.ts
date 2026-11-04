@@ -8,6 +8,7 @@ import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SdTable } from './table.component';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
+import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.directive';
 
 interface Order {
   id: number;
@@ -105,6 +106,10 @@ describe('SdTable mobile filter chips', () => {
   };
 
   beforeEach(() => {
+    // why: real pushState / go would leave entries and late popstate events for the next spec (and can step the Karma
+    // frame back); history.go plays its popstate at once instead.
+    spyOn(history, 'pushState');
+    spyOn(history, 'go').and.callFake(() => window.dispatchEvent(new PopStateEvent('popstate')));
     TestBed.configureTestingModule({
       imports: [FilterHost],
       providers: [provideNoopAnimations(), { provide: SdViewportService, useValue: { isMobile: signal(true) } }],
@@ -257,6 +262,50 @@ describe('SdTable mobile filter chips', () => {
       expect(table.filterRegister!.value.get().columnFilter?.['status']).toEqual([]);
     }));
 
+    it('writes the value and operator of its own filter only', fakeAsync(() => {
+      create();
+      apply({ columnFilter: { status: ['s2'] }, externalFilter: { customer: 'An' } });
+      chip('code').click();
+      settle();
+      overlay().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter-code-operator"]')!.click();
+      settle();
+      overlay().querySelectorAll<HTMLButtonElement>('.sd-table-mobile-operator-menu [mat-menu-item]')[1].click();
+      settle();
+      const input = overlay().querySelector<HTMLInputElement>('.sd-mobile-sheet-body input')!;
+      input.value = 'DH';
+      input.dispatchEvent(new Event('input'));
+      settle();
+      sheetButton('apply').click();
+      settle();
+      const value = table.filterRegister!.value.get();
+      expect(value.columnFilter?.['code']).toBe('DH');
+      expect(value.columnOperator?.['code']).toBe('EQUAL');
+      expect(value.columnFilter?.['status']).toEqual(['s2']);
+      expect(value.externalFilter?.['customer']).toBe('An');
+    }));
+
+    it('drops the operator of its filter when Clear took a NULL operator back', fakeAsync(() => {
+      create();
+      apply({ columnOperator: { code: 'NULL' } });
+      chip('code').click();
+      settle();
+      sheetButton('clear').click();
+      settle();
+      sheetButton('apply').click();
+      settle();
+      expect('code' in (table.filterRegister!.value.get().columnOperator ?? {})).toBeFalse();
+    }));
+
+    it('drops the edits on the scrim', fakeAsync(() => {
+      create();
+      openStatus();
+      tickOption(0);
+      overlay().querySelector<HTMLElement>('.cdk-overlay-backdrop')!.click();
+      settle();
+      expect(overlay().querySelector('mat-bottom-sheet-container')).toBeNull();
+      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+    }));
+
     it('adds a search box only above 8 options', fakeAsync(() => {
       create();
       openStatus();
@@ -355,9 +404,6 @@ describe('SdTable mobile filter chips', () => {
     }));
 
     it('goes back from a page with Escape and Back, then Back closes the sheet', fakeAsync(() => {
-      // why: a real history.go() fires popstate later, outside fakeAsync; play it at once so the order is known.
-      spyOn(history, 'pushState');
-      spyOn(history, 'go').and.callFake(() => window.dispatchEvent(new PopStateEvent('popstate')));
       create();
       openAll();
       row('status').click();
@@ -386,5 +432,245 @@ describe('SdTable mobile filter chips', () => {
       settle();
       expect(document.activeElement?.classList).toContain('sd-mobile-sheet-title');
     }));
+
+    it('clears one filter from its page; ← keeps the others and Apply writes both', fakeAsync(() => {
+      create();
+      apply({ columnFilter: { status: ['s1'], warehouse: 'HN' } });
+      openAll();
+      row('status').click();
+      settle();
+      expect(overlay().querySelectorAll('sd-checkbox input:checked').length).toBe(1);
+      button('clear').click();
+      settle();
+      expect(overlay().querySelectorAll('sd-checkbox input:checked').length).toBe(0);
+      overlay().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter-back"]')!.click();
+      settle();
+      expect(row('status').textContent).toContain('Tất cả');
+      expect(row('warehouse').textContent).toContain('Hà Nội');
+      expect(table.filterRegister!.value.get().columnFilter?.['status']).toEqual(['s1']);
+      button('apply').click();
+      settle();
+      const value = table.filterRegister!.value.get();
+      expect(value.columnFilter?.['status']).toEqual([]);
+      expect(value.columnFilter?.['warehouse']).toBe('HN');
+    }));
+
+    it('goes back to the list on Escape with focus on the page title', fakeAsync(() => {
+      create();
+      openAll();
+      row('status').click();
+      settle();
+      const title = overlay().querySelector<HTMLElement>('.sd-mobile-sheet-title')!;
+      expect(document.activeElement).toBe(title);
+      title.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
+      settle();
+      expect(sheet()).not.toBeNull();
+      expect(row('status')).not.toBeNull();
+    }));
+
+    it('drops the copy on the scrim, also from a page', fakeAsync(() => {
+      create();
+      openAll();
+      row('status').click();
+      settle();
+      tickOption(0);
+      overlay().querySelector<HTMLElement>('.cdk-overlay-backdrop')!.click();
+      settle();
+      expect(sheet()).toBeNull();
+      expect(history.go).toHaveBeenCalledOnceWith(-2);
+      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+    }));
+
+    it('adds no history entry while the table sits in a dialog or a sheet', fakeAsync(() => {
+      create();
+      // why: the owner check walks up from the sheet components; the fixture root stands in for the overlay pane.
+      element().classList.add('cdk-overlay-pane');
+      openAll();
+      row('status').click();
+      settle();
+      tickOption(1);
+      button('done').click();
+      settle();
+      button('apply').click();
+      settle();
+      expect(history.pushState).not.toHaveBeenCalled();
+      expect(history.go).not.toHaveBeenCalled();
+      expect(table.filterRegister!.value.get().columnFilter?.['status']).toEqual(['s1']);
+    }));
+
+    it('keeps the filter of a column hidden through the settings while it filters', fakeAsync(() => {
+      create();
+      apply({ columnFilter: { status: ['s1'] } });
+      const config = table.configuration()!;
+      table.configuration.set({ ...config, firstColumns: config.firstColumns.filter(column => column.field !== 'status') });
+      settle();
+      expect(chip('status')?.textContent).toContain('Status 1');
+      expect(element().querySelector('.sd-mobile-chip-count')?.textContent?.trim()).toBe('1');
+      openAll();
+      button('clear-all').click();
+      settle();
+      button('apply').click();
+      settle();
+      expect(table.filterRegister!.value.get().columnFilter?.['status']).toEqual([]);
+      expect(chip('status')).toBeNull();
+    }));
+
+    it('closes on ✕ without writing the edits', fakeAsync(() => {
+      create();
+      openAll();
+      row('status').click();
+      settle();
+      tickOption(0);
+      button('done').click();
+      settle();
+      button('close').click();
+      settle();
+      expect(sheet()).toBeNull();
+      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+    }));
   });
+});
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdTable, SdTableRowMobileDefDirective, SdTableFilterDefDirective],
+  template: `
+    <sd-table autoId="custom" [option]="option">
+      <ng-template [sdTableRowMobileDef]="option" let-row="item"
+        ><span>{{ row.code }}</span></ng-template
+      >
+      <ng-template sdTableFilterDef="note" let-externalFilter="externalFilter">
+        <input class="note-input" [value]="externalFilter.note ?? ''" (input)="externalFilter.note = $any($event.target).value" />
+      </ng-template>
+    </sd-table>
+  `,
+})
+class CustomFilterHost {
+  option: SdTableOption<{ id: number; code: string; at: string }> = {
+    type: 'local',
+    rowKey: 'id',
+    items: () => [{ id: 1, code: 'DH-1', at: '10:00' }],
+    filter: {
+      externalFilters: [
+        { field: 'note', type: 'custom', title: 'Ghi chú' },
+        { field: 'day', type: 'date', title: 'Ngày' },
+      ],
+    },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã' },
+      { field: 'at', type: 'time', title: 'Giờ' },
+    ],
+  };
+}
+
+/** Handoff table-mobile 5: filters only their own control can edit (templates, time columns) in the filter sheet. */
+describe('SdTable mobile filter sheet with custom filters', () => {
+  let fixture: ComponentFixture<CustomFilterHost>;
+  let table: SdTable<{ id: number; code: string; at: string }>;
+  const settle = () => {
+    fixture.detectChanges();
+    tick(850);
+    flush();
+    fixture.detectChanges();
+  };
+  const overlay = (): HTMLElement => TestBed.inject(OverlayContainer).getContainerElement();
+  const row = (field: string): HTMLButtonElement | null =>
+    overlay().querySelector<HTMLButtonElement>(`[data-autoid$="-mobile-filter-row-${field}"]`);
+  const button = (suffix: string): HTMLButtonElement | null =>
+    overlay().querySelector<HTMLButtonElement>(
+      `[data-autoid$="-mobile-filter-${suffix}"] button, button[data-autoid$="-mobile-filter-${suffix}"]`
+    );
+  const create = () => {
+    fixture = TestBed.createComponent(CustomFilterHost);
+    settle();
+    table = fixture.debugElement.query(By.directive(SdTable)).componentInstance;
+  };
+  const openAll = () => {
+    fixture.nativeElement.querySelector('[data-autoid$="-mobile-filter"]')!.click();
+    settle();
+  };
+
+  beforeEach(() => {
+    // why: real pushState / go would leave entries and late popstate events for the next spec (and can step the Karma
+    // frame back); history.go plays its popstate at once instead.
+    spyOn(history, 'pushState');
+    spyOn(history, 'go').and.callFake(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    TestBed.configureTestingModule({
+      imports: [CustomFilterHost],
+      providers: [provideNoopAnimations(), { provide: SdViewportService, useValue: { isMobile: signal(true) } }],
+    });
+  });
+  afterEach(() =>
+    overlay()
+      .querySelectorAll('.cdk-overlay-pane')
+      .forEach(pane => pane.remove())
+  );
+
+  it('lists them in the sheet without a summary, and gives them no chip', fakeAsync(() => {
+    create();
+    expect(fixture.nativeElement.querySelector('[data-autoid$="-mobile-filter-note"], [data-autoid$="-mobile-filter-at"]')).toBeNull();
+    openAll();
+    expect(row('note')?.textContent).toContain('Ghi chú');
+    expect(row('at')?.textContent).toContain('Giờ');
+    expect(row('note')!.querySelector('.sd-mobile-filter-row-summary')).toBeNull();
+    expect(row('at')!.querySelector('.sd-mobile-filter-row-summary')).toBeNull();
+  }));
+
+  it('edits a filter template on its page without Clear; Apply writes what it set', fakeAsync(() => {
+    create();
+    openAll();
+    row('note')!.click();
+    settle();
+    expect(button('clear')).toBeNull();
+    const input = overlay().querySelector<HTMLInputElement>('.note-input')!;
+    input.value = 'urgent';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    settle();
+    button('done')!.click();
+    settle();
+    // why: a template writes keys the table cannot know, so it never counts as an active filter.
+    expect(overlay().querySelector('.sd-mobile-sheet-subtitle')).toBeNull();
+    button('apply')!.click();
+    settle();
+    expect(table.filterRegister!.value.get().externalFilter?.['note']).toBe('urgent');
+  }));
+
+  it('shows a box for a date external filter off the bar, counts it and clears it from its page', fakeAsync(() => {
+    create();
+    table.filterRegister!.value.set({ externalFilter: { day: '2026/10/01' } });
+    settle();
+    openAll();
+    expect(overlay().querySelector('.sd-mobile-sheet-subtitle')?.textContent).toContain('1');
+    row('day')!.click();
+    settle();
+    expect(overlay().querySelector('.sd-mobile-sheet-body sd-date')).not.toBeNull();
+    button('clear')!.click();
+    settle();
+    button('done')!.click();
+    settle();
+    expect(overlay().querySelector('.sd-mobile-sheet-subtitle')).toBeNull();
+    button('apply')!.click();
+    settle();
+    expect(table.filterRegister!.value.get().externalFilter?.['day'] ?? null).toBeNull();
+  }));
+
+  it('counts a custom column with a value, shows its column filter and clears it', fakeAsync(() => {
+    create();
+    table.filterRegister!.value.set({ columnFilter: { at: '10:00' } });
+    settle();
+    openAll();
+    expect(overlay().querySelector('.sd-mobile-sheet-subtitle')?.textContent).toContain('1');
+    row('at')!.click();
+    settle();
+    expect(overlay().querySelector('column-filter')).not.toBeNull();
+    button('clear')!.click();
+    settle();
+    button('done')!.click();
+    settle();
+    expect(overlay().querySelector('.sd-mobile-sheet-subtitle')).toBeNull();
+    button('apply')!.click();
+    settle();
+    // why: the time column filter fills an empty range back in once it renders again; either way nothing filters.
+    expect(table.filterRegister!.value.get().columnFilter?.['at'] ?? { from: null, to: null }).toEqual({ from: null, to: null });
+  }));
 });

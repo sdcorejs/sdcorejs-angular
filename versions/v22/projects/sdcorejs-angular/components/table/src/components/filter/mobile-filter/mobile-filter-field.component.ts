@@ -231,6 +231,12 @@ export class SdTableMobileFilterFieldComponent {
     this.#changed();
   }
 
+  /** External date / datetime filter the bar leaves out: the raw value only. */
+  setExternal(field: string, raw: unknown): void {
+    (this.value().externalFilter ??= {})[field] = raw;
+    this.#changed();
+  }
+
   /** Custom controls (column-filter, templates) edit the working copy themselves. */
   onCustomChange(): void {
     this.#changed();

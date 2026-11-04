@@ -44,7 +44,10 @@ export interface SdTableMobileDataContext {
   selected: boolean;
 }
 
-/** Builds the slots of one row. Called once per row when the data or the selection of the row changes. */
+/**
+ * Builds the slots of one row. Called again when the rows are read again or `detectChanges()` runs, and when the index
+ * or the selection of the row changes.
+ */
 export type SdTableMobileDataFn<T, D> = (item: T, context: SdTableMobileDataContext) => D;
 
 /**

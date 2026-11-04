@@ -671,6 +671,10 @@
 :host .sd-mobile-top--no-search {
   justify-content: flex-end;
 }
+// Nothing to show but the keyboard Reload (out of sight): no empty band above the chips or the cards.
+:host .sd-mobile-top--empty:not(:focus-within) {
+  padding: 0;
+}
 :host .sd-mobile-top-search {
   flex: 1 1 auto;
   min-width: 0;

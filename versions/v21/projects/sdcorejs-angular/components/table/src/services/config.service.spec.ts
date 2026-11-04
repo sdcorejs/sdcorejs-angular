@@ -194,4 +194,15 @@ describe('ConfigService storage key without option.key', () => {
     const withTemplate = { ...base(), mobile: { ...base().mobile, template: deep as never } };
     expect(() => service.init(withTemplate)).not.toThrow();
   });
+
+  it('gives an option the same key with or without mobile.template', () => {
+    const create = spyOn(TestBed.inject(SdStorageService), 'create').and.callThrough();
+    const option = base();
+    service.init(option);
+    service.init({ ...option, mobile: { ...option.mobile, template: {} as never } });
+    service.init({ ...option, mobile: { ...option.mobile, template: false } });
+    const keys = create.calls.allArgs().map(args => args[0]);
+    expect(keys.length).toBe(3);
+    expect(new Set(keys).size).toBe(1);
+  });
 });

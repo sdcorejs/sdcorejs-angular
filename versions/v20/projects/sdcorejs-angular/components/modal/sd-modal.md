@@ -23,7 +23,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | `hideClose`            | `boolean`                                       | `false`     | Hides the built-in close button. Bare attribute = true.                         |
 | `disableBackdropClose` | `boolean`                                       | `true`      | Prevents backdrop/ESC close. Bare attribute = true.                             |
 | `beforeClose`          | `SdModalBeforeClose \| undefined`               | `undefined` | Optional sync/async guard. Only `true` closes; errors fail closed.              |
-| `closeOnNavigation`    | `boolean`                                       | `true`      | Close when the browser history changes (Back, a route change). Set `false` when the content handles Back itself, e.g. a sheet with pages. Same name as Material's `closeOnNavigation`. Bare attribute = true. |
+| `closeOnNavigation`    | `boolean`                                       | `true`      | Close on a browser history event (`popstate` / `hashchange`: Back, Forward, `history.go`); a router link that pushes a URL does not close it. Set `false` when the content handles Back itself, e.g. a sheet with pages. Same name as Material's `closeOnNavigation`. Bare attribute = true. |
 
 ## Outputs
 

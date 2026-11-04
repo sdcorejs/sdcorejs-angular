@@ -36,6 +36,7 @@
     <sd-radio
       class="sd-mobile-sort-columns"
       [autoId]="_autoId ? _autoId + '-mobile-sort-columns' : null"
+      [placeholder]="'core.component.table.mobile.sort' | sdTranslate"
       display="column"
       [items]="columns()"
       valueField="value"

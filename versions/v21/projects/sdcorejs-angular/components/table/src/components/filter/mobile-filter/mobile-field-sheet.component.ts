@@ -42,7 +42,7 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
   readonly item = signal<SdTableMobileFilterItem | undefined>(undefined);
   readonly working = signal<TableFilterValue | undefined>(undefined);
   readonly revision = signal(0);
-  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView);
+  readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView, inject(ElementRef).nativeElement);
   readonly ctx = computed(() => this.table().mobileFilterModel()?.ctx);
   readonly autoId = computed(() => {
     const base = this.table().autoId();
