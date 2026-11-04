@@ -279,7 +279,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `rowReorder`        | `{ enabled?, onChange?, icon?, disabled?(row,i) }`               | no           | Drag-and-drop row reordering. Respects groups.                                                                                                                                                                                               |
 | `index`             | `{ enabled?, title?, width? }`                                   | no           | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages — `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
 
-| `mobile` | `{ rowLabel?: (row: T) => string }` | no | Accessible label and command-bar title for mobile cards; falls back to `rowKey`, then row ordinal. |
+| `mobile` | `{ rowLabel?: (row: T) => string; template?: SdTableMobileTemplate<T> \| false }` | no | `rowLabel`: accessible label and command-bar title for mobile cards; falls back to `rowKey`, then row ordinal. `template`: card body on phones — a `TemplateRef`, or `{ data }` to build the card from row values; `false` keeps the desktop table. See [Card body](#card-body-mobiletemplate-and-autotemplate). |
 
 ### Row identity (`rowKey` → `SdTableItem.meta.id`)
 
@@ -1545,7 +1545,11 @@ All interactive children derive their autoId from the table base `components-tab
 | Export button (custom / menu / excel-only / csv-only) | `components-button-<B>-export` / `-export-excel` / `-export-csv`                                             |
 | Export menu items (Excel / CSV)                       | `<B>-export-excel` / `<B>-export-csv`                                                                        |
 | Config (settings) button                              | `components-button-<B>-config`                                                                               |
-| Mobile filter open button                             | `components-button-<B>-mobile-filter-open`                                                                   |
+| Mobile filter open button (phone, desktop table)      | `components-button-<B>-mobile-filter-open`                                                                   |
+| Phone: Filters chip / one filter chip                 | `<B>-mobile-filter` / `<B>-mobile-filter-<field>` (native `button`)                                          |
+| Phone: sort chip or top-row sort button               | `<B>-mobile-sort` (native `button`)                                                                          |
+| Phone: ⋮ Tools / Reload (shown on keyboard focus)     | `<B>-mobile-tools` / `<B>-mobile-reload` (native `button`)                                                   |
+| Phone: More fields on a card built from data          | `<B>-mobile-row-<rowId>-more` (native `button`)                                                              |
 | Tree expand toggle (per row)                          | `components-button-<B>-tree-toggle-<rowId>` (native `button`, `data-autoid`; embedded in first/index column) |
 | Detail expand toggle (per row)                        | `components-button-<B>-expand-<rowId>`                                                                       |
 | Group collapse toggle (per group)                     | `components-button-<B>-group-toggle-<groupKey>`                                                              |
@@ -1588,7 +1592,7 @@ All interactive children derive their autoId from the table base `components-tab
 
 Import `SdTableRowMobileDefDirective` with `SdTable` from `@sdcorejs/angular/components/table` (both are also exported by the components barrel). Project **one** mobile template directly into each table. No provider or additional mobile flag is required. Nested tables own their templates and selection independently.
 
-With a template, `SdViewportService.isMobile()` selects the card renderer; its configured Core breakpoint is shared with the rest of the application (default: width below 768px). Without a template, the existing table renderer remains in use at every width. Only one renderer exists at a time. `MatSort`, paginator, filters, data, selection and expanded rows belong to the same table instance: resizing neither fetches data nor reapplies `defaultSelected`.
+With a card body — this template, `mobile.template` or `SD_TABLE_CONFIGURATION.mobile.autoTemplate` (see [Card body](#card-body-mobiletemplate-and-autotemplate)) — `SdViewportService.isMobile()` selects the card renderer; its configured Core breakpoint is shared with the rest of the application (default: width below 768px). Without one, the existing table renderer remains in use at every width. Only one renderer exists at a time. `MatSort`, paginator, filters, data, selection and expanded rows belong to the same table instance: resizing neither fetches data nor reapplies `defaultSelected`.
 
 ### Complete standalone consumer
 
@@ -1682,9 +1686,76 @@ The exported `SdTableRowMobileDefContext<T>` contains:
 | `selectionDisabled` | `boolean` | Whether this row can currently be selected. A selected row remains removable even if its eligibility later changes. |
 | `autoId` | `string \| undefined` | Table auto-id prefix plus `-mobile-row-<rowId>`; also assigned to the card's `data-autoid`. Absent when table `autoId` is absent. |
 
-Core renders the card frame, selector, command trigger, tree/group/expand controls and action bar. The 14px checkbox/radio sits on a 24px circular surface centered over the top-right border, with a 40px hit area. The row-command trigger sits at the bottom-right. No separate selector row is needed. A projected `sdTableCommandHeaderDef` is centered above the cards; otherwise there is no header banner. Do not duplicate selection state or add a wrapping button. Links, buttons, inputs, labels, selects, contenteditable controls and nested tables work independently, without consumer `stopPropagation()`. Enter/Space on a focused card matches body activation; pointer scrolling, drag handles and text selection do not activate it.
+Core renders the card frame, selector, command trigger, tree/group/expand controls and action bar. The frame is a grid: with a selector, the checkbox/radio sits in a 44 × 44 zone of a 44px left column (a tap anywhere in the zone selects once); the content takes the middle; ⋯ (`more_horiz`, 44 × 44) sits in the top-right corner. While rows are selected, and when the table has no row commands, the right column narrows to 12px. With `sdTableExpandDef`, **Chi tiết** is the last line of the card, above the details it opens. No separate selector row is needed. A projected `sdTableCommandHeaderDef` is centered above the cards; otherwise there is no header banner. Do not duplicate selection state or add a wrapping button. Links, buttons, inputs, labels, selects, contenteditable controls and nested tables work independently, without consumer `stopPropagation()`. Enter/Space on a focused card matches body activation; pointer scrolling, drag handles and text selection do not activate it.
 
 `mobile.rowLabel(row)` supplies the command title and accessible selector/command labels. Empty/nullish labels fall back to a primitive `rowKey` value and then a one-based row ordinal across pages. Internal generated identities and guessed business fields are never used as visible labels.
+
+### Card body: `mobile.template` and `autoTemplate`
+
+Phones show cards when the table has a card body. By priority:
+
+| Declaration | On a phone |
+| --- | --- |
+| projected `sdTableRowMobileDef` | Your template inside the card frame. With `mobile.template` set too, the directive wins and a dev warning says so. |
+| `mobile.template: TemplateRef` | Your template inside the card frame. |
+| `mobile.template: { layout?: 'card', data }` | A card built from row values (below). |
+| `mobile.template: false` | The desktop table, even with `autoTemplate`. |
+| nothing, `SD_TABLE_CONFIGURATION.mobile.autoTemplate: true` | A card built from the visible columns. |
+| nothing | The desktop table, as before. |
+
+```ts
+import type { SdTableMobileCardData } from '@sdcorejs/angular/components/table';
+
+const orderCard = (row: Order): SdTableMobileCardData<Order> => ({
+  title: 'code',
+  subtitle: 'customerName',
+  badge: row.locked ? { title: 'Đã khóa', color: 'error' } : 'status',
+  highlight: 'total',
+  fields: ['createdAt', 'warehouse', 'createdBy'],
+});
+
+option: SdTableOption<Order> = {
+  // …
+  mobile: { rowLabel: row => row.code, template: { data: orderCard } },
+};
+```
+
+Slots (`SdTableMobileCardData<T>`):
+
+| Slot | Type | On the card |
+| --- | --- | --- |
+| `title` | field or `{ text }` | First line, 15px medium. Missing or unknown: `mobile.rowLabel`, then `rowKey`, then the row number. |
+| `subtitle` | field or `{ text }` | Second line, one line cut with "…". |
+| `badge` | field or `SdBadgeData` | After the title. A field must be a column with `useBadge`; otherwise it shows as text. |
+| `highlight` | field | First grid cell, medium weight. |
+| `fields` | field[] | Two-column grid; each cell has the column title as label. |
+| `maxFields` | number | Cells before the "{n} more fields" button, highlight included. Default 4. |
+
+- Fields are `NestedKeyOf<T>`: a typo fails the build. Write the return type (`SdTableMobileCardData<Order>`) when the function lives outside the option, so the editor checks it. `layout` is fixed per table and only `'card'` exists; a card rejects `trailing` (a slot of a future `list` layout).
+- At run time a field must be a leaf column of the option (children of grouped headers included). An unknown field drops its slot, with one dev warning per table, field and kind of error.
+- Grid values take the desktop cell path: `sdTableCellDef` / `cell.templateRef` when the column has one, otherwise the formatted value (`transform`, date / number format, `displayField` of values / lazy-values, `useBadge`). The title and subtitle are plain text. `{ text }` shows as is.
+- Fields you name show even when the column is `hidden`, `invisible` or hidden in the settings (a `hidden` column shows its raw value: the table does not format it).
+- `data(item, { index, selected })` runs once per row when the rows are read again (`reload()`, a page), `table.detectChanges()` (`dataRevision`) runs, or the row's index or selection changes — not on change detection. A change of columns or settings re-checks the slots without calling it again. A row whose `data` throws uses the card derived from the columns, with a dev warning.
+
+`autoTemplate` derives the card from the columns on screen: title = the `rowKey` column (else the first column), badge = the first other column with `useBadge`, subtitle = the next `string` column, fields = the rest in column order. Hidden, invisible and settings-hidden columns are left out.
+
+### Filters, sort and tools on phones
+
+With cards, the top of the table is one row: the table search (`filter.quickSearch`), then the sort button (`swap_vert`, only without a chip row) and **⋮** (Tools). Under it, when the table has a filter, a scrolling chip row:
+
+- **Bộ lọc** (`tune`) with the number of active filters opens the filter sheet. Its name reads "Bộ lọc, {n} đang lọc".
+- **Sort chip**: only an icon while the table is not sorted; the column and an arrow once it is. It opens the sort sheet.
+- One chip per filter, in a fixed order (external filters, then columns). A filtering chip is tinted and reads "{name}: {summary}" — the same string as the query bar chip: one value → its label, several → "first +n", ranges → "01/10 – 31/10/2026", "From x" / "To y", a string or number with its operator. Chips are 32px (44px touch area) and at most 240px wide.
+
+The **filter sheet** (bottom sheet, viewport height less 40px) replaces the side drawer. Its list shows every filter with its summary ("Tất cả" when not filtering); a row opens the filter's page (← back, **Bỏ chọn**, **Xong**). The list has no ✕: **Hủy** closes it. Controls are 44px and the two boxes of a range carry floating labels (**Từ ngày** / **Đến ngày**); the operator is a text button. `values` show a checkbox list (a radio list for single selection) with a search box above 8 options; `lazy-values` always search. Templates (`sdTableFilterDef`, external `custom` with a `filterDef`), `time` columns and external `date` / `datetime` filters the query bar leaves out have a row whose page shows their own control. A column hidden through the settings keeps its row and chip while it still filters. The sheet works on a copy: **Áp dụng** writes every filter and reads once; on the list, **Hủy**, the scrim, a swipe down and Back drop the copy; on a page, ←, **Xong**, Escape and Back return to the list with the edits kept; **Xóa tất cả** clears the copy only. A chip opens the same controls for one filter (**Bỏ chọn**, **Hủy**, **Áp dụng**).
+
+The **sort sheet** lists the sortable columns, `invisible` and settings-hidden ones included (not `hidden: true`), under an **Ascending | Descending** switch. A pick sorts at once and closes; changing the direction re-sorts and stays open; **Bỏ sắp xếp** returns to no sort. Phones sort by one column; the old ascending → descending → clear cycle is gone.
+
+**⋮** opens the Tools sheet, a phone sheet like the others (handle, title, swipe down and Back close it). **Xuất dữ liệu** shows the exports as tiles side by side with their file kind (Excel `.xlsx`, CSV `.csv`, or one full-width tile for a custom export); while an export runs its tile shows a spinner and the progress, the other exports wait, and the sheet closes when it is done. **Bảng** has the table settings as a row, marked **Đã tùy chỉnh** while the table uses a setup of its own (the same check as the settings button dot); the settings open once the sheet has closed. The autoIds are unchanged (`{autoId}-mobile-tool-export-excel`, `-tool-export-csv`, `-tool-export`, `-tool-config`). The sheet hides when nothing is left. Filter, sort and reload are no longer in it. The footer holds only the paginator.
+
+**Pull to refresh** replaces Reload (with `reload.visible`): pull the card list down from its top by 64px and release; a round indicator turns with the pull and spins until the read is done. During the pull the page gets `overscroll-behavior-y: contain`, so the browser does not run its own pull to refresh. A pull that starts on a drag handle, while a sheet is open or with two fingers does nothing. A reload button for keyboards and screen readers sits in the top row and shows only when focused.
+
+The sheets keep focus inside, start on the sheet title (so **Bỏ chọn**, **Bỏ sắp xếp** and **Xóa tất cả** never open with a focus fill), return it to the chip or button that opened them, and handle the browser Back button (a page goes back to the list, the list closes) through `sd-modal` `closeOnNavigation: false`. Each open level pushes a history entry with the same URL and state; closing from the UI takes it back with `history.go(-n)`, unless the URL changed meanwhile. That `popstate` re-runs a route only with `onSameUrlNavigation: 'reload'`. Inside a dialog or a sheet (`.cdk-overlay-pane`) the table adds no entries: Material closes such an overlay on every `popstate`, so Back closes it as before.
 
 ### Browsing, selection and actions
 
@@ -1700,9 +1771,9 @@ Row commands open directly in `SdModal` with `view="bottom-sheet"`, titled **Row
 
 Only selection uses a contained `SdQuickAction`, with 16px horizontal padding. A highlighted selected count and a labelled clear icon stay centered in separate side columns; flat actions wrap into evenly aligned columns between them. **More** opens a titled `SdModal` bottom sheet for grouped or HTML actions and subsequent actions, preserving declaration order. `selector.message` is omitted on mobile. The full total/on-page summary remains available through the bar's accessible name and a polite live region. The count and clear route remain available without bulk actions. Closing the sheet preserves selection.
 
-Card lists keep equal 20px side gutters and symmetric content padding with or without selection controls. The corner checkbox does not reduce the content width. Row commands share a separate action row with the expand control, so they do not overlap the consumer's content.
+The card list sits on a low surface (`--sd-surface-muted` 35% over `--sd-surface`) with `8px 12px` padding and 8px between cards; cards have a 1px `--sd-border` border and 12px corners. A selected card has a primary border and a light primary background.
 
-The footer has one **Tools** button and the shared paginator. **Table tools** opens a separate Core bottom sheet containing enabled reload, export, filter, sort and configuration controls. Filter/configuration close the sheet before opening their existing drawer/dialog. Sort choices use the same `MatSort` state and cycle ascending, descending and clear.
+The footer holds only the shared paginator. **⋮** in the top row opens **Table tools**, a Core bottom sheet with export (two choices laid out flat) and configuration; filters, sort and reload have their own places (see [Filters, sort and tools on phones](#filters-sort-and-tools-on-phones)).
 
 Changing data, filtering, paging or calling `table.detectChanges()` after an in-place edit invalidates row commands. Async `hidden` results are tied to their row and render revision. Renderer changes, owner destruction and enclosing Core modal/drawer closure dismiss owned sheets. Tables keep independent state even when Material replaces a previously open sheet.
 
@@ -1730,12 +1801,12 @@ The consumer owns error reporting, retries and `defaultSelected` predicates; upd
 | Feature / slot | Card view |
 | --- | --- |
 | Columns, `sdTableCellDef`, `sdTableTitleDef` | Columns continue to define filters, sort, configuration and export. The mobile row template supplies the body instead of desktop cell templates. Custom titles remain in footer/configuration; the sort menu uses column title text. |
-| `sdTableFilterDef`, inline filters | Existing mobile filter drawer, sharing the same filter register and operators. External filters also move into this drawer; there is no separate filter form above the card list. |
-| Sort | The Table tools bottom sheet cycles ascending → descending → clear through the same `MatSort` and request fields. Only configured sortable leaf columns are listed. |
-| Pagination, reload, configuration, export | Paginator and one Tools button below the list; enabled tools live in the titled Core sheet. Export uses business rows and configured columns, never card DOM. |
+| `sdTableFilterDef`, inline filters | Filter chips under the search and the two-level filter sheet, sharing the same filter register and operators. External filters move there too; there is no separate filter form above the card list. Templates and `time` columns open their own control from the sheet. |
+| Sort | The sort sheet (sort chip, or `swap_vert` in the top row without a chip row) sets one column and a direction through the same `MatSort` and request fields. Sortable leaf columns are listed, `invisible` and settings-hidden ones included. |
+| Pagination, reload, configuration, export | Paginator below the list; ⋮ in the top row opens export and configuration; pull to refresh reloads. Export uses business rows and configured columns, never card DOM. |
 | `sdTableCommandHeaderDef` | Centered above the card list. |
 | `sdTableFooterDef` | Labelled summary below cards; the original `{ items, column }` scope is unchanged (`items` are current-page `SdTableItem` wrappers). |
-| `sdTableExpandDef` | Dedicated Details button and inline detail block; keeps its existing `{ item: SdTableItem }` context, `always`, `multiple`, disabled and async behavior. |
+| `sdTableExpandDef` | **Chi tiết** line at the end of the card and the detail block under it; keeps its existing `{ item: SdTableItem }` context, `always`, `multiple`, disabled and async behavior. |
 | `sdTableGroupDef` | Separate group header using the existing group context and selection/expand controls. |
 | Tree | Indentation, level labels and separate expand/collapse controls; lazy children are fetched only on expansion. |
 | Reorder | Dedicated CDK drag handle; respects existing disabled/group/tree scope and callbacks. |
@@ -1745,7 +1816,7 @@ The action bar keeps a layout footprint inside the owning scroll container, so t
 
 ### Selection toolbar layout
 
-The selected-state icon and the mobile selection count use the success color.
+The selected-state icon uses the success color. The phone selection bar sits 12px off both screen edges, and its count uses the primary light color.
 
 The desktop selection toolbar reserves space inside its table, immediately above the pagination footer. It does not float over the page. A single message shows the selection count; a custom `selector.message` is preserved verbatim, without another count badge.
 

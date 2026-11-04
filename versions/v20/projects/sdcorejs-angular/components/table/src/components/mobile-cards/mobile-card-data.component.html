@@ -1,0 +1,58 @@
+@let _badge = badge();
+@let _subtitle = subtitle();
+@let _cells = shownCells();
+@let _hidden = hiddenCount();
+@let _expanded = expanded();
+@let _autoId = autoId();
+<div class="sd-mobile-data-head">
+  <span class="sd-mobile-data-title">{{ title() }}</span>
+  @if (_badge) {
+    @if (_badge.kind === 'badge') {
+      <sd-badge
+        class="sd-mobile-data-badge"
+        [type]="_badge.data.type || 'round'"
+        [title]="_badge.title"
+        [label]="_badge.data.label"
+        [color]="_badge.data.color"
+        [icon]="_badge.data.icon"
+        [tooltip]="_badge.data.tooltip"></sd-badge>
+    } @else {
+      <span class="sd-mobile-data-badge-text">{{ _badge.text }}</span>
+    }
+  }
+</div>
+@if (_subtitle) {
+  <div class="sd-mobile-data-subtitle">{{ _subtitle }}</div>
+}
+@if (_cells.length) {
+  <dl class="sd-mobile-data-grid">
+    @for (cell of _cells; track cell.column.field) {
+      <div class="sd-mobile-data-cell" [class.sd-mobile-data-cell--highlight]="cell.highlight">
+        <dt>{{ cell.label }}</dt>
+        <dd>
+          @if (cell.cell) {
+            <desktop-cell [column]="$any(cell.column)" [item]="row()" [cellDef]="cellDef()"></desktop-cell>
+          } @else {
+            {{ cell.text }}
+          }
+        </dd>
+      </div>
+    }
+  </dl>
+}
+@if (_hidden > 0) {
+  <button
+    mat-button
+    type="button"
+    class="sd-mobile-data-more"
+    [attr.aria-expanded]="_expanded"
+    [attr.data-autoid]="_autoId ? _autoId + '-more' : null"
+    (click)="expanded.set(!_expanded)">
+    <sd-icon [name]="_expanded ? 'expand_less' : 'expand_more'" size="18px"></sd-icon>
+    @if (_expanded) {
+      {{ 'core.component.table.mobile.show-less' | sdTranslate }}
+    } @else {
+      {{ 'core.component.table.mobile.more-fields' | sdTranslate: { count: _hidden } }}
+    }
+  </button>
+}

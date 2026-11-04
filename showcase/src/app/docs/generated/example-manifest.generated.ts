@@ -262,6 +262,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-lenh-dong-phai"
   | "components/table/example-loading-empty-error"
   | "components/table/example-loc-bang-query-bar"
+  | "components/table/example-loc-va-sap-xep-tren-dien-thoai"
   | "components/table/example-mobile-chon-du-lieu"
   | "components/table/example-mobile-qua-nhieu-trang"
   | "components/table/example-mobile-trong-hop-thoai"
@@ -273,6 +274,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-server-khong-biet-tong"
   | "components/table/example-server-side"
   | "components/table/example-the-mobile-va-thao-tac"
+  | "components/table/example-the-tu-suy-tu-cot"
   | "components/table/example-thiet-lap-cot"
   | "components/table/example-toi-gian"
   | "components/table/example-tra-cuu-co-ban"
@@ -2228,7 +2230,21 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-the-mobile-va-thao-tac",
     title: "Thẻ mobile và thao tác",
-    description: "Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.",
+    description: "Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.",
+  },
+  {
+    sourceKey: "components/table/example-loc-va-sap-xep-tren-dien-thoai",
+    pageKey: "components/table",
+    sectionId: "example-loc-va-sap-xep-tren-dien-thoai",
+    title: "Lọc và sắp xếp trên điện thoại",
+    description: "Xem ở bề rộng điện thoại. Thẻ dựng từ data (title, badge, highlight, fields, nút Thêm). Hàng chip: Bộ lọc, Sắp xếp, rồi từng trường; chip mở sheet một trường, Bộ lọc mở sheet hai cấp. Sắp xếp chọn một cột, kể cả cột ẩn. ⋮ mở Công cụ; kéo danh sách xuống để tải lại.",
+  },
+  {
+    sourceKey: "components/table/example-the-tu-suy-tu-cot",
+    pageKey: "components/table",
+    sectionId: "example-the-tu-suy-tu-cot",
+    title: "Thẻ tự suy từ cột",
+    description: "Bảng không khai báo thẻ: autoTemplate lấy cột rowKey làm tiêu đề, cột có useBadge làm badge, cột chuỗi kế tiếp làm dòng phụ, các cột còn lại vào lưới. Bảng chỉ có sắp xếp nên nút sắp xếp nằm ở hàng đầu.",
   },
   {
     sourceKey: "components/table/example-mobile-qua-nhieu-trang",

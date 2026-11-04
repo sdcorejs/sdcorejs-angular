@@ -49,7 +49,9 @@
      trước khi screen reader kịp đọc và không báo được "đã tải xong". -->
 <span class="sd-table-live" role="status" aria-live="polite" aria-atomic="true">{{ liveMessage() }}</span>
 @if (_configuration) {
-  @if (!_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+  @if (
+    !_queryBarMode && !_mobileCards && !_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister
+  ) {
     <external-filter
       class="mb-16"
       [autoId]="_autoId"
@@ -214,7 +216,7 @@
           </p>
         }
       }
-    } @else if (_quickSearch) {
+    } @else if (_quickSearch && !_mobileCards) {
       <sd-table-quick-search
         [option]="_quickSearch"
         [value]="quickSearchValue()"
@@ -222,11 +224,81 @@
         [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
         (valueChange)="onQuickSearchChange($event)" />
     }
+    @if (_mobileCards) {
+      @let _tools = mobileToolsActions();
+      @let _hasChips = !!mobileFilterModel()?.items?.length;
+      @let _sortable = mobileSortAvailable();
+      <!-- Phone top row (handoff table-mobile 2): the search, Reload for keyboards (shown on focus), the sort button
+           when there is no chip row, and ⋮ Tools. -->
+      <div
+        class="sd-mobile-top"
+        [class.sd-mobile-top--chips]="_hasChips"
+        [class.sd-mobile-top--no-search]="!_quickSearch"
+        [class.sd-mobile-top--empty]="!_quickSearch && (_hasChips || !_sortable) && !_tools.length">
+        @if (_quickSearch) {
+          <sd-table-quick-search
+            class="sd-mobile-top-search"
+            [option]="_quickSearch"
+            [value]="quickSearchValue()"
+            [autoId]="_autoId"
+            [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
+            (valueChange)="onQuickSearchChange($event)" />
+        }
+        @if (_tableOption.reload?.visible) {
+          <button
+            mat-icon-button
+            type="button"
+            class="sd-mobile-top-button sd-mobile-reload"
+            [attr.aria-label]="'core.component.table.reload' | sdTranslate"
+            [attr.data-autoid]="_autoId ? _autoId + '-mobile-reload' : null"
+            (click)="reload()">
+            <sd-icon name="refresh" size="22px"></sd-icon>
+          </button>
+        }
+        @if (!_hasChips && _sortable) {
+          <button
+            mat-icon-button
+            type="button"
+            class="sd-mobile-top-button"
+            aria-haspopup="dialog"
+            [attr.aria-label]="mobileSortLabel()"
+            [attr.data-autoid]="_autoId ? _autoId + '-mobile-sort' : null"
+            (click)="mobileSortSheet.open()">
+            <sd-icon name="swap_vert" size="22px"></sd-icon>
+          </button>
+        }
+        @if (_tools.length) {
+          <button
+            mat-icon-button
+            type="button"
+            class="sd-mobile-top-button"
+            aria-haspopup="dialog"
+            [attr.aria-label]="'core.component.table.mobile.tools' | sdTranslate"
+            [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
+            (click)="mobileTools.open()">
+            <sd-icon name="more_vert" size="22px"></sd-icon>
+          </button>
+          <sd-table-mobile-tools-sheet #mobileTools [table]="this" [actions]="_tools"></sd-table-mobile-tools-sheet>
+        }
+      </div>
+      @if (_hasChips) {
+        <!-- Phone: filter chips under the search (handoff table-mobile 3). -->
+        <sd-table-mobile-filter-chips
+          [table]="this"
+          [model]="mobileFilterModel()"
+          [value]="mobileFilterValue()"
+          [sortAvailable]="_sortable"
+          [sortLabel]="mobileSortLabel()"
+          (sortOpen)="mobileSortSheet.open()"></sd-table-mobile-filter-chips>
+      }
+      <sd-table-mobile-sort-sheet #mobileSortSheet [table]="this"></sd-table-mobile-sort-sheet>
+    }
     <div class="c-container" [class.sd-table-mobile]="_mobileCards">
       <!-- why: lớp loading không phủ lên bảng: header, filter, sort và thanh cuộn luôn dùng được. Chưa có dòng thì
            khung xương (matNoDataRow); đã có dòng thì giữ dòng cũ, quá showDelay mới làm mờ dòng và hiện thanh tiến
            trình. aria-busy vẫn theo loading() thật; vùng .sd-table-live báo "đang tải"/"đã tải xong". -->
       <div
+        #cTable
         class="c-table"
         sdScroll
         stickyShadow
@@ -237,6 +309,12 @@
         [style.max-height]="_tableOption.style?.maxHeight"
         [style.min-height]="_tableOption.style?.minHeight">
         @if (_mobileCards) {
+          <!-- Pull to refresh replaces Reload on phones (handoff table-mobile 7). -->
+          <sd-table-pull-refresh
+            [target]="cTable"
+            [enabled]="!!_tableOption.reload?.visible"
+            [loading]="_loading"
+            (refresh)="reload()"></sd-table-pull-refresh>
           @if (_commandHeaderDef) {
             <div class="sd-mobile-command-header"><ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container></div>
           }
@@ -249,6 +327,7 @@
           }
           <sd-table-mobile-cards
             [table]="this"
+            [body]="mobileBody()"
             [rows]="renderItems"
             [dataRows]="groupedItems"
             [groupTemplate]="sdGroupHeader"
@@ -791,26 +870,7 @@
       }
       <div class="c-paginator">
         <div class="c-action">
-          @if (_mobileCards) {
-            @let _tools = mobileToolsActions();
-            @if (_tools.length) {
-              <button
-                mat-button
-                type="button"
-                class="sd-mobile-tools-trigger"
-                aria-haspopup="dialog"
-                [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
-                (click)="mobileTools.openMore()">
-                <sd-icon name="tune"></sd-icon><span>{{ 'core.component.table.mobile.tools' | sdTranslate }}</span>
-              </button>
-              <sd-table-mobile-actions
-                #mobileTools
-                [actions]="_tools"
-                [autoOpen]="false"
-                [title]="'core.component.table.mobile.tools-title' | sdTranslate"
-                [autoId]="_autoId"></sd-table-mobile-actions>
-            }
-          } @else {
+          @if (!_mobileCards) {
             @if (_tableOption.reload?.visible) {
               <sd-button
                 [autoId]="_autoId ? _autoId + '-reload' : null"
@@ -965,7 +1025,7 @@
       (defaultsRestored)="onConfigDefaultsRestored()"
       (filterApplied)="onConfigFilterApplied($event)" />
   }
-  <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
+  <!-- Mobile filter sheet (bottom sheet, two levels) — opened by the Filters chip or the footer filter button -->
   @if (!_tableOption.filter?.disabled && filterRegister) {
     <mobile-filter
       [autoId]="_autoId"
@@ -974,7 +1034,8 @@
       [columns]="mobileColumns()"
       [filterDefs]="sdFilterDefs()"
       [filterRegister]="filterRegister"
-      [cacheValues]="cacheValues">
+      [cacheValues]="cacheValues"
+      [model]="mobileFilterModel()">
     </mobile-filter>
   }
 } @else if (_readState.status === 'error' && !_hideReadError) {

@@ -12934,6 +12934,8 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { TableAggregateDemoComponent } from './table-aggregate-example.component';
+import { TableMobileAutoDemoComponent } from './table-mobile-auto-example.component';
+import { TableMobileDataDemoComponent } from './table-mobile-data-example.component';
 import { TableUnknownTotalDemoComponent } from './table-unknown-total-example.component';
 import { TableCustomCellsExampleComponent } from './examples/table-custom-cells.example';
 import { TableInlineEditExampleComponent } from './examples/table-inline-edit.example';
@@ -13116,6 +13118,8 @@ const TASKS: Task[] = [
     SdCheckbox,
     SdTableQuickSearchRightDefDirective,
     TableAggregateDemoComponent,
+    TableMobileDataDemoComponent,
+    TableMobileAutoDemoComponent,
     TableUnknownTotalDemoComponent,
     TableStandardExampleComponent,
     TableInlineOperatorExampleComponent,
@@ -13181,7 +13185,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
         [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-        note="Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
+        note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.">
         <sd-table autoId="mobile-employees" [option]="mobileOption">
           <ng-template sdTableCommandHeaderDef>
             <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
@@ -13199,6 +13203,24 @@ const TASKS: Task[] = [
           <ng-template sdTableFooterDef="salary" let-items="items"><strong>{{ totalSalary(items) | number }} ₫ / trang</strong></ng-template>
         </sd-table>
         <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loc-va-sap-xep-tren-dien-thoai') {
+      <demo-section heading="Lọc và sắp xếp trên điện thoại"
+        [props]="[{ name: 'mobile.template', value: '{ data }' }, { name: 'filter.externalFilters', value: '[…]' }, { name: 'sort.enable', value: 'true' }, { name: 'reload.visible', value: 'true' }]"
+        data-example-typescript="./table-mobile-data-example.component.ts" data-example-template="./table-mobile-data-example.component.html"
+        note="Xem ở bề rộng điện thoại. Thẻ dựng từ data (title, badge, highlight, fields, nút Thêm). Hàng chip: Bộ lọc, Sắp xếp, rồi từng trường; chip mở sheet một trường, Bộ lọc mở sheet hai cấp. Sắp xếp chọn một cột, kể cả cột ẩn. ⋮ mở Công cụ; kéo danh sách xuống để tải lại.">
+        <app-table-mobile-data-demo />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-tu-suy-tu-cot') {
+      <demo-section heading="Thẻ tự suy từ cột"
+        [props]="[{ name: 'SD_TABLE_CONFIGURATION.mobile.autoTemplate', value: 'true' }, { name: 'filter.disabled', value: 'true' }]"
+        data-example-typescript="./table-mobile-auto-example.component.ts" data-example-template="./table-mobile-auto-example.component.html"
+        note="Bảng không khai báo thẻ: autoTemplate lấy cột rowKey làm tiêu đề, cột có useBadge làm badge, cột chuỗi kế tiếp làm dòng phụ, các cột còn lại vào lưới. Bảng chỉ có sắp xếp nên nút sắp xếp nằm ở hàng đầu.">
+        <app-table-mobile-auto-demo />
       </demo-section>
       }
 
@@ -15411,6 +15433,151 @@ export class TableQueryBarExampleComponent {
   color: var(--sd-error, #d32f2f);
 }`,
   },
+  "components/table/example-loc-va-sap-xep-tren-dien-thoai": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdTable, SdTableMobileCardData, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Order {
+  code: string;
+  customer: string;
+  channel: string;
+  status: string;
+  warehouse: string;
+  total: number;
+  createdAt: string;
+  createdBy: string;
+  items: number;
+  discount: number;
+  paidAt: string;
+  region: string;
+  phone: string;
+  locked: boolean;
+}
+
+const STATUSES = [
+  { id: 'new', name: 'Mới', color: 'info' },
+  { id: 'confirmed', name: 'Đã xác nhận', color: 'primary' },
+  { id: 'picking', name: 'Đang lấy hàng', color: 'warning' },
+  { id: 'packed', name: 'Đã đóng gói', color: 'warning' },
+  { id: 'shipping', name: 'Đang giao', color: 'primary' },
+  { id: 'delivered', name: 'Đã giao', color: 'success' },
+  { id: 'returned', name: 'Hoàn trả', color: 'error' },
+  { id: 'cancelled', name: 'Đã huỷ', color: 'error' },
+  { id: 'on-hold', name: 'Tạm giữ', color: 'secondary' },
+  { id: 'refunded', name: 'Đã hoàn tiền', color: 'secondary' },
+] as const;
+const WAREHOUSES = [
+  { id: 'HN', name: 'Hà Nội' },
+  { id: 'HCM', name: 'Hồ Chí Minh' },
+  { id: 'DN', name: 'Đà Nẵng' },
+];
+const CHANNELS = [
+  { id: 'online', name: 'Online' },
+  { id: 'store', name: 'Cửa hàng' },
+  { id: 'partner', name: 'Đối tác' },
+];
+const CUSTOMERS = ['Nguyễn Văn An', 'Trần Thị Bình', 'Lê Hoàng Cường', 'Phạm Thu Dung', 'Võ Minh Em'];
+const STAFF = ['Lan', 'Minh', 'Hà', 'Tuấn'];
+
+const ORDERS: Order[] = Array.from({ length: 24 }, (_, index) => ({
+  code: \`DH-\${String(1001 + index)}\`,
+  customer: CUSTOMERS[index % CUSTOMERS.length],
+  channel: CHANNELS[index % CHANNELS.length].id,
+  status: STATUSES[index % STATUSES.length].id,
+  warehouse: WAREHOUSES[index % WAREHOUSES.length].id,
+  total: 350000 + ((index * 137000) % 4200000),
+  createdAt: \`2026/10/\${String(1 + (index % 28)).padStart(2, '0')}\`,
+  createdBy: STAFF[index % STAFF.length],
+  items: 1 + (index % 7),
+  discount: (index % 4) * 5,
+  paidAt: \`2026/10/\${String(2 + (index % 27)).padStart(2, '0')}\`,
+  region: index % 2 ? 'Miền Nam' : 'Miền Bắc',
+  phone: \`09\${String(10000000 + index * 7919).slice(0, 8)}\`,
+  locked: index % 9 === 4,
+}));
+
+/** Card of an order on phones: built from row values, no template. */
+const orderCard = (row: Order): SdTableMobileCardData<Order> => ({
+  title: 'code',
+  subtitle: 'customer',
+  badge: row.locked ? { title: 'Đã khóa', color: 'error' } : 'status',
+  highlight: 'total',
+  fields: ['createdAt', 'warehouse', 'createdBy', 'items', 'discount', 'paidAt'],
+});
+
+@Component({
+  selector: 'app-table-mobile-data-demo',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [SdTable],
+  templateUrl: './table-mobile-data-example.component.html',
+})
+export class TableMobileDataDemoComponent {
+  readonly log = signal('');
+  readonly option: SdTableOption<Order> = {
+    type: 'local',
+    rowKey: 'code',
+    items: () => ORDERS,
+    paginate: { pageSize: 10 },
+    reload: { visible: true },
+    export: { type: 'default', visible: 'ALL' },
+    config: { visible: true },
+    sort: { enable: true },
+    mobile: { rowLabel: row => row.code, template: { data: orderCard } },
+    selector: {
+      visible: true,
+      disabled: row => !!row?.locked,
+      actions: [{ title: 'Duyệt', icon: 'check', click: (rows = []) => this.log.set(\`Duyệt \${rows.length} đơn\`) }],
+    },
+    command: {
+      commands: [
+        { title: 'Xem', icon: 'visibility', click: row => this.log.set(\`Xem \${row.code}\`) },
+        { title: 'Sửa', icon: 'edit', click: row => this.log.set(\`Sửa \${row.code}\`) },
+      ],
+    },
+    filter: {
+      externalFilters: [
+        { field: 'customer', type: 'string', title: 'Khách hàng' },
+        {
+          field: 'channel',
+          type: 'values',
+          title: 'Kênh bán',
+          option: { items: CHANNELS, valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+        },
+      ],
+    },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã đơn', sortable: true, filter: { operator: { enable: true, list: ['CONTAIN', 'EQUAL'] } } },
+      { field: 'customer', type: 'string', title: 'Khách hàng', sortable: true, filter: { disabled: true } },
+      {
+        field: 'status',
+        type: 'values',
+        title: 'Trạng thái',
+        sortable: true,
+        option: { items: [...STATUSES], valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+        useBadge: value => {
+          const status = STATUSES.find(entry => entry.id === value);
+          return { title: status?.name ?? value, color: status?.color ?? 'secondary', type: 'round' };
+        },
+      },
+      {
+        field: 'warehouse',
+        type: 'values',
+        title: 'Kho',
+        sortable: true,
+        option: { items: WAREHOUSES, valueField: 'id', displayField: 'name' },
+      },
+      { field: 'total', type: 'number', title: 'Tổng tiền', sortable: true, filter: { type: 'split-number' } },
+      { field: 'createdAt', type: 'date', title: 'Ngày tạo', sortable: true },
+      { field: 'createdBy', type: 'string', title: 'Người tạo', sortable: true, filter: { disabled: true } },
+      { field: 'items', type: 'number', title: 'Số sản phẩm', sortable: true, filter: { disabled: true } },
+      { field: 'discount', type: 'number', title: 'Giảm giá (%)', sortable: true, filter: { disabled: true } },
+      { field: 'paidAt', type: 'date', title: 'Ngày thanh toán', sortable: true, filter: { disabled: true } },
+      { field: 'region', type: 'string', title: 'Vùng', sortable: true, filter: { disabled: true } },
+      { field: 'phone', type: 'string', title: 'Điện thoại', sortable: true, filter: { disabled: true }, invisible: true },
+    ],
+  };
+}`,
+  },
   "components/table/example-nhap-lieu-inline-bao-loi": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -15970,6 +16137,56 @@ export class TableUnknownTotalDemoComponent {
     this.sourceSize.set(32);
     this.#write('Khôi phục 32 sự kiện');
   }
+}`,
+  },
+  "components/table/example-the-tu-suy-tu-cot": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SD_TABLE_CONFIGURATION, SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Product {
+  sku: string;
+  name: string;
+  category: string;
+  stock: number;
+  price: number;
+  updatedAt: string;
+}
+
+const PRODUCTS: Product[] = [
+  { sku: 'SP-01', name: 'Bàn phím cơ', category: 'Phụ kiện', stock: 42, price: 1250000, updatedAt: '2026/10/12' },
+  { sku: 'SP-02', name: 'Chuột không dây', category: 'Phụ kiện', stock: 8, price: 390000, updatedAt: '2026/10/20' },
+  { sku: 'SP-03', name: 'Màn hình 27"', category: 'Thiết bị', stock: 5, price: 6490000, updatedAt: '2026/10/03' },
+  { sku: 'SP-04', name: 'Tai nghe', category: 'Âm thanh', stock: 17, price: 890000, updatedAt: '2026/10/28' },
+];
+
+/**
+ * \`SD_TABLE_CONFIGURATION.mobile.autoTemplate\`: a table without a card body gets cards derived from its visible
+ * columns. The table sorts but has no filter, so the sort button sits in the top row.
+ */
+@Component({
+  selector: 'app-table-mobile-auto-demo',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [SdTable],
+  providers: [{ provide: SD_TABLE_CONFIGURATION, useValue: { mobile: { autoTemplate: true } } }],
+  templateUrl: './table-mobile-auto-example.component.html',
+})
+export class TableMobileAutoDemoComponent {
+  readonly option: SdTableOption<Product> = {
+    type: 'local',
+    rowKey: 'sku',
+    items: () => PRODUCTS,
+    sort: { enable: true },
+    reload: { visible: true },
+    filter: { disabled: true },
+    columns: [
+      { field: 'sku', type: 'string', title: 'Mã', sortable: true },
+      { field: 'name', type: 'string', title: 'Sản phẩm', sortable: true },
+      { field: 'category', type: 'string', title: 'Nhóm', sortable: true },
+      { field: 'stock', type: 'number', title: 'Tồn kho', sortable: true },
+      { field: 'price', type: 'number', title: 'Giá bán', sortable: true },
+      { field: 'updatedAt', type: 'date', title: 'Cập nhật', sortable: true },
+    ],
+  };
 }`,
   },
   "components/table/example-thiet-lap-cot": {
@@ -30217,6 +30434,12 @@ Bởi Nguyễn Văn A"></sd-badge>
 <p class="table-note">pagingReq gửi đi (đổi Khung / Thanh bộ lọc trong Thiết lập › Bộ lọc: cùng thao tác cho ra cùng payload):</p>
 <pre class="table-paging-req" data-autoid="query-bar-demo-paging-req">{{ pagingReq()?.filters | json }}</pre>`,
   },
+  "components/table/example-loc-va-sap-xep-tren-dien-thoai": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-loc-va-sap-xep-tren-dien-thoai"],
+    html: `<!-- On a phone (< 768px): chip row, filter and sort sheets, ⋮ Tools, pull to refresh, and cards built from data. -->
+<sd-table autoId="mobile-orders" [option]="option"></sd-table>
+<p class="T14R mt-12" role="status">{{ log() }}</p>`,
+  },
   "components/table/example-mobile-chon-du-lieu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Mobile chọn dữ liệu"
@@ -30467,7 +30690,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Thẻ mobile và thao tác"
     [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-    note="Nút Thêm canh giữa phía trên card. Lề card hai bên cố định, checkbox nhỏ nằm đè góc phải border. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng; nút Công cụ ở footer mở sheet tải lại, xuất, lọc và sắp xếp.">
+    note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.">
     <sd-table autoId="mobile-employees" [option]="mobileOption">
       <ng-template sdTableCommandHeaderDef>
         <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
@@ -30486,6 +30709,11 @@ Bởi Nguyễn Văn A"></sd-badge>
     </sd-table>
     <p class="T14R mt-12" role="status">{{ mobileLog() }}</p>
   </demo-section>`,
+  },
+  "components/table/example-the-tu-suy-tu-cot": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-the-tu-suy-tu-cot"],
+    html: `<!-- On a phone (< 768px): cards derived from the columns; sort button and ⋮ in the top row, pull to refresh. -->
+<sd-table autoId="mobile-auto" [option]="option"></sd-table>`,
   },
   "components/table/example-thiet-lap-cot": {
     ...SHOWCASE_PAGE_SOURCES["components/table/example-thiet-lap-cot"],

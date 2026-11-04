@@ -55,6 +55,8 @@ export class TableExportService {
 
   // Phần trăm tiến độ export; null = đang rảnh (nút hiện nhãn mặc định).
   #exportPercent = signal<number | null>(null);
+  /** Progress of a paged export in percent; `null` while unknown. */
+  readonly exportPercent = this.#exportPercent.asReadonly();
 
   // WHY computed + i18n: trước đây đây là signal('Export') hard-code tiếng Anh nên
   // app chạy tiếng Việt vẫn hiện "Export". Đọc qua I18nService.t() để nhãn nút bám

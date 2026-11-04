@@ -48,6 +48,13 @@ export interface ISdTableConfiguration {
   };
   /** Lớp hiển thị khi đang tải cho mọi bảng; `option.loading` của từng bảng thắng theo từng field. */
   loading?: SdTableOptionLoading;
+  mobile?: {
+    /**
+     * Phone cards for tables without a card body (`sdTableRowMobileDef` or `mobile.template`): the card is built from
+     * the visible columns. `mobile.template: false` opts a table out. Mặc định là `false`.
+     */
+    autoTemplate?: boolean;
+  };
 }
 
 export const DEFAULT_TABLE_CONFIG: ISdTableConfiguration = {

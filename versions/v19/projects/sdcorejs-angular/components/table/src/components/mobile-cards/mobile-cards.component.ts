@@ -32,12 +32,51 @@ import { SdTableMobileActionsComponent } from './mobile-actions.component';
 import { collectFormattedTreeRows } from '../../services/tree/tree.util';
 import type { AggregateRow } from '../../services/table-aggregate.util';
 import { TABLE_SKELETON_ROWS } from '../../services/table-loading/table-loading.util';
+import type { SdTableColumnAnyRow } from '../../models/table-column.model';
+import { leafColumns } from '../../services/column-leaf.util';
+import {
+  autoMobileView,
+  resolveMobileView,
+  shownLeafColumns,
+  type SdTableMobileBody,
+  type SdTableMobileIssue,
+  type SdTableMobileView,
+  warnMobileOnce,
+} from '../../services/mobile/mobile-view.util';
+import { SdTableMobileCardDataComponent } from './mobile-card-data.component';
 
 /** A phone screen shows about three cards; more skeleton cards would only be scrolled past. */
 const MOBILE_SKELETON_CARDS = 3;
 
+type CardBody<T> =
+  | { kind: 'template'; templateRef: TemplateRef<SdTableRowMobileDefContext<T>> }
+  | { kind: 'data'; view: SdTableMobileView };
+
+/** Last `mobile.template.data` result of a row, and the card resolved from it. */
+interface DataEntry {
+  fn: unknown;
+  /** The table item: a reload builds new ones, also around the same row objects. */
+  row: unknown;
+  item: unknown;
+  index: number;
+  revision: number;
+  selected: boolean;
+  /** `undefined` when the function threw or returned no object: the row uses the derived card. */
+  raw?: Record<string, unknown>;
+  columns: readonly SdTableColumnAnyRow[];
+  view: SdTableMobileView;
+}
+
+const ISSUE_MESSAGES: Record<SdTableMobileIssue['kind'], string> = {
+  'unknown-field': 'mobile.template.data names a field that is not a leaf column; the slot is dropped:',
+  'badge-field': 'mobile.template.data badge field has no useBadge; it shows as text:',
+  layout: 'mobile.template.layout is not supported; the card layout is used:',
+};
+
 interface Card<T> {
   row: SdTableItem<T>;
+  /** Card body of a data row; `undefined` for group and summary rows. */
+  body?: CardBody<T>;
   context: SdTableRowMobileDefContext<T>;
   label: string;
   selectLabel: string;
@@ -48,8 +87,10 @@ interface Card<T> {
   expandDisabled: boolean;
 }
 
+// why: `.sd-mobile-card-select` — the checkbox touch target fills the 44px zone outside the input; a tap there must
+// not also reach the card, which would toggle the row back in selection mode.
 const INTERACTIVE =
-  'a[href],button,input,select,textarea,summary,label,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="textbox"],[tabindex]:not([tabindex="-1"]),sd-button,sd-table,[cdkDragHandle]';
+  'a[href],button,input,select,textarea,summary,label,[contenteditable]:not([contenteditable="false"]),[role="button"],[role="link"],[role="checkbox"],[role="radio"],[role="switch"],[role="textbox"],[tabindex]:not([tabindex="-1"]),sd-button,sd-table,[cdkDragHandle],.sd-mobile-card-select';
 
 @Component({
   selector: 'sd-table-mobile-cards',
@@ -64,12 +105,15 @@ const INTERACTIVE =
     SdIcon,
     SdTranslatePipe,
     SdTableMobileActionsComponent,
+    SdTableMobileCardDataComponent,
   ],
   templateUrl: './mobile-cards.component.html',
   styleUrl: './mobile-cards.component.scss',
 })
 export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   readonly table = input.required<SdTable<T>>();
+  /** Card body the table resolved (`sdTableRowMobileDef`, `mobile.template` or `autoTemplate`). */
+  readonly body = input<SdTableMobileBody<T>>();
   readonly rows = input.required<SdTableItem<T>[]>();
   readonly dataRows = input<SdTableItem<T>[]>();
   readonly aggregateTemplate = input<TemplateRef<{ summary: AggregateRow<T> }>>();
@@ -101,14 +145,38 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   /** The cards on screen are being replaced: dim them and ignore taps (scrolling and the keyboard still work). */
   readonly dimmed = computed(() => this.table().loadingView() === 'refresh' && this.table().loadingSettings().dim);
 
+  /**
+   * Columns `mobile.template.data` may name: every leaf column of the option, hidden ones included, with the settings
+   * version (renamed title, width) when it is on screen.
+   */
+  readonly #dataColumns = computed<SdTableColumnAnyRow[]>(() => {
+    const configured = new Map(
+      this.table()
+        .mobileColumns()
+        .map(column => [column.field, column])
+    );
+    return leafColumns(this.option().columns).map(column => configured.get(column.field) ?? column);
+  });
+  /** Card derived from the columns on screen: `autoTemplate`, and rows whose `data` threw. */
+  readonly #autoView = computed(() => {
+    const config = this.table().configuration();
+    return autoMobileView(shownLeafColumns(config?.firstColumns, config?.secondColumns), this.option().rowKey);
+  });
+  /** `mobile.template.data` cache by row id: called again only when the row, its index or its selection changes. */
+  #dataCache = new Map<string, DataEntry>();
+
   readonly cards = computed<Card<T>[]>(() => {
     const table = this.table();
     table.selectedTableItems();
     table.treeRevision();
     table.expandRevision();
     const option = this.option();
+    const mobileBody = this.body();
+    const revision = table.dataRevision();
+    const previous = this.#dataCache;
+    const cache = new Map<string, DataEntry>();
     let index = 0;
-    return this.rows().map(row => {
+    const cards = this.rows().map(row => {
       const dataIndex = table.isDataRow(0, row) ? index++ : -1;
       if (dataIndex === -1)
         return {
@@ -128,13 +196,23 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
         option.mobile?.rowLabel?.(row.data)?.trim() ||
         keyLabel ||
         this.#i18n.t('core.component.table.mobile.row', { index: table.pageOffset() + dataIndex + 1 });
+      const selected = !!row.meta.selector?.isSelected;
+      let body: CardBody<T> | undefined;
+      if (mobileBody?.kind === 'template') body = { kind: 'template', templateRef: mobileBody.templateRef };
+      else if (mobileBody?.kind === 'auto') body = { kind: 'data', view: this.#autoView() };
+      else if (mobileBody?.kind === 'data') {
+        const entry = this.#dataEntry(previous.get(row.meta.id), mobileBody, row, dataIndex, selected, revision);
+        cache.set(row.meta.id, entry);
+        body = { kind: 'data', view: entry.view };
+      }
       return {
         row,
+        body,
         label,
         context: {
           item: row.data,
           index: dataIndex,
-          selected: !!row.meta.selector?.isSelected,
+          selected,
           selectionDisabled: !!row.meta.selector?.disabled || !row.meta.selector?.visible,
           autoId: table.autoId() ? `${table.autoId()}-mobile-row-${row.meta.id}` : undefined,
         },
@@ -146,7 +224,54 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
         expandDisabled: !!option.expand?.disabled?.(row.data),
       };
     });
+    // why: rows that left the page drop out of the cache.
+    this.#dataCache = cache;
+    return cards;
   });
+
+  /**
+   * Card of one row from `mobile.template.data`. The function runs again when the row (a reload, `dataRevision`), its
+   * index, its selection or the function itself changed; a change of columns or settings only re-checks the slots.
+   */
+  #dataEntry(
+    cached: DataEntry | undefined,
+    body: Extract<SdTableMobileBody<T>, { kind: 'data' }>,
+    row: SdTableItem<T>,
+    index: number,
+    selected: boolean,
+    revision: number
+  ): DataEntry {
+    const columns = this.#dataColumns();
+    if (
+      cached &&
+      cached.fn === body.data &&
+      cached.row === row &&
+      cached.item === row.data &&
+      cached.index === index &&
+      cached.revision === revision &&
+      cached.selected === selected
+    ) {
+      if (cached.columns !== columns) return { ...cached, columns, view: this.#viewOf(cached.raw, body.layout, columns) };
+      return cached;
+    }
+    let raw: Record<string, unknown> | undefined;
+    try {
+      // why: untracked — signals the consumer reads in `data` must not become dependencies of the card list.
+      const result = untracked(() => body.data(row.data, { index, selected })) as unknown;
+      if (!result || typeof result !== 'object') throw new TypeError('mobile.template.data must return an object');
+      raw = result as Record<string, unknown>;
+    } catch (error) {
+      warnMobileOnce(this.table(), 'data-error', 'mobile.template.data threw; those rows use the card derived from the columns.', error);
+    }
+    return { fn: body.data, row, item: row.data, index, revision, selected, raw, columns, view: this.#viewOf(raw, body.layout, columns) };
+  }
+
+  #viewOf(raw: Record<string, unknown> | undefined, layout: unknown, columns: readonly SdTableColumnAnyRow[]): SdTableMobileView {
+    if (!raw) return this.#autoView();
+    const { view, issues } = resolveMobileView(columns, layout, raw);
+    for (const issue of issues) warnMobileOnce(this.table(), `${issue.kind}:${issue.value}`, ISSUE_MESSAGES[issue.kind], issue.value);
+    return view;
+  }
 
   readonly selectionSummary = computed(() => {
     const total = this.selected().length;

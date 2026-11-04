@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="design_doc_mode" content="canvas">
+<title>sd-table trên điện thoại: bộ lọc và thẻ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons&amp;display=block" rel="stylesheet">
+<style>
+body{margin:0;background:#f4f4f1;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px;color:#1a1b1f}
+.mi{font-family:'Material Icons';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;display:inline-block;overflow:hidden}
+</style>
+</helmet>
+<section data-screen-label="Vòng 4 · Nút Công cụ" style="padding:48px 40px 56px;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6;display:flex;flex-direction:column;gap:40px;border-bottom:1px solid #dddcd6">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+<span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">VÒNG 4 · NÚT CÔNG CỤ</span>
+<h2 style="margin:0;font-weight:600;font-size:32px;line-height:1.2;letter-spacing:-0.01em">Nút Công cụ trên điện thoại</h2>
+<p style="margin:0;color:#3a3c42;font-size:16px;text-wrap:pretty">Sheet Công cụ hiện gồm Làm mới, Xuất, Lọc, Sắp xếp, Thiết lập (<code>mobileToolsActions</code>). Khi Lọc chuyển ra hàng chip (<a href="#1c">1c</a>), sheet còn bốn mục.</p>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:#3a3c42;font-size:14px">
+<li>Icon <code>tune</code> trùng với chip bộ lọc ở <a href="#1c">1c</a>: hai nút trông giống nhau nhưng mở hai thứ khác nhau.</li>
+<li>Sắp xếp mất 3 lần chạm (Công cụ → Sắp xếp → cột), và danh sách không cho biết đang sắp theo cột nào, chiều nào.</li>
+<li>Bấm một cột thì xoay vòng tăng → giảm → bỏ (<code>sort({ start: 'asc', disableClear: false })</code>), không chọn thẳng chiều được.</li>
+<li>Nút có chữ chiếm khoảng 110px chân trang, ngay cạnh phân trang.</li>
+</ul>
+</header>
+
+<div id="4a" style="display:flex;flex-direction:column;gap:14px;width:408px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">4a</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Giữ ở chân trang, sắp xếp nằm ngay trong sheet</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Icon đổi sang <code>more_horiz</code>. Sheet mở ra là thấy luôn danh sách cột để sắp xếp và nút chọn chiều; bên dưới là các hành động.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto"><div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div><div style="flex:none;padding:4px 16px 10px;display:flex"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div><div style="flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;border-bottom:1px solid #e3e4ea;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div><div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ orders }}" as="o" hint-placeholder-count="5"><div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#5f6368">more_horiz</span>
+</div></sc-for></div><div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">more_horiz</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div><div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div><div style="position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column;padding-bottom:8px"><span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span><div style="flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 20px"><span style="font-size:20px;font-weight:500;line-height:28px">Công cụ</span><span style="flex:1"></span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:4px 16px 2px 20px"><span style="font-size:12px;font-weight:500;color:#5f6368">Sắp xếp theo</span><div style="display:flex;flex:none;border:1px solid #74777f;border-radius:16px;overflow:hidden;height:32px;box-sizing:border-box">
+<span style="padding:0 12px;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:#44474e"><span class="mi" style="font-size:16px">arrow_upward</span>Tăng</span>
+<span style="border-left:1px solid #74777f;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;background:#d7e3f8;color:#101c2b"><span class="mi" style="font-size:16px">check</span>Giảm</span></div></div><div style="display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Ngày tạo</span></div><div style="display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #005cbb;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:#005cbb"></span></span></span><span style="font-weight:500">Tổng tiền</span></div><div style="display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Mã đơn</span></div><div style="display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Khách hàng</span></div><div style="height:1px;background:#e3e4ea;margin:6px 0"></div><div style="display:flex;align-items:center;gap:16px;min-height:48px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">table_view</span>Xuất Excel</div><div style="display:flex;align-items:center;gap:16px;min-height:48px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">description</span>Xuất CSV</div><div style="display:flex;align-items:center;gap:16px;min-height:48px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">refresh</span>Làm mới</div><div style="display:flex;align-items:center;gap:16px;min-height:48px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">settings</span>Thiết lập cột</div></div></div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Sắp xếp còn 2 lần chạm, chọn thẳng được chiều.</li><li>Ít thay đổi bố cục bảng.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Đóng sheet rồi thì không còn thấy đang sắp theo gì.</li><li>Sheet dài khi bảng có nhiều cột sắp xếp được.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li><code>mobileToolsActions</code>: bỏ <code>tool-filter</code>; <code>tool-sort</code> render thành nhóm radio thay vì menu con.</li><li>Icon nút: <code>tune</code> → <code>more_horiz</code>.</li></ul></div></div>
+</div>
+
+<div id="4b" style="display:flex;flex-direction:column;gap:14px;width:1176px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">4b</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Sắp xếp thành chip, Công cụ lên cạnh ô tìm kiếm</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty;max-width:760px">Chip sắp xếp đứng sau chip bộ lọc, luôn cho thấy cột và chiều đang dùng. Các hành động còn lại vào nút ⋮ cạnh ô tìm kiếm. Chân trang chỉ còn phân trang.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto"><figure style="margin:0;display:flex;flex-direction:column;gap:10px"><div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div><div style="flex:none;padding:4px 4px 10px 16px;display:flex;align-items:center;gap:4px"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_vert</span></div><div style="flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;border-bottom:1px solid #e3e4ea;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;height:32px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">arrow_downward</span>Tổng tiền</span><span style="flex:none;width:1px;height:20px;background:#c4c6d0"></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div><div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ orders }}" as="o" hint-placeholder-count="5"><div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#5f6368">more_horiz</span>
+</div></sc-for></div><div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 16px;background:#ffffff"><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div></div><figcaption style="font-size:13px;color:#3a3c42;max-width:360px">Danh sách, đang sắp theo Tổng tiền (khác mặc định). Vạch dọc ngăn chip sắp xếp với các chip lọc.</figcaption></figure><figure style="margin:0;display:flex;flex-direction:column;gap:10px"><div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div><div style="flex:none;padding:4px 4px 10px 16px;display:flex;align-items:center;gap:4px"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_vert</span></div><div style="flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;border-bottom:1px solid #e3e4ea;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;height:32px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">arrow_downward</span>Tổng tiền</span><span style="flex:none;width:1px;height:20px;background:#c4c6d0"></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div><div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ o3 }}" as="o" hint-placeholder-count="3"><div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#5f6368">more_horiz</span>
+</div></sc-for></div><div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 16px;background:#ffffff"><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div><div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div><div style="position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column;padding-bottom:8px"><span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span><div style="flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 20px"><span style="font-size:20px;font-weight:500;line-height:28px">Sắp xếp</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Bỏ sắp xếp</span></div><div style="padding:4px 20px 8px"><div style="display:flex;border:1px solid #74777f;border-radius:20px;overflow:hidden;height:40px;box-sizing:border-box">
+<span style="flex:1;justify-content:center;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;color:#44474e"><span class="mi" style="font-size:16px">arrow_upward</span>Tăng dần</span>
+<span style="flex:1;justify-content:center;border-left:1px solid #74777f;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500;background:#d7e3f8;color:#101c2b"><span class="mi" style="font-size:16px">check</span>Giảm dần</span></div></div><div style="display:flex;align-items:center;gap:4px;min-height:48px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Ngày tạo</span></div><div style="display:flex;align-items:center;gap:4px;min-height:48px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #005cbb;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:#005cbb"></span></span></span><span style="font-weight:500">Tổng tiền</span></div><div style="display:flex;align-items:center;gap:4px;min-height:48px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Mã đơn</span></div><div style="display:flex;align-items:center;gap:4px;min-height:48px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Khách hàng</span></div><div style="display:flex;align-items:center;gap:4px;min-height:48px;padding:0 8px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span><span style="">Hạn giao</span></div></div></div><figcaption style="font-size:13px;color:#3a3c42;max-width:360px">Bấm chip sắp xếp. Chọn cột và chiều xong là áp dụng ngay, như hiện tại.</figcaption></figure><figure style="margin:0;display:flex;flex-direction:column;gap:10px"><div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div><div style="flex:none;padding:4px 4px 10px 16px;display:flex;align-items:center;gap:4px"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_vert</span></div><div style="flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;border-bottom:1px solid #e3e4ea;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;height:32px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">arrow_downward</span>Tổng tiền</span><span style="flex:none;width:1px;height:20px;background:#c4c6d0"></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div><div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ orders }}" as="o" hint-placeholder-count="5"><div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#5f6368">more_horiz</span>
+</div></sc-for></div><div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 16px;background:#ffffff"><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div><div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div><div style="position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column;padding-bottom:8px"><span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span><div style="flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 20px"><span style="font-size:20px;font-weight:500;line-height:28px">Công cụ</span><span style="flex:1"></span></div><div style="display:flex;align-items:center;gap:16px;min-height:56px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">table_view</span>Xuất Excel</div><div style="display:flex;align-items:center;gap:16px;min-height:56px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">description</span>Xuất CSV</div><div style="display:flex;align-items:center;gap:16px;min-height:56px;padding:0 20px"><span class="mi" style="font-size:22px;color:#44474e">settings</span>Thiết lập cột</div></div></div><figcaption style="font-size:13px;color:#3a3c42;max-width:360px">Bấm ⋮. Xuất có 2 lựa chọn thì trải phẳng, không cần menu con. Làm mới chuyển thành kéo xuống.</figcaption></figure></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<strong style="font-weight:600;font-size:15px;line-height:1.4">Chip sắp xếp chiếm bao nhiêu chỗ</strong>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty;max-width:760px">Chiều dọc không thêm: hàng chip đã có từ <a href="#1c">1c</a>. Chiều ngang giữ nhỏ nhất có thể bằng cách chỉ hiện tên cột khi người dùng đã đổi sắp xếp. Bảng không có bộ lọc thì không dựng hàng chip chỉ để chứa sắp xếp.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:8px;width:360px;max-width:100%"><span style="font-size:13px;color:#3a3c42">Sắp xếp mặc định: chip chỉ có icon, 32px</span><div style="box-sizing:border-box;background:#ffffff;border:1px solid #d5d6dc;border-radius:12px;padding:12px 0 0;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121"><div style="display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;width:32px;height:32px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center"><span class="mi" style="font-size:18px;color:#44474e">swap_vert</span></span><span style="flex:none;width:1px;height:20px;background:#c4c6d0"></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px;width:360px;max-width:100%"><span style="font-size:13px;color:#3a3c42">Đã đổi sắp xếp: chiều và tên cột, khoảng 115px</span><div style="box-sizing:border-box;background:#ffffff;border:1px solid #d5d6dc;border-radius:12px;padding:12px 0 0;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121"><div style="display:flex;align-items:center;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat"><span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span><span style="flex:none;height:32px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">arrow_downward</span>Tổng tiền</span><span style="flex:none;width:1px;height:20px;background:#c4c6d0"></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span><span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px;width:360px;max-width:100%"><span style="font-size:13px;color:#3a3c42">Không có bộ lọc: nút icon cạnh ⋮, không có hàng chip</span><div style="box-sizing:border-box;background:#ffffff;border:1px solid #d5d6dc;border-radius:12px;padding:6px 0;overflow:hidden;font:400 14px/20px Roboto,sans-serif;color:#212121"><div style="display:flex;align-items:center;gap:0;padding:0 4px 0 12px"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn</div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">swap_vert</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_vert</span></div></div></div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thấy ngay khi đang sắp khác mặc định.</li><li>Đổi chiều 2 lần chạm, đổi cột 2 lần chạm.</li><li>Các control của danh sách nằm cùng một chỗ ở đầu trang.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Hàng chip bớt chỗ cho chip lọc: 32px khi mặc định, khoảng 115px khi đã đổi.</li><li>Nút ⋮ không có chữ, khó đoán hơn nút Công cụ có chữ.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li>Chip sắp xếp: hiện khi <code>sort.enable</code> và có cột sắp xếp được. Sắp xếp mặc định: chỉ icon; đã đổi: icon chiều và tên cột.</li><li>Bỏ mục Làm mới. Kéo xuống ở đầu danh sách để làm mới, khi <code>reload.visible</code>.</li><li>Nút ⋮ thay <code>sd-mobile-tools-trigger</code>; <code>aria-label</code> dùng <code>core.component.table.mobile.tools</code>.</li><li>Menu con Xuất trải phẳng khi có ≤ 2 mục.</li><li>Không còn mục nào thì ẩn nút ⋮.</li></ul></div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+<div style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#e3f4e8;border-radius:8px;font-size:14px;color:#1b4d2c"><span><strong style="font-weight:600">Đề xuất:</strong> <a href="#4b">4b</a>, vì nó đi cùng hàng chip của <a href="#1c">1c</a>.</span></div>
+<strong style="font-weight:600;font-size:18px;line-height:1.3">Đã chốt</strong>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Làm mới: kéo xuống để làm mới, bỏ mục Làm mới khỏi sheet Công cụ.</li>
+<li>Chip sắp xếp: sắp xếp mặc định chỉ hiện icon; tên cột chỉ hiện khi đã đổi.</li>
+<li>Sheet sắp xếp giữ như mẫu thứ hai của <a href="#4b">4b</a>: một cột, chọn chiều Tăng dần / Giảm dần, áp dụng ngay.</li>
+<li>Chỉ sắp theo một cột trên điện thoại.</li>
+<li>Cột đang ẩn trong Thiết lập vẫn có trong danh sách sắp xếp.</li>
+</ul>
+</div>
+
+</section>
+<section data-screen-label="Vòng 3 · API template" style="padding:48px 40px 56px;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6;display:flex;flex-direction:column;gap:40px;border-bottom:1px solid #dddcd6">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+<span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">VÒNG 3 · API TEMPLATE</span>
+<h2 style="margin:0;font-weight:600;font-size:32px;line-height:1.2;letter-spacing:-0.01em"><code style="font-size:.8em">mobile.template</code>: TemplateRef hoặc <code style="font-size:.8em">{ layout, data: (item) =&gt; … }</code></h2>
+<p style="margin:0;color:#3a3c42;font-size:16px;text-wrap:pretty">Thay cho <code>mobile.slots</code> / <code>mobile.layout</code> ở <a href="#2b">2b</a>. <code>layout</code> nằm ngoài hàm, cố định cho cả bảng; <code>data</code> là hàm theo dòng, kiểu trả về theo <code>layout</code>. Bỏ <code>layout</code> nghĩa là <code>'card'</code>, cố định trong kiểu của thư viện; <code>SD_TABLE_CONFIGURATION</code> không có tùy chọn layout.</p>
+<div style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#e3f4e8;border-radius:8px;font-size:14px;color:#1b4d2c">
+<span><strong style="font-weight:600">Đã chốt:</strong> layout ra ngoài hàm, giữ kiểu trả về của <code>data</code> qua union (<a href="#3b">3b</a>).</span>
+<span><strong style="font-weight:600">Đã chốt:</strong> có template thì không ẩn field theo Thiết lập; thẻ tự suy thì ẩn (<a href="#3d">3d</a>).</span>
+</div>
+</header>
+
+<div id="3a" style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3a</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Khai báo nào cho ra gì</strong></div>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:640px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:10px 16px;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Khai báo</span><span>Trên điện thoại</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:12px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>template: { layout: 'list', data: row =&gt; ({ … }) }</code></span><span>Bố cục list; <code>data</code> trả <code>SdTableMobileListData</code></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:12px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>template: { layout: 'card', data }</code> hoặc <code>{ data }</code></span><span>Bố cục card; <code>data</code> trả <code>SdTableMobileCardData</code></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:12px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>template: TemplateRef</code> hoặc <code>sdTableRowMobileDef</code></span><span>Template của consumer trong khung card</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:12px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>template: false</code></span><span>Bảng desktop</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:12px 16px;align-items:start"><span>Không khai báo</span><span>Bảng desktop như hiện tại. Bật <code>SD_TABLE_CONFIGURATION.mobile.autoTemplate</code> thì tự suy từ columns (<a href="#2c">2c</a>), vẽ bằng card.</span></div>
+</div>
+</div>
+</div>
+
+<div id="3b" style="display:flex;flex-direction:column;gap:14px;max-width:1120px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3b</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Kiểu và ví dụ</strong></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;align-items:start">
+<pre style="margin:0;padding:16px 18px;background:#1a1b1f;color:#e8e8e3;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;overflow-x:auto">export type SdTableMobileField&lt;T&gt; = NestedKeyOf&lt;T&gt;;
+export type SdTableMobileText&lt;T&gt; =
+  SdTableMobileField&lt;T&gt; | { text: string };
+
+/** Phần chung của mọi layout. */
+export interface SdTableMobileData&lt;T&gt; {
+  title: SdTableMobileText&lt;T&gt;;
+  subtitle?: SdTableMobileText&lt;T&gt;;
+  /** field: cột phải có useBadge */
+  badge?: SdTableMobileField&lt;T&gt; | SdBadgeData;
+  fields?: SdTableMobileField&lt;T&gt;[];
+}
+export interface SdTableMobileCardData&lt;T&gt;
+  extends SdTableMobileData&lt;T&gt; {
+  /** Ô đầu lưới, chữ đậm */
+  highlight?: SdTableMobileField&lt;T&gt;;
+  /** Số ô trước nút Thêm. Mặc định 4 */
+  maxFields?: number;
+  trailing?: never;
+}
+export interface SdTableMobileListData&lt;T&gt;
+  extends SdTableMobileData&lt;T&gt; {
+  /** Giá trị bên phải dòng 1 */
+  trailing?: SdTableMobileField&lt;T&gt;;
+  highlight?: never;
+  maxFields?: never;
+}
+
+export interface SdTableMobileDataContext {
+  index: number;
+  selected: boolean;
+}
+type DataFn&lt;T, D&gt; =
+  (item: T, context: SdTableMobileDataContext) =&gt; D;
+
+export type SdTableMobileTemplate&lt;T&gt; =
+  | TemplateRef&lt;SdTableRowMobileDefContext&lt;T&gt;&gt;
+  /** Bỏ layout = 'card' */
+  | { layout?: 'card'; data: DataFn&lt;T, SdTableMobileCardData&lt;T&gt;&gt; }
+  | { layout: 'list'; data: DataFn&lt;T, SdTableMobileListData&lt;T&gt;&gt; };
+
+// SdTableOption&lt;T&gt;
+mobile?: {
+  rowLabel?: (row: T) =&gt; string;
+  template?: SdTableMobileTemplate&lt;T&gt; | false;
+};
+
+// SD_TABLE_CONFIGURATION: không có layout
+mobile?: {
+  autoTemplate?: boolean;  // false
+};</pre>
+<div style="display:flex;flex-direction:column;gap:12px">
+<pre style="margin:0;padding:16px 18px;background:#1a1b1f;color:#e8e8e3;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;overflow-x:auto">mobile: {
+  rowLabel: row =&gt; row.code,
+  template: {
+    layout: 'card',
+    // row: Order, kiểu trả về: SdTableMobileCardData&lt;Order&gt;
+    data: row =&gt; ({
+      title: 'code',
+      subtitle: 'customerName',
+      badge: row.locked
+        ? { title: 'Đã khóa', color: 'error' }
+        : 'status',          // cột status có useBadge
+      highlight: 'total',
+      fields: ['createdAt', 'warehouse', 'createdBy'],
+    }),
+  },
+},</pre>
+<pre style="margin:0;padding:16px 18px;background:#1a1b1f;color:#e8e8e3;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;overflow-x:auto">// Tách hàm ra ngoài: ghi kiểu trả về để IDE gợi ý
+const orderCard &#61; (row: Order): SdTableMobileCardData&lt;Order&gt; =&gt; ({
+  title: 'code',
+  badge: 'status',
+  highlight: 'total',
+});
+
+template: { data: orderCard },   // bỏ layout = 'card'</pre>
+<pre style="margin:0;padding:16px 18px;background:#2a1d1d;color:#f3dede;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;overflow-x:auto">// Lỗi lúc build
+{ data: () =&gt; ({ title: 'cod' }) }
+//  ✗ 'cod' không thuộc NestedKeyOf&lt;Order&gt;
+{ layout: 'list', data: () =&gt; ({ title: 'code', highlight: 'total' }) }
+//  ✗ highlight?: never ở SdTableMobileListData
+{ data: () =&gt; ({ title: 'code', trailing: 'total' }) }
+//  ✗ bỏ layout là 'card'; trailing?: never
+{ layout: 'list', data: orderCard }
+//  ✗ SdTableMobileCardData không gán được cho list</pre>
+<p style="margin:0;font-size:13.5px;color:#3a3c42;text-wrap:pretty">TypeScript không báo thuộc tính thừa trong object trả về từ arrow function, kể cả khi hàm có kiểu ngữ cảnh. Vì vậy mỗi kiểu data khai báo trường của layout khác là <code>?: never</code>; thiếu bước này, <code>highlight</code> trong list vẫn build được.</p>
+</div>
+</div>
+</div>
+
+<div id="3c" style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3c</span><strong style="font-weight:600;font-size:18px;line-height:1.3">data theo layout</strong></div>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:560px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Trường</span><span>card · cũng là khi bỏ layout</span><span>list</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">title</code><span>Dòng 1, đậm. Bắt buộc</span><span>Dòng 1, đậm. Bắt buộc</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">subtitle</code><span>Dòng 2</span><span>Dòng 2</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">badge</code><span>Cạnh title</span><span>Bên phải, dưới trailing</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">fields</code><span>Lưới 2 cột, phần dư vào Thêm</span><span>Ô đầu ghép sau subtitle; còn lại xem qua Chi tiết</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">highlight</code><span>Ô đầu lưới, đậm</span><span style="color:#9a9ca3">—</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6;align-items:start"><code style="justify-self:start;align-self:start">maxFields</code><span>Mặc định 4</span><span style="color:#9a9ca3">—</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;align-items:start"><code style="justify-self:start;align-self:start">trailing</code><span style="color:#9a9ca3">—</span><span>Bên phải dòng 1</span></div>
+</div>
+</div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi kiểu data khai báo trường riêng của layout khác là <code>?: never</code> (<a href="#3b">3b</a>). Layout mới: thêm một nhánh có <code>layout</code> bắt buộc, kiểu data <code>extends SdTableMobileData</code>, và bổ sung <code>?: never</code> hai chiều. Khai báo đang có không phải sửa.</p>
+</div>
+
+<div id="3d" style="display:flex;flex-direction:column;gap:14px;max-width:1000px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">3d</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Kiểm tra tên trường và hiển thị</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty;max-width:900px">Tên field được kiểm tra lúc build qua <code>NestedKeyOf&lt;T&gt;</code>. Điều kiện "badge phải là cột có <code>useBadge</code>" không kiểm tra lúc build được: <code>columns</code> có kiểu <code>SdTableColumn&lt;T&gt;[]</code>, không giữ lại cột nào có <code>useBadge</code>. Phần này kiểm tra lúc chạy.</p>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:760px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Kiểm tra</span><span>Build</span><span>Lúc chạy</span><span>Khi sai</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span>Field là leaf column trong <code>columns</code> (kể cả cột con của <code>children</code>)</span><span style="color:#1b6b3a">Một phần</span><span style="color:#1b6b3a">Có</span><span>Bỏ slot đó. Thiếu title: dùng <code>rowLabel</code>, rồi <code>rowKey</code></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>badge</code> dạng field: cột có <code>useBadge</code></span><span style="color:#8a5300">Không</span><span style="color:#1b6b3a">Có</span><span>Hiện giá trị như chữ thường</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>badge</code> dạng <code>SdBadgeData</code></span><span style="color:#1b6b3a">Có</span><span style="color:#9a9ca3">—</span><span>—</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span>Trường thuộc đúng layout (vd. <code>highlight</code> chỉ ở card)</span><span style="color:#1b6b3a">Có</span><span style="color:#9a9ca3">—</span><span>—</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span><code>layout</code> là <code>'card'</code> / <code>'list'</code> (consumer JS)</span><span style="color:#1b6b3a">Có</span><span style="color:#1b6b3a">Có</span><span>Dùng card</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start;border-bottom:1px solid #ecebe6"><span>Hàm <code>data</code> ném lỗi</span><span style="color:#9a9ca3">—</span><span style="color:#1b6b3a">Có</span><span>Dòng đó dùng data tự suy từ columns</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 96px 96px minmax(0,1.4fr);gap:16px;padding:10px 16px;align-items:start"><span>Field <code>hidden</code>, <code>invisible</code> hoặc đang ẩn trong Thiết lập</span><span style="color:#9a9ca3">—</span><span style="color:#1b6b3a">Có</span><span><strong style="font-weight:600">Có template</strong> (TemplateRef hoặc <code>data</code>): vẫn hiện. <strong style="font-weight:600">Tự suy</strong> (<code>autoTemplate</code>): bỏ khỏi thẻ.</span></div>
+</div>
+</div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty;max-width:900px">"Một phần" vì <code>NestedKeyOf&lt;T&gt;</code> chỉ biết field có trong <code>T</code>, không biết có column hay không. Cảnh báo chỉ ở <code>isDevMode()</code>, một lần cho mỗi bảng, field và loại lỗi. Ẩn hay hiện field không cảnh báo. Phần kiểm tra là một hàm thuần <code>resolveMobileView(columns, layout, data)</code>, có spec riêng.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+<strong style="font-weight:600;font-size:18px;line-height:1.3">Quy tắc khác</strong>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li><code>data</code> được gọi một lần cho mỗi dòng trong mỗi lần đổi dữ liệu (cache theo <code>meta.id</code> và <code>dataRevision</code>), không gọi theo change detection.</li>
+<li>Giá trị đi qua cùng đường với ô desktop: <code>transform</code>, định dạng date / number, <code>displayField</code> của values / lazy-values, <code>useBadge</code>.</li>
+<li><code>sdTableRowMobileDef</code> giữ nguyên, tương đương <code>template: TemplateRef</code>. Khai báo cả hai thì directive được dùng, kèm cảnh báo.</li>
+<li>Export <code>SdTableMobileTemplate</code>, <code>SdTableMobileCardData</code>, <code>SdTableMobileListData</code>, <code>SdTableMobileDataContext</code> từ <code>@sdcorejs/angular/components/table</code>.</li>
+</ul>
+</div>
+
+</section>
+<section data-screen-label="Vòng 2 · Bố cục và nội dung" style="padding:48px 40px 56px;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6;display:flex;flex-direction:column;gap:40px;border-bottom:1px solid #dddcd6">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+<span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">VÒNG 2 · CHỐT HƯỚNG</span>
+<h2 style="margin:0;font-weight:600;font-size:32px;line-height:1.2;letter-spacing:-0.01em">Mobile: tách bố cục và nội dung</h2>
+<p style="margin:0;color:#3a3c42;font-size:16px;text-wrap:pretty">1e nên coi là một <strong style="font-weight:600;color:#1a1b1f">bố cục</strong> (khung dòng), không phải template. Bảng mobile có hai trục độc lập: bố cục do core vẽ, nội dung do template của consumer hoặc slots khai báo từ columns. Mọi bố cục đọc cùng một bộ slot, nên thêm bố cục sau này không đổi cách khai báo.</p>
+<div style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#e3f4e8;border-radius:8px;font-size:14px;color:#1b4d2c">
+<span><strong style="font-weight:600">Bộ lọc:</strong> <a href="#1c">1c</a> hàng chip, chip đầu mở sheet <a href="#1b">1b</a>.</span>
+<span><strong style="font-weight:600">Thẻ đợt 1:</strong> bố cục <code>'card'</code> (<a href="#1d">1d</a>) làm mặc định, nội dung slots (<a href="#1f">1f</a>) khi không có template.</span>
+<span><strong style="font-weight:600">Đợt 2:</strong> bố cục <code>'list'</code> (<a href="#1e">1e</a>), không phải khai báo gì thêm.</span>
+</div>
+</header>
+
+<div id="2a" style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">2a</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Hai trục</strong></div>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:680px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:minmax(150px,.8fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Nội dung ↓ · Bố cục →</span><span>layout: 'card' (1d)</span><span>layout: 'list' (1e)</span></div>
+<div style="display:grid;grid-template-columns:minmax(150px,.8fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 16px;border-bottom:1px solid #ecebe6"><span><strong style="font-weight:600">Template</strong><br><code>sdTableRowMobileDef</code></span><span>Template trong thẻ, cạnh cột ô chọn và ⋯. <span style="color:#1b6b3a;font-weight:500">Đợt 1</span></span><span>Template trong dòng phẳng. <span style="color:#8a5300;font-weight:500">Đợt 2</span></span></div>
+<div style="display:grid;grid-template-columns:minmax(150px,.8fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 16px"><span><strong style="font-weight:600">Slots</strong><br><code>mobile.slots</code> / tự suy từ columns</span><span>Tiêu đề, badge, lưới nhãn–giá trị, Thêm. <span style="color:#1b6b3a;font-weight:500">Đợt 1</span></span><span>Hai dòng chữ, giá trị và badge bên phải. <span style="color:#8a5300;font-weight:500">Đợt 2</span></span></div>
+</div>
+</div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Hành vi thuộc khung chung, không thuộc bố cục: chọn dòng, ⋯ và sheet hành động, Chi tiết (expand), tree, reorder, nhãn aria, autoId. Bố cục chỉ quyết định vị trí của chúng.</p>
+</div>
+
+<div id="2b" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">2b</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Cùng một khai báo, hai bố cục</strong></div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto">
+
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:4px 16px 10px"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="flex:none;display:flex;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat;border-bottom:1px solid #e3e4ea">
+<span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Kho<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+</div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ o4 }}" as="o" hint-placeholder-count="4">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 12px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div>
+<span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:8px"><div><div style="font-size:12px;line-height:16px;color:#5f6368">Tổng tiền</div><div style="font-weight:500">{{ o.total }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Ngày tạo</div><div>{{ o.date }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Kho</div><div>{{ o.wh }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Người tạo</div><div>{{ o.by }}</div></div></div>
+</div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_horiz</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+<figcaption style="font-size:13px;color:#3a3c42"><code>layout: 'card'</code> · đợt 1</figcaption>
+</figure>
+
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:4px 16px 10px"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="flex:none;display:flex;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat;border-bottom:1px solid #e3e4ea">
+<span style="flex:none;height:32px;padding:0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">2</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Kho<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+<sc-for list="{{ orders }}" as="o" hint-placeholder-count="6">
+<div style="flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto 28px;gap:8px;align-items:center;padding:10px 4px 10px 16px;border-bottom:1px solid #eceef1">
+<div style="min-width:0;display:flex;flex-direction:column"><span style="font-weight:500">{{ o.code }}</span><span style="font-size:13px;line-height:18px;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }} · {{ o.date }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ o.total }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div>
+<span class="mi" style="width:28px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_vert</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+<figcaption style="font-size:13px;color:#3a3c42"><code>layout: 'list'</code> · đợt 2. Kho, Người tạo không có chỗ, xem qua ⋯ → Chi tiết.</figcaption>
+</figure>
+
+</div>
+<div style="width:380px;max-width:100%;display:flex;flex-direction:column;gap:16px">
+<pre style="margin:0;padding:16px 18px;background:#1a1b1f;color:#e8e8e3;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap">mobile: {
+  rowLabel: row =&gt; row.code,
+  layout: 'card',      // 'card' | 'list'
+  slots: {
+    title: 'code',
+    subtitle: 'customerName',
+    badge: 'status',
+    trailing: 'total',
+    fields: ['createdAt', 'warehouse',
+             'createdBy'],
+  },
+}</pre>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:#3a3c42">
+<li>Mỗi slot là <code>field</code> của một column trong <code>columns</code>: tiêu đề, định dạng, ẩn/hiện ở Thiết lập lấy từ column đó.</li>
+<li>Ưu tiên nội dung: <code>sdTableRowMobileDef</code> → <code>mobile.slots</code> → tự suy từ columns.</li>
+<li><code>slots: false</code> và không có template: giữ bảng desktop như hiện tại.</li>
+<li>Thay cho <code>mobile.card</code> ở <a href="#1f">1f</a>.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="2c" style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">2c</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Slot hiện ở đâu trong từng bố cục</strong></div>
+<div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#ffffff">
+<div style="min-width:680px;font-size:14px;line-height:1.55">
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;background:#f9f9f7;border-bottom:1px solid #ecebe6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5f6167"><span>Slot</span><span>card</span><span>list</span><span>Tự suy khi bỏ trống</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6"><code style="justify-self:start;align-self:start">title</code><span>Dòng 1, đậm</span><span>Dòng 1, đậm</span><span><code>rowKey</code> nếu đang hiện, không thì cột hiện đầu tiên</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6"><code style="justify-self:start;align-self:start">subtitle</code><span>Dòng 2</span><span>Dòng 2, trước dấu ·</span><span>Cột string hiện tiếp theo</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6"><code style="justify-self:start;align-self:start">badge</code><span>Cạnh title</span><span>Phải, dưới trailing</span><span>Cột đầu tiên có <code>useBadge</code></span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px;border-bottom:1px solid #ecebe6"><code style="justify-self:start;align-self:start">trailing</code><span>Ô đầu của lưới, đậm</span><span>Phải, dòng 1</span><span>Không tự suy</span></div>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 16px"><code style="justify-self:start;align-self:start">fields</code><span>Lưới 2 cột, cùng trailing tối đa 4 ô; còn lại vào Thêm</span><span>Ô đầu ghép sau subtitle; còn lại xem qua Chi tiết</span><span>Các cột hiện còn lại, theo thứ tự cột</span></div>
+</div>
+</div>
+</div>
+
+<div id="2d" style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">2d</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Nhiều bố cục về sau có ổn không</strong></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#1b6b3a">Ổn, nếu giữ 3 quy tắc</span>
+<ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Một bộ slot chung. Bố cục mới chỉ đọc slot đã có. Cần slot mới thì phải ghi rõ nó hiện ở đâu trong mọi bố cục cũ, nếu không thì rơi vào <code>fields</code>.</li>
+<li>Hành vi nằm ở khung chung; bố cục chỉ đặt vị trí. Không bố cục nào có cách chọn dòng hay mở hành động riêng.</li>
+<li>Giữ ít bố cục có sẵn (<code>card</code>, <code>list</code>). Nhu cầu riêng của một màn dùng template; template chạy trong khung của bố cục đang chọn.</li>
+</ol>
+</div>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a5300">Không nên</span>
+<p style="margin:0;font-size:14px;color:#3a3c42">Mỗi bố cục một kiểu khai báo riêng, ví dụ union <code>{ type: 'list', primary, secondary }</code> | <code>{ type: 'card', header, grid }</code>:</p>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Đổi bố cục phải viết lại khai báo.</li>
+<li>Tài liệu, test và global config nhân theo số bố cục.</li>
+<li>Không đặt được bố cục mặc định ở <code>SD_TABLE_CONFIGURATION</code> cho cả ứng dụng.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+<strong style="font-weight:600;font-size:18px;line-height:1.3">Câu ở vòng 1: mặc định nếu không có ý kiến khác</strong>
+<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Chip <a href="#1c">1c</a>: mọi externalFilters và cột có filter, theo thứ tự khai báo.</li>
+<li>Sheet một trường vẫn bấm Áp dụng, để không tải lại sau mỗi lần tick.</li>
+<li>Chọn khoảng ngày nhanh để đợt sau.</li>
+<li>Slots tự suy chỉ bật khi có <code>mobile.slots</code> hoặc <code>mobile.layout</code>; bật mặc định cho mọi bảng ở bản major tiếp theo.</li>
+</ol>
+</div>
+
+</section>
+<section data-screen-label="Vòng 1 · Đề xuất mobile" style="padding:48px 40px 64px;font-family:'Be Vietnam Pro',sans-serif;color:#1a1b1f;font-size:15px;line-height:1.6;display:flex;flex-direction:column;gap:48px">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+<div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#5f6167;display:flex;flex-wrap:wrap;gap:6px 18px"><span>sdcorejs/sdcorejs-angular · main @ 24ae8bc</span><span>components/table · filter/mobile-filter · mobile-cards</span></div>
+<span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">VÒNG 1 · ĐỀ XUẤT</span>
+<h1 style="margin:0;font-weight:600;font-size:36px;line-height:1.15;letter-spacing:-0.02em;text-wrap:balance">sd-table trên điện thoại: bộ lọc và thẻ</h1>
+<p style="margin:0;color:#3a3c42;font-size:16px;text-wrap:pretty">Hiện trạng dựng lại từ code nhánh main. Ba phương án cho bộ lọc (<a href="#1a">1a</a>–<a href="#1c">1c</a>) và ba phương án cho thẻ (<a href="#1d">1d</a>–<a href="#1f">1f</a>); hai nhóm chọn độc lập. Khung 360 × 720.</p>
+<nav style="display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px"><a href="#hien-trang">Hiện trạng</a><a href="#bo-loc">Bộ lọc</a><a href="#the">Thẻ</a><a href="#de-xuat">Đề xuất và cần chốt</a></nav>
+</header>
+
+<!-- ============ HIỆN TRẠNG ============ -->
+<div id="hien-trang" data-screen-label="Hiện trạng" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">00</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Hiện trạng</h2></div>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;flex-wrap:wrap">
+
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:12px 16px;border-bottom:1px solid #e3e4ea"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="flex:1;min-height:0;overflow:hidden;padding:20px 20px 8px;display:flex;flex-direction:column;gap:24px">
+<sc-for list="{{ orders }}" as="o" hint-placeholder-count="4">
+<div style="position:relative;flex:none;border:1px solid #c4c6d0;border-radius:8px;padding:8px 12px">
+<span style="position:absolute;top:-12px;right:-12px;width:24px;height:24px;border:1px solid #c4c6d0;border-radius:50%;background:#ffffff;display:flex;align-items:center;justify-content:center"><span style="width:14px;height:14px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="padding:4px 0"><strong style="font-weight:700">{{ o.code }} · {{ o.customer }}</strong><p style="margin:6px 0">{{ o.total }}</p><small style="font-size:12px;color:#5f6368">{{ o.date }} · {{ o.status }}</small></div>
+<div style="display:flex;align-items:center;justify-content:space-between;min-height:44px"><span style="display:inline-flex;align-items:center;gap:6px;color:#005cbb;font-weight:500;padding:0 8px;height:40px"><span class="mi" style="font-size:20px">expand_more</span>Chi tiết</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_horiz</span></div>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+<figcaption style="font-size:13px;color:#3a3c42;max-width:360px">Thẻ: lề 20px, cách 24px, ô chọn đè góc trên phải, hàng Chi tiết · ⋯ riêng. Thân thẻ theo ví dụ trong <code>sd-table.md</code>.</figcaption>
+</figure>
+
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:12px 16px;border-bottom:1px solid #e3e4ea"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;top:28px;bottom:0;right:0;width:324px;background:#ffffff;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.18)">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 16px;border-bottom:1px solid #e3e4ea"><span style="font-size:16px;font-weight:500">Lọc</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">close</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;font-size:13px;color:#7a7a7a">Khách hàng</div>
+<div style="position:relative;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 6px 0 10px;display:flex;align-items:center;gap:6px;font-size:13px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:11px;line-height:14px;color:#5f6368">Trạng thái</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chờ duyệt, Đang giao</span><span class="mi" style="font-size:18px;color:#5f6368">arrow_drop_down</span></div>
+<div style="position:relative;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 8px 0 10px;display:flex;align-items:center;gap:6px;font-size:13px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:11px;line-height:14px;color:#5f6368">Ngày tạo</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">23/10/2026 – 30/10/2026</span><span class="mi" style="font-size:16px;color:#5f6368">calendar_today</span></div>
+<div style="height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px 0 4px;display:flex;align-items:center;gap:6px;font-size:13px;color:#7a7a7a"><span style="flex:none;height:22px;padding:0 6px;border-radius:4px;background:#eceef1;color:#44474e;font-size:11px;line-height:22px;font-weight:500">Chứa</span>Mã đơn</div>
+<div style="display:flex;align-items:center;gap:4px"><div style="position:relative;flex:1;min-width:0;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;font-size:13px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:11px;line-height:14px;color:#5f6368">Tổng tiền</span>1.000.000</div><span style="color:#5f6368">-</span><div style="flex:1;min-width:0;height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box"></div></div>
+<div style="height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 6px 0 4px;display:flex;align-items:center;gap:6px;font-size:13px;color:#7a7a7a"><span style="flex:none;height:22px;padding:0 6px;border-radius:4px;background:#eceef1;color:#44474e;font-size:11px;line-height:22px;font-weight:500">Là</span><span style="flex:1">Kho</span><span class="mi" style="font-size:18px;color:#5f6368">arrow_drop_down</span></div>
+<div style="height:32px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 6px 0 4px;display:flex;align-items:center;gap:6px;font-size:13px;color:#7a7a7a"><span style="flex:none;height:22px;padding:0 6px;border-radius:4px;background:#eceef1;color:#44474e;font-size:11px;line-height:22px;font-weight:500">Là</span><span style="flex:1">Người tạo</span><span class="mi" style="font-size:18px;color:#5f6368">arrow_drop_down</span></div>
+</div>
+<div style="flex:none;padding:12px 16px;border-top:1px solid #e3e4ea;display:flex;gap:8px"><span style="flex:1;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;color:#44474e;font-weight:500">Không</span><span style="flex:1;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Có</span></div>
+</div>
+</div>
+<figcaption style="font-size:13px;color:#3a3c42;max-width:360px">Bộ lọc: <code>sd-side-drawer width="90vw"</code>, external → filterDef → cột, mọi ô <code>size="sm"</code>, nút <code>core.confirm.no / yes</code>.</figcaption>
+</figure>
+</div>
+
+<div style="flex:1;min-width:300px;max-width:520px;display:flex;flex-direction:column;gap:20px">
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a5300">Bộ lọc</span>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Lối vào là mục Lọc trong sheet Công cụ ở chân trang: 2 lần chạm, và danh sách không cho biết đang lọc gì.</li>
+<li>Drawer phải rộng 90vw còn 36px trống bên trái, không vuốt xuống để đóng, khó với tới bằng một tay.</li>
+<li>Ô <code>sm</code> cao 32px, dưới mức chạm 44px. Chip operator trong ô lấy mất chỗ của nhãn khi màn hẹp.</li>
+<li>Ba nhóm xếp liền nhau, không tiêu đề, không đếm số trường đang lọc, không có Xóa tất cả.</li>
+<li>Nút ghi Không / Có thay vì Hủy / Áp dụng.</li>
+</ul>
+</div>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+<span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8a5300">Thẻ</span>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Ô chọn nằm đè lên viền góc trên phải, nên danh sách phải chừa lề 20px hai bên để ô không bị cắt.</li>
+<li>Cách nhau 24px cộng viền và đệm: màn 360 × 720 chỉ thấy khoảng 3 thẻ.</li>
+<li>Hàng Chi tiết · ⋯ thêm khoảng 44px vào mỗi thẻ, kể cả khi thân thẻ chỉ có hai dòng.</li>
+<li>Thân thẻ do từng màn tự dựng, không có khung chung. Bảng không khai báo <code>sdTableRowMobileDef</code> vẫn hiện bảng desktop trên điện thoại.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ============ BỘ LỌC ============ -->
+<div id="bo-loc" data-screen-label="Bộ lọc 1a–1c" style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">01</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Bộ lọc</h2></div>
+<p style="margin:0;color:#3a3c42;text-wrap:pretty">Cả ba giữ <code>filterRegister</code>, bản sao làm việc và cơ chế Hủy / Áp dụng của <code>mobile-filter</code>. Phần chung:</p>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:#3a3c42;font-size:14px">
+<li>Nút lọc đặt cạnh ô tìm kiếm, có số trường đang lọc; mục Lọc rời khỏi sheet Công cụ.</li>
+<li>Ô cao 44px (<code>control-height-coarse</code>), nhãn nằm trên ô thay cho float label. Operator thành dòng chữ bấm được cạnh nhãn.</li>
+<li>Có Xóa tất cả. Nút ghi Hủy / Áp dụng.</li>
+<li>Khung dùng <code>sd-modal view="bottom-sheet"</code> đã có ở bảng (sheet Công cụ, hành động dòng).</li>
+</ul>
+<span style="font-size:13px;color:#5f6167">Thẻ phía sau sheet dùng khung <a href="#1d">1d</a>.</span>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+<!-- 1a -->
+<div id="1a" style="display:flex;flex-direction:column;gap:14px;width:408px">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1a</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Bottom sheet một trang</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Giữ một danh sách control như hiện tại, chuyển sang sheet cao gần hết màn. Mỗi trường có tiêu đề. Trường values có từ 6 lựa chọn trở xuống hiện thành chip.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 16px 12px"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span style="position:relative;flex:none;width:40px;height:40px;border:1px solid #c4c6d0;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#005cbb"><span class="mi" style="font-size:20px">filter_list</span><span style="position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;font-weight:500;line-height:18px;text-align:center;border:2px solid #ffffff">3</span></span></div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ o2 }}" as="o" hint-placeholder-count="2"><div style="flex:none;height:86px;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px"></div></sc-for>
+</div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;top:96px;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column">
+<span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 8px 8px 20px"><span style="font-size:20px;font-weight:500;line-height:28px">Bộ lọc</span><span style="font-size:13px;color:#5f6368">3 đang lọc</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Xóa tất cả</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;padding:4px 20px 0;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:500">Trạng thái</span><span style="font-size:12px;color:#5f6368">Là một trong</span></div><div style="display:flex;flex-wrap:wrap;gap:8px"><span style="height:32px;padding:0 12px 0 8px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px">check</span>Chờ duyệt</span><span style="height:32px;padding:0 12px 0 8px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px">check</span>Đang giao</span><span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Hoàn tất</span><span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Đã hủy</span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:500">Ngày tạo</span><div style="display:flex;flex-wrap:wrap;gap:8px"><span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Hôm nay</span><span style="height:32px;padding:0 12px 0 8px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:18px">check</span>7 ngày qua</span><span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">30 ngày qua</span><span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:4px;font-weight:500"><span class="mi" style="font-size:16px">calendar_today</span>Tùy chọn</span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:500">Kho</span><div style="height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 8px 0 12px;display:flex;align-items:center;color:#7a7a7a"><span style="flex:1">Tất cả kho</span><span class="mi" style="font-size:22px;color:#5f6368">arrow_drop_down</span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:500">Tổng tiền</span><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0;height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;justify-content:space-between"><span>1.000.000</span><span style="color:#7a7a7a">₫</span></div><span style="color:#5f6368">–</span><div style="flex:1;min-width:0;height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;justify-content:space-between;color:#7a7a7a"><span>Đến</span><span>₫</span></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:500">Khách hàng</span><span style="font-size:12px;color:#005cbb;font-weight:500;display:inline-flex;align-items:center">Chứa<span class="mi" style="font-size:16px">arrow_drop_down</span></span></div><div style="height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 12px;display:flex;align-items:center;color:#7a7a7a">Nhập tên khách hàng</div></div>
+</div>
+<div style="flex:none;padding:12px 16px 16px;border-top:1px solid #e3e4ea;display:flex;gap:8px;background:#ffffff"><span style="flex:1;height:40px;border-radius:20px;border:1px solid #74777f;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#005cbb;font-weight:500">Hủy</span><span style="flex:2;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Áp dụng</span></div>
+</div>
+</div>
+
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Ít thay đổi nhất, dùng lại control hiện có.</li><li>Thấy toàn bộ bộ lọc trong một lần cuộn.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Từ khoảng 8 trường trở lên phải cuộn dài.</li><li>Select nhiều giá trị vẫn mở thêm một panel trên sheet.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li><code>mobile-filter</code>: <code>sd-side-drawer</code> → <code>sd-modal view="bottom-sheet"</code>, nhóm theo trường.</li><li>values ≤ 6 lựa chọn render chip; nhiều hơn dùng <code>sd-select</code>.</li><li>Nút chọn khoảng ngày nhanh là phần thêm, tắt được.</li></ul></div>
+</div>
+</div>
+
+<!-- 1b -->
+<div id="1b" style="display:flex;flex-direction:column;gap:14px;width:1176px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1b</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Danh sách trường, bấm để mở trang con</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty;max-width:760px">Sheet chỉ liệt kê tên trường và giá trị đang chọn. Bấm một dòng để sang trang con có control đầy đủ. Cùng cách làm với danh sách cột trong modal Thiết lập (2b).</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;top:40px;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column">
+<span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span>
+<div style="flex:none;display:flex;align-items:center;gap:4px;padding:2px 8px 8px 4px;border-bottom:1px solid #e3e4ea"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">close</span><span style="font-size:20px;font-weight:500;line-height:28px">Bộ lọc</span><span style="font-size:13px;color:#5f6368;margin-left:4px">3 đang lọc</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Xóa tất cả</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Trạng thái</span><span style="font-size:13px;line-height:18px;color:#005cbb;font-weight:500">Chờ duyệt, Đang giao</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Ngày tạo</span><span style="font-size:13px;line-height:18px;color:#005cbb;font-weight:500">7 ngày qua</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Kho</span><span style="font-size:13px;line-height:18px;color:#5f6368">Tất cả</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Tổng tiền</span><span style="font-size:13px;line-height:18px;color:#005cbb;font-weight:500">Từ 1.000.000 ₫</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Khách hàng</span><span style="font-size:13px;line-height:18px;color:#5f6368">Tất cả</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Mã đơn</span><span style="font-size:13px;line-height:18px;color:#5f6368">Tất cả</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 12px 0 20px;border-bottom:1px solid #eceef1"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span>Người tạo</span><span style="font-size:13px;line-height:18px;color:#5f6368">Tất cả</span></div><span class="mi" style="font-size:22px;color:#5f6368">chevron_right</span></div>
+</div>
+<div style="flex:none;padding:12px 16px 16px;border-top:1px solid #e3e4ea;display:flex;gap:8px"><span style="flex:1;height:40px;border-radius:20px;border:1px solid #74777f;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#005cbb;font-weight:500">Hủy</span><span style="flex:2;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Áp dụng</span></div>
+</div>
+</div>
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;top:40px;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column">
+<span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span>
+<div style="flex:none;display:flex;align-items:center;gap:4px;padding:2px 8px 8px 4px;border-bottom:1px solid #e3e4ea"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:20px;font-weight:500;line-height:28px">Trạng thái</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Bỏ chọn</span></div>
+<div style="flex:none;padding:12px 20px 4px;font-size:12px;color:#5f6368">Là một trong</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:0 8px">
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>Chờ duyệt</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>Đang giao</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Đang xử lý</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Hoàn tất</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Trả hàng</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Đã hủy</div>
+</div>
+<div style="flex:none;padding:12px 16px 16px;border-top:1px solid #e3e4ea"><span style="height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Xong</span></div>
+</div>
+</div>
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;top:40px;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column">
+<span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span>
+<div style="flex:none;display:flex;align-items:center;gap:4px;padding:2px 8px 8px 4px;border-bottom:1px solid #e3e4ea"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:20px;font-weight:500;line-height:28px">Ngày tạo</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Bỏ chọn</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:8px 8px 0">
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span>Hôm nay</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span>Hôm qua</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #005cbb;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:#005cbb"></span></span></span>7 ngày qua</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span>30 ngày qua</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span>Tháng này</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;border:2px solid #5f6368;border-radius:50%;box-sizing:border-box"></span></span>Khoảng tùy chọn</div>
+<div style="display:flex;gap:8px;padding:4px 12px 0 48px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:#5f6368">Từ ngày</span><div style="height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;color:#7a7a7a">23/10/2026</div></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;color:#5f6368">Đến ngày</span><div style="height:44px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;color:#7a7a7a">30/10/2026</div></div>
+</div>
+</div>
+<div style="flex:none;padding:12px 16px 16px;border-top:1px solid #e3e4ea"><span style="height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Xong</span></div>
+</div>
+</div>
+
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Gọn với bảng nhiều trường; trang đầu luôn vừa một màn.</li><li>values thành danh sách tick 48px, không cần panel select. Thêm ô tìm khi có hơn 8 lựa chọn (cùng ngưỡng ô tìm cột).</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Mỗi trường thêm một lần chạm.</li><li>Cần chuỗi tóm tắt giá trị cho từng kiểu trường.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li><code>mobile-filter</code> thêm điều hướng 2 cấp trong cùng sheet.</li><li>Tóm tắt dùng lại phần dựng nhãn chip của <code>table-query-bar.util</code>.</li><li>Trường string / number có operator: trang con gồm dòng operator và ô nhập.</li></ul></div>
+</div>
+</div>
+
+<!-- 1c -->
+<div id="1c" style="display:flex;flex-direction:column;gap:14px;width:792px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1c</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Thanh chip ngang</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Dưới ô tìm là một hàng chip cuộn ngang, mỗi chip một trường và ghi luôn giá trị. Bấm chip mở sheet nhỏ chỉ cho trường đó. Chip đầu mở toàn bộ bộ lọc theo <a href="#1a">1a</a> hoặc <a href="#1b">1b</a>. Tương ứng chế độ query bar trên desktop.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:4px 16px 10px"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="flex:none;display:flex;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat;border-bottom:1px solid #e3e4ea">
+<span style="flex:none;height:32px;padding:0 8px 0 8px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;gap:6px;font-weight:500"><span class="mi" style="font-size:18px;color:#005cbb">tune</span><span style="min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#005cbb;color:#ffffff;font-size:11px;line-height:18px;text-align:center">3</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box;color:#44474e;display:inline-flex;align-items:center;font-weight:500">Kho<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Tổng tiền: từ 1 tr<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+</div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ orders }}" as="o" hint-placeholder-count="5">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_horiz</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;padding:4px 16px 10px"><div style="height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div></div>
+<div style="flex:none;display:flex;gap:8px;padding:0 16px 12px;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);-webkit-mask-size:100% calc(100% - 1px),100% 1px;-webkit-mask-position:top,bottom;-webkit-mask-repeat:no-repeat;mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent),linear-gradient(#000,#000);mask-size:100% calc(100% - 1px),100% 1px;mask-position:top,bottom;mask-repeat:no-repeat">
+<span style="flex:none;width:52px;height:32px;border-radius:8px;border:1px solid #c4c6d0;box-sizing:border-box"></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Trạng thái: 2<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+<span style="flex:none;height:32px;padding:0 4px 0 12px;border-radius:8px;background:#d7e3f8;color:#101c2b;display:inline-flex;align-items:center;font-weight:500">Ngày tạo: 7 ngày qua<span class="mi" style="font-size:18px">arrow_drop_down</span></span>
+</div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ o3 }}" as="o" hint-placeholder-count="3"><div style="flex:none;height:86px;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px"></div></sc-for>
+</div>
+<div style="position:absolute;inset:0;background:rgba(15,18,25,.40)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#ffffff;border-radius:28px 28px 0 0;display:flex;flex-direction:column">
+<span style="flex:none;width:32px;height:4px;border-radius:2px;background:#c4c6d0;margin:10px auto 4px"></span>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 8px 4px 20px"><span style="font-size:20px;font-weight:500;line-height:28px">Trạng thái</span><span style="flex:1"></span><span style="height:40px;padding:0 12px;display:inline-flex;align-items:center;color:#005cbb;font-weight:500">Bỏ chọn</span></div>
+<div style="padding:0 20px 4px;font-size:12px;color:#5f6368">Là một trong</div>
+<div style="display:flex;flex-direction:column;padding:0 8px 4px">
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>Chờ duyệt</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>Đang giao</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Đang xử lý</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Hoàn tất</div>
+<div style="display:flex;align-items:center;gap:4px;min-height:48px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>Đã hủy</div>
+</div>
+<div style="flex:none;padding:12px 16px 16px;border-top:1px solid #e3e4ea;display:flex;gap:8px"><span style="flex:1;height:40px;border-radius:20px;border:1px solid #74777f;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#005cbb;font-weight:500">Hủy</span><span style="flex:2;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;background:#005cbb;color:#ffffff;font-weight:500">Áp dụng</span></div>
+</div>
+</div>
+
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thấy ngay đang lọc gì mà không mở gì.</li><li>Sửa một trường mất 2 lần chạm.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thêm một hàng 44px trên đầu danh sách.</li><li>Trường ở cuối hàng chip bị khuất, phải cuộn ngang mới thấy.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li>Hàng chip mới trong table khi mobile.</li><li>Thứ tự cố định: externalFilters, rồi cột có filter.</li><li>Nhãn chip dùng chung với query bar.</li></ul></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ============ THẺ ============ -->
+<div id="the" data-screen-label="Thẻ 1d–1f" style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:900px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">02</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Thẻ</h2></div>
+<p style="margin:0;color:#3a3c42;text-wrap:pretty">Ở <a href="#1d">1d</a> và <a href="#1e">1e</a>, <code>sdTableRowMobileDef</code> vẫn là thân thẻ; core đổi khung, vị trí ô chọn và nút ⋯. <a href="#1f">1f</a> thêm cách dựng thẻ khi màn không có template. Phần thân trong khung là ví dụ template của consumer.</p>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+<!-- 1d -->
+<div id="1d" style="display:flex;flex-direction:column;gap:14px;width:792px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1d</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Thẻ gọn</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Ô chọn vào cột trái trong thẻ, ⋯ lên góc trên phải, bỏ hàng hành động riêng. Lề 12px, thẻ cách 8px trên nền xám nhạt. Thanh chọn giữ như hiện tại.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 16px 12px;border-bottom:1px solid #e3e4ea"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span style="flex:none;width:40px;height:40px;border:1px solid #c4c6d0;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#44474e"><span class="mi" style="font-size:20px">filter_list</span></span></div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ orders }}" as="o" hint-placeholder-count="5">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_horiz</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 16px 12px;border-bottom:1px solid #e3e4ea"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span style="flex:none;width:40px;height:40px;border:1px solid #c4c6d0;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#44474e"><span class="mi" style="font-size:20px">filter_list</span></span></div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ selA }}" as="o" hint-placeholder-count="2">
+<div style="flex:none;background:#eef4fc;border:1px solid #005cbb;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 12px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span></span>
+</div>
+</sc-for>
+<sc-for list="{{ selB }}" as="o" hint-placeholder-count="3">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;display:grid;grid-template-columns:44px minmax(0,1fr) 12px;align-items:start;padding:4px 0 10px">
+<span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;padding-top:10px;display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;color:#5f6368">{{ o.date }} · <span style="color:#212121;font-weight:500">{{ o.total }}</span></span></div>
+<span></span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;margin:0 12px 8px;padding:4px 4px 4px 12px;border-radius:12px;background:#ffffff;border:1px solid #e3e4ea;box-shadow:0 4px 16px rgba(15,23,42,.12);display:flex;align-items:center;gap:8px"><span style="flex:none;min-width:28px;height:28px;padding:0 6px;box-sizing:border-box;border-radius:8px;background:#2e7d32;color:#ffffff;font-weight:500;display:flex;align-items:center;justify-content:center">2</span><span style="flex:1;display:flex;gap:4px"><span style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:4px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:16px">check_circle</span>Duyệt</span><span style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:4px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:16px">download</span>Xuất</span><span style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:4px;color:#44474e;font-weight:500"><span class="mi" style="font-size:18px">more_horiz</span>Thêm</span></span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:20px;color:#44474e">close</span></div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thấy khoảng 5–6 thẻ thay vì 3.</li><li>Template consumer không phải sửa.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Vẫn là thẻ có viền, mật độ thấp hơn <a href="#1e">1e</a>.</li><li>Cột ô chọn lấy 44px chiều ngang khi bật selector.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li><code>mobile-cards.scss</code>: lề, gap, nền, bỏ ô chọn ở góc.</li><li>Chi tiết (<code>sdTableExpandDef</code>) thành dòng cuối thẻ, chỉ khi có expand.</li><li>Chế độ chọn: ⋯ ẩn, như hiện tại.</li></ul></div>
+</div>
+</div>
+
+<!-- 1e -->
+<div id="1e" style="display:flex;flex-direction:column;gap:14px;width:792px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1e</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Danh sách phẳng</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Bỏ viền thẻ, dòng tràn hết chiều ngang, ngăn bằng đường kẻ. Nhấn giữ một dòng để vào chế độ chọn; hàng tìm kiếm đổi thành thanh chọn có số đã chọn và hành động.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 16px 12px;border-bottom:1px solid #e3e4ea"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span style="flex:none;width:40px;height:40px;border:1px solid #c4c6d0;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#44474e"><span class="mi" style="font-size:20px">filter_list</span></span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="flex:none;padding:6px 16px;background:#f4f5f7;font-size:12px;line-height:18px;font-weight:500;color:#5f6368">{{ g.label }}</div>
+<sc-for list="{{ g.rows }}" as="o" hint-placeholder-count="2">
+<div style="flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 16px;border-bottom:1px solid #eceef1">
+<div style="min-width:0;display:flex;flex-direction:column"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;line-height:18px;color:#5f6368">{{ o.code }} · {{ o.wh }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ o.total }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;height:56px;display:flex;align-items:center;gap:2px;padding:0 4px;background:#e8eef8;border-bottom:1px solid #d7e3f8"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">close</span><span style="flex:1;font-size:16px;font-weight:500">2 đã chọn</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#005cbb">check_circle</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#005cbb">download</span><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">more_vert</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+<sc-for list="{{ groupsSel }}" as="g" hint-placeholder-count="3">
+<div style="flex:none;padding:6px 16px;background:#f4f5f7;font-size:12px;line-height:18px;font-weight:500;color:#5f6368">{{ g.label }}</div>
+<sc-for list="{{ g.rows }}" as="o" hint-placeholder-count="2">
+<sc-if value="{{ o.sel }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px 12px 12px;border-bottom:1px solid #d7e3f8;background:#eef4fc">
+<span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:2px;background:#005cbb;display:flex;align-items:center;justify-content:center"><span class="mi" style="font-size:16px;color:#ffffff">check</span></span></span>
+<div style="min-width:0;display:flex;flex-direction:column"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;line-height:18px;color:#5f6368">{{ o.code }} · {{ o.wh }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ o.total }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ o.unsel }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px 12px 12px;border-bottom:1px solid #eceef1">
+<span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border:2px solid #5f6368;border-radius:2px;box-sizing:border-box"></span></span>
+<div style="min-width:0;display:flex;flex-direction:column"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span><span style="font-size:13px;line-height:18px;color:#5f6368">{{ o.code }} · {{ o.wh }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ o.total }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div>
+</div>
+</sc-if>
+</sc-for>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Mật độ cao nhất, khoảng 7 dòng một màn.</li><li>Nhóm dòng (<code>sdTableGroupDef</code>) thành tiêu đề dính.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Nhấn giữ khó phát hiện; cần thêm mục Chọn trong Công cụ.</li><li>Template đang giả định có khung thẻ có thể phải chỉnh.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thêm <code>mobile.layout: 'card' | 'list'</code>, mặc định <code>'card'</code>.</li><li>Thanh chọn lên đầu bảng thay cho thanh dưới.</li><li>Bấm dòng: mở sheet hành động dòng như hiện tại.</li></ul></div>
+</div>
+</div>
+
+<!-- 1f -->
+<div id="1f" style="display:flex;flex-direction:column;gap:14px;width:792px;max-width:100%">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">1f</span><strong style="font-weight:600;font-size:18px;line-height:1.3">Thẻ tự sinh từ columns</strong></div>
+<p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Khi không có <code>sdTableRowMobileDef</code>, bảng dựng thẻ từ cấu hình cột: tiêu đề, phụ đề, badge và tối đa 4 cặp nhãn–giá trị; phần còn lại nằm sau Thêm. Giá trị dùng cùng định dạng ô desktop. Dùng được với khung <a href="#1d">1d</a> hoặc <a href="#1e">1e</a>.</p>
+<div style="background:#e4e5ea;border-radius:12px;padding:24px;display:flex;gap:24px;overflow-x:auto;align-items:flex-start">
+
+<div style="width:360px;height:720px;flex:none;box-sizing:border-box;border-radius:28px;background:#ffffff;border:1px solid #d5d6dc;box-shadow:0 10px 30px rgba(15,23,42,.10);overflow:hidden;position:relative;display:flex;flex-direction:column;font:400 14px/20px Roboto,sans-serif;color:#212121">
+<div style="height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 12px/1 Roboto,sans-serif"><span>9:41</span><span style="display:flex;gap:4px"><span class="mi" style="font-size:14px">signal_cellular_alt</span><span class="mi" style="font-size:14px">wifi</span><span class="mi" style="font-size:14px">battery_full</span></span></div>
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px"><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:22px;color:#44474e">arrow_back</span><span style="font-size:18px;font-weight:500;line-height:24px">Đơn hàng</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:8px;padding:4px 16px 12px;border-bottom:1px solid #e3e4ea"><div style="flex:1;min-width:0;height:40px;border:1px solid #c4c6d0;border-radius:4px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7a7a7a"><span class="mi" style="font-size:20px">search</span>Tìm mã đơn, khách hàng</div><span style="flex:none;width:40px;height:40px;border:1px solid #c4c6d0;border-radius:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#44474e"><span class="mi" style="font-size:20px">filter_list</span></span></div>
+<div style="flex:1;min-height:0;overflow:hidden;background:#f4f5f7;padding:8px 12px;display:flex;flex-direction:column;gap:8px">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;padding:4px 0 8px 16px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:start"><div style="min-width:0;padding-top:10px;display:flex;flex-direction:column"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:500">DH-24051</span><span style="display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font-size:12px;line-height:20px;font-weight:500;background:#e3edf9;color:#004a99">Đang giao</span></div><span style="color:#44474e">Công ty TNHH Minh Phát</span></div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_horiz</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px 0 0"><div><div style="font-size:12px;line-height:16px;color:#5f6368">Ngày tạo</div><div>30/10/2026</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Tổng tiền</div><div style="font-weight:500">12.450.000 ₫</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Kho</div><div>Kho Hà Nội</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Người tạo</div><div>Lan Anh</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Số sản phẩm</div><div>6</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Hạn giao</div><div>02/11/2026</div></div></div>
+<div style="display:flex;align-items:center;gap:2px;height:36px;margin-top:4px;color:#005cbb;font-size:13px;font-weight:500">Thu gọn<span class="mi" style="font-size:18px">expand_less</span></div>
+</div>
+<sc-for list="{{ o3tail }}" as="o" hint-placeholder-count="2">
+<div style="flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:12px;padding:4px 0 8px 16px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:start"><div style="min-width:0;padding-top:10px;display:flex;flex-direction:column"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:500">{{ o.code }}</span><span style="{{ o.badge }}">{{ o.status }}</span></div><span style="color:#44474e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer }}</span></div><span class="mi" style="width:44px;height:44px;line-height:44px;text-align:center;font-size:20px;color:#5f6368">more_horiz</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 16px 0 0"><div><div style="font-size:12px;line-height:16px;color:#5f6368">Ngày tạo</div><div>{{ o.date }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Tổng tiền</div><div style="font-weight:500">{{ o.total }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Kho</div><div>{{ o.wh }}</div></div><div><div style="font-size:12px;line-height:16px;color:#5f6368">Người tạo</div><div>{{ o.by }}</div></div></div>
+<div style="display:flex;align-items:center;gap:2px;height:36px;margin-top:4px;color:#005cbb;font-size:13px;font-weight:500">Thêm 2 trường<span class="mi" style="font-size:18px">expand_more</span></div>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;height:52px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:2px;padding:0 4px 0 6px;background:#ffffff"><span style="display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;color:#005cbb;font-weight:500"><span class="mi" style="font-size:20px">tune</span>Công cụ</span><span style="flex:1"></span><span style="font-size:13px;color:#5f6368">1 – 10 / 128</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#c4c6d0">chevron_left</span><span class="mi" style="width:40px;height:40px;line-height:40px;text-align:center;font-size:22px;color:#44474e">chevron_right</span></div>
+</div>
+
+<div style="width:360px;flex:none;display:flex;flex-direction:column;gap:16px">
+<pre style="margin:0;padding:16px 18px;background:#1a1b1f;color:#e8e8e3;border-radius:12px;font:400 12.5px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap">mobile: {
+  rowLabel: row =&gt; row.code,
+  card: {
+    title: 'code',
+    subtitle: 'customerName',
+    badge: 'status',
+    fields: ['createdAt', 'total',
+             'warehouse', 'createdBy'],
+  },
+}</pre>
+<div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:#3a3c42">
+<span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">MẶC ĐỊNH KHI KHÔNG KHAI BÁO</span>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+<li><code>title</code>: <code>rowKey</code> nếu là cột hiển thị, không thì cột hiển thị đầu tiên.</li>
+<li><code>badge</code>: cột đầu tiên có <code>useBadge</code>.</li>
+<li><code>fields</code>: 4 cột hiển thị tiếp theo; cột ẩn trong Thiết lập cũng ẩn ở thẻ.</li>
+<li>Thêm: các cột hiển thị còn lại, mở ngay trong thẻ.</li>
+</ul>
+</div>
+</div>
+
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 32px;font-size:13.5px;color:#3a3c42">
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#1b6b3a">ƯU</span><ul style="margin:4px 0 0;padding-left:18px"><li>Bảng nào cũng có thẻ trên điện thoại mà không cần viết template.</li><li>Các màn trông giống nhau.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#8a5300">NHƯỢC</span><ul style="margin:4px 0 0;padding-left:18px"><li>Kém linh hoạt hơn template.</li><li>Đổi hành vi mặc định: bảng đang hiện dạng desktop sẽ chuyển sang thẻ.</li></ul></div>
+<div><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">THAY ĐỔI</span><ul style="margin:4px 0 0;padding-left:18px"><li>Thêm <code>mobile.card</code>; renderer thẻ mặc định trong <code>mobile-cards</code>.</li><li>Giá trị qua <code>desktop-cell/view</code>, cùng pipe định dạng.</li><li><code>mobile.card: false</code> giữ bảng desktop như hiện tại.</li></ul></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ============ ĐỀ XUẤT ============ -->
+<div id="de-xuat" data-screen-label="Đề xuất và cần chốt" style="display:flex;flex-direction:column;gap:18px;max-width:900px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#5f6167">03</span><h2 style="margin:0;font-weight:600;font-size:28px;line-height:1.2;letter-spacing:-0.01em">Đề xuất và cần chốt</h2></div>
+<div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;font-size:14px;color:#3a3c42">
+<p style="margin:0"><strong style="font-weight:600;color:#1a1b1f">Bộ lọc:</strong> <a href="#1c">1c</a> để xem và sửa nhanh từng trường, chip đầu mở sheet <a href="#1b">1b</a> khi cần xem hết.</p>
+<p style="margin:0"><strong style="font-weight:600;color:#1a1b1f">Thẻ:</strong> <a href="#1d">1d</a> làm khung mặc định, <a href="#1f">1f</a> khi không có template. <a href="#1e">1e</a> làm sau, bật bằng <code>mobile.layout</code>.</p>
+</div>
+<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:#3a3c42">
+<li>Chip ở <a href="#1c">1c</a>: mọi trường đều lên chip, hay chỉ externalFilters và cột được đánh dấu?</li>
+<li>Sheet một trường: tick xong áp dụng ngay, hay vẫn bấm Áp dụng?</li>
+<li>Chọn khoảng ngày nhanh (Hôm nay, 7 ngày qua…) có làm trong đợt này không?</li>
+<li><a href="#1f">1f</a> có bật mặc định cho mọi bảng chưa có template không?</li>
+</ol>
+</div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const tone = {
+      info: 'background:#e3edf9;color:#004a99',
+      warn: 'background:#fff1d6;color:#8a5300',
+      ok: 'background:#e3f4e8;color:#1b6b3a',
+      muted: 'background:#eceef1;color:#44474e'
+    };
+    const base = 'display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font-size:12px;line-height:20px;font-weight:500;white-space:nowrap;flex:none;';
+    const raw = [
+      { code: 'DH-24051', customer: 'Công ty TNHH Minh Phát', date: '30/10/2026', total: '12.450.000 ₫', status: 'Đang giao', t: 'info', wh: 'Kho Hà Nội', by: 'Lan Anh' },
+      { code: 'DH-24050', customer: 'Nguyễn Thu Hà', date: '29/10/2026', total: '860.000 ₫', status: 'Chờ duyệt', t: 'warn', wh: 'Kho HCM', by: 'Minh Đức' },
+      { code: 'DH-24049', customer: 'Siêu thị An Bình', date: '29/10/2026', total: '4.200.000 ₫', status: 'Hoàn tất', t: 'ok', wh: 'Kho Đà Nẵng', by: 'Lan Anh' },
+      { code: 'DH-24048', customer: 'Trần Quốc Bảo', date: '28/10/2026', total: '1.150.000 ₫', status: 'Đã hủy', t: 'muted', wh: 'Kho HCM', by: 'Hải Yến' },
+      { code: 'DH-24047', customer: 'Công ty CP Hưng Thịnh', date: '28/10/2026', total: '27.900.000 ₫', status: 'Đang giao', t: 'info', wh: 'Kho Hà Nội', by: 'Minh Đức' },
+      { code: 'DH-24046', customer: 'Phạm Gia Linh', date: '28/10/2026', total: '540.000 ₫', status: 'Chờ duyệt', t: 'warn', wh: 'Kho HCM', by: 'Hải Yến' }
+    ];
+    const orders = raw.map(o => ({ ...o, badge: base + tone[o.t] }));
+    const mark = (rows, sel) => rows.map(o => ({ ...o, sel: sel.includes(o.code), unsel: !sel.includes(o.code) }));
+    const chosen = ['DH-24051', 'DH-24049'];
+    const groupDefs = [
+      { label: 'Hôm nay · 30/10', rows: orders.slice(0, 1) },
+      { label: 'Hôm qua · 29/10', rows: orders.slice(1, 3) },
+      { label: '28/10/2026', rows: orders.slice(3) }
+    ];
+    return {
+      orders,
+      o2: orders.slice(0, 2),
+      o3: orders.slice(0, 3),
+      o3tail: orders.slice(1, 4),
+      o4: orders.slice(0, 4),
+      selA: orders.slice(0, 2),
+      selB: orders.slice(2),
+      groups: groupDefs,
+      groupsSel: groupDefs.map(g => ({ label: g.label, rows: mark(g.rows, chosen) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

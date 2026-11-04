@@ -23,6 +23,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | `hideClose`            | `boolean`                                       | `false`     | Hides the built-in close button. Bare attribute = true.                         |
 | `disableBackdropClose` | `boolean`                                       | `true`      | Prevents backdrop/ESC close. Bare attribute = true.                             |
 | `beforeClose`          | `SdModalBeforeClose \| undefined`               | `undefined` | Optional sync/async guard. Only `true` closes; errors fail closed.              |
+| `closeOnNavigation`    | `boolean`                                       | `true`      | Close on a browser history event (`popstate` / `hashchange`: Back, Forward, `history.go`); a router link that pushes a URL does not close it. Set `false` when the content handles Back itself, e.g. a sheet with pages. Same name as Material's `closeOnNavigation`. Bare attribute = true. |
 
 ## Outputs
 
@@ -97,7 +98,7 @@ Two implementation constraints are load-bearing here, so do not "simplify" them:
 - `<sd-modal>` uses `ViewEncapsulation.None`, so its stylesheet is **global**. The rule `.sd-modal-root button:focus { outline: none !important }` therefore stripped the focus ring from every consumer-projected button inside any modal, and `!important` meant consumers could not win it back. A matching `.sd-modal-root button:focus-visible { outline: 2px solid var(--sd-primary) !important }` now restores a visible ring for keyboard navigation while mouse clicks stay borderless.
 - The built-in close button already had its own `:focus-visible` ring; it is unchanged.
 
-The real dialog/bottom-sheet container is associated with its visible heading using a unique `aria-labelledby` target. The accessible name follows title changes while the overlay is open, including projected header-left content.
+The real dialog/bottom-sheet container is associated with its visible heading using a unique `aria-labelledby` target: the default title, or the first heading (`h1`–`h6`, `role="heading"`) of a projected `[sdHeaderLeft]`, so buttons next to it are not part of the name. Only a header-left without a heading names the modal as a whole. The accessible name follows title changes and a heading that is swapped while the overlay is open (a sheet with pages).
 
 ## Overlay presentation refresh
 

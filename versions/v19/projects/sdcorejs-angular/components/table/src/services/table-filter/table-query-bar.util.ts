@@ -467,6 +467,12 @@ const chipOf = (source: SdTableQuerySource, value: TableFilterValue): { operator
   }
 };
 
+/** The chip a field shows for a raw record (active or not): what the bar would draw, shared with the phone filters. */
+export const sdTableQueryChipOf = (source: SdTableQuerySource, value: TableFilterValue): { filter: Filter; active: boolean } => {
+  const chip = chipOf(source, value);
+  return { filter: { field: source.key, operator: chip.operator, data: chip.data } as Filter, active: chip.active };
+};
+
 /** Raw value a chip stores; no chip stores the empty value of the shape. */
 const rawOf = (source: SdTableQuerySource, chip: Filter | undefined): unknown => {
   if (!chip) return source.shape === 'range' ? { from: null, to: null } : null;

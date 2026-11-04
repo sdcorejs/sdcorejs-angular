@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { Component, Injector, ViewContainerRef } from '@angular/core';
+import { Component, Injector, ViewContainerRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
@@ -25,6 +25,7 @@ import { SdModal } from './modal.component';
       [hideClose]="hideClose"
       [modalClass]="modalClass"
       [disableBackdropClose]="disableBackdropClose"
+      [closeOnNavigation]="closeOnNavigation"
       [beforeClose]="beforeClose"
       (sdCloseError)="onCloseError($event)"
       (sdClosed)="onClosed()">
@@ -39,6 +40,7 @@ class HostComponent {
   hideClose = false;
   modalClass: string | string[] | Record<string, boolean> = '';
   disableBackdropClose = true;
+  closeOnNavigation = true;
   beforeClose: (() => boolean | Promise<boolean>) | undefined;
   closedCount = 0;
   closeErrors: unknown[] = [];
@@ -277,6 +279,18 @@ describe('SdModal', () => {
       expect(opts.disableClose).toBeFalse();
     });
 
+    it('closes on navigation by default', () => {
+      component.open();
+      expect((dialogOpenSpy.calls.mostRecent().args[1] as any).closeOnNavigation).toBeTrue();
+    });
+
+    it('passes closeOnNavigation=false through, so the content can handle Back', () => {
+      host.closeOnNavigation = false;
+      fixture.detectChanges();
+      component.open();
+      expect((dialogOpenSpy.calls.mostRecent().args[1] as any).closeOnNavigation).toBeFalse();
+    });
+
     it('adds the default dialog panel class and preserves custom classes', () => {
       host.modalClass = 'custom-a custom-b';
       fixture.detectChanges();
@@ -471,6 +485,25 @@ describe('SdModal', () => {
       bsFixture.destroy();
 
       expect(ref.dismiss as jasmine.Spy).toHaveBeenCalled();
+    });
+
+    it('passes closeOnNavigation to the bottom sheet as well', () => {
+      let open: jasmine.Spy | undefined;
+      const openSheet = (closeOnNavigation?: boolean): boolean => {
+        const bsFixture = TestBed.createComponent(SdModal);
+        bsFixture.componentRef.setInput('view', 'bottom-sheet');
+        if (closeOnNavigation !== undefined) bsFixture.componentRef.setInput('closeOnNavigation', closeOnNavigation);
+        bsFixture.detectChanges();
+        // why: both fixtures share the standalone injector of SdModal, so one spy serves both.
+        open ??= spyOn(bsFixture.debugElement.injector.get(MatBottomSheet), 'open').and.returnValue(makeFakeBottomSheetRef().ref);
+        bsFixture.componentInstance.open();
+        const passed = (open.calls.mostRecent().args[1] as any).closeOnNavigation;
+        bsFixture.destroy();
+        return passed;
+      };
+
+      expect(openSheet()).toBeTrue();
+      expect(openSheet(false)).toBeFalse();
     });
 
     it('does not throw when destroyed without ever opening', () => {
@@ -797,6 +830,28 @@ describe('SdModal', () => {
 // overlay + backdrop không ở lại trong CDK overlay container sau khi host destroy.
 // ---------------------------------------------------------------------------
 
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdModal],
+  template: `
+    <sd-modal view="bottom-sheet" title="Bộ lọc" hideClose>
+      <div sdHeaderLeft>
+        <button type="button" class="head-close">Đóng</button>
+        @if (page()) {
+          <h2 class="head-title">{{ page() }}</h2>
+        } @else {
+          <h2 class="head-title">Bộ lọc</h2>
+        }
+        <button type="button">Xóa tất cả</button>
+      </div>
+      body
+    </sd-modal>
+  `,
+})
+class HeadingHost {
+  readonly page = signal<string | undefined>(undefined);
+}
+
 describe('SdModal — real overlay teardown', () => {
   let fixture: ComponentFixture<HostComponent>;
   let component: SdModal;
@@ -845,6 +900,30 @@ describe('SdModal — real overlay teardown', () => {
     ownFixture.destroy();
     flush();
   }));
+
+  it('names the sheet by the heading of a custom header, not its buttons, and follows a swapped heading', async () => {
+    const own = TestBed.createComponent(HeadingHost);
+    own.detectChanges();
+    const modal = own.debugElement.query(By.directive(SdModal)).componentInstance as SdModal;
+    modal.open();
+    own.detectChanges();
+    await own.whenStable();
+    own.detectChanges();
+    const dialog = document.querySelector('.cdk-overlay-container [role="dialog"]')!;
+    const name = () => document.getElementById(dialog.getAttribute('aria-labelledby') ?? '')?.textContent?.trim();
+    expect(name()).toBe('Bộ lọc');
+
+    own.componentInstance.page.set('Trạng thái');
+    own.detectChanges();
+    // why: the MutationObserver callback runs as a microtask after the DOM change.
+    await new Promise(resolve => setTimeout(resolve));
+    expect(name()).toBe('Trạng thái');
+    expect(dialog.querySelectorAll(`[id="${dialog.getAttribute('aria-labelledby')}"]`).length).toBe(1);
+
+    modal.forceClose();
+    own.destroy();
+    await new Promise(resolve => setTimeout(resolve));
+  });
 
   it('leaves no orphaned overlay or backdrop in the CDK container after the host is destroyed', fakeAsync(() => {
     component.open();

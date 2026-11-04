@@ -707,7 +707,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/table/sd-table',
     keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal', 'unknown total', 'has more', 'query bar', 'column settings'],
     status: 'stable',
-    demoSectionCount: 37,
+    demoSectionCount: 39,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({

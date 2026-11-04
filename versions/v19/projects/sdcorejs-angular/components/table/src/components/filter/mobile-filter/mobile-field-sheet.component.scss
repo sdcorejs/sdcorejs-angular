@@ -1,0 +1,4 @@
+@use '../../mobile-sheet/mobile-sheet' as sheet;
+
+@include sheet.chrome;
+@include sheet.panel('sd-table-mobile-filter-sheet');

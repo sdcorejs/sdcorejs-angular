@@ -1,0 +1,59 @@
+@let _item = item();
+@let _working = working();
+@let _ctx = ctx();
+@let _autoId = autoId();
+<sd-modal
+  #sheet
+  view="bottom-sheet"
+  [title]="_item?.label ?? ''"
+  [autoId]="_autoId ? _autoId + '-sheet' : undefined"
+  hideClose
+  [disableBackdropClose]="false"
+  [closeOnNavigation]="false"
+  modalClass="sd-table-mobile-filter-sheet"
+  (sdClosed)="onClosed()">
+  <div sdHeaderLeft #head class="sd-mobile-sheet-head">
+    <span class="sd-mobile-sheet-handle" aria-hidden="true"></span>
+    <div class="sd-mobile-sheet-title-row">
+      <!-- why: Material focuses the first tabbable element on open; the title keeps Clear from showing its focus fill. -->
+      <h2 class="sd-mobile-sheet-title" tabindex="-1" cdkFocusInitial>{{ _item?.label }}</h2>
+      <sd-button
+        [autoId]="_autoId ? _autoId + '-clear' : null"
+        type="text"
+        color="primary"
+        size="md"
+        [title]="'core.component.table.mobile.clear-field' | sdTranslate"
+        (click)="clear()"></sd-button>
+    </div>
+  </div>
+  @if (_item && _working && _ctx) {
+    <div class="sd-mobile-sheet-body">
+      <sd-table-mobile-filter-field
+        [item]="_item"
+        [value]="_working"
+        [ctx]="_ctx"
+        [revision]="revision()"
+        [cacheValues]="table().cacheValues"
+        [labels]="labels()"
+        [autoId]="_autoId"
+        (changed)="onChanged()"></sd-table-mobile-filter-field>
+    </div>
+  }
+  <div sdFooterRight class="sd-mobile-sheet-footer">
+    <sd-button
+      class="sd-mobile-sheet-cancel"
+      [autoId]="_autoId ? _autoId + '-cancel' : null"
+      type="outline"
+      size="md"
+      [title]="'core.common.cancel' | sdTranslate"
+      (click)="cancel()"></sd-button>
+    <sd-button
+      class="sd-mobile-sheet-apply"
+      [autoId]="_autoId ? _autoId + '-apply' : null"
+      type="fill"
+      color="primary"
+      size="md"
+      [title]="'core.component.table.apply' | sdTranslate"
+      (click)="apply()"></sd-button>
+  </div>
+</sd-modal>

@@ -1,32 +1,82 @@
-.mobile-filter-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 8px 0;
-}
+@use '../../mobile-sheet/mobile-sheet' as sheet;
 
-.mobile-filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+@include sheet.chrome;
+@include sheet.panel('sd-table-mobile-filter-sheet');
 
-.mobile-filter-row {
-  display: flex;
-  flex-direction: column;
+// The full filter sheet is as tall as the viewport less 40px (handoff table-mobile 5). why: both classes — the 85dvh
+// cap of the other phone sheets has the same weight and may load later.
+::ng-deep .sd-table-mobile-filter-sheet.sd-table-mobile-filter-sheet--full {
+  &.mat-bottom-sheet-container,
+  &.mat-mdc-bottom-sheet-container,
+  .mat-bottom-sheet-container,
+  .mat-mdc-bottom-sheet-container {
+    height: calc(100dvh - 40px);
+    max-height: calc(100dvh - 40px);
+  }
+  .sd-modal-header {
+    border-bottom: 1px solid var(--sd-border);
+  }
+  // The list or page fills the sheet; the footer stays at the bottom.
+  .sd-modal-root {
+    height: 100%;
+  }
+  .sd-modal-body {
+    max-height: none;
+  }
 }
-
-// Footer 2 button chia đôi 50/50
-.mobile-filter-footer {
+.sd-mobile-filter-head {
+  padding-inline-start: 4px;
+}
+.sd-mobile-filter-heading {
   display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.sd-mobile-filter-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sd-mobile-filter-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
   width: 100%;
-}
+  min-height: 60px;
+  padding: 0 12px 0 20px;
+  border: 0;
+  border-bottom: 1px solid var(--sd-surface-muted);
+  background: transparent;
+  color: var(--sd-text-secondary);
+  text-align: start;
+  cursor: pointer;
 
-.mobile-filter-action {
-  flex: 1 1 50%;
-
-  ::ng-deep button {
-    width: 100%;
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: -2px;
   }
+}
+.sd-mobile-filter-row-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.sd-mobile-filter-row-label {
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  color: var(--sd-text);
+}
+.sd-mobile-filter-row-summary {
+  overflow: hidden;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
+  color: var(--sd-text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sd-mobile-filter-row-summary--active {
+  font-weight: var(--sd-font-weight-medium, 500);
+  color: var(--sd-primary);
 }

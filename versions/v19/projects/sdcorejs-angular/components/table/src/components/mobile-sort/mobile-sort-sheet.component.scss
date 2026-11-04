@@ -1,0 +1,19 @@
+@use '../mobile-sheet/mobile-sheet' as sheet;
+
+@include sheet.chrome;
+@include sheet.panel('sd-table-mobile-filter-sheet');
+
+// Sort sheet (handoff table-mobile 6): full-width direction switch, then the columns, which scroll inside the sheet.
+.sd-mobile-sort-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+.sd-mobile-sort-direction {
+  display: block;
+  width: 100%;
+}
+.sd-mobile-sort-columns ::ng-deep .mat-mdc-radio-button {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+}

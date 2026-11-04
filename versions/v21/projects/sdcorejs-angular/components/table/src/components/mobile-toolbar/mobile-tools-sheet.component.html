@@ -1,0 +1,83 @@
+@let _autoId = table().autoId();
+@let _exports = exportTools();
+@let _others = tableTools();
+@let _exporting = exporting();
+@let _running = running();
+@let _title = 'core.component.table.mobile.tools-title' | sdTranslate;
+<sd-modal
+  #sheet
+  view="bottom-sheet"
+  [title]="_title"
+  [autoId]="_autoId ? _autoId + '-mobile-sheet' : undefined"
+  hideClose
+  [disableBackdropClose]="false"
+  [closeOnNavigation]="false"
+  modalClass="sd-table-mobile-filter-sheet sd-table-mobile-tools-sheet"
+  (sdClosed)="onClosed()">
+  <div sdHeaderLeft #head class="sd-mobile-sheet-head">
+    <span class="sd-mobile-sheet-handle" aria-hidden="true"></span>
+    <div class="sd-mobile-sheet-title-row">
+      <!-- why: Material focuses the first tabbable element on open; the title keeps the first tile from showing its focus. -->
+      <h2 class="sd-mobile-sheet-title" tabindex="-1" cdkFocusInitial>{{ _title }}</h2>
+    </div>
+  </div>
+  <div class="sd-mobile-tools">
+    @if (_exports.length) {
+      <section class="sd-mobile-tools-section" [attr.aria-labelledby]="ids.export">
+        <h3 class="sd-mobile-tools-label" [id]="ids.export">{{ 'core.component.table.mobile.tools-export' | sdTranslate }}</h3>
+        <div class="sd-mobile-tools-tiles" [class.sd-mobile-tools-tiles--single]="_exports.length === 1">
+          @for (tool of _exports; track tool.action.key) {
+            @let _busy = _exporting && _running === tool.action.key;
+            <button
+              type="button"
+              class="sd-mobile-tool sd-mobile-tool-tile"
+              [attr.data-tone]="tool.tone"
+              [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + tool.action.key : null"
+              [attr.aria-busy]="_busy || null"
+              [disabled]="_exporting || tool.action.disabled"
+              (click)="run(tool)">
+              <span class="sd-mobile-tool-icon" aria-hidden="true">
+                @if (_busy) {
+                  <mat-spinner diameter="20" strokeWidth="2.5"></mat-spinner>
+                } @else {
+                  <sd-icon [name]="tool.icon" size="22px"></sd-icon>
+                }
+              </span>
+              <span class="sd-mobile-tool-text">
+                <span class="sd-mobile-tool-title">{{ tool.title }}</span>
+                <span class="sd-mobile-tool-hint">{{ _busy ? progress() : tool.hint }}</span>
+              </span>
+            </button>
+          }
+        </div>
+        <span class="sd-mobile-tools-status" role="status">{{ _running && _exporting ? progress() : '' }}</span>
+      </section>
+    }
+    @if (_others.length) {
+      <section class="sd-mobile-tools-section" [attr.aria-labelledby]="ids.table">
+        <h3 class="sd-mobile-tools-label" [id]="ids.table">{{ 'core.component.table.mobile.tools-table' | sdTranslate }}</h3>
+        @for (tool of _others; track tool.action.key) {
+          <button
+            type="button"
+            class="sd-mobile-tool sd-mobile-tool-row"
+            [attr.data-tone]="tool.tone"
+            [attr.data-autoid]="_autoId ? _autoId + '-mobile-' + tool.action.key : null"
+            [disabled]="tool.action.disabled"
+            (click)="run(tool)">
+            <span class="sd-mobile-tool-icon" aria-hidden="true"><sd-icon [name]="tool.icon" size="22px"></sd-icon></span>
+            <span class="sd-mobile-tool-text">
+              <span class="sd-mobile-tool-title">{{ tool.title }}</span>
+              @if (tool.hint) {
+                <span class="sd-mobile-tool-hint">{{ tool.hint }}</span>
+              }
+            </span>
+            @if (tool.badge) {
+              <span class="sd-mobile-tool-badge">{{ tool.badge }}</span>
+            }
+            <sd-icon class="sd-mobile-tool-chevron" name="chevron_right" size="22px" aria-hidden="true"></sd-icon>
+          </button>
+        }
+      </section>
+    }
+  </div>
+</sd-modal>

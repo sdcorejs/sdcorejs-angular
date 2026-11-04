@@ -1,0 +1,160 @@
+@use '../mobile-sheet/mobile-sheet' as sheet;
+
+@include sheet.chrome;
+@include sheet.panel('sd-table-mobile-filter-sheet');
+
+// Tools sheet (handoff table-mobile 2): a section per kind of tool. Exports are tiles side by side; the table settings
+// are a row. Each tool has a tinted 40px icon in the tone of what it does.
+.sd-mobile-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 20px max(20px, env(safe-area-inset-bottom));
+}
+.sd-mobile-tools-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sd-mobile-tools-label {
+  margin: 0;
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  letter-spacing: 0.02em;
+  color: var(--sd-text-secondary);
+}
+.sd-mobile-tools-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.sd-mobile-tools-tiles--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.sd-mobile-tools-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sd-mobile-tool {
+  --sd-mobile-tool-bg: var(--sd-secondary-light);
+  --sd-mobile-tool-fg: var(--sd-secondary-dark);
+  appearance: none;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    border-color: color-mix(in srgb, var(--sd-mobile-tool-fg) 32%, var(--sd-border));
+    background: color-mix(in srgb, var(--sd-mobile-tool-fg) 6%, var(--sd-surface));
+  }
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 2px;
+  }
+  &:disabled {
+    cursor: default;
+  }
+  &:disabled:not([aria-busy='true']) {
+    opacity: 0.5;
+  }
+  &[aria-busy='true'] {
+    border-color: color-mix(in srgb, var(--sd-mobile-tool-fg) 40%, var(--sd-border));
+    background: color-mix(in srgb, var(--sd-mobile-tool-fg) 6%, var(--sd-surface));
+  }
+}
+.sd-mobile-tool[data-tone='success'] {
+  --sd-mobile-tool-bg: var(--sd-success-light);
+  --sd-mobile-tool-fg: var(--sd-success-dark);
+}
+.sd-mobile-tool[data-tone='info'] {
+  --sd-mobile-tool-bg: var(--sd-info-light);
+  --sd-mobile-tool-fg: var(--sd-info-dark);
+}
+.sd-mobile-tool[data-tone='primary'] {
+  --sd-mobile-tool-bg: var(--sd-primary-light);
+  --sd-mobile-tool-fg: var(--sd-primary-dark);
+}
+
+.sd-mobile-tool-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 112px;
+  padding: 14px;
+}
+.sd-mobile-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 8px 10px 12px;
+}
+.sd-mobile-tool-icon {
+  display: grid;
+  flex: 0 0 40px;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-mobile-tool-bg);
+  color: var(--sd-mobile-tool-fg);
+  --mdc-circular-progress-active-indicator-color: var(--sd-mobile-tool-fg);
+}
+.sd-mobile-tool-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sd-mobile-tool-title {
+  font-size: var(--sd-font-size-15, 15px);
+  line-height: var(--sd-line-height-20, 20px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  overflow-wrap: anywhere;
+}
+.sd-mobile-tool-hint {
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  color: var(--sd-text-secondary);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.sd-mobile-tool-badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: var(--sd-radius-full, 999px);
+  background: var(--sd-primary-light);
+  color: var(--sd-primary-dark);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  white-space: nowrap;
+}
+.sd-mobile-tool-chevron {
+  flex: 0 0 auto;
+  color: var(--sd-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-mobile-tool {
+    transition: none;
+  }
+}

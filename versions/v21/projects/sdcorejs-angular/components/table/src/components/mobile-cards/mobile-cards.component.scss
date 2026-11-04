@@ -5,11 +5,13 @@
   display: block;
   min-width: 0;
 }
+// List on a low surface (surface-container-low: same mix as the table summaries), cards 8px apart.
 .sd-mobile-list {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 20px 20px 8px;
+  gap: 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--sd-surface-muted) 35%, var(--sd-surface));
   transition: opacity var(--sd-duration-fast, 120ms);
 
   @media (prefers-reduced-motion: reduce) {
@@ -30,12 +32,29 @@
 .sd-mobile-skeleton-card {
   position: relative;
   border: 1px solid var(--sd-border);
-  border-radius: var(--sd-radius-8, 8px);
+  border-radius: var(--sd-radius-12, 12px);
   background: var(--sd-surface);
   color: var(--sd-text);
   min-width: 0;
-  padding: 8px 12px;
-  overflow-wrap: anywhere;
+}
+// Card grid: [selector 44px] | content | ⋯ 44px. The right column drops to 12px while rows are selected (⋯ hidden)
+// and when the table has no row commands.
+.sd-mobile-card {
+  --sd-mobile-card-end: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sd-mobile-card-end);
+  align-items: start;
+  padding: 4px 0 8px 16px;
+}
+.sd-mobile-card--select {
+  grid-template-columns: 44px minmax(0, 1fr) var(--sd-mobile-card-end);
+  padding: 4px 0 10px;
+}
+.sd-mobile-card--commands {
+  --sd-mobile-card-end: 44px;
+}
+.sd-mobile-skeleton-card {
+  padding: 14px 16px 10px;
 }
 .sd-mobile-card.selected {
   border-color: var(--sd-primary);
@@ -49,71 +68,47 @@ button:focus-visible {
   outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
   outline-offset: 2px;
 }
-.sd-mobile-card-commandable {
-  min-height: 76px;
+// The checkbox/radio sits in a 44 × 44 zone of the left column; its Material touch target covers the zone.
+.sd-mobile-card-select {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
 }
-// The 24px circular surface straddles the border; the transparent hit area is 40px.
 .sd-mobile-card-selector {
-  position: absolute;
-  z-index: 1;
-  top: -20px;
-  inset-inline-end: -20px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   --mdc-checkbox-state-layer-size: 40px;
   --mat-checkbox-state-layer-size: 40px;
   --mdc-radio-state-layer-size: 40px;
   --mat-radio-state-layer-size: 40px;
 }
-.sd-mobile-card-selector::before {
-  content: '';
-  position: absolute;
-  inset: 8px;
-  border: 1px solid var(--sd-border);
-  border-radius: 50%;
-  background: var(--sd-surface);
+.sd-mobile-card-main {
+  min-width: 0;
+  padding-top: 10px;
+  overflow-wrap: anywhere;
 }
-.sd-mobile-card-actions {
+.sd-mobile-card-end {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
 }
 .sd-mobile-command-trigger {
-  flex: 0 0 44px;
-  margin-inline-start: auto;
   width: 44px;
   height: 44px;
-}
-:host ::ng-deep .sd-mobile-card-selector {
-  .mdc-checkbox__background {
-    width: 14px;
-    height: 14px;
-    top: 13px;
-    left: 13px;
-  }
-  .mdc-radio__background {
-    transform: scale(0.7);
-  }
-  .mat-mdc-checkbox-touch-target,
-  .mat-mdc-radio-touch-target {
-    width: 40px;
-    height: 40px;
-  }
-  .mdc-checkbox__ripple,
-  .mat-mdc-checkbox-ripple,
-  .mat-mdc-radio-ripple {
-    width: 24px;
-    height: 24px;
-    inset: 8px;
-  }
+  padding: 0;
+  color: var(--sd-text-secondary);
+  --mat-icon-button-state-layer-size: 44px;
+  --mdc-icon-button-state-layer-size: 44px;
 }
 .sd-mobile-card-body {
-  padding: 4px 0;
   min-width: 0;
+}
+// Details line at the end of the card: a full-width text button that discloses the block below it.
+.sd-mobile-card-details {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  margin-top: 4px;
+  padding-inline: 0;
 }
 // Loading layer, tree/expand button that is loading: 16px spinner in place of the icon.
 @include loading.spinner-keyframes;
