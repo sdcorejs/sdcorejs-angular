@@ -774,7 +774,7 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'components/table/example-the-mobile-va-thao-tac': {
     title: 'Mobile cards and actions',
     description:
-      'The Add button is centered above the cards. The checkbox sits in the left column of the card, ⋯ in the top-right corner and Details on the last line. The selection bar leaves 16px at both ends; many actions wrap evenly onto new rows. Tapping a card opens the row actions sheet. The chip row under the search opens the filters; ⋮ in the top row opens Tools (export, settings); pull the list down to reload.',
+      'The Add button is centered above the cards. The checkbox sits in the left column of the card, ⋯ in the top-right corner and Details on the last line. The selection bar sits 12px off both screen edges and its count is primary light; many actions wrap evenly onto new rows. Tapping a card opens the row actions sheet. The chip row under the search opens the filters; ⋮ in the top row opens Tools (Excel / CSV export tiles with progress, a Table settings row); pull the list down to reload.',
   },
   'components/table/example-loc-va-sap-xep-tren-dien-thoai': {
     title: 'Filters and sort on phones',

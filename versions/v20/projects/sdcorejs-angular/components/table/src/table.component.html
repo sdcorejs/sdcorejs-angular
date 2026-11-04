@@ -275,16 +275,10 @@
             aria-haspopup="dialog"
             [attr.aria-label]="'core.component.table.mobile.tools' | sdTranslate"
             [attr.data-autoid]="_autoId ? _autoId + '-mobile-tools' : null"
-            (click)="mobileTools.openMore()">
+            (click)="mobileTools.open()">
             <sd-icon name="more_vert" size="22px"></sd-icon>
           </button>
-          <sd-table-mobile-actions
-            #mobileTools
-            [actions]="_tools"
-            [autoOpen]="false"
-            sheetClass="sd-table-mobile-tools-panel"
-            [title]="'core.component.table.mobile.tools-title' | sdTranslate"
-            [autoId]="_autoId"></sd-table-mobile-actions>
+          <sd-table-mobile-tools-sheet #mobileTools [table]="this" [actions]="_tools"></sd-table-mobile-tools-sheet>
         }
       </div>
       @if (_hasChips) {

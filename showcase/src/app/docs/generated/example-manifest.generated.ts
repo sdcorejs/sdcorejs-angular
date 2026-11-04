@@ -2230,7 +2230,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/table",
     sectionId: "example-the-mobile-va-thao-tac",
     title: "Thẻ mobile và thao tác",
-    description: "Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (xuất, thiết lập); kéo danh sách xuống để tải lại.",
+    description: "Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.",
   },
   {
     sourceKey: "components/table/example-loc-va-sap-xep-tren-dien-thoai",

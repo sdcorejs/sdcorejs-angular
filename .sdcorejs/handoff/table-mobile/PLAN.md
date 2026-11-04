@@ -300,6 +300,22 @@ Không sửa, ghi lại:
 - Chip và sheet giữ hai bộ nhớ nhãn riêng nên `lazy-values` tra nhãn hai lần; `values` một giá trị với `NOT_EQUAL` mất toán tử
   trong tóm tắt (chuỗi của thanh query-bar).
 
+## Chỉnh sau review của chủ dự án (2026-11-04)
+
+- **Bỏ chọn / Bỏ sắp xếp khác nhau:** bottom sheet của Material mặc định `autoFocus: 'first-tabbable'`, nên nút chữ đầu tiên
+  (Bỏ sắp xếp, Bỏ chọn ở sheet một bộ lọc, ✕ ở danh sách lọc) mở ra với nền focus; trên trang lọc focus đã ở tiêu đề nên nút
+  phẳng. Mọi sheet giờ focus tiêu đề lúc mở (`h2 tabindex="-1" cdkFocusInitial`); sheet một bộ lọc chạy `detectChanges()` trước
+  `open()` để tiêu đề đã có khi Material đặt focus.
+- **Bỏ ✕ ở danh sách lọc:** Hủy ở chân sheet đã đóng được; tiêu đề danh sách thẳng lề 20px như các sheet khác.
+- **Sheet Công cụ thiết kế lại:** component riêng `sd-table-mobile-tools-sheet` (cùng khung sheet: tay nắm, tiêu đề, vuốt, Back),
+  thay `sd-table-mobile-actions` + `sheetClass` (bỏ input nội bộ đó). Hai nhóm có nhãn: **Xuất dữ liệu** là ô vuông cạnh nhau
+  (icon 40px nền nhạt theo tông: Excel success, CSV info, xuất tuỳ chỉnh primary; dòng phụ là loại tệp); đang xuất thì ô hiện
+  spinner + phần trăm (`TableExportService.exportPercent`), ô khác chờ, sheet tự đóng khi xong (xuất xong ngay thì đóng ngay).
+  **Bảng** là một dòng Thiết lập bảng với dòng phụ và nhãn **Đã tùy chỉnh** khi `hasCustomSetup()` (cùng điều kiện với chấm ở
+  nút thiết lập desktop); thiết lập mở sau khi sheet đóng. AutoId giữ nguyên. 8 key i18n mới.
+- **Từ ngày / Đến ngày:** bỏ `labelPlacement="top"`, dùng float label mặc định của `sd-date`.
+- **Thanh chọn dòng:** số đếm dùng `--sd-primary-light` / `--sd-primary-dark` (trước là success fill), thanh cách hai mép 12px.
+
 ## CHANGELOG (`## [Unreleased]`)
 
 - Changed (BREAKING cho E2E): autoId `{autoId}-mobile-tool-filter`, `-mobile-tool-sort-<field>`, `-mobile-tool-reload` không

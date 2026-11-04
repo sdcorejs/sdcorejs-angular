@@ -13185,7 +13185,7 @@ const TASKS: Task[] = [
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-the-mobile-va-thao-tac') {
       <demo-section heading="Thẻ mobile và thao tác"
         [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-        note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (xuất, thiết lập); kéo danh sách xuống để tải lại.">
+        note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.">
         <sd-table autoId="mobile-employees" [option]="mobileOption">
           <ng-template sdTableCommandHeaderDef>
             <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>
@@ -30690,7 +30690,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Thẻ mobile và thao tác"
     [props]="[{ name: 'sdTableRowMobileDef', value: 'template' }, { name: 'mobile.rowLabel', value: 'callback' }, { name: 'selector.actions', value: '[…]' }, { name: 'command.commands', value: '[…]' }]"
-    note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn chừa 16px hai đầu; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (xuất, thiết lập); kéo danh sách xuống để tải lại.">
+    note="Nút Thêm canh giữa phía trên card. Checkbox nằm ở cột trái của thẻ, ⋯ ở góc trên phải, dòng Chi tiết ở cuối thẻ. Thanh chọn cách hai mép 12px, số đếm màu primary nhạt; nhiều action tự xuống hàng đều. Chạm card mở sheet thao tác dòng. Hàng chip dưới ô tìm mở bộ lọc; ⋮ ở hàng đầu mở Công cụ (ô xuất Excel / CSV có tiến độ, dòng Thiết lập bảng); kéo danh sách xuống để tải lại.">
     <sd-table autoId="mobile-employees" [option]="mobileOption">
       <ng-template sdTableCommandHeaderDef>
         <sd-button title="Thêm" prefixIcon="add" type="text" (click)="recordMobile('Thêm dòng', [])"></sd-button>

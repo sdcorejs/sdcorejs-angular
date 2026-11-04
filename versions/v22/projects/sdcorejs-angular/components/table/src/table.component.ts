@@ -60,9 +60,9 @@ import {
 import { type SdTableMobileFilterItem, sdTableMobileFilterItems } from './services/table-filter/table-mobile-filter.util';
 import { SdTableMobileFilterChipsComponent } from './components/mobile-toolbar/mobile-filter-chips.component';
 import { SdTablePullRefreshComponent } from './components/mobile-toolbar/pull-refresh.component';
+import { SdTableMobileToolsSheetComponent } from './components/mobile-toolbar/mobile-tools-sheet.component';
 import { SdTableMobileSortSheetComponent } from './components/mobile-sort/mobile-sort-sheet.component';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
-import { SdTableMobileActionsComponent } from './components/mobile-cards/mobile-actions.component';
 import { SdTableMobileAction } from './components/mobile-cards/mobile-action.model';
 import { SdTableMobileCardsComponent } from './components/mobile-cards/mobile-cards.component';
 import { type SdTableMobileBody, warnMobileOnce } from './services/mobile/mobile-view.util';
@@ -354,8 +354,8 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SdTableMobileCardsComponent,
     SdTableMobileFilterChipsComponent,
     SdTablePullRefreshComponent,
+    SdTableMobileToolsSheetComponent,
     SdTableMobileSortSheetComponent,
-    SdTableMobileActionsComponent,
     SdTableUnknownTotalPaginator,
   ],
 })

@@ -15,7 +15,8 @@
   <div sdHeaderLeft #head class="sd-mobile-sheet-head">
     <span class="sd-mobile-sheet-handle" aria-hidden="true"></span>
     <div class="sd-mobile-sheet-title-row">
-      <h2 class="sd-mobile-sheet-title">{{ _item?.label }}</h2>
+      <!-- why: Material focuses the first tabbable element on open; the title keeps Clear from showing its focus fill. -->
+      <h2 class="sd-mobile-sheet-title" tabindex="-1" cdkFocusInitial>{{ _item?.label }}</h2>
       <sd-button
         [autoId]="_autoId ? _autoId + '-clear' : null"
         type="text"

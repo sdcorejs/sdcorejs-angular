@@ -15,7 +15,7 @@
   (sdClosed)="onClosed()">
   <div sdHeaderLeft #head class="sd-mobile-sheet-head">
     <span class="sd-mobile-sheet-handle" aria-hidden="true"></span>
-    <div class="sd-mobile-sheet-title-row sd-mobile-filter-head">
+    <div class="sd-mobile-sheet-title-row" [class.sd-mobile-filter-head]="!!_page">
       @if (_page) {
         <button
           mat-icon-button
@@ -37,17 +37,10 @@
             (click)="clearPage()"></sd-button>
         }
       } @else {
-        <button
-          mat-icon-button
-          type="button"
-          class="sd-mobile-sheet-icon"
-          [attr.aria-label]="'core.common.close' | sdTranslate"
-          [attr.data-autoid]="_autoId ? _autoId + 'close' : null"
-          (click)="onCancel()">
-          <sd-icon name="close" size="22px"></sd-icon>
-        </button>
+        <!-- No ✕ here: Hủy in the footer closes the sheet. -->
         <div class="sd-mobile-filter-heading">
-          <h2 class="sd-mobile-sheet-title">{{ 'core.component.table.filter' | sdTranslate }}</h2>
+          <!-- why: Material focuses the first tabbable element on open; the title keeps Clear all from showing its focus fill. -->
+          <h2 class="sd-mobile-sheet-title" tabindex="-1" cdkFocusInitial>{{ 'core.component.table.filter' | sdTranslate }}</h2>
           @if (_count) {
             <span class="sd-mobile-sheet-subtitle">{{ 'core.component.table.mobile.filter-count' | sdTranslate: { count: _count } }}</span>
           }

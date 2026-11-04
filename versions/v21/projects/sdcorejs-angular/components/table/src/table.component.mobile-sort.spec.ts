@@ -158,6 +158,17 @@ describe('SdTable mobile sort and tools', () => {
       expect(table.sortState().direction).toBe('');
     }));
 
+    it('focuses the title on open, so Bỏ sắp xếp looks like Bỏ chọn', fakeAsync(() => {
+      create();
+      openSort();
+      radios()[0].click();
+      settle();
+      openSort();
+      expect(document.activeElement?.classList).toContain('sd-mobile-sheet-title');
+      const clear = overlay().querySelector<HTMLElement>('[data-autoid$="-mobile-sort-clear"]')!;
+      expect(clear.contains(document.activeElement)).toBeFalse();
+    }));
+
     it('names the top-row button after the active sort', fakeAsync(() => {
       create();
       const plain = byAutoId('-mobile-sort')!.getAttribute('aria-label');

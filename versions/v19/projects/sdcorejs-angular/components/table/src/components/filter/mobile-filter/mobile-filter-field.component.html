@@ -78,14 +78,12 @@
     @case ('date-range') {
       <div class="sd-mobile-field-pair">
         <sd-date
-          labelPlacement="top"
           [label]="'core.component.table.mobile.date-from' | sdTranslate"
           [autoId]="_autoId ? _autoId + '-from' : null"
           [model]="_raw?.from"
           (modelChange)="setRange('from', $event)"
           hideInlineError></sd-date>
         <sd-date
-          labelPlacement="top"
           [label]="'core.component.table.mobile.date-to' | sdTranslate"
           [autoId]="_autoId ? _autoId + '-to' : null"
           [model]="_raw?.to"

@@ -199,7 +199,7 @@ describe('SdTable mobile cards', () => {
     element.querySelector<HTMLButtonElement>('.sd-mobile-top [data-autoid$="-mobile-tools"]')!.click();
     settle();
     const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-    expect(overlay.querySelector('.sd-modal-bottom-sheet-panel .sd-modal-title')?.textContent?.trim()).toBeTruthy();
+    expect(overlay.querySelector('.sd-table-mobile-tools-sheet .sd-mobile-sheet-title')?.textContent?.trim()).toBeTruthy();
     expect(overlay.querySelector('[data-autoid$="-mobile-tool-export-excel"]')).not.toBeNull();
     expect(overlay.querySelector('[data-autoid*="-mobile-tool-sort"]')).toBeNull();
     expect(overlay.querySelector('[data-autoid$="-mobile-tool-filter"]')).toBeNull();
@@ -219,6 +219,14 @@ describe('SdTable mobile cards', () => {
     expect(bar?.textContent).not.toContain('Do not show this message on mobile');
     expect(bar?.querySelector('.sd-mobile-clear')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.sd-mobile-select-page')).toBeNull();
+  }));
+
+  it('keeps the selection bar off both edges of the screen', fakeAsync(() => {
+    create();
+    select(0);
+    const actions = getComputedStyle(fixture.nativeElement.querySelector('.sd-mobile-actions'));
+    expect(actions.paddingLeft).toBe('12px');
+    expect(actions.paddingRight).toBe('12px');
   }));
 
   it('omits the ⋮ tools button when every tool is disabled', fakeAsync(() => {

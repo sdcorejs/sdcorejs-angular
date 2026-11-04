@@ -304,6 +304,13 @@ describe('SdTable mobile filter chips', () => {
       expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
     }));
 
+    it('focuses the title on open, so Bỏ chọn looks like on the filter page', fakeAsync(() => {
+      create();
+      openStatus();
+      expect(document.activeElement?.classList).toContain('sd-mobile-sheet-title');
+      expect(document.activeElement?.textContent).toContain('Trạng thái');
+    }));
+
     it('adds a search box only above 8 options', fakeAsync(() => {
       create();
       openStatus();
@@ -513,18 +520,27 @@ describe('SdTable mobile filter chips', () => {
       expect(chip('status')).toBeNull();
     }));
 
-    it('closes on ✕ without writing the edits', fakeAsync(() => {
+    it('has no ✕ (Hủy closes the list) and focuses the title on open, not Xóa tất cả', fakeAsync(() => {
+      create();
+      apply({ columnFilter: { status: ['s1'] } });
+      openAll();
+      expect(overlay().querySelector('[data-autoid$="-mobile-filter-close"]')).toBeNull();
+      expect(overlay().querySelector('.sd-table-mobile-filter-sheet--full .sd-modal-close-btn')).toBeNull();
+      expect(document.activeElement?.classList).toContain('sd-mobile-sheet-title');
+      expect(button('clear-all').disabled).toBeFalse();
+    }));
+
+    it('shows Từ ngày / Đến ngày as floating labels inside the boxes', fakeAsync(() => {
       create();
       openAll();
-      row('status').click();
+      row('createdAt').click();
       settle();
-      tickOption(0);
-      button('done').click();
-      settle();
-      button('close').click();
-      settle();
-      expect(sheet()).toBeNull();
-      expect(table.filterRegister!.value.get().columnFilter?.['status'] ?? []).toEqual([]);
+      const dates = Array.from(overlay().querySelectorAll<HTMLElement>('.sd-mobile-field-pair sd-date'));
+      expect(dates.length).toBe(2);
+      for (const date of dates) {
+        expect(date.classList).not.toContain('sd-label-top');
+        expect(date.querySelector('mat-label, .mdc-floating-label')).not.toBeNull();
+      }
     }));
   });
 });

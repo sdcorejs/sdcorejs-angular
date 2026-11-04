@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   ElementRef,
@@ -43,6 +44,7 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
   readonly item = signal<SdTableMobileFilterItem | undefined>(undefined);
   readonly working = signal<TableFilterValue | undefined>(undefined);
   readonly revision = signal(0);
+  readonly #changes = inject(ChangeDetectorRef);
   readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView, inject(ElementRef).nativeElement);
   readonly ctx = input<SdTableQueryContext>();
   readonly autoId = computed(() => {
@@ -64,6 +66,8 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
     this.item.set(item);
     this.working.set(clone(register.value.get()));
     this.revision.update(value => value + 1);
+    // why: render the title first; Material puts the focus on the title (cdkFocusInitial) as soon as the sheet attaches.
+    this.#changes.detectChanges();
     this.sheet().open();
     // why: Back closes the sheet (drops the copy) instead of leaving the page.
     this.#history.push(() => this.sheet().forceClose());

@@ -2,9 +2,10 @@
   display: block;
   min-width: 0;
 }
+// The bar floats over the cards with a gap to both edges of the screen.
 .sd-mobile-actions {
   min-width: 0;
-  padding: 4px 0 max(4px, env(safe-area-inset-bottom));
+  padding: 4px 12px max(8px, env(safe-area-inset-bottom));
 }
 .sd-mobile-selection-summary {
   display: flex;
@@ -18,8 +19,8 @@
   height: 28px;
   padding: 0 6px;
   border-radius: var(--sd-radius-8, 8px);
-  background: var(--sd-success-dark, #2e7d32);
-  color: var(--sd-success-contrast, #fff);
+  background: var(--sd-primary-light);
+  color: var(--sd-primary-dark);
   font-variant-numeric: tabular-nums;
 }
 .sd-mobile-action-buttons {
@@ -184,20 +185,5 @@ button:focus-visible {
   .sd-modal-close-btn {
     width: 40px;
     height: 40px;
-  }
-}
-// Tools sheet (handoff table-mobile 2): rows of 56px, 20px side padding, 22px icon and 16px gap.
-::ng-deep .sd-table-mobile-tools-panel .sd-mobile-sheet-action {
-  min-height: 56px;
-  padding: 0 20px;
-  border-radius: 0;
-
-  .mdc-button__label {
-    gap: 16px;
-  }
-
-  sd-icon {
-    flex-basis: 22px;
-    font-size: 22px;
   }
 }
