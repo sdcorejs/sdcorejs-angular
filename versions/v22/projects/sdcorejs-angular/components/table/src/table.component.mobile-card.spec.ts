@@ -8,6 +8,7 @@ import { SdTable } from './table.component';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableRowMobileDefDirective } from './directives/sd-table-row-mobile-def.directive';
 import { SdTableExpandDefDirective } from './directives/sd-table-expand-def.directive';
+import { SD_TABLE_LAYOUT, type SdTableLayout } from './configurations';
 
 interface CardRow {
   id: number;
@@ -190,5 +191,92 @@ describe('SdTable mobile card frame', () => {
     settle();
     expect(table.selectedItems.map(row => row.id)).toEqual([1]);
     expect(document.querySelector('.sd-modal-bottom-sheet-panel')).toBeNull();
+  }));
+});
+
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdTable, SdTableRowMobileDefDirective],
+  template: `
+    <div class="scroll-box" style="height: 300px; overflow: auto; display: flex; flex-direction: column">
+      <sd-table [option]="option">
+        <ng-template [sdTableRowMobileDef]="option" let-row="item"
+          ><div style="height: 120px">{{ row.name }}</div></ng-template
+        >
+      </sd-table>
+    </div>
+  `,
+})
+class ScrollHost {
+  rows: CardRow[] = Array.from({ length: 8 }, (_, index) => ({ id: index + 1, name: `Row ${index + 1}` }));
+  option: SdTableOption<CardRow> = {
+    type: 'local',
+    rowKey: 'id',
+    items: () => this.rows,
+    paginate: { pageSize: 8 },
+    columns: [{ field: 'name', type: 'string', title: 'Name' }],
+  };
+}
+
+/** Phone cards scroll with the page: the table is never a scroll box of its own, also in a page layout that fills. */
+describe('SdTable mobile cards scrolling', () => {
+  let fixture: ComponentFixture<ScrollHost>;
+  let table: SdTable<CardRow>;
+  let host: HTMLElement;
+  const isMobile = signal(true);
+  const fillTarget = signal<Element | null>(null);
+  const layout: SdTableLayout = { fillTarget, externalFilterCollapsed: signal(false) };
+  const settle = () => {
+    fixture.detectChanges();
+    tick(850);
+    flush();
+    fixture.detectChanges();
+  };
+  const create = () => {
+    fixture = TestBed.createComponent(ScrollHost);
+    settle();
+    const element = fixture.debugElement.query(By.directive(SdTable));
+    table = element.componentInstance;
+    host = element.nativeElement;
+  };
+
+  beforeEach(() => {
+    isMobile.set(true);
+    fillTarget.set(null);
+    TestBed.configureTestingModule({
+      imports: [ScrollHost],
+      providers: [
+        provideNoopAnimations(),
+        { provide: SdViewportService, useValue: { isMobile } },
+        { provide: SD_TABLE_LAYOUT, useValue: layout },
+      ],
+    });
+  });
+
+  it('leaves the scrolling to its scrolling parent, footer touch targets included', fakeAsync(() => {
+    create();
+    const box = fixture.nativeElement.querySelector('.scroll-box') as HTMLElement;
+    const list = host.querySelector('.c-table') as HTMLElement;
+    expect(host.classList).toContain('sd-table--cards');
+    expect(getComputedStyle(host).overflowY).toBe('visible');
+    expect(host.scrollHeight).toBeLessThanOrEqual(host.clientHeight);
+    expect(list.scrollHeight).toBeLessThanOrEqual(list.clientHeight);
+    expect(box.scrollHeight).toBeGreaterThan(box.clientHeight + 600);
+    expect(host.querySelector<HTMLElement>('.c-paginator')!.getBoundingClientRect().height).toBeGreaterThanOrEqual(48);
+  }));
+
+  it('does not fill a page layout while it shows cards, and fills it again as a desktop table', fakeAsync(() => {
+    create();
+    fillTarget.set(host);
+    settle();
+    expect(table.fill()).toBeFalse();
+    expect(host.classList).not.toContain('sd-table--fill');
+    expect(host.style.getPropertyValue('--sd-table-fill-min')).toBe('');
+
+    isMobile.set(false);
+    settle();
+    expect(table.fill()).toBeTrue();
+    expect(host.classList).toContain('sd-table--fill');
+    expect(host.classList).not.toContain('sd-table--cards');
   }));
 });

@@ -299,6 +299,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     '[attr.data-loading-view]': 'loadingView()',
     '[attr.data-filter-mode]': 'effectiveFilterMode()',
     '[class.sd-table--fill]': 'fill()',
+    '[class.sd-table--cards]': 'mobileCards()',
   },
   providers: [
     DatePipe,
@@ -1120,10 +1121,14 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   readonly #layout = inject(SD_TABLE_LAYOUT, { optional: true });
-  /** Bảng chính của khung trang (sd-page-list): lấp phần chiều cao còn lại, giữ tối thiểu header + 5 dòng. */
+  /**
+   * Bảng chính của khung trang (sd-page-list): lấp phần chiều cao còn lại, giữ tối thiểu header + 5 dòng. Không áp
+   * dụng khi điện thoại hiện thẻ: thẻ nằm theo trang và vùng cuộn của trang cuộn một lần, thay vì cuộn trong một hộp
+   * thấp giữa header và paginator (và cuộn lồng với trang khi màn thấp).
+   */
   readonly fill = computed(() => {
     const target = this.#layout?.fillTarget();
-    return !!target && (target === this.#host || target.contains(this.#host));
+    return !!target && (target === this.#host || target.contains(this.#host)) && !this.mobileCards();
   });
   /** External filter của bảng chính thu gọn khi khung trang đang ở chế độ màn thấp. */
   readonly externalFilterCollapsedByDefault = computed(() => this.fill() && !!this.#layout?.externalFilterCollapsed());
