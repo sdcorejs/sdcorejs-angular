@@ -338,6 +338,8 @@
   .c-paginator {
     flex-wrap: wrap;
     gap: 4px;
+    // why: the 48px touch targets of ‹ › must fit; a 44px footer let them stick out at the bottom of the table.
+    min-height: 48px;
   }
   .c-action {
     display: flex;
@@ -967,6 +969,13 @@
 .sd-aggregate-cell {
   background: inherit;
   border-top: 1px solid var(--sd-border);
+}
+
+// Phone cards: the table is not a scroll box of its own. The cards flow with the page and the nearest scrolling area
+// (the page, or the page layout) scrolls once; a fixed-height parent no longer makes the host scroll inside it.
+:host(.sd-table--cards) {
+  height: auto;
+  overflow: visible;
 }
 
 // Bảng chính của sd-page-list (SD_TABLE_LAYOUT): lấp phần chiều cao còn lại của cột flex chứa nó. Không co nhỏ

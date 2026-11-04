@@ -60,6 +60,7 @@ sd-page-list (flex column, height 100%)
 - **Selection:** the `selector.actions` bar appears above the footer, inside the table; the data area shrinks and the paginator does not move.
 - **Minimum:** the data area keeps room for the table header and 5 one-line rows (36px each). Only when that does not fit does the page body scroll.
 - The main table runs in fill mode through `SD_TABLE_LAYOUT` (`@sdcorejs/angular/components/table`); other tables on the page keep their own height.
+- On a phone that shows table cards the main table does not fill: the cards flow with the page and the body scrolls once.
 
 ## Short viewport
 

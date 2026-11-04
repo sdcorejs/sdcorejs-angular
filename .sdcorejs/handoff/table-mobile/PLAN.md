@@ -315,6 +315,11 @@ Không sửa, ghi lại:
   nút thiết lập desktop); thiết lập mở sau khi sheet đóng. AutoId giữ nguyên. 8 key i18n mới.
 - **Từ ngày / Đến ngày:** bỏ `labelPlacement="top"`, dùng float label mặc định của `sd-date`.
 - **Thanh chọn dòng:** số đếm dùng `--sd-primary-light` / `--sd-primary-dark` (trước là success fill), thanh cách hai mép 12px.
+- **Nhiều thanh cuộn (đo trên showcase 360px):** (1) chân bảng chế độ thẻ chỉ còn paginator cao 44px, vùng chạm 48px của
+  ‹ › lòi 2px nên host `sd-table` (`overflow: auto`) thành vùng cuộn 2px — lỗi do branch bỏ nút Công cụ khỏi chân; sửa:
+  chân ≥ 48px. (2) Trong `sd-page-list` (fill) thẻ cuộn trong `.c-table` (`sdScroll`) cao ~210px ở 720px, màn 560px thì cuộn
+  lồng với `.c-page-wrapper`; sửa: chế độ thẻ bỏ fill và host `sd-table--cards` `height: auto; overflow: visible`, trang cuộn
+  một lần. `style.maxHeight` của option vẫn áp dụng.
 
 ## CHANGELOG (`## [Unreleased]`)
 
