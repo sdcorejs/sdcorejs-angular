@@ -4,6 +4,8 @@ import { ɵSdQueryChipLabels } from '@sdcorejs/angular/components/query-bar';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import type { SdTable } from '../../table.component';
+import type { TableFilterValue } from '../../services/table-filter/table-filter.model';
+import type { SdTableQueryContext } from '../../services/table-filter/table-query-bar.util';
 import { sdTableMobileFilterActive, type SdTableMobileFilterItem } from '../../services/table-filter/table-mobile-filter.util';
 import { SdTableMobileFieldSheetComponent } from '../filter/mobile-filter/mobile-field-sheet.component';
 import { sdTableMobileFilterSummary } from '../filter/mobile-filter/mobile-filter-summary';
@@ -30,22 +32,26 @@ interface FieldChip {
 })
 export class SdTableMobileFilterChipsComponent<T = unknown> {
   readonly table = input.required<SdTable<T>>();
+  /** Filters of the phone UI and the applied value (from the table). */
+  readonly model = input<{ ctx: SdTableQueryContext; items: SdTableMobileFilterItem[] }>();
+  readonly value = input<TableFilterValue>();
+  readonly sortAvailable = input(false);
+  readonly sortLabel = input('');
   readonly fieldSheet = viewChild.required(SdTableMobileFieldSheetComponent);
   readonly sortOpen = output<void>();
   readonly labels = new ɵSdQueryChipLabels();
   readonly #i18n = inject(I18nService);
   readonly #summary = sdTableMobileFilterSummary();
 
-  readonly #model = computed(() => this.table().mobileFilterModel());
-  readonly #value = computed(() => this.table().mobileFilterValue() ?? {});
+  readonly #value = computed(() => this.value() ?? {});
   readonly count = computed(() => {
     const value = this.#value();
-    return (this.#model()?.items ?? []).filter(item => sdTableMobileFilterActive(item, value)).length;
+    return (this.model()?.items ?? []).filter(item => sdTableMobileFilterActive(item, value)).length;
   });
   readonly filterLabel = computed(() => this.#i18n.t('core.component.table.mobile.filter-open', { count: this.count() }));
   readonly chips = computed<FieldChip[]>(() => {
     const value = this.#value();
-    return (this.#model()?.items ?? [])
+    return (this.model()?.items ?? [])
       .filter(item => !!item.source)
       .map(item => {
         const summary = this.#summary(item, value, this.labels);
@@ -56,10 +62,10 @@ export class SdTableMobileFilterChipsComponent<T = unknown> {
   /** Sort chip (3.2): only an icon while the table is not sorted, else the arrow and the column. */
   readonly sort = computed(() => {
     const table = this.table();
-    if (!table.mobileSortAvailable()) return undefined;
+    if (!this.sortAvailable()) return undefined;
     const state = table.sortState();
     const column = state.direction ? table.mobileSortColumns().find(entry => entry.field === state.active) : undefined;
-    const label = table.mobileSortLabel();
+    const label = this.sortLabel();
     if (!column) return { active: false, title: '', icon: 'swap_vert', label };
     return { active: true, title: column.title, icon: state.direction === 'asc' ? 'arrow_upward' : 'arrow_downward', label };
   });

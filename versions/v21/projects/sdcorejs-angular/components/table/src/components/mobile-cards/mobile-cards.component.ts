@@ -112,6 +112,8 @@ const INTERACTIVE =
 })
 export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
   readonly table = input.required<SdTable<T>>();
+  /** Card body the table resolved (`sdTableRowMobileDef`, `mobile.template` or `autoTemplate`). */
+  readonly body = input<SdTableMobileBody<T>>();
   readonly rows = input.required<SdTableItem<T>[]>();
   readonly dataRows = input<SdTableItem<T>[]>();
   readonly aggregateTemplate = input<TemplateRef<{ summary: AggregateRow<T> }>>();
@@ -169,7 +171,7 @@ export class SdTableMobileCardsComponent<T = unknown> implements OnDestroy {
     table.treeRevision();
     table.expandRevision();
     const option = this.option();
-    const mobileBody = table.mobileBody();
+    const mobileBody = this.body();
     const revision = table.dataRevision();
     const previous = this.#dataCache;
     const cache = new Map<string, DataEntry>();

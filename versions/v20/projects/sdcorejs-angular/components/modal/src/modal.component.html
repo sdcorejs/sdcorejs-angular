@@ -4,9 +4,9 @@
     @if (!lazyLoadContent() || alreadyOpened()) {
       @if (_title) {
         <div class="sd-modal-header">
-          <div class="sd-modal-header-left" [id]="titleId">
+          <div class="sd-modal-header-left">
             <ng-content select="[sdHeaderLeft]">
-              <div class="sd-modal-title T18M">{{ _title }}</div>
+              <div class="sd-modal-title T18M" [id]="titleId">{{ _title }}</div>
             </ng-content>
           </div>
           <div class="sd-modal-header-right">

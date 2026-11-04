@@ -96,13 +96,38 @@ export class SdModal implements OnDestroy {
 
   constructor() {
     this.#isMobile = BrowserUtilities.isMobile();
-    // BottomSheetConfig has no ariaLabelledBy; bind its real container to the live heading.
-    effect(() => {
+    // BottomSheetConfig has no ariaLabelledBy; bind its real container to the live heading. A custom `sdHeaderLeft`
+    // may swap its heading (a sheet with pages), so the binding follows changes of the header.
+    effect(onCleanup => {
       const title = this.title();
-      const container = (this.modal()?.nativeElement as HTMLElement | undefined)?.closest('[role="dialog"]');
-      if (title) container?.setAttribute('aria-labelledby', this.titleId);
-      else container?.removeAttribute('aria-labelledby');
+      const root = this.modal()?.nativeElement as HTMLElement | undefined;
+      const container = root?.closest('[role="dialog"]');
+      if (!root || !container) return;
+      const bind = (): void => {
+        const label = title ? this.#labelOf(root) : undefined;
+        if (label) container.setAttribute('aria-labelledby', label);
+        else container.removeAttribute('aria-labelledby');
+      };
+      bind();
+      const left = root.querySelector('.sd-modal-header-left');
+      if (!left || typeof MutationObserver === 'undefined') return;
+      const observer = new MutationObserver(bind);
+      observer.observe(left, { childList: true, subtree: true });
+      onCleanup(() => observer.disconnect());
     });
+  }
+
+  /**
+   * Id of the element that names the modal: the default title, or the first heading of a custom `sdHeaderLeft`. Only
+   * without a heading does the whole left cell (with its buttons) name it.
+   */
+  #labelOf(root: HTMLElement): string | undefined {
+    const left = root.querySelector<HTMLElement>('.sd-modal-header-left');
+    if (!left) return undefined;
+    const heading = left.querySelector<HTMLElement>(`#${this.titleId}, h1, h2, h3, h4, h5, h6, [role="heading"]`) ?? left;
+    if (heading !== left && left.id === this.titleId) left.removeAttribute('id');
+    if (!heading.id) heading.id = this.titleId;
+    return heading.id;
   }
 
   // why: PHẢI là ngOnDestroy, KHÔNG phải #destroyRef.onDestroy. Angular chạy executeOnDestroys

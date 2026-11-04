@@ -101,6 +101,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+#### Modal
+
+- The dialog or bottom sheet is named by its heading: the default title, or the first heading (`h1`–`h6`, `role="heading"`) of a projected `[sdHeaderLeft]`, instead of the whole header-left cell with its buttons. The name follows a heading that is swapped while the modal is open; a header-left without a heading still names it as a whole.
+
 #### Query bar
 
 - The chip value text moved to the shared `ɵsdQueryChipValueText` / `ɵSdQueryChipLabels`, which the phone table filters use too. The text is unchanged.

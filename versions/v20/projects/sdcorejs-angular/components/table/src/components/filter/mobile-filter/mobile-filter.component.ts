@@ -65,7 +65,7 @@ export class MobileFilterComponent {
   filterDefs = input<readonly SdTableFilterDefDirective[] | null | undefined>([]);
   filterRegister = input<TableFilterRegister | undefined>(undefined);
   cacheValues = input<Record<string, any[]> | undefined>(undefined);
-  /** Filters and the query model (`SdTable.mobileFilterModel`). */
+  /** Filters and the query model, from the table. */
   model = input<{ ctx: SdTableQueryContext; items: SdTableMobileFilterItem[] } | undefined>(undefined);
 
   // ==========================================

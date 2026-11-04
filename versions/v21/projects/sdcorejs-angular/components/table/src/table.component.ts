@@ -409,7 +409,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
    * Body of the phone cards, by priority: `sdTableRowMobileDef`, then `mobile.template` (a template or `{ data }`),
    * then `SD_TABLE_CONFIGURATION.mobile.autoTemplate`. `undefined`: phones show the desktop table.
    */
-  readonly mobileBody = computed<SdTableMobileBody<T> | undefined>(() => {
+  protected readonly mobileBody = computed<SdTableMobileBody<T> | undefined>(() => {
     const directive = this.sdRowMobileDef();
     const template = this.tableOption()?.mobile?.template;
     if (directive) {
@@ -676,9 +676,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       });
   });
   /** The phone shows a sort chip / button: `sort.enable` and at least one sortable column. */
-  readonly mobileSortAvailable = computed(() => !!this.tableOption()?.sort?.enable && this.mobileSortColumns().length > 0);
+  protected readonly mobileSortAvailable = computed(() => !!this.tableOption()?.sort?.enable && this.mobileSortColumns().length > 0);
   /** Accessible name of the phone sort chip / button: "Sort", or the column and direction while sorted. */
-  readonly mobileSortLabel = computed(() => {
+  protected readonly mobileSortLabel = computed(() => {
     const state = this.sortState();
     const column = state.direction ? this.mobileSortColumns().find(entry => entry.field === state.active) : undefined;
     if (!column) return this.#i18n.t('core.component.table.mobile.sort');
@@ -907,7 +907,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
    * Filters of the phone UI (chip row and filter sheets), in the fixed order external → `sdTableFilterDef` → columns.
    * `undefined` on desktop, with `filter.disabled`, or before the configuration is known.
    */
-  readonly mobileFilterModel = computed<{ ctx: SdTableQueryContext; items: SdTableMobileFilterItem[] } | undefined>(() => {
+  protected readonly mobileFilterModel = computed<{ ctx: SdTableQueryContext; items: SdTableMobileFilterItem[] } | undefined>(() => {
     if (!this.isMobile()) return undefined;
     const option = this.tableOption();
     const config = this.configuration();
@@ -932,7 +932,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     return { ctx, items: sdTableMobileFilterItems({ ctx, columns, externalFilters, filterDefs }) };
   });
   /** Applied filter value (last emission of the filter register); the phone chips summarise it. */
-  readonly mobileFilterValue = computed(() => this.#appliedFilter());
+  protected readonly mobileFilterValue = computed(() => this.#appliedFilter());
 
   /** Giá trị đã áp dụng khác default (so trên các field của thanh) — bật nút Xoá lọc. */
   readonly #queryBarDirty = computed(() => {

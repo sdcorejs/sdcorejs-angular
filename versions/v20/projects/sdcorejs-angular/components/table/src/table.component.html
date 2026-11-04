@@ -289,7 +289,13 @@
       </div>
       @if (_hasChips) {
         <!-- Phone: filter chips under the search (handoff table-mobile 3). -->
-        <sd-table-mobile-filter-chips [table]="this" (sortOpen)="mobileSortSheet.open()"></sd-table-mobile-filter-chips>
+        <sd-table-mobile-filter-chips
+          [table]="this"
+          [model]="mobileFilterModel()"
+          [value]="mobileFilterValue()"
+          [sortAvailable]="_sortable"
+          [sortLabel]="mobileSortLabel()"
+          (sortOpen)="mobileSortSheet.open()"></sd-table-mobile-filter-chips>
       }
       <sd-table-mobile-sort-sheet #mobileSortSheet [table]="this"></sd-table-mobile-sort-sheet>
     }
@@ -327,6 +333,7 @@
           }
           <sd-table-mobile-cards
             [table]="this"
+            [body]="mobileBody()"
             [rows]="renderItems"
             [dataRows]="groupedItems"
             [groupTemplate]="sdGroupHeader"

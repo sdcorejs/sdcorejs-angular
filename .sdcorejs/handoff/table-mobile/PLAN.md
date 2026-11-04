@@ -284,11 +284,17 @@ sắp xếp, Công cụ, kéo để làm mới và API. Kết quả và cách x�
   danh sách; mục lịch sử và `onSameUrlNavigation: 'reload'`; bỏ "plus your own entries"; "hidden ones included" sửa thành
   `invisible` và ẩn qua Settings; `sd-modal.md` nói rõ chỉ `popstate` / `hashchange`.
 
+Chủ dự án quyết (2026-11-04):
+- Giữ tên `mobile.template` (không thêm `templateRef`), dù option khác nhận `TemplateRef` đặt tên `templateRef`: handoff
+  (mục 9, bảng ở dòng 220) đặt tên này cho cả `TemplateRef`, `{ data }` và `false`.
+- Sửa `sd-modal`: dialog / sheet mang tên của heading (tiêu đề mặc định, hoặc heading đầu tiên của `[sdHeaderLeft]`), không còn
+  cả khối header-left với các nút; heading đổi (sheet nhiều trang) thì tên đổi theo (MutationObserver).
+- Member mới của `SdTable` chỉ export khi consumer dùng: không consumer nào dùng `mobileBody`, `mobileFilterModel`,
+  `mobileFilterValue`, `mobileSortAvailable`, `mobileSortLabel` (chỉ template của bảng và component con nội bộ), nên chúng là
+  `protected`; con nhận giá trị qua input (`body`, `model`, `value`, `sortAvailable`, `sortLabel`, `ctx`). Kiểu của chúng không
+  export. Member có từ trước (`mobileCards`, `mobileColumns`, `mobileSortColumns`, `mobileToolsActions`) giữ nguyên.
+
 Không sửa, ghi lại:
-- Tên `mobile.template` khác quy ước `templateRef` của option khác: handoff (mục 9, bảng ở dòng 220) đặt đúng tên này cho cả
-  `TemplateRef` lẫn `{ data }` và `false`; đổi tên là quyết định API của chủ dự án, chưa phát hành nên còn đổi được.
-- Member public mới của `SdTable` (`mobileBody`, `mobileFilterModel`, …) dùng kiểu không export, như `mobileToolsActions` sẵn có.
-- `aria-labelledby` của `sd-modal` trỏ cả khối header-left (gồm ✕ / ← và nút); sửa ở `sd-modal` ảnh hưởng mọi modal.
 - Nút More cao 36px theo spec (không mở rộng vùng chạm), không có `aria-controls`; thẻ không có `rowLabel` / `rowKey` vẫn tên
   "Dòng n".
 - Chip và sheet giữ hai bộ nhớ nhãn riêng nên `lazy-values` tra nhãn hai lần; `values` một giá trị với `NOT_EQUAL` mất toán tử

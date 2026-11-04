@@ -18,6 +18,7 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import type { SdTable } from '../../../table.component';
 import { sdTableMobileFilterClear, type SdTableMobileFilterItem } from '../../../services/table-filter/table-mobile-filter.util';
 import type { TableFilterValue } from '../../../services/table-filter/table-filter.model';
+import type { SdTableQueryContext } from '../../../services/table-filter/table-query-bar.util';
 import { SdTableSheetHistory, sdTableSheetSwipe } from '../../mobile-sheet/mobile-sheet';
 import { SdTableMobileFilterFieldComponent } from './mobile-filter-field.component';
 
@@ -43,7 +44,7 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
   readonly working = signal<TableFilterValue | undefined>(undefined);
   readonly revision = signal(0);
   readonly #history = new SdTableSheetHistory(inject(DOCUMENT).defaultView, inject(ElementRef).nativeElement);
-  readonly ctx = computed(() => this.table().mobileFilterModel()?.ctx);
+  readonly ctx = input<SdTableQueryContext>();
   readonly autoId = computed(() => {
     const base = this.table().autoId();
     const field = this.item()?.source?.field;

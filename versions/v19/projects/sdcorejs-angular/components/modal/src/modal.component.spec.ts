@@ -1,4 +1,4 @@
-import { Component, Injector, ViewContainerRef } from '@angular/core';
+import { Component, Injector, ViewContainerRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
@@ -825,6 +825,27 @@ describe('SdModal', () => {
 // overlay + backdrop không ở lại trong CDK overlay container sau khi host destroy.
 // ---------------------------------------------------------------------------
 
+@Component({
+  imports: [SdModal],
+  template: `
+    <sd-modal view="bottom-sheet" title="Bộ lọc" hideClose>
+      <div sdHeaderLeft>
+        <button type="button" class="head-close">Đóng</button>
+        @if (page()) {
+          <h2 class="head-title">{{ page() }}</h2>
+        } @else {
+          <h2 class="head-title">Bộ lọc</h2>
+        }
+        <button type="button">Xóa tất cả</button>
+      </div>
+      body
+    </sd-modal>
+  `,
+})
+class HeadingHost {
+  readonly page = signal<string | undefined>(undefined);
+}
+
 describe('SdModal — real overlay teardown', () => {
   let fixture: ComponentFixture<HostComponent>;
   let component: SdModal;
@@ -873,6 +894,30 @@ describe('SdModal — real overlay teardown', () => {
     ownFixture.destroy();
     flush();
   }));
+
+  it('names the sheet by the heading of a custom header, not its buttons, and follows a swapped heading', async () => {
+    const own = TestBed.createComponent(HeadingHost);
+    own.detectChanges();
+    const modal = own.debugElement.query(By.directive(SdModal)).componentInstance as SdModal;
+    modal.open();
+    own.detectChanges();
+    await own.whenStable();
+    own.detectChanges();
+    const dialog = document.querySelector('.cdk-overlay-container [role="dialog"]')!;
+    const name = () => document.getElementById(dialog.getAttribute('aria-labelledby') ?? '')?.textContent?.trim();
+    expect(name()).toBe('Bộ lọc');
+
+    own.componentInstance.page.set('Trạng thái');
+    own.detectChanges();
+    // why: the MutationObserver callback runs as a microtask after the DOM change.
+    await new Promise(resolve => setTimeout(resolve));
+    expect(name()).toBe('Trạng thái');
+    expect(dialog.querySelectorAll(`[id="${dialog.getAttribute('aria-labelledby')}"]`).length).toBe(1);
+
+    modal.forceClose();
+    own.destroy();
+    await new Promise(resolve => setTimeout(resolve));
+  });
 
   it('leaves no orphaned overlay or backdrop in the CDK container after the host is destroyed', fakeAsync(() => {
     component.open();
