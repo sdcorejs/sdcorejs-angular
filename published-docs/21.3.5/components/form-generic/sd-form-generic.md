@@ -1,0 +1,728 @@
+# `<sd-form-builder>` & `<sd-form-render>`
+
+**Type**: Components (two public components in one entry point)
+**Selectors**: `sd-form-builder`, `sd-form-render`
+**Import path**: `@sdcorejs/angular/components/form-generic`
+**Classes**: `SdFormBuilder`, `SdFormRender`
+**Standalone**: yes
+
+## One-line purpose
+
+A schema-driven form system: `<sd-form-builder>` is an embedded drag-and-drop designer that produces an `SdFormGenericSchema` JSON document, and `<sd-form-render>` turns that document into a live Angular form with a `[(value)]` model, static content (headings, text, images, links, notices) and buttons that report an `(sdAction)`.
+
+## When to use
+
+- The set of fields is data, not code — a portal where an admin composes the form and end users fill it in.
+- The same schema must drive both an editable form and a read-only detail view (`[viewed]`).
+- Fields need to show/hide/disable/require each other through configured conditions rather than hand-written template logic.
+- The layout must adapt to the width of the **form** (a drawer, a dialog, a page) with a span per level (desktop / tablet / mobile).
+
+## When NOT to use
+
+- A form whose fields are known at compile time. Compose `<sd-input>` / `<sd-select>` / … directly — you get real types and far less indirection.
+- A single dynamic field. Use `@if` over the concrete control.
+- A page that only needs conditional display. `@if` on a signal is lighter than a schema.
+
+## Exported surface
+
+The entry point exports exactly five runtime symbols — guarded by `src/public-api.spec.ts`:
+
+| Runtime symbol                 | Kind                                                        |
+| ------------------------------ | ----------------------------------------------------------- |
+| `SdFormBuilder`                | component `sd-form-builder`                                 |
+| `SdFormRender`                 | component `sd-form-render`                                  |
+| `SdFormRenderService`          | service (`viewEntities`)                                    |
+| `provideSdFormGeneric(config)` | `EnvironmentProviders` for the portal configuration         |
+| `SD_FORM_GENERIC_BREAKPOINTS`  | frozen default breakpoints `{ tablet: 600, desktop: 1024 }` |
+
+Everything else is **type-only**: the schema (`SdFormGenericSchema`, `SdFormGenericPage`, `SdFormGenericPageElement`, `SdFormGenericElement`, `SdFormGenericGroup`, `SdFormGenericVariable`, `SdFormGenericValidation`, …), the field model (`SdFormGenericField` and one interface per `type`, `SdFormGenericLayout`, `SdFormGenericRules`, `SdFormGenericFieldValidation`, `SdFormGenericOptions`, `SdFormGenericValueRef`, `SdFormGenericParam`, `SdFormGenericFill`, …), the static elements and buttons (`SdFormGenericStatic` and `SdFormGenericHeading`, `SdFormGenericParagraph`, `SdFormGenericQuote`, `SdFormGenericImage`, `SdFormGenericLink`, `SdFormGenericDivider`, `SdFormGenericNotice`; `SdFormGenericButton`, `SdFormGenericButtonRules`; the `(sdAction)` payload `SdFormGenericAction` and the `submit()` result `SdFormGenericSubmitResult`), the configuration (`SdFormGenericConfig`, `SdFormGenericCatalog`, `SdFormGenericCatalogItem`, `SdFormGenericCatalogContext`, `SdFormGenericTemplate`, `SdFormGenericHtmlDefinition`, `SdFormGenericValidator`), the breakpoint types (`SdFormGenericBreakpoint`, `SdFormGenericBreakpoints`) and the result of `validate()` (`SdFormGenericValidationResult`, `SdFormGenericValidationMessages`).
+
+**Not exported** (internal): the renderer's field sub-components, the builder's canvas / palette / inspector / preview parts and its state layer, the layout / rule / reference helpers, `FormGenericService`, the presets and the pipes. There is no supported way to mount one of them on its own.
+
+---
+
+## Schema — `SdFormGenericSchema`
+
+This is the **first version** of the schema: there is no `schemaVersion` field and no migration from the pre-3.0 `SdFormGeneric` shape.
+
+```ts
+interface SdFormGenericSchema {
+  pages: SdFormGenericPage[]; // a single-page form still stores one page
+  navigation?: { type: 'tabs' } | { type: 'steps'; linear?: boolean }; // absent: first page; linear defaults false
+  variables?: SdFormGenericVariable[]; // { key, label } — values come from [variables]
+  validations?: SdFormGenericValidation[]; // form-level checks run by validate()
+}
+
+interface SdFormGenericPage {
+  id: string;
+  label?: string; // page title: tab/step label and the page name in the builder
+  description?: string; // plain text shown at the top of the page content
+  icon?: string;
+  rules?: { visible?: Filter; hidden?: Filter };
+  elements: SdFormGenericPageElement[]; // group | field | static element | button
+}
+
+type SdFormGenericElement = SdFormGenericField | SdFormGenericStatic | SdFormGenericButton;
+type SdFormGenericPageElement = SdFormGenericGroup | SdFormGenericElement;
+```
+
+The grammar is fixed: **schema → pages → group | element**, where an element is a field, a static element or a button; a group holds elements only — groups do not nest. Every element has an `id`; every field that stores a value has a `key`, unique across fields **and** variables (one namespace). Static elements and buttons have no `key`: they never appear in `value`, `validate()` or `viewEntities()`. A key cannot be a JavaScript `Object.prototype` name (`__proto__`, `constructor`, `toString`…) or `prototype`; the builder refuses it and the renderer skips such a field (one dev-mode warning per key). The renderer uses the first page when navigation is absent; the builder can edit all pages while preserving their serialized order and metadata.
+
+### Tabs and steps
+
+With no `navigation`, the renderer keeps the released first-page behavior. A page `description` renders as plain text (line breaks kept) above the page fields in every mode; with tabs/steps it also describes the page region (`aria-describedby`). `{ type: 'tabs' }` renders the visible pages as manually activated tabs: arrows/Home/End move focus, Enter/Space activates. Labels use `page.label` or localized "Page n"; icons are optional. The header scrolls horizontally on narrow screens.
+
+`{ type: 'steps' }` allows free step selection. Add `linear: true` to validate all visible predecessor pages before moving forward. Errors block advancement and reveal the first invalid page; warnings do not block. Previous/backward navigation remains available while async forward validation is pending and cancels that transition. Additional forward requests are rejected while it is pending; they are not queued. Changing schema, values, page visibility or the active page invalidates old results. There is no automatic save/submit or final-step callback.
+
+```ts
+const schema: SdFormGenericSchema = {
+  navigation: { type: 'steps', linear: true },
+  pages: [
+    {
+      id: 'contact',
+      label: 'Contact',
+      icon: 'person',
+      elements: [{ id: 'email', key: 'email', type: 'textfield', label: 'Email', subtype: 'email', validation: { required: true } }],
+    },
+    { id: 'notes', label: 'Notes', elements: [{ id: 'note', key: 'note', type: 'textarea', label: 'Notes' }] },
+  ],
+};
+```
+
+```html
+<sd-form-render #renderer [schema]="schema" [(value)]="value" [(activePageId)]="activePageId"></sd-form-render>
+```
+
+`activePageId` is transient navigation state. Initial null/unknown IDs choose the first visible page. If the active page disappears, the nearest surviving successor is selected, then predecessor/first. Consumer writes to a later linear step use the same validation gate as Next. A pending/rejected write restores the accepted model. No visible pages means `activePageId = null` and no header.
+
+Visible inactive panels stay mounted with `hidden` and `inert`: controls, dirty/touched state and async validators remain intact, while inactive fields cannot receive focus. A rule-hidden page unmounts its owned controls and retains its values. `validate()` checks all visible pages, including unvisited ones, waits for async field validation, then runs form-level validations once. External FormGroup controls still participate. Only a current failed field-validation attempt navigates/focuses; global/external-only errors have no invented field destination. `upload()` visits mounted visible fields once and skips rule-hidden pages.
+
+The builder page strip shows the pages as underline tabs. The selected tab has a ⋯ button whose menu duplicates the page, moves it left or right, or deletes it; **Add page** ends the strip. Hooks for tests: `data-builder-page` on each tab, `data-page-menu-trigger` on the ⋯ button and `data-page-action` (`add`, `duplicate`, `up`, `down`, `delete`) on the add button and the menu items. Clicking a page (or adding/duplicating one) opens the **page settings** in the inspector: title (`label`), description, icon (picked from the same presets as a group; picking it again removes it) and visibility rules. Clicking the empty canvas, or the back button in the page panel header, opens the **form settings**: a tip pointing to the page strip, page navigation (Single page/Tabs/Steps and Linear), variables, form validations and shortcuts. Selecting an element opens its own properties. Single page renders only the first page, so with two or more pages the form settings show a warning tip under Navigation and every later page in the strip is muted with a `visibility_off` icon and an accessible description; the builder never switches navigation by itself. Page commands/configuration participate in the existing undo/redo history; page selection does not. The last page cannot be removed. Nonempty/referenced page deletion is confirmed, and external references remain for consumer repair. Duplicate rewrites only structured references owned by the copied page and assigns globally unique field keys/IDs. Unsupported elements disable page duplication with an explanation. Unknown metadata and imported pages survive single-page view. Preview uses the real renderer and applies page rules and navigation.
+
+An element whose `type` this version does not know (added by a later release) is **skipped** by the renderer (one dev-mode warning per type) and **kept as-is** by the builder, which shows it as an "unsupported" card that can be moved or deleted but not edited or duplicated.
+
+An `id` that is missing, or that repeats an earlier one (for example in hand-copied JSON), gets a new id when a component loads the schema; the first element keeps its id.
+
+### Field base
+
+Every field has these properties:
+
+| Property                       | Type                           | Notes                                                                                                                                       |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                           | `string`                       | Unique element id.                                                                                                                          |
+| `type`                         | see table below                | Discriminates the field union.                                                                                                              |
+| `key`                          | `string`                       | The property of `value` this field reads and writes (optional on `html`).                                                                   |
+| `label`                        | `string`                       | Visible label.                                                                                                                              |
+| `placeholder`, `helperText`    | `string`                       | Hint inside the control / described-by text under it.                                                                                       |
+| `defaultValue`                 | per type                       | Applied only while the key is `undefined` — see _Field behaviour_.                                                                          |
+| `layout`                       | `SdFormGenericLayout`          | Span per level and `newRow` — see _Layout_.                                                                                                 |
+| `rules`                        | `SdFormGenericRules`           | Dynamic `visible` / `hidden` / `disabled` / `required` conditions (`Filter`).                                                               |
+| `validation`                   | `SdFormGenericFieldValidation` | Static constraints.                                                                                                                         |
+| `disabled`, `viewed`, `hidden` | `boolean`                      | Static state. `viewed` is a read-only presentation (not the same as disabled).                                                              |
+| `hyperlink`                    | `string`                       | Link used in viewed mode (select / radio); `${key}` inside is free text (not rewritten on rename) and is replaced by the URL-encoded value. |
+
+```ts
+interface SdFormGenericFieldValidation {
+  required?: boolean;
+  min?: number | 'today' | string; // number: numeric bound; datetime: 'today' (whole day for date+time) or an ISO date; time: 'HH:mm'
+  max?: number | 'today' | string;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: { value: string; message?: string };
+  maxItems?: number; // chip-string / chip-calendar
+  phoneCountry?: 'VN'; // textfield subtype 'phone'
+}
+```
+
+### Field types
+
+| `type`          | Adds                                                                                                                                | Value                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `textfield`     | `subtype?: 'text' \| 'email' \| 'phone' \| 'url' \| 'password'` (see _Presets_)                                                     | `string`                    |
+| `textarea`      | —                                                                                                                                   | `string`                    |
+| `number`        | `subtype?: 'integer' \| 'decimal' \| 'currency' \| 'percent'`, `precision?`, `currency?`                                            | `number`                    |
+| `select`        | `options`, `multiple?`                                                                                                              | `string \| string[]`        |
+| `radio`         | `options`, `direction?: 'row' \| 'column'`                                                                                          | `string`                    |
+| `checkbox`      | —                                                                                                                                   | `boolean`                   |
+| `datetime`      | `subtype?: 'date' \| 'datetime'`                                                                                                    | ISO `string`                |
+| `chip-string`   | —                                                                                                                                   | `string[]`                  |
+| `chip-calendar` | —                                                                                                                                   | `string[]` (dates)          |
+| `upload`        | `accept?: 'file' \| 'image'`, `source?: 'ALL' \| 'PHOTO_LIBRARY' \| 'CAPTURE'`, `extensions?`, `maxFiles?`, `maxSizeMb?`, `params?` | result of the portal upload |
+| `time`          | — (`validation.min` / `max` as `'HH:mm'`)                                                                                           | `string` (`HH:mm`)          |
+| `json`          | —                                                                                                                                   | parsed JSON (`unknown`)     |
+| `html`          | static `content` + `variables`, **or** a portal `definition` + `query`                                                              | — (no value)                |
+
+A line break is no longer an element: a field that must start a new row sets `layout.newRow: true`.
+
+### Group
+
+```ts
+interface SdFormGenericGroup {
+  id: string;
+  type: 'group';
+  label: string;
+  icon?: string; // Material icon name before the title
+  color?: Color; // icon accent: primary (default) · secondary · info · success · warning · error
+  collapsible?: boolean; // expand / collapse in the builder preview and the renderer
+  hidden?: boolean;
+  rules?: { visible?: Filter; hidden?: Filter };
+  elements: SdFormGenericElement[]; // fields, static elements and buttons
+}
+```
+
+A group always takes a full row and is presentation only: its children read and write **flat** keys on `value`. A group whose children are all hidden is not rendered. Collapsing changes presentation only — child controls keep their values, touched state and validation.
+
+### Layout
+
+```ts
+interface SdFormGenericLayout {
+  span?: { desktop?: number; tablet?: number; mobile?: number }; // 1–12
+  newRow?: boolean;
+}
+```
+
+The grid has 12 columns and three levels. Inheritance:
+
+| Level   | Span                                                    |
+| ------- | ------------------------------------------------------- |
+| desktop | `span.desktop ?? 12`                                    |
+| tablet  | `span.tablet ?? span.desktop ?? 12` — _same as Desktop_ |
+| mobile  | `span.mobile ?? 12` — _default_ (full row)              |
+
+Rows are packed greedily in schema order: a field that does not fit starts a new row, `newRow: true` always starts one, and a group takes a full row. The renderer and the builder canvas use **the same packing function**, so the same schema at the same level gives the same rows.
+
+The level is chosen from the width of the **form** — a `ResizeObserver` on the renderer's grid, not the viewport — so a form in a narrow drawer stacks like it would on a phone:
+
+| Form width                           | Level   |
+| ------------------------------------ | ------- |
+| `< tablet` (600 px)                  | mobile  |
+| `tablet` … `< desktop` (600–1023 px) | tablet  |
+| `≥ desktop` (1024 px)                | desktop |
+
+The thresholds are `SD_FORM_GENERIC_BREAKPOINTS`; a portal overrides either one with `provideSdFormGeneric({ breakpoints: { tablet: 700 } })` (the other keeps its default). `<sd-form-render [breakpoint]>` forces a level regardless of the width.
+
+### Rules — `Filter`
+
+Conditions are stored as `Filter` from `@sdcorejs/utils/models` — the same shape `<sd-query-builder>` edits — and evaluated against `{ ...value, ...variables }`:
+
+```ts
+rules: {
+  visible:  { field: 'agree', operator: 'EQUAL', data: true },
+  required: { field: 'amount', operator: 'GREATER_THAN', data: 1000 },
+  disabled: { field: 'tenantLocked', operator: 'EQUAL', data: true },   // a variable key
+}
+```
+
+- A field is shown when (`visible` is absent or true) **and** (`hidden` is absent or false) **and** the static `hidden` flag is off.
+- `disabled` / `required` are OR-ed with the static `disabled` / `validation.required`.
+- Field-to-field comparisons use `dataType: 'field'`; dates support `dataType: 'date-today'` and `'date-relative'`.
+- On a multiple value (a `select` with `multiple`, chips) `IN` / `NOT_IN` mean _one selected item is / none is in the list_, and `EQUAL` / `NOT_EQUAL` mean _one selected item equals / none equals_.
+- A checkbox without a value (never touched) counts as unticked: `EQUAL false` matches it.
+- An `AND` / `OR` group without conditions is _no condition_: inside a group it is skipped, and a rule or a form validation that is only an empty group does not apply.
+- `CONTAIN` / `START_WITH` / `END_WITH` (and their `NOT_` forms) on a multiple value compare the comma-joined text of the selected items.
+- A condition the evaluator cannot read (hand-edited JSON, for example a leaf without `field`) never matches, so a form validation built on it never fires.
+- A hidden field is not rendered (the rows reflow) and therefore not validated; its value stays in `value`.
+
+### Time zone (`ISdCoreConfiguration.timeZone`)
+
+With a configured zone, every date the form works on uses the calendar of that zone:
+
+- Rules and form validations resolve `date-today`, `date-relative` and zone-less date strings in the zone (`FilterUtilities` `timeZone` option). At 01:00 on 15/08/2026 in `'Asia/Ho_Chi_Minh'`, `GREATER_OR_EQUAL date-today` is true for `'2026/08/15'` and false for `'2026/08/14'`, in every browser.
+- `min` / `max: 'today'` of a date + time field is the first and the last instant of today in the zone.
+- The read-only display (`viewed`), `SdFormRenderService.viewEntities` and the builder's limit choices show instants as the wall clock of the zone.
+
+Without the setting (or with `'local'`) nothing changes. See [`SdDateTimeService`](../../services/date-time/sd-date-time.md).
+
+### Form-level validations
+
+```ts
+type SdFormGenericValidation =
+  | { type: 'filter'; filter: Filter; message: string; alert: 'error' | 'warning' } // message when the filter is true
+  | { type: 'function'; validator: string; alert: 'error' | 'warning' }; // id of a registered validator
+```
+
+`validate()` runs them after the field validators. A `function` validation whose id is **not registered** in `provideSdFormGeneric({ validators })` fails closed with an error message (`core.component.form-generic.validation.unregistered`); a validator that throws reports `core.component.form-generic.validation.failed`. Only `error` messages make the form invalid.
+
+### Options — static or catalog
+
+```ts
+type SdFormGenericOptions =
+  | { source: 'static'; items: { value: string; label: string; disabled?: boolean }[] }
+  | {
+      source: 'catalog';
+      catalog: string; // id of a registered catalog
+      params?: { name: string; value: SdFormGenericValueRef }[];
+      fill?: { field: string; from: string }[]; // on select: value[field] = item.data[from]
+    };
+
+type SdFormGenericValueRef = { field: string } | { variable: string } | { value: string | number | boolean };
+```
+
+A catalog is registered by the portal (see _Configuration_): the components never call HTTP themselves. `params` are resolved from `value` / `variables` and the catalog is reloaded when a resolved parameter changes; a catalog with `search` makes the select search by term instead. Loaded lists are cached per catalog and parameters for the lifetime of the renderer.
+
+Every reference to another key is **structured** — `rules` (`Filter.field` and field-to-field `data`), `options.params`, `options.fill`, upload `params`, html `query`, form validations — so the builder can rename a key everywhere. `${key}` inside `hyperlink` and html `content` is free text and is never rewritten.
+
+### Presets
+
+Presets are **not** new types. They reuse `textfield` / `number` with a `subtype`, so nothing asks the end user for a regular expression.
+
+| Preset   | Schema                                | Native input                                     | Validation (empty is always valid — `required` decides)                                             | Stored value                                                                                         |
+| -------- | ------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Text     | `textfield`, no `subtype` or `'text'` | `type="text"`                                    | `minLength` / `maxLength` / `pattern`                                                               | string                                                                                               |
+| Email    | `subtype: 'email'`                    | `type="email"`, `autocomplete="email"`           | format check                                                                                        | string, as typed                                                                                     |
+| Phone    | `subtype: 'phone'`                    | `type="tel"`, `autocomplete="tel"`               | phone characters and 7–15 digits; with `validation.phoneCountry: 'VN'` the Vietnamese mobile format | string — `+` and a leading `0` are kept                                                              |
+| URL      | `subtype: 'url'`                      | `type="url"`                                     | `http://` / `https://` only                                                                         | string                                                                                               |
+| Password | `subtype: 'password'`                 | `type="password"`, `autocomplete="new-password"` | none                                                                                                | string; **never** filled from `defaultValue`, **never** shown in viewed mode (a fixed mask is shown) |
+| Integer  | `number`, `subtype: 'integer'`        | numeric keyboard when `min ≥ 0`                  | whole numbers only                                                                                  | number                                                                                               |
+| Decimal  | `subtype: 'decimal'`                  | decimal keyboard                                 | at most `precision` decimals (default 2)                                                            | number                                                                                               |
+| Currency | `subtype: 'currency'`                 | as decimal                                       | at most `precision` decimals (default 0)                                                            | number — `currency` (default `VND`) is a display suffix                                              |
+| Percent  | `subtype: 'percent'`                  | as decimal                                       | at most `precision` decimals (default 2)                                                            | number — `10` means 10 %                                                                             |
+
+A `number` without `subtype` keeps the `<sd-input-number>` default of 3 decimals, while editing and in viewed mode. In viewed mode a URL links only safe `http(s)` URLs. A `validation.pattern` that is not a valid regular expression is ignored by the renderer (with a dev-mode warning) and flagged in the builder inspector.
+
+### HTML field
+
+Either static `content` with `${key}` placeholders filled from `variables`, or `definition` — the id of a portal html definition. A `static` definition supplies the content; a `query` definition receives `query` (value refs resolved like catalog params) and is called again when a resolved parameter changes. Content is sanitized.
+
+### Static elements
+
+Seven elements show content without storing a value. Like a field they sit on the grid (`layout.span` per level, `layout.newRow`), can live in a group and are shown or hidden by the static `hidden` flag and `rules.visible` / `rules.hidden` (`Filter`, evaluated like field rules).
+
+| `type`      | Properties                                                                               | Renders                                                                       |
+| ----------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `heading`   | `text`, `level?: 2 \| 3 \| 4` (default 3)                                                | `<h2>` – `<h4>`; a `level` outside 2–4 renders as 3                           |
+| `paragraph` | `text`                                                                                   | `<p>`; line breaks in `text` are kept                                         |
+| `quote`     | `text`, `cite?`                                                                          | `<blockquote>` with an optional `<cite>`                                      |
+| `image`     | `src`, `alt`, `width?` (px, at most the cell), `caption?`                                | `<figure>` with `<img>`; an empty `alt` marks a decorative image              |
+| `link`      | `text`, `href`, `newTab?`                                                                | `<a>`; `newTab` adds `target="_blank"` and always `rel="noopener noreferrer"` |
+| `divider`   | —                                                                                        | `<hr>`                                                                        |
+| `notice`    | `text`, `title?`, `color?: 'info' \| 'success' \| 'warning' \| 'error'` (default `info`) | `<sd-inform>`; line breaks in `text` are kept                                 |
+
+```ts
+{ id: 'intro', type: 'heading', text: 'Applicant', level: 2 }
+{ id: 'help', type: 'notice', color: 'warning', title: 'Before you start', text: 'Have your ID card ready.' }
+{ id: 'terms', type: 'link', text: 'Terms of use', href: '/legal/terms', newTab: true, layout: { span: { desktop: 6 } } }
+```
+
+Every text (`text`, `title`, `caption`, `alt`, `cite`, a button `label`) is **plain text**: it is never parsed as HTML and `${key}` is not replaced — use an `html` field for rich or dynamic content. `text` (and a button `label`) must not be empty; `sdValidateSchema` reports `text-missing`, and the renderer skips such an element with one dev-mode warning.
+
+### URL policy
+
+`href` and `src` are untrusted data and reach the page through one policy, shared by the renderer, the builder canvas and the inspector warnings:
+
+| Element       | Accepted                                                                                                 | Rejected                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `link` `href` | absolute `http(s)` without credentials, `mailto:`, `tel:`, a relative path that stays on the page origin | `javascript:`, `data:`, `//other.host`, `/\other.host`, a URL that carries credentials … |
+| `image` `src` | `http(s)` without credentials, a relative path, `data:image/*`                                           | `blob:`, any other `data:`, `javascript:` …                                              |
+
+A rejected `href` renders the link text without an `<a>`, a rejected `src` renders no `<img>`; the renderer logs one dev-mode warning per element and the builder inspector warns while you type. An empty `href` / `src` means _not set yet_: nothing is rendered and nothing is reported. URL safety is not a schema error — `sdValidateSchema` accepts any string.
+
+### Button
+
+```ts
+interface SdFormGenericButton {
+  id: string;
+  type: 'button';
+  label: string;
+  icon?: string; // Material icon before the label
+  action: 'submit' | 'reset' | 'custom';
+  name?: string; // required for 'custom'; not 'submit' or 'reset'
+  validate?: boolean; // 'custom' only: run like submit
+  variant?: 'fill' | 'light' | 'outline' | 'text'; // default: fill for submit, light otherwise
+  color?: Color; // default: primary for submit, secondary otherwise
+  align?: 'start' | 'center' | 'end' | 'stretch'; // in its cell; 'stretch' fills it
+  disabled?: boolean;
+  showWhenViewed?: boolean; // keep it visible in [viewed] mode (e.g. "Print")
+  hidden?: boolean;
+  layout?: SdFormGenericLayout;
+  rules?: { visible?: Filter; hidden?: Filter; disabled?: Filter };
+}
+```
+
+A button is rendered with `<sd-button>` and **never calls an API**: `<sd-form-render>` reports what was pressed through `(sdAction)` and the host does the work.
+
+| `action` | When pressed                                                                                                                                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `submit` | Runs `validate()`. Invalid: field errors show on the fields, the form-level error messages show in an error block above the grid (scrolled into view), and nothing is emitted. Valid: emits `{ action: 'submit', buttonId, value, messages }`.   |
+| `reset`  | Puts `value` back to the last value the host loaded (with `defaultValue` applied again — a new form gets its defaults only), clears touched / dirty state and the error block, and emits `{ action: 'reset', buttonId, value, messages: null }`. |
+| `custom` | Emits `{ action: name, buttonId, value, messages: null }` at once, or runs like `submit` (emitting `name`) when `validate: true`.                                                                                                                |
+
+`sdValidateSchema` reports `button-action-invalid`, `button-name-missing` and `button-name-reserved`; the renderer skips such a button with one dev-mode warning. While a validating run is in progress its button shows a loading state and every other action — another button, `submit()` or `reset()` — is ignored, so a double click never submits twice. The emitted `value` is the object that was validated.
+
+---
+
+## Configuration — `provideSdFormGeneric`
+
+Portal-wide data enters the form only through this provider. Without it both components work with the default breakpoints, no catalogs, templates, html definitions or validators. Call it at bootstrap or in the `providers` of a route: the builder, the renderer and `SdFormRenderService` under that route all read the route's configuration.
+
+```ts
+import { provideSdFormGeneric } from '@sdcorejs/angular/components/form-generic';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideSdFormGeneric({
+      catalogs: [
+        {
+          id: 'districts',
+          label: 'Districts',
+          params: [{ name: 'provinceId', label: 'Province', required: true }],
+          fields: [{ name: 'postalCode', label: 'Postal code' }],
+          load: async ({ provinceId }) =>
+            (await api.districts(provinceId)).map(d => ({ value: d.id, label: d.name, data: { postalCode: d.zip } })),
+          labels: async values => api.districtLabels(values), // optional: labels for viewed mode / viewEntities
+        },
+      ],
+      validators: [
+        {
+          id: 'budget',
+          label: 'Budget covers the request',
+          validate: value => ((value['amount'] as number) > (value['budget'] as number) ? 'Amount exceeds the budget.' : null),
+        },
+      ],
+      htmlDefinitions: async () => api.htmlDefinitions(), // an array, a factory or an async factory
+      templates: [], // quick-pick field templates in the builder inspector
+      breakpoints: { tablet: 700 }, // partial override of SD_FORM_GENERIC_BREAKPOINTS
+    }),
+  ],
+});
+```
+
+| Key               | Type                           | Used by                                                                                                                                                                    |
+| ----------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `catalogs`        | `SdFormGenericCatalog[]`       | `options.source: 'catalog'`. `load(params, ctx)`, optional `search(term, params, ctx)` and `labels(values, params)`; `params` / `fields` describe what the builder offers. |
+| `validators`      | `SdFormGenericValidator[]`     | `{ type: 'function', validator: id }`. `validate(value)` returns a message (may be HTML) or `null` / `''`.                                                                 |
+| `htmlDefinitions` | list, factory or async factory | html `definition`. Called once.                                                                                                                                            |
+| `templates`       | `SdFormGenericTemplate[]`      | Builder inspector: apply a predefined field (same `type`).                                                                                                                 |
+| `breakpoints`     | `{ tablet?, desktop? }`        | Level thresholds of both components.                                                                                                                                       |
+
+---
+
+## `<sd-form-render>`
+
+Turns a schema into a live form. `OnPush`. It never mutates the schema or the value object you pass.
+
+### Inputs
+
+| Name             | Type                                        | Default      | Notes                                                                                                                            |
+| ---------------- | ------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`         | `SdFormGenericSchema`                       | **required** | Normalised internally (missing or repeated ids get new ids); the input is never mutated.                                         |
+| `value`          | `Record<string, unknown>`                   | `{}`         | `model()` — bind `[(value)]`. Every change emits a **new** object; the previous object is untouched (a deep-frozen value works). |
+| `activePageId`   | `string \| null`                            | `null`       | `model()` - bind `[(activePageId)]`. Effective visible page; consumer forward requests obey the linear gate.                     |
+| `form`           | `FormGroup \| null`                         | own group    | The reactive form the controls register into — supply yours to read status from the parent.                                      |
+| `variables`      | `Record<string, unknown> \| null`           | `null`       | Values for the schema variables; used by rules, value refs and hyperlinks.                                                       |
+| `viewed`         | `boolean`                                   | `false`      | Read-only presentation of the whole form.                                                                                        |
+| `breakpoint`     | `'desktop' \| 'tablet' \| 'mobile' \| null` | `null`       | Forces a level; `null` measures the form width.                                                                                  |
+| `labelPlacement` | `'top' \| 'float'`                          | `'top'`      | Labels above the controls (real `<label for>`), or Material floating labels.                                                     |
+| `keys`           | `readonly string[] \| null`                 | `null`       | Renders only the fields whose key is listed; static elements and buttons are hidden.                                             |
+
+### Outputs
+
+| Name       | Payload                                                         | Notes                                                                                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `sdAction` | `SdFormGenericAction` — `{ action, buttonId, value, messages }` | A button was pressed, or `submit()` / `reset()` ran. `action` is `'submit'`, `'reset'` or the `name` of a custom button; `buttonId` is `null` from code; `messages` holds the form-level messages of a validated action (`null` otherwise). `value` has **no upload results yet** — call `upload()` before saving. |
+
+### Methods
+
+| Name         | Signature                                      | Notes                                                                                                                                                                                                                                                                               |
+| ------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validate()` | `() => Promise<SdFormGenericValidationResult>` | Marks every control touched, waits for pending async validators, then runs the form-level `validations`. Always resolves `{ valid, messages: { error: string[]; warning: string[] } }` — never `undefined`. `valid` is `false` when a field is invalid or an `error` message fired. |
+| `submit()`   | `() => Promise<SdFormGenericSubmitResult>`     | Same as pressing a `submit` button, with `buttonId: null`: validates, emits `(sdAction)` only when valid, and resolves `{ valid, messages, value }`. While a validating run is in progress it returns that run's promise.                                                           |
+| `reset()`    | `() => void`                                   | Same as pressing a `reset` button, with `buttonId: null`. Ignored while a validating run is in progress.                                                                                                                                                                            |
+| `upload()`   | `() => Promise<void>`                          | Uploads the pending files of every `upload` field with its resolved `params` and writes the results into `value`. **Call it before saving.** The action pipeline never calls it.                                                                                                    |
+
+### Field behaviour
+
+- `defaultValue` fills a key only while it is `undefined` — a key the user cleared (`null`, `''`) is not refilled. Not in viewed mode, and never for the password preset.
+- Controls register into the `FormGroup` while rendered; a hidden field unregisters, so it does not block `validate()`.
+- A viewed field (its own `viewed`, or the renderer's `[viewed]`) is not validated: the user cannot change it, so its `required` and constraints never make `validate()` fail.
+- A select / radio with catalog options loads (or searches) through the portal catalog; choosing an item applies `fill`.
+- In viewed mode values are formatted like `SdFormRenderService.viewEntities` (option labels, dates, numbers by preset, password mask).
+- `time` uses `<sd-time>`. Typed and picked values are kept as canonical `HH:mm`, an impossible time (`25:00`) marks the control invalid, and only `HH:mm` boundaries in `validation.min` / `max` are applied.
+- `json` edits text in `<sd-code-editor language="json">`. The `FormGroup` control holds the TEXT (error `json` while it does not parse, `required` while it is empty and required); the form `value` holds the PARSED JSON, and blank text stores `null`. Viewed mode shows the formatted JSON read-only; `viewEntities` returns compact JSON text.
+- In viewed mode static elements stay visible and every button is hidden, except a button with `showWhenViewed: true`. With `[keys]` set, static elements and buttons are hidden.
+- `reset()` returns to the last value **the host loaded**: a value object that arrives through `[value]` / `[(value)]` and is not the object the renderer itself emitted (nor equal to it in content). Binding `[(value)]` and setting a new object loads it. With a one-way `[value]`, setting the **same** object again does not reach the renderer (the binding did not change), so it is not a new load — pass a new object.
+- The form-level error block above the grid lists the `error` messages of the last failed `submit`; it disappears after the next successful submit or a reset. Field errors stay on the fields.
+
+---
+
+## `<sd-form-builder>`
+
+An **embedded** visual designer, not an application: it has no header, save / draft / publish / import / export actions. Persistence belongs to the host page. It fills the height its host gives it — give the element (or its flex container) a height.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ [Design | Preview | Schema]  [Desktop | Tablet | Mobile]            [↶] [↷] [⋮]  │
+├──────────────────────┬──────────────────────────────────────┬────────────────────┤
+│ Components|Structure │ canvas (rows of the level in view)   │ Properties         │
+└──────────────────────┴──────────────────────────────────────┴────────────────────┘
+```
+
+### Inputs / outputs
+
+| Name     | Type                                      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema` | `model<SdFormGenericSchema \| undefined>` | Bind `[(schema)]`. The builder emits `schemaChange` with an independent snapshot (deep clone) after **every user change**, including undo and redo — not when a schema loads, nor for selection, mode or viewport changes. A new reference with **different content** loads another form and resets the undo history and the selection. The snapshot the builder just emitted, or another object with the **same content**, is ignored — so `[(schema)]` neither loops nor wipes the history. Mutating the bound object in place does nothing; pass a new object. |
+
+```html
+<sd-form-builder [(schema)]="schema"></sd-form-builder>
+```
+
+| Method        | Notes                                                        |
+| ------------- | ------------------------------------------------------------ |
+| `getSchema()` | Snapshot of the current schema (deep clone), safe to mutate. |
+
+### Behaviour notes
+
+- **Desktop | Tablet | Mobile** picks the level being designed. The canvas packs rows with the span of that level (the same packing as the renderer) in a 768 px (tablet) or 390 px (mobile) frame. Resizing a field and the _Layout_ tab write the span of **that level only**; a level without its own span shows _Same as Desktop_ (tablet) or _Default_ (mobile), and _Reset to inherited_ removes the level's own span.
+- **Start a new row** (`layout.newRow`) is a switch in _Layout_ and in each field's ⋮ menu; the canvas marks such fields. When a drop needs a row start to keep the row you pointed at, the planner turns `newRow` on instead of inserting an element.
+- **Preview** is the real `<sd-form-render>` with `[breakpoint]` forced to the level in view — its rows match the canvas at every level. The canvas also keeps a place for statically hidden fields (dimmed) and unsupported elements so they stay selectable; the renderer skips them, so around such an element the canvas rows can differ from Preview. Test data typed there never reaches the schema; _Validate_ runs `validate()` and lists invalid fields and form messages separately.
+- **Schema** shows the read-only JSON that `schemaChange` emits. The level switch is hidden there.
+- **One drop position per pointer location**: the top or bottom quarter of a row means _a new row above / below_; the middle means _this row_. A new field dropped into a row takes the remaining width (at least 3 columns); an existing field must fit as it is. Other fields are never shrunk. The indicator and the commit use the same planner. Moving or deleting an element never pulls untouched rows up: the planner turns `newRow` on where a row would otherwise merge into the one before it — for a move at the level in view, for a delete at every level. `newRow` is one flag for all levels, so a row start kept for one level also starts a row at the others.
+- **Groups** are edited in place. Fields move page ↔ group and group ↔ group by dragging or through the ⋮ menu (_Move into group …_, _Move out of group_). Groups do not nest.
+- **Static elements and buttons**: the palette has a _Static_ group (heading, paragraph, quote, image, link, divider, notice) and a _Buttons_ group before _Layout_; a new button is a `submit` button. The canvas shows them with the renderer's own components inside an `inert` region — they look real but take no focus or clicks, the card stays the control. They drag, resize, duplicate, delete, undo and appear in _Structure_ like fields, and renaming a field key updates their `rules` too.
+- **Inspector**: _General · Data · Rules · Layout_ for a field, _General · Rules · Layout_ for a group, _General · Conditions · Layout_ for a static element or a button. A required text (`text`, a button `label`, a custom `name`) that is empty — or a `name` of `submit` / `reset` — stays an unsaved draft in the inspector, so every emitted schema passes `sdValidateSchema`. An unsafe `href` / `src` and a missing or reserved action name are flagged as you type. Switching a button to `custom` gives it an unused `name` (`action`, `action_2`, …), and duplicating a custom button gives the copy a new one (`save-draft_2`). _Data_ chooses the options source — a static list (value, label; reorder by the grip or ↑ / ↓) or a portal catalog with its parameters (`params`: field, variable or fixed value) and _Fill other fields on select_ (`fill`). _Rules_ edits `visible` / `hidden` / `disabled` / `required` in `<sd-query-builder>` and stores the `Filter` as is. The ⋮ _Tools_ menu holds the variables and form-validation dialogs; form validations are a `Filter` with a message or a registered validator.
+- **Undo / redo**: every edit is one command; typing in one property coalesces into one step; 100 steps are kept. Ctrl/⌘+Z, Ctrl/⌘+Y and Ctrl/⌘+Shift+Z act inside the builder only and never replace the text undo of an input.
+- **Keys**: a new field gets `<preset>_<hash>` (`email_k3x9qa`), never an existing key. Renaming checks the format and uniqueness (fields of every page and variables share one namespace), then asks **Yes / No** with how many structured references are updated with it, how many free-text uses (`hyperlink`, html `content`) are not, and that data saved under the old key is not moved. Applying a template whose key differs asks the same question — _No_ applies the template and keeps the key. Renaming a variable in the variables dialog updates its structured references too; saving the dialog without a variable that is still used asks first.
+- **Delete** asks first when a group still has fields or other elements reference the key; every delete offers **Undo** in a 5 s toast that closes as soon as the schema changes in another way. Focus moves to the neighbouring card (or the group, or the canvas).
+- **Drag** uses Pointer Events for mouse, pen and touch; on touch only the grip starts a drag so the canvas still scrolls. Nothing is written until release; Escape or dropping outside the canvas cancels.
+- **Toolbar**: _Design · Preview · Schema_ and _Desktop · Tablet · Mobile_ are `sd-segmented` groups (size `sm`). The level choices show icons only; below 720 px the mode choices show icons only too. Their names stay the accessible names.
+- When the builder is narrower than 900 px, the palette and the inspector become overlay panels opened from the toolbar; opening one moves focus into it and Escape closes it back to its button.
+- Requires `SdConfirmService` and `SdNotifyService` (both `providedIn: 'root'`).
+
+### Keyboard
+
+| Keys                               | Where                                                | Action                          |
+| ---------------------------------- | ---------------------------------------------------- | ------------------------------- |
+| Enter / Space                      | canvas card                                          | select                          |
+| Delete / Backspace                 | selected card                                        | delete (asks when needed)       |
+| Alt+↑ / Alt+↓                      | selected card                                        | move before / after its sibling |
+| Ctrl/⌘+D                           | selected card                                        | duplicate                       |
+| Ctrl/⌘+Z, Ctrl/⌘+Y, Ctrl/⌘+Shift+Z | anywhere in the builder except text inputs           | undo / redo                     |
+| Escape                             | while dragging or resizing                           | cancel                          |
+| Escape                             | inside an open overlay panel (narrow builder)        | close it                        |
+| ← / → / Home / End                 | Design · Preview · Schema, Desktop · Tablet · Mobile | switch                          |
+| ↑ / ↓ / Home / End / Enter         | Structure tree                                       | move / select                   |
+| ↑ / ↓                              | grip of a static option (inspector)                  | move the option up / down       |
+
+---
+
+## `SdFormRenderService`
+
+| Method                           | Signature                                                                               | Notes                                                                                                                                                                                                                                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewEntities(schema, entities)` | `(SdFormGenericSchema, Record<string, unknown>[]) => Promise<Record<string, string>[]>` | Display text per field key for each entity — option labels (static items, or the catalog's `labels` / `load`), dates, numbers by preset, the password mask. For list and export screens. Within one call a catalog without `labels` is loaded once per resolved parameters, not once per value. |
+
+---
+
+## Examples
+
+### 1. Design a form, then render it
+
+```ts
+import { Component, signal } from '@angular/core';
+import { SdFormBuilder, SdFormRender, type SdFormGenericSchema } from '@sdcorejs/angular/components/form-generic';
+
+@Component({
+  selector: 'app-form-designer',
+  imports: [SdFormBuilder, SdFormRender],
+  template: `
+    <div style="height: 720px">
+      <sd-form-builder [(schema)]="schema"></sd-form-builder>
+    </div>
+    <sd-form-render [schema]="schema()" [(value)]="value"></sd-form-render>
+  `,
+})
+export class FormDesignerComponent {
+  readonly schema = signal<SdFormGenericSchema>({ pages: [{ id: 'main', elements: [] }] });
+  readonly value = signal<Record<string, unknown>>({});
+
+  save() {
+    return this.api.post('/api/forms', this.schema());
+  }
+}
+```
+
+### 2. Validate, upload and submit
+
+```ts
+async submit(render: SdFormRender) {
+  const { valid, messages } = await render.validate();
+  if (messages.warning.length) this.notify.warning(messages.warning);
+  if (!valid) {
+    if (messages.error.length) this.notify.error(messages.error);
+    return;
+  }
+  await render.upload();                         // resolve file fields first
+  await this.api.post('/api/requests', this.value());
+}
+```
+
+### 3. Buttons in the schema and `(sdAction)`
+
+```ts
+import { SdFormRender, type SdFormGenericAction, type SdFormGenericSchema } from '@sdcorejs/angular/components/form-generic';
+
+@Component({
+  selector: 'app-request-form',
+  imports: [SdFormRender],
+  template: `<sd-form-render #render [schema]="schema" [(value)]="value" (sdAction)="onAction($event, render)"></sd-form-render>`,
+})
+export class RequestFormComponent {
+  readonly value = signal<Record<string, unknown>>({});
+  readonly schema: SdFormGenericSchema = {
+    pages: [
+      {
+        id: 'main',
+        elements: [
+          { id: 'title', type: 'heading', text: 'New request', level: 2 },
+          { id: 'f1', key: 'reason', type: 'textarea', label: 'Reason', validation: { required: true } },
+          { id: 'b1', type: 'button', label: 'Submit', icon: 'send', action: 'submit', layout: { span: { desktop: 3 } } },
+          { id: 'b2', type: 'button', label: 'Save draft', action: 'custom', name: 'save-draft', layout: { span: { desktop: 3 } } },
+          { id: 'b3', type: 'button', label: 'Reset', action: 'reset', variant: 'text', layout: { span: { desktop: 3 } } },
+        ],
+      },
+    ],
+  };
+
+  async onAction(event: SdFormGenericAction, render: SdFormRender) {
+    if (event.action === 'reset') return; // the renderer already restored the value
+    await render.upload(); // the action pipeline never uploads
+    const body = this.value(); // value after upload
+    if (event.action === 'submit') await this.api.post('/api/requests', body);
+    if (event.action === 'save-draft') await this.api.put('/api/requests/draft', body);
+  }
+}
+```
+
+`submit()` and `reset()` do the same from code — for example a submit button that lives outside the form:
+
+```ts
+const { valid } = await render.submit(); // emits (sdAction) { action: 'submit', buttonId: null, … } when valid
+```
+
+### 4. A hand-written schema
+
+```ts
+const schema: SdFormGenericSchema = {
+  pages: [
+    {
+      id: 'main',
+      elements: [
+        {
+          id: 'f1',
+          key: 'fullName',
+          type: 'textfield',
+          label: 'Full name',
+          layout: { span: { desktop: 6, mobile: 12 } },
+          validation: { required: true, maxLength: 120 },
+        },
+        {
+          id: 'f2',
+          key: 'email',
+          type: 'textfield',
+          subtype: 'email', // preset: format checked, no regex needed
+          label: 'Email',
+          placeholder: 'name@example.com',
+          layout: { span: { desktop: 6 } }, // tablet follows desktop, mobile is a full row
+        },
+        {
+          id: 'f3',
+          key: 'province',
+          type: 'select',
+          label: 'Province',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          options: {
+            source: 'static',
+            items: [
+              { value: 'HN', label: 'Hà Nội' },
+              { value: 'SG', label: 'TP. HCM' },
+            ],
+          },
+        },
+        {
+          id: 'f4',
+          key: 'district',
+          type: 'select',
+          label: 'District',
+          layout: { span: { desktop: 4, tablet: 6 } },
+          options: {
+            source: 'catalog',
+            catalog: 'districts',
+            params: [{ name: 'provinceId', value: { field: 'province' } }],
+            fill: [{ field: 'postalCode', from: 'postalCode' }],
+          },
+        },
+        {
+          id: 'g1',
+          type: 'group',
+          label: 'Budget',
+          icon: 'payments',
+          elements: [
+            {
+              id: 'f5',
+              key: 'budget',
+              type: 'number',
+              subtype: 'currency',
+              label: 'Budget',
+              layout: { span: { desktop: 6 } },
+              validation: { min: 0 },
+              currency: 'VND',
+            },
+            {
+              id: 'f6',
+              key: 'reason',
+              type: 'textarea',
+              label: 'Reason',
+              layout: { newRow: true }, // always on its own row
+              rules: { required: { field: 'budget', operator: 'GREATER_THAN', data: 100000000 } },
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  validations: [{ type: 'function', validator: 'budget', alert: 'error' }],
+};
+```
+
+## Accessibility
+
+- **Canvas cards** are `role="button"` elements with `aria-pressed` (selected) and an `aria-label` built from the label, the preset and the required / hidden state. The card content is an `aria-hidden` illustration without real inputs. The drag grip, duplicate, delete and ⋮ menu are separate buttons, rendered for the selected field only, which keeps the DOM of large forms small.
+- **Structure** is an ARIA tree with a roving tab stop (↑ ↓ Home End, Enter selects and scrolls the canvas to the item).
+- Adding, moving, deleting and undoing are announced through a polite live region. Every drag has a keyboard path: Alt+↑ / Alt+↓, the ⋮ menu (_Move into group …_, _Move out of group_, _Start a new row_) and click / Enter on a palette item. Resize has _Layout_ → width of the level in view.
+- In `<sd-form-render>` (default `labelPlacement="top"`) each control is named by exactly one visible label and described by its helper text or its error.
+- Headings render real `<h2>` – `<h4>` elements: pick `level` so it continues the outline of the host page. An `image` with an empty `alt` is decorative (`alt=""`). A `warning` / `error` notice is announced by `<sd-inform>` as soon as its rules show it. The form-level error block is an `<sd-inform color="error">` above the grid.
+- On the builder canvas, static elements and buttons sit inside an `inert` region, so a preview link or button is never a second tab stop inside the card.
+
+## Limitations
+
+- A repeating table is not part of this release. Tabs/steps and page editing are supported as described above.
+- Static texts are plain text: no formatting and no `${key}` placeholders (use an `html` field).
+- A button only reports `(sdAction)`; navigation, API calls and uploads belong to the host.
+- `checkbox` `validation.required` is not enforced (`<sd-checkbox>` has no `required` input).
+- `time` ignores `labelPlacement` (`<sd-time>` has no top-label mode yet); `json` always shows its label above the editor.
+- Code that switches exhaustively over `SdFormGenericField['type']` needs branches for `time` and `json`.
+- The password preset has no show / hide toggle.
+- Groups always span the full row and do not nest.
+- Schema mode is read-only.
+
+## Anti-patterns
+
+- ❌ Mutating the object bound to `[(schema)]` and expecting the canvas to update — the builder only reacts to a **new reference** with different content.
+- ❌ Writing a delayed save response back into `[(schema)]`. If the user edited meanwhile, the older schema differs from the current one and is loaded, discarding the newer edits and the undo history. Keep the schema you sent.
+- ❌ Calling HTTP from a component or pipe to feed a select — register a catalog in `provideSdFormGeneric` and reference it with `options: { source: 'catalog' }`.
+- ❌ Referencing a function validation id that the portal does not register — it fails closed and blocks submit.
+- ❌ Asking end users for a regex to validate an email or a phone number — use the `email` / `phone` presets.
+- ❌ Saving without awaiting `render.upload()` — file fields still hold local placeholders. This includes the `value` of `(sdAction)`.
+- ❌ Saving the `value` of a `custom` button without `validate: true` as if it were checked — only `submit` and `validate: true` run `validate()` first.
+- ❌ Putting HTML or `${key}` into a static `text` — it is shown literally.
+- ❌ Importing a field sub-component, a pipe or a helper from a deep path — they are not exported and the path is not an entry point.
+
+## Related
+
+- `<sd-query-builder>` — edits the `Filter` conditions the schema stores.
+- `<sd-upload-file>` — backs the `upload` field type.
+- `<sd-time>` / `<sd-code-editor>` — back the `time` / `json` field types.
+- `<sd-section>` — renders a group.
+- `<sd-button>` — renders a schema `button`; `<sd-inform>` — renders a `notice` and the form-level error block.
+- `<sd-input>` / `<sd-select>` / … — the controls the renderer composes; `labelPlacement` is available on them too (default `'float'` there).

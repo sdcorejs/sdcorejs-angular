@@ -1,13 +1,13 @@
 {
   "repository": "sdcorejs-angular",
-  "latest": "3.4",
+  "latest": "3.5",
   "retentionPerLeadingDigit": 5,
   "suffixes": [
+    "3.5",
     "3.4",
     "3.3",
     "3.2",
     "3.1",
-    "3.0",
     "2.15",
     "2.14",
     "2.13",
