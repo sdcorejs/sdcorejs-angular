@@ -34,8 +34,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5] - 2026-11-05
+
+Packages `19.3.5` · `20.3.5` · `21.3.5` · `22.3.5`, validated against `*.3.4`.
+
 > [!IMPORTANT]
 > **Before upgrading:** the table query bar (`filter.mode: 'query-bar'`) now edits chips inline on the bar; set `filter.queryBar.editor: 'popover'` (per table or in `SD_TABLE_CONFIGURATION`) to keep the popover chips. The table settings modal gets a **Bộ lọc** tab where users can switch between the filter panel and the query bar; set `filter.modeSelectable: false` to keep `filter.mode` fixed. Default client XLSX export writes untransformed `date`, `datetime` and `time` columns as Excel date/time cells instead of date strings. On phones, table cards get a new frame, the filter drawer becomes a bottom sheet with filter chips, **⋮** (Tools) moves to the top row and pull to refresh replaces Reload; E2E tests that use `-mobile-tool-filter`, `-mobile-tool-sort-<field>` or `-mobile-tool-reload` must use the chips, the sort sheet and the reload button, and tests that use the filter drawer ids `-mobile-filter-ext-<field>`, `-mobile-filter-col-<field>` or `-mobile-filter-def-<field>` must open the filter's page first.
+
+**Highlights**
+
+- Table phone cards from `mobile.template`, filter chips, bottom sheets for filters and sorting, a redesigned Tools sheet, and pull to refresh
+- Table settings: a filter tab with a saved choice between the filter panel and query bar, plus inline query-bar chip editing
+- Excel export: typed date/time cells and `SdExcelColumn.numFmt` for numeric and date values
+- Modal accessibility: dialogs and bottom sheets use their heading as their accessible name
 
 ### Changed (BREAKING for consumers)
 
@@ -101,6 +112,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+#### Layout
+
+- Performance: the account menu's document Escape and outside-pointer listeners are active only while the menu is open; closing or destroying it removes both listeners.
+
 #### Modal
 
 - The dialog or bottom sheet is named by its heading: the default title, or the first heading (`h1`–`h6`, `role="heading"`) of a projected `[sdHeaderLeft]`, instead of the whole header-left cell with its buttons. The name follows a heading that is swapped while the modal is open; a header-left without a heading still names it as a whole.
@@ -108,6 +123,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Query bar
 
 - The chip value text moved to the shared `ɵsdQueryChipValueText` / `ɵSdQueryChipLabels`, which the phone table filters use too. The text is unchanged.
+
+#### Select
+
+- Performance: the read-error retry keyboard listener runs outside Angular only while the select panel is open. Closing the panel, replacing the inner select or destroying the component removes it, so closed selects in editable grids do not process document key events.
 
 #### Table
 
@@ -2897,7 +2916,8 @@ Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
 ---
 
-[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.4...HEAD
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.5...HEAD
+[3.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.4...v3.5
 [3.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...v3.4
 [3.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...v3.3
 [3.2]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.1...v3.2
