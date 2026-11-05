@@ -1,5 +1,38 @@
 # Reviewed release snapshots
 
+## Release 3.5
+
+`3.5.json` compares all four candidates with their same-major published `*.3.4`
+baseline. Candidates are the actual `19.3.5` / `20.3.5` / `21.3.5` / `22.3.5`
+tarballs built on Linux by the `publish-npm.yml` run `41944429877` for the first
+`v3.5` tag (source `4bd4e43b7aa6a7c0760eb1c9bebe65b10e41d947`, the squash of #134,
+exact Node `24.22.1` and npm `11.5.1`), downloaded from that run's retained
+artifacts. That run stopped at "Verify all four retained packages" and published
+nothing. Artifact SHA-256, npm SHA-512 integrity and SHA-1 shasum were checked
+before deriving the snapshot. The canonical surface fingerprint reader excludes
+only `version` and `frameworkMajor`. Every baseline fingerprint equals the
+candidate fingerprint recorded in `3.4.json`.
+The snapshot and these same artifacts passed
+`release-package-contract.mjs --compile-consumers` on exact Node `24.22.1`
+and npm `11.5.1` in the source commit's checkout.
+
+The export map, dependencies, peers and engines are unchanged for each line.
+Angular 19 adds 13 declaration files for the query-chip text helper, mobile
+field/filter sheets, card data, sheet helpers, sorting, filter chips, tools,
+pull refresh, mobile models and mobile view/filter utilities. No packed file
+is removed. Later Angular lines retain their existing bundled declaration
+inventory, and all four lines retain their existing FESM chunk paths.
+
+Each line adds 18 authored sourcemap sources (12 runtime TypeScript files and
+six templates), changes 26 existing sources and removes none. Angular 19
+changes 16 existing declaration files; later lines change five declaration
+bundles. These changes cover table mobile cards, filters, sorting, tools and
+pull refresh; the filter-mode setting and inline query-bar default; typed Excel
+date/time export and `SdExcelColumn.numFmt`; modal navigation and accessible
+names; and the select/account-menu listener lifecycle. The changelog documents
+the table defaults, XLSX cell types and mobile autoId migrations. They must be
+independently reviewed with this snapshot; CI never regenerates expectations.
+
 ## Release 3.4
 
 `3.4.json` compares all four candidates with their same-major published `*.3.3`
