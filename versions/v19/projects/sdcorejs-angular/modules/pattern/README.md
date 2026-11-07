@@ -59,6 +59,7 @@ Tên feature đã có trong đường dẫn, không lặp lại trong tên file 
 | E11 | Tài liệu không ghi chú theo version; khác biệt giữa version ghi ở CHANGELOG. |
 | E12 | `features/*` theo cấu trúc project-structure của Blueprint. |
 | E13 | Sau lưu: page sang chi tiết, drawer đóng và danh sách tải lại. Lưu lỗi: focus field lỗi đầu tiên, lỗi API gắn vào field. Xoá, duyệt, từ chối, mọi tác vụ đổi trạng thái đều hỏi xác nhận, cả từng bản ghi lẫn hàng loạt; hàng loạt báo kết quả từng phần và cho thử lại phần lỗi. |
+| E14 | Màn đọc query param của chính nó subscribe `ActivatedRoute.queryParamMap` (hoặc `toSignal`), không đọc `route.snapshot.queryParamMap` một lần: trong `sd-tab-router-outlet` cùng path khác query là cùng tab và component được giữ. Bản ghi cần tab riêng thì định danh nằm trong path. Bảng / tab / anchor muốn giữ state qua link thì bật `syncQueryParams` (cần `autoId`), không tự ghi query. Chi tiết: mục "Screens that read query params" trong [`sd-tab-router.md`](../../components/tab-router/sd-tab-router.md). |
 
 ## Mã quyền
 
@@ -73,4 +74,4 @@ Thêm hoặc sửa một màn mẫu:
 - [ ] Mã quyền mới có trong `core/permission/pattern-permission.ts`; mã không còn dùng thì xoá.
 - [ ] Tài liệu trong `docs/` trỏ tới file của feature bằng marker `@source`; chạy `npm run pattern:docs` (cập nhật cả manifest của tab Source).
 - [ ] Playwright cho route trong `showcase/e2e/pattern/`.
-- [ ] Quy tắc review: không có chiều cao hay `overflow` tự viết trong danh sách, không có `hideInlineFilter: true`, không có nút Đóng thường trực trong drawer, không có chữ "Chỉnh sửa".
+- [ ] Quy tắc review: không có chiều cao hay `overflow` tự viết trong danh sách, không có `hideInlineFilter: true`, không có nút Đóng thường trực trong drawer, không có chữ "Chỉnh sửa", không đọc `route.snapshot.queryParamMap` một lần (E14).
