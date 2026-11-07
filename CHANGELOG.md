@@ -34,6 +34,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+> [!IMPORTANT]
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`.
+
+**Highlights**
+
+- `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state
+
+### Changed (BREAKING for consumers)
+
+#### Tab router
+
+- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.
+  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.
+  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.
+  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.
+  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.
+
+    ```diff
+    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');
+    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));
+    ```
+
+    ```diff
+    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab
+    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order
+    ```
+
+### Added
+
+#### Anchor
+
+- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
+
+#### Tab
+
+- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.
+
+#### Table
+
+- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{"q","c","o","e","s","p","z"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.
+  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.
+  - `paginate.total: 'unknown'` restores the page size only.
+
+#### General
+
+- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.
+
 ### Changed
 
 #### Theme

@@ -31,6 +31,7 @@ Signal-based scroll-spy navigation (OnPush) — pairs a side TOC with the actual
 | `hideNav` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Cờ **ép ẩn thủ công**: `[hideNav]="true"` ẩn TOC ở mọi breakpoint. Không còn đọc UA lúc khởi tạo class. Khi hide, scroll-spy cũng bị disable, content chiếm 100% width. |
 | `hideNavOnMobile` | `boolean` | `true` | `transform: booleanAttribute`. Auto-ẩn TOC khi viewport ở breakpoint `mobile` (`< 768px` theo `SD_VIEWPORT_BREAKPOINTS`). Trạng thái mobile lấy từ `SdViewportService` — SSR-safe và tự cập nhật khi resize. Đặt `false` để buộc hiện TOC cả trên mobile. |
 | `color` | `Color` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Màu highlight active nav — apply cho text, icon, vertical bar bên trái. Bind qua CSS var `--anchor-active-color` map sang token global `--sd-{color}`. Import `Color` từ `@sdcorejs/utils/models`. |
+| `syncQueryParams` | `boolean` | `false` | `transform: booleanAttribute`. Ghi mục đang xem lên query param `anchor-<autoId>` và cuộn tới mục đó khi mở link — copy link giữ đúng mục. Cần `autoId` (thiếu thì không đồng bộ, cảnh báo một lần). Xem [Ví dụ 6](#6-giữ-mục-đang-xem-trên-url-syncqueryparams). |
 
 ## Computed state (`<sd-anchor>`)
 | Signal | Type | Description |
@@ -169,6 +170,24 @@ None exposed on the host element.
 ```
 
 > **BREAKING (từ bản này):** `[hideNav]="false"` KHÔNG còn là cách ép hiện TOC trên mobile — `false` giờ là default nên component không phân biệt được "không set" và "set false". Dùng `[hideNavOnMobile]="false"`. Ngoài ra tiêu chí "mobile" đổi từ UA detection (`BrowserUtilities.isMobile()`) sang breakpoint chiều rộng viewport, nên desktop thu hẹp cửa sổ dưới 768px giờ cũng ẩn TOC.
+
+### 6. Giữ mục đang xem trên URL (`syncQueryParams`)
+```html
+<!-- /customers/12?anchor-customer-profile=address mở ra và cuộn tới mục "Địa chỉ" -->
+<sd-anchor autoId="customer-profile" syncQueryParams>
+  <sd-anchor-item title="Thông tin chung" key="general">…</sd-anchor-item>
+  <sd-anchor-item title="Địa chỉ" key="address">…</sd-anchor-item>
+  <sd-anchor-item title="Ghi chú">…</sd-anchor-item>
+</sd-anchor>
+```
+
+- Tên param: `anchor-<autoId>` (`autoId` bạn truyền, không phải `components-anchor-…`). Giá trị: `key` của `sd-anchor-item`; mục không có `key` dùng vị trí 0-based (`anchor-customer-profile=2`). Đặt `key` cho mọi mục để link không đổi khi thêm/bớt mục.
+- Mục đầu tiên → param bị xoá. Mục active phải đứng yên 300ms mới được ghi, nên cuộn qua nhiều mục không ghi URL liên tục.
+- Ghi bằng `replaceUrl` (không thêm history), gộp với các component khác cùng lượt thành một navigation, giữ query param khác và fragment.
+- Mở link: nhảy thẳng tới mục; param đổi sau đó (link khác, back): cuộn mượt tới mục. Key chưa có mục tương ứng → giữ param và cuộn tới khi mục đó xuất hiện (mục render sau bằng `@if`/`@for`); người dùng chuyển sang mục khác trước thì param được ghi theo mục mới.
+- TOC bị ẩn (`hideNav`, hoặc mobile với `hideNavOnMobile`) thì không có scroll-spy nên không ghi gì; mở link vẫn cuộn tới mục.
+- Param biến mất (vd bấm menu không query vào cùng trang) → giữ mục đang xem và ghi lại param.
+- Trong `sd-tab-router-outlet`, cùng path khác query vẫn là một tab — ghi param không mở tab mới. Không có route Angular (`provideRouter`) thì không làm gì.
 
 ## Anti-patterns
 - **Not wrapping `<sd-anchor>` in a parent with explicit `height`** — the component uses `height: 100%` + `overflow-y: auto`; without a bounded parent, scroll-spy never fires

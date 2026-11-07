@@ -11,6 +11,7 @@ import { TabManyExampleComponent } from './examples/tab-many.example';
 import { TabMixedExampleComponent } from './examples/tab-mixed.example';
 import { TabTableExampleComponent } from './examples/tab-table.example';
 import { TabViewsExampleComponent } from './examples/tab-views.example';
+import { TabSyncQueryParamsExampleComponent } from './examples/tab-sync-query-params.example';
 
 interface FileTab {
   id: string;
@@ -35,6 +36,7 @@ interface FileTab {
     TabLoadingExampleComponent,
     TabDisabledExampleComponent,
     TabClosableExampleComponent,
+    TabSyncQueryParamsExampleComponent,
   ],
   template: `
     <demo-page #demoPage
@@ -290,6 +292,15 @@ interface FileTab {
         [props]="[{ name: 'closable', value: 'true' }, { name: 'beforeClose', value: 'SdTabBeforeClose' }, { name: '(close)', value: 'event' }]"
         note="Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.">
         <app-tab-closable-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-tab-tren-url') {
+      <demo-section heading="Giữ tab trên URL"
+        data-example-typescript="./examples/tab-sync-query-params.example.ts" data-example-template="./examples/tab-sync-query-params.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'customer-detail' }]"
+        note="Chọn tab rồi copy link: thanh địa chỉ có ?tab-customer-detail=…, mở link ở tab mới ra đúng tab. Tab đầu tiên thì không có param.">
+        <app-tab-sync-query-params-example />
       </demo-section>
       }
     </demo-page>

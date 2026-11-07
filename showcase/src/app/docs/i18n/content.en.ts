@@ -125,6 +125,11 @@ export const EN_PAGE_CONTENT: Readonly<Record<string, DocsContentTranslation>> =
  */
 export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKey, DocsContentTranslation>>> = {
   'components/anchor/example-anchor-mac-dinh': { title: 'Default anchor' },
+  'components/anchor/example-giu-muc-dang-xem-tren-url': {
+    title: 'Keep the current section in the URL',
+    description:
+      'Scroll or click the table of contents, then copy the link: the address bar has ?anchor-customer-profile=…, and opening the link in a new tab scrolls straight to that section. The first section has no param.',
+  },
   'components/anchor/example-mau-va-cat-ngan-chu': { title: 'Colors and text truncation' },
   'components/api-contract-builder/example-ba-che-do-nguon-gia-tri': {
     title: 'Three value source modes',
@@ -637,6 +642,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     title: 'Form split into groups',
     description: 'Data is kept when switching tabs; on save, it jumps to the group with errors and shows a Notify message.',
   },
+  'components/tab/example-giu-tab-tren-url': {
+    title: 'Keep the tab in the URL',
+    description:
+      'Pick a tab, then copy the link: the address bar has ?tab-customer-detail=…, and opening the link in a new tab shows the same tab. The first tab has no param.',
+  },
   'components/tab/example-mo-nhieu-ho-so': {
     title: 'Open multiple records',
     description: 'Tabs are closable; rename one and then close it to try the unsaved-data confirmation.',
@@ -707,6 +717,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
       'The callback runs only when the filter value has been committed and differs from the previous one; text/number inputs commit on Enter or blur.',
   },
   'components/table/example-footer-tong-hop': { title: 'Summary footer' },
+  'components/table/example-giu-bo-loc-tren-url': {
+    title: 'Keep filters in the URL',
+    description:
+      'Search, filter under the columns, sort or change page, then copy the link: the address bar has ?table-invoices=…, and opening the link in a new tab shows the same filters, order and page. Clearing every filter removes the param.',
+  },
   'components/table/example-giu-selection-xuyen-trang': { title: 'Keep selection across pages' },
   'components/table/example-hanh-dong-o-header-cot-command': {
     title: 'Action in the command column header',

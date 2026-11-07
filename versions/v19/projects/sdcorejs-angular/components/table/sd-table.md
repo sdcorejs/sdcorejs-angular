@@ -749,6 +749,39 @@ Switches (`sd-switch`) rendered within the table use the compact `sm` appearance
 | -------- | ----------------------------- | ----------- | --------------------------------------------------------------------- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="components-table-<value>"` for E2E selectors. |
 | `option` | `SdTableOption<T>` (REQUIRED) | —           | The whole table configuration (see schema above).                     |
+| `hideReadError` | `boolean` | `false` | Hides the integrated error region (see "Trạng thái đọc server và retry"). |
+| `syncQueryParams` | `boolean` | `false` | `booleanAttribute` transform. Writes filters, sort and page to the query param `table-<autoId>` and reads them back when the link is opened. Needs `autoId`. See [URL state](#url-state-syncqueryparams). |
+
+## URL state (`syncQueryParams`)
+
+```html
+<!-- /customers?table-customers=%7B%22c%22%3A%7B%22name%22%3A%22An%22%7D%2C%22s%22%3A%5B%22createdAt%22%2C%22desc%22%5D%2C%22p%22%3A2%7D -->
+<sd-table autoId="customers" syncQueryParams [option]="option"></sd-table>
+```
+
+A copied link opens the table with the same filters, sort and page.
+
+- **Param name:** `table-<autoId>` — the `autoId` you pass, not the prefixed `data-autoId`. Without `autoId` nothing is synced and a warning is logged once. Two tables on one page need two `autoId`s.
+- **Value:** compact JSON with only what differs from the default state; at the default the param is removed.
+
+  | Key | Content |
+  | --- | --- |
+  | `q` | quick search: `t` keyword, `f` dropdown values by field |
+  | `c` | filters under the columns, by field |
+  | `o` | column operators that differ from the default operator |
+  | `e` | external filters, by field (`null` = cleared a filter that has a default) |
+  | `s` | `[field, "asc" \| "desc"]` |
+  | `p` | page, 1-based |
+  | `z` | page size (only values in `paginate.pages`) |
+
+  A `Date` value is written as ISO text and read back as a `Date`.
+- **Opening a link:** the URL wins over the cached filters (`filter.key` / `cacheable`) and goes into the first read — the table reads once. Without the param the table starts as before (cache included) and then writes its state if it is not the default, so the URL is right from the start.
+- **Changes:** every filter, sort, page or page-size change updates the URL with `replaceUrl` (no history entry per change); writes from several components in one turn go out as one navigation, and other query params and the fragment are kept.
+- **Param changed from outside** (another link, the back button): the table applies it and reads once. **Param removed** (a menu link to the same page without a query): the table keeps its state and writes the param again. A malformed value, an unknown field, a column whose filter is `disabled` (or every filter when `filter.disabled`), an operator outside the column's `filter.operator.list` and a page size outside `paginate.pages` are ignored — the URL is untrusted input, so a link can only set what the user could set on screen.
+- **`paginate.total: 'unknown'`:** only the page size is restored; the page starts at 1 (without a total the table cannot know that page N exists).
+- **Not in the URL:** column setup (visible columns, order, widths), filter mode, selection, expanded rows.
+- **Inside `sd-tab-router-outlet`:** the same path with another query is the same tab, so writing the param never opens a new router tab, and a table in a background tab does not write over the URL of the open one.
+- No effect without Angular routes (`provideRouter`). Long filter values make long URLs — keep it for list screens whose state is worth sharing.
 
 ## Outputs
 

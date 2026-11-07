@@ -55,7 +55,8 @@ None.
 - The leaf route snapshot and its `ActivatedRoute` are captured when `NavigationEnd` / `NavigationSkipped` is emitted, not when the queued activation runs, so navigations that finish while an earlier activation is still pending (for example an NgModule lazy route) each get their own component, route and tab name
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
 - `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
-- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTabRouterTab` descriptor may be immutably copied when `isActive` changes
+- Tab identity = hash of the **path only** (the URL before `?` and `#`). The same path with another query or fragment is the same tab: navigating to it — while it is open or from another tab — keeps the per-tab injector, `tabInfoChanges` stream and component instance/state, and stores the latest `queryParams` on the tab (an immutably copied descriptor, so a function `name` sees the new query). Clicking the tab later navigates back to that latest query. See [Screens that read query params](#screens-that-read-query-params)
+- `SdTabActivated` fires when a tab goes from the background to active. A query change on the tab that is already open (for example a component with `syncQueryParams` writing its state) does not fire it again
 - `state.replaceTab = true` → new tab replaces the current active tab (instead of stacking)
 - `state.switchTab = true` → user clicked an existing tab pill (used by item click handler to avoid creating duplicates)
 - `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTabRouterTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
@@ -66,6 +67,7 @@ None.
 - Component instances are kept alive: switching tabs only toggles `[class.active]` on `.tab-router__pane` divs; `*ngComponentOutlet` reference is preserved when only `isActive` changes (uses spread instead of mutation)
 - Outlet panes and nav items track `tab.injector ?? tab.key`: ordinary activation keeps the same tracked identity, while an explicit reload's fresh injector recreates both views
 - Per-tab `Injector` overrides `ActivatedRoute` so each tab's component injects its OWN route, not the router's current one — avoids state-leak between tabs
+- That `ActivatedRoute` is a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again, Angular creates a new route for the path and the outlet points the proxy at it. `snapshot`, `params`, `queryParams`, `fragment`, `data`, `url`, `paramMap` and `queryParamMap` follow the newest route; the observables do not repeat an equal value. Before, a subscription made by the tab component stopped emitting after the user switched away and back
 - Soft cap warning: if the user opens more than 30 tabs, `SdNotifyService.warning('Bạn đã mở quá nhiều tab.')` fires
 - Closing the active tab navigates to the neighbor (next, then previous, else `/`)
 - **Browser title (`syncBrowserTitle`):** set through Angular `Title`, updated when the open tab changes and whenever its `tabInfoChanges` sends a new name or `dirty`. Before the screen sends tab info, the name comes from `@SdTabComponent` (else the URL). With the input on, route `title`s set by the router are overwritten after each navigation
@@ -172,7 +174,8 @@ Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.n
 interface SdTabRouterTab {
   component: Type<any>;
   injector?: Injector;
-  key: string; // hash(url + queryParams)
+  key: string; // hash(path) — query and fragment are not part of it
+  // url: the path; queryParams: the latest query the tab was opened with
   isActive: boolean;
   url: string;
   params?: Record<string, string | number>;
@@ -307,6 +310,25 @@ this.tab.tabInfoChanges.next({
 <sd-tab-router-outlet syncBrowserTitle></sd-tab-router-outlet>
 ```
 
+## Screens that read query params
+
+Rule for every screen rendered by `sd-tab-router-outlet` (check it in code review): **a screen that uses a query param of its own must subscribe to it and update when it changes.** The outlet keeps the tab and its component when only the query changes — a link with another query, a menu item without a query, the back button, or a `syncQueryParams` component writing its state — so a value read once goes stale.
+
+```ts
+@Component({ /* … */ })
+export class OrderListPage {
+  readonly #route = inject(ActivatedRoute);
+  // ✅ follows every change, including when the user comes back to the tab with another query
+  readonly status = toSignal(this.#route.queryParamMap.pipe(map(params => params.get('status') ?? 'all')), { initialValue: 'all' });
+
+  // ❌ read once: the tab keeps the first value
+  // readonly status = this.#route.snapshot.queryParamMap.get('status');
+}
+```
+
+- Query params written by `sd-table`, `sd-tab-group` or `sd-anchor` with `syncQueryParams` (`table-<autoId>`, `tab-<autoId>`, `anchor-<autoId>`) are handled by those components; the screen does nothing for them.
+- When each record needs its own tab, put its identity in the path (`/orders/detail/:id`), not in the query.
+
 ## Anti-patterns
 
 - ❌ Using `<router-outlet>` AND `<sd-tab-router-outlet>` in the same shell — they will both react to navigation and double-render
@@ -314,7 +336,8 @@ this.tab.tabInfoChanges.next({
 - ❌ Decorating a non-routable component with `@SdTabComponent` — the decorator only takes effect when the route activates the class
 - ❌ Counting on `ngOnDestroy` for cleanup when the user closes a tab — the component is destroyed only when its `*ngComponentOutlet` is removed; this happens on close, but timing is async after navigation
 - ❌ Relying on global state via `SdTabRouterService` from inside a tab without checking `tab === currentTab` — services are app-wide; multiple tabs can subscribe simultaneously
-- ❌ Opening the same URL with different query params and expecting tab reuse — keys include `queryParams`, so any difference creates a new tab
+- ❌ Reading a query param once (`route.snapshot.queryParamMap` in the constructor or `ngOnInit`) in a screen hosted by the outlet — the same path with another query reuses the tab and the component, so the screen keeps showing the old value. Subscribe instead; see [Screens that read query params](#screens-that-read-query-params)
+- ❌ Expecting one tab per query value (`/orders/detail?id=5` and `?id=6`) — the key is the path, so both open the same tab. Put the identity in the path (`/orders/detail/:id`) when each record needs its own tab
 
 ## Accessibility
 

@@ -45,6 +45,7 @@ import { sdTabInfoFromBuilders } from '../../pipes/tab-info.pipe';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
+import { SdTabActivatedRouteRef } from '../../utils/tab-activated-route';
 
 type TabRouterNavigationEvent = RoutesRecognized | NavigationEnd | NavigationSkipped | NavigationCancel | NavigationError;
 
@@ -249,11 +250,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       return Promise.resolve();
     }
 
-    const [urlPath] = this.#router.url.split('?');
-    const key = Utilities.hash({
-      url: urlPath,
-      queryParams: { ...(route.queryParams || {}) },
-    });
+    const key = tabKey(this.#router.url);
 
     if (this.tabs().some(tab => tab.key === key)) {
       return Promise.resolve();
@@ -356,9 +353,9 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     const queryParams = { ...(route.queryParams || {}) };
     const params = { ...(route.params || {}) };
     const data = { ...(route.data || {}) };
-    const [url] = fullUrl.split('?');
-    // Tab identity = hash(url + queryParams). Cùng key mặc định giữ tab cũ; forceReload mới tạo lại.
-    const key = Utilities.hash({ url, queryParams });
+    const url = tabPath(fullUrl);
+    // Tab identity = hash(path): query và fragment không tách tab. Cùng key giữ tab cũ; chỉ forceReload tạo lại.
+    const key = tabKey(fullUrl);
 
     let existedIndex = -1;
     let activatedIndex = -1;
@@ -388,6 +385,32 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
     const replaceTab = state['replaceTab'];
     const forceReload = state['forceReload'] === true;
+
+    // Tab đã có (cùng path) và không forceReload: chỉ kích hoạt + lưu query mới nhất, giữ injector/component. Chạy đồng
+    // bộ — không cần resolve injector cho tab sẽ không tạo.
+    if (existedIndex >= 0 && !forceReload) {
+      const existing = currentTabs[existedIndex];
+      const latestRoute = this.#findActivatedRouteForSnapshot(this.#router.routerState.root, route) ?? capturedActivatedRoute;
+      // why: component trong tab giữ ActivatedRoute (proxy) từ lúc tạo; trỏ nó sang route mới để subscription
+      // `queryParamMap`/`fragment` của màn nhận query đổi kể cả khi tab vừa được mở lại.
+      if (existing.injector instanceof SdOutletInjector) existing.injector.setRoute(latestRoute);
+      const unchanged = existing.isActive && shallowEqualParams(existing.queryParams, queryParams);
+      const updated: SdTabRouterTab = unchanged ? existing : { ...existing, isActive: true, url, params, queryParams, data };
+      if (updated !== existing && existing.injector instanceof SdOutletInjector) existing.injector.setTab(updated);
+
+      let updatedTabs = currentTabs.map((tab, index) => {
+        if (index === existedIndex) return updated;
+        return tab.isActive ? { ...tab, isActive: false } : tab;
+      });
+      if (replaceTab && activatedIndex >= 0) {
+        updatedTabs = updatedTabs.filter((_, index) => index !== activatedIndex);
+      }
+      this.#tabRouterService.setCurrentTab(updated);
+      // Chỉ phát khi tab chuyển từ nền sang active; đổi query tại chỗ (vd `syncQueryParams`) không phải lần kích hoạt.
+      if (!existing.isActive) this.#tabRouterService.pushEvent(updated, SdTabActivated);
+      this.tabs.set(updatedTabs);
+      return;
+    }
 
     // Resolve injector phù hợp với route. Cần xử lý 3 trường hợp:
     // - Standalone route (Angular đã set _injector trên routeConfig sau khi activate)
@@ -469,21 +492,15 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
 
     if (existedIndex >= 0) {
-      // Mặc định tab đã tồn tại chỉ được activate, không thay tab object. forceReload là nhánh
-      // explicit duy nhất thay SdTabRouterTab + injector để body và nav item được tạo lại.
+      // Tới đây chỉ còn forceReload (nhánh không forceReload đã return ở trên): thay SdTabRouterTab + injector để body
+      // và nav item được tạo lại.
       //
       // splice phía trên có thể đã shift index nếu activatedIndex < existedIndex.
       const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex ? existedIndex - 1 : existedIndex;
-      if (forceReload) {
-        updatedTabs = updatedTabs.map((tab, index) => (index === idx ? newTab : tab));
-        this.#tabRouterService.setCurrentTab(newTab);
-        this.#tabRouterService.pushEvent(newTab, SdTabActivated);
-        this.tabs.set(updatedTabs);
-      } else {
-        this.#tabRouterService.setCurrentTab(updatedTabs[idx]);
-        this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
-        this.tabs.set(updatedTabs);
-      }
+      updatedTabs = updatedTabs.map((tab, index) => (index === idx ? newTab : tab));
+      this.#tabRouterService.setCurrentTab(newTab);
+      this.#tabRouterService.pushEvent(newTab, SdTabActivated);
+      this.tabs.set(updatedTabs);
     } else {
       // Tab chưa tồn tại → thêm mới ở cuối.
       this.#tabRouterService.setCurrentTab(newTab);
@@ -517,24 +534,50 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   };
 }
 
+/** Path của URL tab: bỏ query và fragment. */
+const tabPath = (fullUrl: string): string => fullUrl.split(/[?#]/)[0];
+
+/** Key tab = hash(path). Query và fragment không tách tab. */
+const tabKey = (fullUrl: string): string => Utilities.hash({ url: tabPath(fullUrl) });
+
+const shallowEqualParams = (a: Record<string, unknown> | undefined, b: Record<string, unknown> | undefined): boolean => {
+  const left = a ?? {};
+  const right = b ?? {};
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every(key => Object.prototype.hasOwnProperty.call(right, key) && left[key] === right[key])
+  );
+};
+
 // Custom Injector cho từng tab: override ActivatedRoute thành route của TAB ĐÓ
 // (không phải route hiện tại của router). Nếu không override, mọi tab sẽ inject ActivatedRoute
 // của route đang active → component cũ trong tab inactive nhận data sai khi user navigate.
+// ActivatedRoute cấp ra là proxy sống (SdTabActivatedRouteRef): outlet trỏ nó sang route mới mỗi khi tab được mở lại.
 class SdOutletInjector implements Injector {
   #tab?: SdTabRouterTab;
+  #routeRef: SdTabActivatedRouteRef | null;
 
   constructor(
-    private route: ActivatedRoute | null,
+    route: ActivatedRoute | null,
     private parentInjector: Injector
-  ) {}
+  ) {
+    this.#routeRef = route ? new SdTabActivatedRouteRef(route) : null;
+  }
 
   setTab(tab: SdTabRouterTab): void {
     this.#tab = tab;
   }
 
+  setRoute(route: ActivatedRoute | null): void {
+    if (!route) return;
+    if (this.#routeRef) this.#routeRef.setTarget(route);
+    else this.#routeRef = new SdTabActivatedRouteRef(route);
+  }
+
   get(token: any, notFoundValue?: any): any {
     if (token === ActivatedRoute) {
-      return this.route || notFoundValue;
+      return this.#routeRef?.route || notFoundValue;
     }
     if (token === SD_TAB) {
       return this.#tab ?? notFoundValue;

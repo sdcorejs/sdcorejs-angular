@@ -12,11 +12,12 @@ const SHOWCASE_PAGE_SOURCES = {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
+import { AnchorSyncQueryParamsExampleComponent } from './examples/anchor-sync-query-params.example';
 
 @Component({
   selector: 'app-anchor-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdAnchor, SdAnchorItem],
+  imports: [DemoPageComponent, DemoSectionComponent, SdAnchor, SdAnchorItem, AnchorSyncQueryParamsExampleComponent],
   template: \`
     <demo-page #demoPage
       title="Anchor"
@@ -75,6 +76,14 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
         </div>
       </demo-section>
       }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-muc-dang-xem-tren-url') {
+      <demo-section heading="Giữ mục đang xem trên URL"
+        data-example-typescript="./examples/anchor-sync-query-params.example.ts" data-example-template="./examples/anchor-sync-query-params.example.html"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'customer-profile' }, { name: 'key', value: 'sd-anchor-item' }]"
+        note="Cuộn hoặc bấm mục lục rồi copy link: thanh địa chỉ có ?anchor-customer-profile=…, mở link ở tab mới cuộn thẳng tới mục đó. Mục đầu tiên thì không có param.">
+        <app-anchor-sync-query-params-example />
+      </demo-section>
+      }
     </demo-page>
   \`,
   styles: [\`
@@ -127,6 +136,33 @@ export class AnchorDemoComponent {}
   color: #555;
   margin: 0;
 }`,
+  },
+  "components/anchor/example-giu-muc-dang-xem-tren-url": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
+
+@Component({
+  selector: 'app-anchor-sync-query-params-example',
+  standalone: true,
+  imports: [SdAnchor, SdAnchorItem],
+  templateUrl: './anchor-sync-query-params.example.html',
+  styles: [
+    \`
+      .anchor-wrap {
+        height: 320px;
+        border: 1px solid var(--sd-border);
+        border-radius: var(--sd-panel-radius, 8px);
+        padding: 12px;
+      }
+      .block {
+        min-height: 260px;
+        padding: 8px 0;
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AnchorSyncQueryParamsExampleComponent {}`,
   },
   "components/api-contract-builder": {
     typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
@@ -11580,6 +11616,7 @@ import { TabManyExampleComponent } from './examples/tab-many.example';
 import { TabMixedExampleComponent } from './examples/tab-mixed.example';
 import { TabTableExampleComponent } from './examples/tab-table.example';
 import { TabViewsExampleComponent } from './examples/tab-views.example';
+import { TabSyncQueryParamsExampleComponent } from './examples/tab-sync-query-params.example';
 
 interface FileTab {
   id: string;
@@ -11604,6 +11641,7 @@ interface FileTab {
     TabLoadingExampleComponent,
     TabDisabledExampleComponent,
     TabClosableExampleComponent,
+    TabSyncQueryParamsExampleComponent,
   ],
   template: \`
     <demo-page #demoPage
@@ -11859,6 +11897,15 @@ interface FileTab {
         [props]="[{ name: 'closable', value: 'true' }, { name: 'beforeClose', value: 'SdTabBeforeClose' }, { name: '(close)', value: 'event' }]"
         note="Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.">
         <app-tab-closable-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-tab-tren-url') {
+      <demo-section heading="Giữ tab trên URL"
+        data-example-typescript="./examples/tab-sync-query-params.example.ts" data-example-template="./examples/tab-sync-query-params.example.html" data-example-style="./examples/tab-pattern-example.scss"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'customer-detail' }]"
+        note="Chọn tab rồi copy link: thanh địa chỉ có ?tab-customer-detail=…, mở link ở tab mới ra đúng tab. Tab đầu tiên thì không có param.">
+        <app-tab-sync-query-params-example />
       </demo-section>
       }
     </demo-page>
@@ -12175,6 +12222,73 @@ export class TabFormExampleComponent {
     this.#notify.success('Đã lưu thông tin khách hàng.');
   }
 }`,
+    scss: `:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-toolbar--end {
+  justify-content: flex-end;
+}
+
+.tab-note {
+  margin: 0;
+  color: var(--sd-text-secondary, #5f6368);
+  font-size: 13px;
+}
+
+// Breathing room between the tab header and its content.
+.tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.view-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  small {
+    display: block;
+    color: var(--sd-text-secondary, #5f6368);
+  }
+}`,
+  },
+  "components/tab/example-giu-tab-tren-url": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { SdTab, SdTabGroup } from '@sdcorejs/angular/components/tab';
+
+@Component({
+  selector: 'app-tab-sync-query-params-example',
+  standalone: true,
+  imports: [SdSection, SdSectionItem, SdTab, SdTabGroup],
+  templateUrl: './tab-sync-query-params.example.html',
+  styleUrl: './tab-pattern-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TabSyncQueryParamsExampleComponent {}`,
     scss: `:host {
   display: flex;
   flex-direction: column;
@@ -12943,6 +13057,7 @@ import { TableInlineErrorsExampleComponent } from './examples/table-inline-error
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
 import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
 import { TableSettingsExampleComponent } from './examples/table-settings.example';
+import { TableSyncQueryParamsExampleComponent } from './examples/table-sync-query-params.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -13125,6 +13240,7 @@ const TASKS: Task[] = [
     TableInlineOperatorExampleComponent,
     TableQueryBarExampleComponent,
     TableSettingsExampleComponent,
+    TableSyncQueryParamsExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -13179,6 +13295,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
         note="Nút Thiết lập ở footer mở modal hai tab. Cột: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng và bật / tắt cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Bộ lọc: chọn Khung hay Thanh bộ lọc. Áp dụng lưu cả hai tab. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
         <app-table-settings-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-bo-loc-tren-url') {
+      <demo-section heading="Giữ bộ lọc trên URL"
+        data-example-typescript="./examples/table-sync-query-params.example.ts" data-example-template="./examples/table-sync-query-params.example.html"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'invoices' }]"
+        note="Tìm kiếm, lọc dưới cột, sắp xếp hay chuyển trang rồi copy link: thanh địa chỉ có ?table-invoices=…, mở link ở tab mới ra đúng bộ lọc, thứ tự và trang. Xoá hết bộ lọc thì param biến mất.">
+        <app-table-sync-query-params-example />
       </demo-section>
       }
 
@@ -14781,6 +14906,53 @@ export class TableCustomCellsExampleComponent {
 
 .required-mark {
   color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/table/example-giu-bo-loc-tren-url": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
+
+interface Invoice {
+  id: number;
+  code: string;
+  customer: string;
+  status: string;
+  total: number;
+}
+
+const CUSTOMERS = ['Công ty An Phát', 'Minh Long Foods', 'Hải Đăng Logistics', 'Thiên Phúc', 'Sao Mai Retail'];
+const STATUSES = ['Nháp', 'Đã gửi', 'Đã thanh toán', 'Quá hạn'];
+
+const INVOICES: Invoice[] = Array.from({ length: 36 }, (_, index) => ({
+  id: index + 1,
+  code: \`HD-\${2026_0100 + index}\`,
+  customer: CUSTOMERS[index % CUSTOMERS.length],
+  status: STATUSES[index % STATUSES.length],
+  total: (index + 4) * 1_250_000,
+}));
+
+@Component({
+  selector: 'app-table-sync-query-params-example',
+  standalone: true,
+  imports: [SdTable],
+  templateUrl: './table-sync-query-params.example.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TableSyncQueryParamsExampleComponent {
+  // why: \`syncQueryParams\` + \`autoId\` ghi filter/sort/trang lên \`?table-invoices=…\`; copy link mở lại đúng bảng này.
+  readonly option: SdTableOption<Invoice> = {
+    type: 'local',
+    items: () => INVOICES,
+    columns: [
+      { field: 'code', title: 'Số hóa đơn', type: 'string', sortable: true, filter: {} },
+      { field: 'customer', title: 'Khách hàng', type: 'string', sortable: true, filter: {} },
+      { field: 'status', title: 'Trạng thái', type: 'string', filter: {} },
+      { field: 'total', title: 'Tổng tiền', type: 'number', sortable: true, filter: {} },
+    ],
+    filter: { quickSearch: { containFields: ['code', 'customer'], placeholder: 'Tìm số hóa đơn, khách hàng' } },
+    sort: { enable: true },
+    paginate: { pageSize: 5, pages: [5, 10, 20] },
+  };
 }`,
   },
   "components/table/example-inline-filter-operator": {
@@ -25595,6 +25767,38 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/anchor/example-giu-muc-dang-xem-tren-url": {
+    ...SHOWCASE_PAGE_SOURCES["components/anchor/example-giu-muc-dang-xem-tren-url"],
+    html: `<!-- Cuộn hoặc bấm mục lục rồi copy link: \`?anchor-customer-profile=address\` mở ra đúng mục "Địa chỉ". -->
+<div class="anchor-wrap">
+  <sd-anchor autoId="customer-profile" syncQueryParams sidebarWidth="180px">
+    <sd-anchor-item title="Thông tin chung" key="general" icon="person">
+      <div class="block">
+        <h3>Thông tin chung</h3>
+        <p>Tên, mã khách hàng, người phụ trách.</p>
+      </div>
+    </sd-anchor-item>
+    <sd-anchor-item title="Địa chỉ" key="address" icon="home">
+      <div class="block">
+        <h3>Địa chỉ</h3>
+        <p>Địa chỉ xuất hóa đơn và địa chỉ giao hàng.</p>
+      </div>
+    </sd-anchor-item>
+    <sd-anchor-item title="Liên hệ" key="contacts" icon="call">
+      <div class="block">
+        <h3>Liên hệ</h3>
+        <p>Danh sách người liên hệ và kênh ưu tiên.</p>
+      </div>
+    </sd-anchor-item>
+    <sd-anchor-item title="Ghi chú" key="notes" icon="sticky_note_2">
+      <div class="block">
+        <h3>Ghi chú</h3>
+        <p>Ghi chú nội bộ của đội bán hàng.</p>
+      </div>
+    </sd-anchor-item>
+  </sd-anchor>
+</div>`,
+  },
   "components/anchor/example-mau-va-cat-ngan-chu": {
     ...SHOWCASE_PAGE_SOURCES["components/anchor"],
     html: `<demo-section heading="Màu và cắt ngắn chữ" [props]="[{ name: 'color', value: 'success' }, { name: 'ellipsis', value: 'true' }]">
@@ -29848,6 +30052,35 @@ Bởi Nguyễn Văn A"></sd-badge>
   <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
 </div>`,
   },
+  "components/tab/example-giu-tab-tren-url": {
+    ...SHOWCASE_PAGE_SOURCES["components/tab/example-giu-tab-tren-url"],
+    html: `<!-- Chọn tab rồi copy link: \`?tab-customer-detail=1\` mở lại đúng tab "Đơn hàng". -->
+<sd-tab-group autoId="customer-detail" syncQueryParams [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Mã số thuế">0101234567</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Đơn hàng" icon="receipt_long">
+    <div class="tab-body">
+      <sd-section title="Đơn hàng">
+        <sd-section-item label="Đang xử lý">3 đơn</sd-section-item>
+        <sd-section-item label="Hoàn tất trong tháng">12 đơn</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Lịch sử" icon="history">
+    <div class="tab-body">
+      <sd-section title="Lịch sử">
+        <sd-section-item label="Cập nhật gần nhất">08/11/2026 09:30</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>`,
+  },
   "components/tab/example-mo-nhieu-ho-so": {
     ...SHOWCASE_PAGE_SOURCES["components/tab/example-mo-nhieu-ho-so"],
     html: `<div class="tab-toolbar">
@@ -30317,6 +30550,10 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-table [option]="employeeOption"></sd-table>
     </div>
   </demo-section>`,
+  },
+  "components/table/example-giu-bo-loc-tren-url": {
+    ...SHOWCASE_PAGE_SOURCES["components/table/example-giu-bo-loc-tren-url"],
+    html: `<sd-table autoId="invoices" syncQueryParams [option]="option"></sd-table>`,
   },
   "components/table/example-giu-selection-xuyen-trang": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
