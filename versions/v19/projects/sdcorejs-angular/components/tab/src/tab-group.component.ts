@@ -19,6 +19,7 @@ import { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { ɵsdQueryParamState } from '@sdcorejs/angular/services/query-params';
 
 export interface SdTabClosedEvent {
   index: number;
@@ -61,8 +62,14 @@ export class SdTabGroup {
   disableRipple = input(false, { transform: booleanAttribute });
   dynamicHeight = input(false, { transform: booleanAttribute });
   autoId = input<string | undefined>(undefined);
+  /**
+   * Ghi tab đang chọn lên query param `tab-<autoId>` và chọn lại tab đó khi mở link, để copy link giữ đúng tab. Cần
+   * `autoId`. Về tab ban đầu thì param bị xoá. Mặc định tắt.
+   */
+  syncQueryParams = input(false, { transform: booleanAttribute });
 
   tabClosed = output<SdTabClosedEvent>();
+  #initialIndex: number | undefined;
 
   readonly #closeRequests = new WeakMap<SdTab, Promise<boolean>>();
 
@@ -121,6 +128,26 @@ export class SdTabGroup {
       if (len > 0 && cur >= len) {
         this.selectedIndex.set(Math.max(0, len - 1));
       }
+    });
+    ɵsdQueryParamState({
+      selector: 'sd-tab-group',
+      prefix: 'tab',
+      enabled: this.syncQueryParams,
+      autoId: this.autoId,
+      ready: () => this.tabs().length > 0,
+      state: () => {
+        const index = this.selectedIndex();
+        this.#initialIndex ??= index;
+        return index === this.#initialIndex ? null : String(index);
+      },
+      apply: value => {
+        const index = /^\d+$/.test(value) ? Number(value) : -1;
+        // Tab chưa render (nội dung `@for`/`@if` đến sau): giữ param, chọn khi tab xuất hiện.
+        if (index >= this.tabs().length) return false;
+        const tab = this.tabs()[index];
+        if (tab && !tab.disabled()) this.selectTab(index);
+        return undefined;
+      },
     });
   }
 

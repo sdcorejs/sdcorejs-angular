@@ -138,7 +138,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/anchor/sd-anchor',
     keywords: ['scroll spy', 'table of contents', 'toc', 'navigation'],
     status: 'stable',
-    demoSectionCount: 2,
+    demoSectionCount: 3,
     loadComponent: () => import('../../pages/components/anchor/anchor-demo.component').then(m => m.AnchorDemoComponent),
   }),
   defineDocPage({
@@ -681,7 +681,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/tab/sd-tab',
     keywords: ['tabs', 'navigation', 'closable', 'lazy'],
     status: 'stable',
-    demoSectionCount: 18,
+    demoSectionCount: 19,
     loadComponent: () => import('../../pages/components/tab/tab-demo.component').then(m => m.TabDemoComponent),
   }),
   defineDocPage({
@@ -707,7 +707,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/table/sd-table',
     keywords: ['data grid', 'pagination', 'filter', 'quick search', 'selection', 'server side', 'command header', 'aggregate', 'subtotal', 'unknown total', 'has more', 'query bar', 'column settings'],
     status: 'stable',
-    demoSectionCount: 39,
+    demoSectionCount: 40,
     loadComponent: () => import('../../pages/components/table/table-demo.component').then(m => m.TableDemoComponent),
   }),
   defineDocPage({

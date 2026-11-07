@@ -1,0 +1,26 @@
+<!-- Chọn tab rồi copy link: `?tab-customer-detail=1` mở lại đúng tab "Đơn hàng". -->
+<sd-tab-group autoId="customer-detail" syncQueryParams [stretchTabs]="false" animationDuration="0ms">
+  <sd-tab label="Thông tin chung" icon="info">
+    <div class="tab-body">
+      <sd-section title="Thông tin chung">
+        <sd-section-item label="Khách hàng">Công ty An Phát</sd-section-item>
+        <sd-section-item label="Mã số thuế">0101234567</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Đơn hàng" icon="receipt_long">
+    <div class="tab-body">
+      <sd-section title="Đơn hàng">
+        <sd-section-item label="Đang xử lý">3 đơn</sd-section-item>
+        <sd-section-item label="Hoàn tất trong tháng">12 đơn</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+  <sd-tab label="Lịch sử" icon="history">
+    <div class="tab-body">
+      <sd-section title="Lịch sử">
+        <sd-section-item label="Cập nhật gần nhất">08/11/2026 09:30</sd-section-item>
+      </sd-section>
+    </div>
+  </sd-tab>
+</sd-tab-group>

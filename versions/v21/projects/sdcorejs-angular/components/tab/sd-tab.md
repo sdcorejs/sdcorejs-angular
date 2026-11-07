@@ -67,6 +67,7 @@ These inputs target only the owning group's regions, across all variants and bot
 | `disableRipple`     | `boolean`                                                                             | `false`     | `booleanAttribute` transform. Forwarded to `mat-tab-group.disableRipple`.                                                                                                                                                                                                                                                                                     |
 | `dynamicHeight`     | `boolean`                                                                             | `false`     | `booleanAttribute` transform. Forwarded to `mat-tab-group.dynamicHeight`.                                                                                                                                                                                                                                                                                     |
 | `preserveContent` | `boolean` | `false` | Keep visited tab bodies in the DOM while inactive; useful for stateful form content. |
+| `syncQueryParams` | `boolean` | `false` | `booleanAttribute` transform. Writes the selected tab to the query param `tab-<autoId>` and selects it again when the link is opened, so a copied link keeps the tab. Needs `autoId` (without it nothing is synced and a warning is logged once). See [URL state](#url-state-syncqueryparams). |
 | `autoId`            | `string \| undefined`                                                                 | `undefined` | Emitted as `data-autoId` on the host element for e2e selectors.                                                                                                                                                                                                                                                                                               |
 
 ### Outputs
@@ -104,6 +105,25 @@ These inputs target only the owning group's regions, across all variants and bot
 - **`badge=0` renders**: zero is treated as a meaningful value. Pass `null` / `undefined` to hide the badge.
 - **Close click doesn't select**: the close icon calls `stopPropagation()`, so clicking X on a non-active tab does NOT switch to that tab.
 - **Close on disabled is no-op**: the close handler short-circuits when the tab is `[disabled]`.
+
+### URL state (`syncQueryParams`)
+
+```html
+<!-- /customers/12?tab-customer-detail=2 opens on the third tab -->
+<sd-tab-group autoId="customer-detail" syncQueryParams>
+  <sd-tab label="Thông tin">…</sd-tab>
+  <sd-tab label="Đơn hàng">…</sd-tab>
+  <sd-tab label="Lịch sử">…</sd-tab>
+</sd-tab-group>
+```
+
+- Param name: `tab-<autoId>`, using the `autoId` you pass. Value: the 0-based index of the selected tab.
+- The param is removed while the tab that was selected when the group opened is selected, so a page with default state keeps a clean URL.
+- The URL is updated with `replaceUrl` (no history entry per tab change). Writes from several components in the same turn go out as one navigation; other query params and the fragment are kept.
+- Opening the link, or a later navigation with another value, selects that tab. An index on a disabled tab or a malformed value is ignored and the URL is rewritten with the current tab. An index past the last tab is kept: the tab is selected when it appears (tabs rendered later by `@if` / `@for`), unless the user picks another tab first.
+- When the param disappears (for example a menu link to the same page without a query), the group keeps its tab and writes the param again.
+- Inside `sd-tab-router-outlet` the same path with another query is the same tab, so writing the param never opens a new router tab. A group in a background router tab does not write over the URL of the open one.
+- No effect without Angular routes (`provideRouter`).
 
 ### Examples
 

@@ -450,7 +450,7 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     expect(counters.pageA.ctor).toBe(1);
   });
 
-  it('F5 trên URL có queryParams — tab key hash gồm queryParams, không tạo tab thứ hai khi nav lại cùng url+queryParams', async () => {
+  it('F5 trên URL có queryParams — không tạo tab thứ hai khi nav lại cùng url+queryParams', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/a?x=1');
     const fixture = TestBed.createComponent(HostComponent);
@@ -467,7 +467,8 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     expect(counters.pageA.ctor).toBe(1);
   });
 
-  it('F5 rồi nav qua URL khác cùng query khác — tạo 2 tab độc lập (tab key khác)', async () => {
+  // why: key tab chỉ còn path — cùng path khác query là cùng tab, component không bị tạo lại.
+  it('F5 rồi nav qua cùng path query khác — vẫn một tab, cùng component, lưu query mới', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/a?x=1');
     const fixture = TestBed.createComponent(HostComponent);
@@ -477,14 +478,9 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     await settle(fixture);
 
     const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
-    expect(outlet.tabs().length).toBe(2);
-    expect(
-      outlet
-        .tabs()
-        .map(t => t.queryParams?.['x'])
-        .sort()
-    ).toEqual(['1', '2']);
-    expect(counters.pageA.ctor).toBe(2);
+    expect(outlet.tabs().length).toBe(1);
+    expect(outlet.tabs()[0].queryParams).toEqual({ x: '2' });
+    expect(counters.pageA.ctor).toBe(1);
   });
 });
 

@@ -15,6 +15,7 @@ import { TableInlineErrorsExampleComponent } from './examples/table-inline-error
 import { TableInlineOperatorExampleComponent } from './examples/table-inline-operator.example';
 import { TableQueryBarExampleComponent } from './examples/table-query-bar.example';
 import { TableSettingsExampleComponent } from './examples/table-settings.example';
+import { TableSyncQueryParamsExampleComponent } from './examples/table-sync-query-params.example';
 import { TableStandardExampleComponent } from './examples/table-standard.example';
 import { TableStatesExampleComponent } from './examples/table-states.example';
 import {
@@ -197,6 +198,7 @@ const TASKS: Task[] = [
     TableInlineOperatorExampleComponent,
     TableQueryBarExampleComponent,
     TableSettingsExampleComponent,
+    TableSyncQueryParamsExampleComponent,
     TableCustomCellsExampleComponent,
     TableInlineEditExampleComponent,
     TableInlineErrorsExampleComponent,
@@ -251,6 +253,15 @@ const TASKS: Task[] = [
         [props]="[{ name: 'config.visible', value: 'true' }, { name: 'config.resizable', value: 'true' }, { name: 'key', value: 'showcase-table-settings' }]"
         note="Nút Thiết lập ở footer mở modal hai tab. Cột: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng và bật / tắt cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Bộ lọc: chọn Khung hay Thanh bộ lọc. Áp dụng lưu cả hai tab. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.">
         <app-table-settings-example />
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-bo-loc-tren-url') {
+      <demo-section heading="Giữ bộ lọc trên URL"
+        data-example-typescript="./examples/table-sync-query-params.example.ts" data-example-template="./examples/table-sync-query-params.example.html"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'invoices' }]"
+        note="Tìm kiếm, lọc dưới cột, sắp xếp hay chuyển trang rồi copy link: thanh địa chỉ có ?table-invoices=…, mở link ở tab mới ra đúng bộ lọc, thứ tự và trang. Xoá hết bộ lọc thì param biến mất.">
+        <app-table-sync-query-params-example />
       </demo-section>
       }
 

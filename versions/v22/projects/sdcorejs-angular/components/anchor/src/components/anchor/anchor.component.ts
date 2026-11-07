@@ -17,6 +17,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Color } from '@sdcorejs/utils/models';
 import { SdViewportService } from '@sdcorejs/angular/services/viewport';
+import { ɵsdQueryParamState } from '@sdcorejs/angular/services/query-params';
 import { Subscription, fromEvent, take } from 'rxjs';
 import { AnchorNav } from '../anchor-nav/anchor-nav.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
@@ -50,6 +51,11 @@ export class SdAnchor implements OnDestroy {
   hideNavOnMobile = input(true, { transform: booleanAttribute });
   // Màu highlight active nav (text + icon + vertical bar). Default 'primary'.
   color = input<Color>('primary');
+  /**
+   * Ghi mục đang xem lên query param `anchor-<autoId>` (giá trị `key` của `sd-anchor-item`, mục không có `key` dùng vị
+   * trí 0-based) và cuộn tới mục đó khi mở link. Cần `autoId`. Mục đầu tiên thì param bị xoá. Mặc định tắt.
+   */
+  readonly syncQueryParams = input(false, { transform: booleanAttribute });
 
   readonly #viewport = inject(SdViewportService);
   // Trạng thái ẩn/hiện thực tế của nav: ép ẩn thủ công HOẶC đang ở breakpoint mobile.
@@ -66,12 +72,58 @@ export class SdAnchor implements OnDestroy {
 
   #timeoutScrollFallback = 200;
 
+  // syncQueryParams: mục active sau khi đứng yên — cuộn qua nhiều mục không ghi URL liên tục.
+  readonly #settledSectionId = signal('');
+  readonly #rendered = signal(false);
+  #settleTimer: ReturnType<typeof setTimeout> | null = null;
+  #urlScrolled = false;
+  readonly #settleDelay = 300;
+
   constructor() {
     afterNextRender(() => {
       this.#initialized = true;
       if (!this.navHidden()) {
         this.#registerIntersectionObserver();
       }
+      this.#rendered.set(true);
+    });
+
+    effect(() => {
+      const id = this.activeSectionId();
+      if (!this.syncQueryParams()) return;
+      untracked(() => {
+        if (this.#settleTimer) clearTimeout(this.#settleTimer);
+        this.#settleTimer = setTimeout(() => {
+          this.#settleTimer = null;
+          this.#settledSectionId.set(id);
+        }, this.#settleDelay);
+      });
+    });
+
+    ɵsdQueryParamState({
+      selector: 'sd-anchor',
+      prefix: 'anchor',
+      enabled: this.syncQueryParams,
+      autoId: this.autoIdInput,
+      ready: () => this.#rendered() && this.sections().length > 0,
+      state: () => {
+        const sections = this.sections();
+        const index = sections.findIndex(section => section.id === this.#settledSectionId());
+        if (index <= 0) return null;
+        return sections[index].key() || String(index);
+      },
+      apply: value => {
+        const sections = this.sections();
+        const target = sections.find(section => section.key() === value) ?? (/^\d+$/.test(value) ? sections[Number(value)] : undefined);
+        // Mục chưa render (đến sau) hoặc key đã bỏ: giữ param, áp dụng khi mục xuất hiện hoặc tới khi người dùng đổi mục.
+        if (!target) return false;
+        // Lần đầu (mở link) nhảy thẳng tới mục; các lần sau cuộn mượt như bấm mục lục.
+        this.#scrollToSection(target.id, this.#urlScrolled ? 'smooth' : 'instant');
+        this.#urlScrolled = true;
+        if (this.#settleTimer) clearTimeout(this.#settleTimer);
+        this.#settledSectionId.set(target.id);
+        return true;
+      },
     });
 
     // Lắng nghe thay đổi sections để đăng ký lại observer cho từng section.
@@ -139,6 +191,10 @@ export class SdAnchor implements OnDestroy {
   }
 
   scrollSectionByClick(idSectionTarget: string): void {
+    this.#scrollToSection(idSectionTarget, 'smooth');
+  }
+
+  #scrollToSection(idSectionTarget: string, behavior: ScrollBehavior): void {
     this.activeSectionId.set(idSectionTarget);
     const targetSection = this.sections().find(s => s.id === idSectionTarget)?.elementRef;
     if (!targetSection) {
@@ -168,7 +224,7 @@ export class SdAnchor implements OnDestroy {
       }
     }, this.#timeoutScrollFallback);
 
-    wrapperEl.scrollTo({ top: scrollTop, behavior: 'smooth' });
+    wrapperEl.scrollTo({ top: scrollTop, behavior });
   }
 
   #cleanScrollSectionByClickObserver = (): void => {
@@ -184,6 +240,7 @@ export class SdAnchor implements OnDestroy {
   };
 
   ngOnDestroy(): void {
+    if (this.#settleTimer) clearTimeout(this.#settleTimer);
     this.#cleanScrollSectionByClickObserver();
     this.#cleanIntersectionObserver();
   }

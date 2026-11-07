@@ -144,6 +144,13 @@ import { ConfigService } from './services/config.service';
 import { sdTableHasCustomSetup } from './services/config-custom.util';
 import { buildColumnWidthMap } from './services/column-width.util';
 import { leafColumns } from './services/column-leaf.util';
+import {
+  SdTableUrlStateContext,
+  SdTableUrlState,
+  parseTableQueryState,
+  serializeTableQueryState,
+} from './services/table-query-params/table-query-params.util';
+import { ɵsdQueryParamState } from '@sdcorejs/angular/services/query-params';
 import { filterLocalItems, hasActiveColumnFilter } from './services/table-local/table-local.util';
 import { isNoDataColumnOperator } from './services/table-filter/table-filter-operator.util';
 import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
@@ -370,6 +377,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   option = input.required<SdTableOption<T>>();
   /** Hide the integrated error region while retaining read state, events and retry. */
   readonly hideReadError = input(false, { transform: booleanAttribute });
+  /**
+   * Ghi filter (quick search, filter dưới cột + operator, external filter), sort và trang lên query param
+   * `table-<autoId>`, rồi đọc lại khi mở link — copy link giữ đúng bảng đang xem. Cần `autoId`. State mặc định thì param
+   * bị xoá. Mặc định tắt.
+   */
+  readonly syncQueryParams = input(false, { transform: booleanAttribute });
   readonly sdReadStateChange = output<SdReadState>();
   readonly #read = new SdReadChannel('TABLE', state => {
     if (!this.#destroyed) {
@@ -822,6 +835,26 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   readonly queryBarHintId = `sd-table-${Utilities.generateUuid()}-query-bar-hint`;
   /** Giá trị lọc đã áp dụng, theo lần phát gần nhất của filter register. */
   readonly #appliedFilter = signal<TableFilterValue | undefined>(undefined);
+  // syncQueryParams: bật sau khi cấu hình + filter register sẵn sàng và state từ URL đã áp cho lần đọc đầu.
+  readonly #queryReady = signal(false);
+  readonly #queryParamState = ɵsdQueryParamState({
+    selector: 'sd-table',
+    prefix: 'table',
+    enabled: this.syncQueryParams,
+    autoId: this.autoIdInput,
+    ready: this.#queryReady,
+    state: () => {
+      // why: filter register và paginator không phải signal; các signal dưới đây phát mỗi lần chúng đổi.
+      this.#appliedFilter();
+      this.sortState();
+      this.pageRevision();
+      this.#pageTarget();
+      if (!this.#queryReady()) return null;
+      const context = this.#queryContext();
+      return context ? serializeTableQueryState(this.#currentQueryState(), context) : null;
+    },
+    apply: value => this.#applyQueryState(value, false),
+  });
   readonly #inlineExternal = signal<Record<string, boolean>>({});
   // why: tách khỏi #inlineExternal (mặc định {}) — trước khi filter register phát lần đầu thì chưa biết, không được
   // coi là "khác defaultShowing" mà bật chấm trên nút Thiết lập.
@@ -1534,6 +1567,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#aggregateLoadedChildren.clear();
     this.#aggregateFilteredItems = [];
     this.#configurationReady = false;
+    this.#queryReady.set(false);
     this.#cancelReload();
     this.#hydration = undefined;
     this.#retryConfiguration = undefined;
@@ -1672,7 +1706,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       // why: form/required controls phải nhận snapshot đã hydrate trước khi cho phép đọc.
       this.#ref.detectChanges();
       if (!valid()) return;
+      // syncQueryParams: state trên URL thắng cache và vào ngay lần đọc đầu — không đọc hai lần.
+      const queryValue = this.#queryParamState.value();
+      if (queryValue) this.#applyQueryState(queryValue, true);
       this.#configurationReady = true;
+      this.#queryReady.set(true);
       this.#requestReload(true);
     } catch (error) {
       if (!valid()) return;
@@ -1684,6 +1722,101 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     } finally {
       if (valid()) this.#ref.markForCheck();
     }
+  };
+
+  /** Mặc định và field hợp lệ để serialize/parse state URL; `undefined` khi chưa có filter register. */
+  #queryContext = (): SdTableUrlStateContext | undefined => {
+    const option = this.tableOption();
+    if (!option || !this.filterRegister) return undefined;
+    const defaults: TableFilterValue = this.filterRegister.value.default?.() ?? {};
+    const columns = leafColumns(option.columns);
+    const quickSearch = this.quickSearchOption();
+    const filterEnabled = !option.filter?.disabled;
+    return {
+      defaults: {
+        quickSearch: quickSearch ? (defaults.quickSearch ?? { term: '', filters: {} }) : undefined,
+        columnOperator: defaults.columnOperator || {},
+        columnFilter: defaults.columnFilter || {},
+        externalFilter: defaults.externalFilter || {},
+        pageSize: option.paginate?.pageSize || 50,
+      },
+      // why: URL là input không tin cậy — chỉ nhận field người dùng tự lọc được trên màn hình (filter cột không bị
+      // `disabled`, bảng không tắt filter) và operator nằm trong danh sách của chính cột đó.
+      fields: {
+        column: new Set(filterEnabled ? columns.filter(column => !column.filter?.disabled).map(column => column.field) : []),
+        operator: new Map(
+          filterEnabled
+            ? columns
+                .filter(column => !column.filter?.disabled && column.filter?.operator?.enable)
+                .map(column => [column.field, new Set<string>(column.filter?.operator?.list ?? [])] as const)
+            : []
+        ),
+        external: new Set(filterEnabled ? (option.filter?.externalFilters || []).map(filter => filter.field) : []),
+        quickSearch: new Set((quickSearch?.filters || []).map(filter => filter.field)),
+        sort: new Set(option.sort?.enable ? columns.filter(column => column.sortable).map(column => column.field) : []),
+      },
+      pageSizes: option.paginate?.pages || [],
+      pageIndex: !this.unknownTotal(),
+    };
+  };
+
+  #currentQueryState = (): SdTableUrlState => {
+    const value = this.filterRegister.value.get();
+    const target = this.unknownTotal() ? this.#unknownTarget() : undefined;
+    const paginator = this.paginator();
+    const { active, direction } = this.sortState();
+    return {
+      quickSearch: this.quickSearchOption() ? value.quickSearch || { term: '', filters: {} } : undefined,
+      columnOperator: value.columnOperator || {},
+      columnFilter: value.columnFilter || {},
+      externalFilter: value.externalFilter || {},
+      sort: { active, direction },
+      pageIndex: target ? target.pageIndex : paginator?.pageIndex || 0,
+      pageSize: target ? target.pageSize : paginator?.pageSize || this.tableOption()?.paginate?.pageSize || 50,
+    };
+  };
+
+  /**
+   * Áp state từ query param `table-<autoId>`. `initial`: trước lần đọc đầu (lần đọc đó dùng luôn state này); sau đó thì
+   * đọc lại đúng một lần. Giá trị hỏng hoặc trùng state hiện tại thì không làm gì.
+   */
+  #applyQueryState = (raw: string, initial: boolean): void => {
+    const context = this.#queryContext();
+    const parsed = context && parseTableQueryState(raw, context);
+    if (!context || !parsed) return;
+    if (serializeTableQueryState(parsed, context) === serializeTableQueryState(this.#currentQueryState(), context)) return;
+
+    // Giữ reference ổn định cho column-filter (xem #syncColumnFilterInPlace).
+    this.#syncColumnFilterInPlace(parsed.columnFilter);
+    this.filterRegister.value.set({
+      columnOperator: parsed.columnOperator,
+      columnFilter: parsed.columnFilter,
+      externalFilter: parsed.externalFilter,
+      ...(parsed.quickSearch ? { quickSearch: parsed.quickSearch } : {}),
+      // why: lần đọc do hàm này lên lịch (hoặc lần đọc đầu) — không để filter register tự hẹn thêm một lần đọc và về trang 1.
+      notReload: true,
+    });
+    if (parsed.quickSearch) this.quickSearchControl()?.term.set(parsed.quickSearch.term || '');
+
+    const sort = this.sort();
+    if (sort) {
+      sort.active = parsed.sort.active;
+      sort.direction = parsed.sort.direction;
+    }
+    this.sortState.set({ ...parsed.sort });
+
+    if (this.unknownTotal()) {
+      this.#pageTarget.set({ pageIndex: 0, pageSize: parsed.pageSize });
+    } else {
+      const paginator = this.paginator();
+      if (paginator) {
+        paginator.pageSize = parsed.pageSize;
+        paginator.pageIndex = parsed.pageIndex;
+      }
+    }
+    this.pageRevision.update(n => n + 1);
+    this.#ref.markForCheck();
+    if (!initial) this.#requestReload(false);
   };
 
   #loadFilterRegister = () => {

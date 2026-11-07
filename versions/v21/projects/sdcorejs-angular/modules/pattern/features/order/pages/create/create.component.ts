@@ -1,7 +1,8 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, Injector, signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom, map } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
@@ -42,7 +43,7 @@ import { ORDER_CHANNELS, ORDER_PAYMENTS, ORDER_WAREHOUSES, type OrderSaveReq } f
       </div>
       <div class="d-flex flex-column gap-16 py-16">
         <general-information-form [form]="form" [seed]="seed" />
-        @if (linesTable) {
+        @if (linesTable()) {
           <lines-table-form [form]="form" [seed]="seed.lines" [errors]="apiErrors.errors()" />
         } @else {
           <lines-form [form]="form" [seed]="seed.lines" [errors]="apiErrors.errors()" />
@@ -62,7 +63,10 @@ export class CreateComponent {
   readonly #router = inject(Router);
   readonly #route = inject(ActivatedRoute);
   /** `?lines=sd-table`: dòng hàng dựng bằng `sd-table` (`lines-table-form`) để so với `<table>`. Màn thật chọn một. */
-  protected readonly linesTable = this.#route.snapshot.queryParamMap.get('lines') === 'sd-table';
+  // why: subscribe, không đọc snapshot — trong sd-tab-router-outlet cùng path khác query giữ nguyên component.
+  protected readonly linesTable = toSignal(this.#route.queryParamMap.pipe(map(params => params.get('lines') === 'sd-table')), {
+    requireSync: true,
+  });
   readonly #host: HTMLElement = inject(ElementRef).nativeElement;
   readonly #injector = inject(Injector);
   protected readonly seed: OrderSaveReq = {

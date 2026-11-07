@@ -3,6 +3,7 @@
 
 export type ShowcaseExampleSourceKey =
   | "components/anchor/example-anchor-mac-dinh"
+  | "components/anchor/example-giu-muc-dang-xem-tren-url"
   | "components/anchor/example-mau-va-cat-ngan-chu"
   | "components/api-contract-builder/example-ba-che-do-nguon-gia-tri"
   | "components/api-contract-builder/example-che-do-xem"
@@ -230,6 +231,7 @@ export type ShowcaseExampleSourceKey =
   | "components/tab/example-chuyen-cach-xem-du-lieu"
   | "components/tab/example-dieu-khien-tu-ngoai"
   | "components/tab/example-form-chia-nhom"
+  | "components/tab/example-giu-tab-tren-url"
   | "components/tab/example-mo-nhieu-ho-so"
   | "components/tab/example-nhieu-nhom-noi-dung"
   | "components/tab/example-nhom-chua-kha-dung"
@@ -253,6 +255,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-filter-onchange"
   | "components/table/example-footer-tong-hop"
   | "components/table/example-full-demo-local"
+  | "components/table/example-giu-bo-loc-tren-url"
   | "components/table/example-giu-selection-xuyen-trang"
   | "components/table/example-hanh-dong-o-header-cot-command"
   | "components/table/example-inline-filter-operator"
@@ -523,6 +526,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-mau-va-cat-ngan-chu",
     title: "Màu và cắt ngắn chữ",
     description: "Existing “Màu và cắt ngắn chữ” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/anchor/example-giu-muc-dang-xem-tren-url",
+    pageKey: "components/anchor",
+    sectionId: "example-giu-muc-dang-xem-tren-url",
+    title: "Giữ mục đang xem trên URL",
+    description: "Cuộn hoặc bấm mục lục rồi copy link: thanh địa chỉ có ?anchor-customer-profile=…, mở link ở tab mới cuộn thẳng tới mục đó. Mục đầu tiên thì không có param.",
   },
   {
     sourceKey: "components/api-contract-builder/example-get-tim-kiem-san-pham",
@@ -2177,6 +2187,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Tab đóng được; thay tên rồi đóng để thử xác nhận dữ liệu chưa lưu.",
   },
   {
+    sourceKey: "components/tab/example-giu-tab-tren-url",
+    pageKey: "components/tab",
+    sectionId: "example-giu-tab-tren-url",
+    title: "Giữ tab trên URL",
+    description: "Chọn tab rồi copy link: thanh địa chỉ có ?tab-customer-detail=…, mở link ở tab mới ra đúng tab. Tab đầu tiên thì không có param.",
+  },
+  {
     sourceKey: "components/tab-router/example-thu-truc-tiep",
     pageKey: "components/tab-router",
     sectionId: "example-thu-truc-tiep",
@@ -2224,6 +2241,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-thiet-lap-cot",
     title: "Thiết lập cột",
     description: "Nút Thiết lập ở footer mở modal hai tab. Cột: tìm cột (bảng có hơn 8 cột), bấm dòng để sửa tiêu đề, độ rộng và bật / tắt cố định, rút gọn; kéo ⠿ hoặc chọn ⠿ rồi dùng ↑ ↓ để đổi thứ tự. Bộ lọc: chọn Khung hay Thanh bộ lọc. Áp dụng lưu cả hai tab. Nút có chấm khi bảng đang dùng thiết lập riêng; Khôi phục mặc định tắt chấm. Cột Khách hàng có minWidth/maxWidth, cột Ghi chú rộng 20%.",
+  },
+  {
+    sourceKey: "components/table/example-giu-bo-loc-tren-url",
+    pageKey: "components/table",
+    sectionId: "example-giu-bo-loc-tren-url",
+    title: "Giữ bộ lọc trên URL",
+    description: "Tìm kiếm, lọc dưới cột, sắp xếp hay chuyển trang rồi copy link: thanh địa chỉ có ?table-invoices=…, mở link ở tab mới ra đúng bộ lọc, thứ tự và trang. Xoá hết bộ lọc thì param biến mất.",
   },
   {
     sourceKey: "components/table/example-the-mobile-va-thao-tac",

@@ -50,7 +50,7 @@ import type { OrderDto } from '../../services/order.model';
       </div>
       <div class="d-flex flex-column gap-16 py-16">
         <general-information-form [form]="form" [seed]="entity()" />
-        @if (linesTable) {
+        @if (linesTable()) {
           <lines-table-form [form]="form" [seed]="entity().lines" [errors]="apiErrors.errors()" />
         } @else {
           <lines-form [form]="form" [seed]="entity().lines" [errors]="apiErrors.errors()" />
@@ -70,7 +70,10 @@ export class UpdateComponent {
   readonly #router = inject(Router);
   readonly #route = inject(ActivatedRoute);
   /** `?lines=sd-table`: dòng hàng dựng bằng `sd-table` (`lines-table-form`) để so với `<table>`. Màn thật chọn một. */
-  protected readonly linesTable = this.#route.snapshot.queryParamMap.get('lines') === 'sd-table';
+  // why: subscribe, không đọc snapshot — trong sd-tab-router-outlet cùng path khác query giữ nguyên component.
+  protected readonly linesTable = toSignal(this.#route.queryParamMap.pipe(map(params => params.get('lines') === 'sd-table')), {
+    requireSync: true,
+  });
   readonly #host: HTMLElement = inject(ElementRef).nativeElement;
   readonly #injector = inject(Injector);
   /** Đơn do resolver tải; draft khởi tạo từ đây. */

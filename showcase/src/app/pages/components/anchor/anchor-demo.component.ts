@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
+import { AnchorSyncQueryParamsExampleComponent } from './examples/anchor-sync-query-params.example';
 
 @Component({
   selector: 'app-anchor-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdAnchor, SdAnchorItem],
+  imports: [DemoPageComponent, DemoSectionComponent, SdAnchor, SdAnchorItem, AnchorSyncQueryParamsExampleComponent],
   template: `
     <demo-page #demoPage
       title="Anchor"
@@ -62,6 +63,14 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
             </sd-anchor-item>
           </sd-anchor>
         </div>
+      </demo-section>
+      }
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-muc-dang-xem-tren-url') {
+      <demo-section heading="Giữ mục đang xem trên URL"
+        data-example-typescript="./examples/anchor-sync-query-params.example.ts" data-example-template="./examples/anchor-sync-query-params.example.html"
+        [props]="[{ name: 'syncQueryParams', value: 'true' }, { name: 'autoId', value: 'customer-profile' }, { name: 'key', value: 'sd-anchor-item' }]"
+        note="Cuộn hoặc bấm mục lục rồi copy link: thanh địa chỉ có ?anchor-customer-profile=…, mở link ở tab mới cuộn thẳng tới mục đó. Mục đầu tiên thì không có param.">
+        <app-anchor-sync-query-params-example />
       </demo-section>
       }
     </demo-page>

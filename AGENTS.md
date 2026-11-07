@@ -116,6 +116,7 @@ Mẫu màn hình chuẩn của Core UI (list, detail, form, flow, drawer, split,
 - Code mẫu trong `docs/*.md` sinh từ source bằng `npm run pattern:docs`; không sửa tay code block trong docs.
 - `collect-docs` bỏ qua `modules/pattern`: docs pattern không vào `published-docs/`.
 - Mã quyền mẫu: `PATTERN_<ENTITY>_<R|C|U|D>_<ACTION>`, khai trong `core/permission/pattern-permission.ts`; mỗi mã phải được một feature dùng.
+- **Màn đọc query param (review bắt buộc):** trong `sd-tab-router-outlet`, cùng path khác query là cùng tab và component không bị tạo lại. Màn dùng query param của chính nó phải subscribe `ActivatedRoute.queryParamMap` (hoặc `toSignal`), không đọc `route.snapshot.queryParamMap` một lần trong constructor/`ngOnInit`; cần tab riêng cho từng bản ghi thì đưa định danh vào path. Param `table-|tab-|anchor-<autoId>` của `syncQueryParams` do component tự xử lý. Ghi là quyết định E14 trong `modules/pattern/README.md`; chi tiết: mục "Screens that read query params" trong `components/tab-router/sd-tab-router.md`.
 
 ## Review bắt buộc: naming và public API consistency
 

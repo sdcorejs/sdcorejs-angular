@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { Component, ErrorHandler, NgModule } from '@angular/core';
+import { Component, ErrorHandler, NgModule, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -10,6 +11,7 @@ import { SdTabRouterOutletComponent } from './tab-router-outlet.component';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterTab } from '../../models/tab-router.model';
+import { SdTabActivated } from '../../events/tab-router.event';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 
@@ -31,6 +33,21 @@ class PageBComponent {}
   template: '<span data-cy="page-c"></span>',
 })
 class PageCComponent {}
+
+const queryPageLog: (string | null)[] = [];
+const queryPageRoutes: ActivatedRoute[] = [];
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  standalone: true,
+  template: '<span data-cy="page-q"></span>',
+})
+class QueryPageComponent {
+  constructor() {
+    const route = inject(ActivatedRoute);
+    queryPageRoutes.push(route);
+    route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => queryPageLog.push(params.get('x')));
+  }
+}
 
 // NgModule lazy route: the outlet calls loadChildren() again to build the tab injector, so the test can hold that call
 // and keep the activation queue busy while the router moves on.
@@ -75,6 +92,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
           { path: 'a', component: PageAComponent },
           { path: 'b', component: PageBComponent },
           { path: 'c', component: PageCComponent },
+          { path: 'q', component: QueryPageComponent },
         ]),
         SdTabRouterService,
         SdTabDecoratorService,
@@ -183,7 +201,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(actives[0].url).toBe('/b');
     });
 
-    it('does NOT duplicate tab when navigating to the same URL twice (key is hash(url+queryParams))', async () => {
+    it('does NOT duplicate tab when navigating to the same URL twice (key is hash(path))', async () => {
       await navigateAndStabilize(router, fixture, '/a');
       await navigateAndStabilize(router, fixture, '/b');
       await navigateAndStabilize(router, fixture, '/a'); // revisit
@@ -206,12 +224,81 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(tabA.injector).toBe(firstInjector);
     });
 
-    it('different queryParams ⇒ different tab key ⇒ creates a new tab', async () => {
+    // why: key chỉ còn path — component ghi state lên query (`syncQueryParams`) không được mở thêm tab.
+    it('same path with another query or fragment ⇒ same tab, same component, latest queryParams', async () => {
       await navigateAndStabilize(router, fixture, '/a?x=1');
+      const [first] = outletCmp.tabs();
+      const page = fixture.debugElement.query(By.css('[data-cy="page-a"]')).nativeElement;
+
+      await navigateAndStabilize(router, fixture, '/a?x=2');
+      expect(outletCmp.tabs().length).toBe(1);
+      expect(outletCmp.tabs()[0].queryParams).toEqual({ x: '2' });
+      // Descriptor mới để tên tab dạng hàm tính lại theo query mới; injector và component giữ nguyên.
+      expect(outletCmp.tabs()[0]).not.toBe(first);
+
+      await navigateAndStabilize(router, fixture, '/a#h');
+      const tabs = outletCmp.tabs();
+      expect(tabs.length).toBe(1);
+      expect(tabs[0].key).toBe(first.key);
+      expect(tabs[0].url).toBe('/a');
+      expect(tabs[0].queryParams).toEqual({});
+      expect(tabs[0].injector).toBe(first.injector);
+      expect(fixture.debugElement.query(By.css('[data-cy="page-a"]')).nativeElement).toBe(page);
+    });
+
+    it('reactivating a background tab with another query keeps the component and stores the new query', async () => {
+      await navigateAndStabilize(router, fixture, '/a?x=1');
+      const injector = outletCmp.tabs()[0].injector;
+      await navigateAndStabilize(router, fixture, '/b');
       await navigateAndStabilize(router, fixture, '/a?x=2');
 
       const tabs = outletCmp.tabs();
-      expect(tabs.length).toBe(2);
+      expect(tabs.map(tab => tab.url)).toEqual(['/a', '/b']);
+      const tabA = tabs.find(tab => tab.url === '/a')!;
+      expect(tabA.isActive).toBeTrue();
+      expect(tabA.injector).toBe(injector);
+      expect(tabA.queryParams).toEqual({ x: '2' });
+
+      // Bấm tab /b rồi bấm lại tab /a (như thanh tab): URL trở về query mới nhất của tab.
+      const tabB = tabs.find(tab => tab.url === '/b')!;
+      await router.navigate([tabB.url], { queryParams: tabB.queryParams, state: { switchTab: true } });
+      await fixture.whenStable();
+      const storedA = outletCmp.tabs().find(tab => tab.url === '/a')!;
+      await router.navigate([storedA.url], { queryParams: storedA.queryParams, state: { switchTab: true } });
+      await fixture.whenStable();
+      expect(router.url).toBe('/a?x=2');
+    });
+
+    it('does not re-emit SdTabActivated when only the query of the active tab changes', async () => {
+      const service = TestBed.inject(SdTabRouterService);
+      const pushEvent = spyOn(service, 'pushEvent').and.callThrough();
+      const activated = () => pushEvent.calls.allArgs().filter(([, event]) => event === SdTabActivated).length;
+
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      await navigateAndStabilize(router, fixture, '/a');
+      expect(activated()).toBe(1);
+
+      await navigateAndStabilize(router, fixture, '/a?x=1');
+      expect(activated()).toBe(1);
+      expect(outletCmp.tabs().find(tab => tab.isActive)!.queryParams).toEqual({ x: '1' });
+    });
+  });
+
+  describe('ActivatedRoute inside a tab', () => {
+    it('emits the new query to a tab component after switching tabs, without duplicates', async () => {
+      queryPageLog.length = 0;
+      await navigateAndStabilize(router, fixture, '/q?x=1');
+      await navigateAndStabilize(router, fixture, '/b');
+      await navigateAndStabilize(router, fixture, '/q?x=1'); // mở lại cùng query: không phát lại
+      await navigateAndStabilize(router, fixture, '/b');
+      await navigateAndStabilize(router, fixture, '/q?x=2');
+      await navigateAndStabilize(router, fixture, '/q?x=3');
+
+      expect(queryPageLog).toEqual(['1', '2', '3']);
+      expect(queryPageRoutes.every(route => route instanceof ActivatedRoute)).toBeTrue();
+      expect(queryPageRoutes.length).toBe(1);
+      expect(queryPageRoutes[0].snapshot.queryParamMap.get('x')).toBe('3');
     });
   });
 
