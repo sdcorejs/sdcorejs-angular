@@ -1,4 +1,5 @@
-<sd-page-list title="Khách hàng" description="Khách cá nhân và doanh nghiệp đang giao dịch." [detail]="detailMode()">
+@let _drawer = drawer();
+<sd-page-list title="Khách hàng" description="Khách cá nhân và doanh nghiệp đang giao dịch.">
   <sd-button
     headerRight
     *sdPermission="'PATTERN_CUSTOMER_C_CREATE'"
@@ -7,16 +8,30 @@
     type="fill"
     color="primary"
     autoId="customer-create"
-    [routerLink]="['create']" />
+    (click)="drawer.set({ type: 'create' })" />
 
   <summary-cards [counts]="counts()" [(segment)]="segment" />
 
   <sd-table autoId="customer-list" [option]="tableOption">
     <ng-template sdTableCellDef="code" let-customer="item">
-      <a *sdPermission="'PATTERN_CUSTOMER_R_DETAIL'" [routerLink]="[customer.id, 'detail']">{{ customer.code }}</a>
+      <a *sdPermission="'PATTERN_CUSTOMER_R_DETAIL'" href="" (click)="openDetail($event, customer.id)">{{ customer.code }}</a>
       @if (!canOpenDetail) {
         <span>{{ customer.code }}</span>
       }
     </ng-template>
   </sd-table>
 </sd-page-list>
+
+@if (_drawer?.type === 'create') {
+  <create-side-drawer (closed)="drawer.set(null)" />
+}
+@if (_drawer?.type === 'detail') {
+  <detail-side-drawer
+    [id]="_drawer.id"
+    (update)="drawer.set({ type: 'update', id: _drawer.id })"
+    (profile)="openProfile(_drawer.id)"
+    (closed)="drawer.set(null)" />
+}
+@if (_drawer?.type === 'update') {
+  <update-side-drawer [id]="_drawer.id" (closed)="drawer.set(null)" />
+}

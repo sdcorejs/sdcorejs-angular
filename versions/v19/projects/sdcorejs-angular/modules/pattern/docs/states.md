@@ -76,7 +76,7 @@ import { map, timeout } from 'rxjs';
 import { CustomerService } from './services/customer.service';
 import type { CustomerDto } from './services/customer.model';
 
-/** Tải khách hàng bằng `detail(id)` trước khi mở drawer/trang; lỗi đi tới navigation error handler của host. */
+/** Tải khách hàng bằng `detail(id)` trước khi mở hồ sơ 360°; lỗi đi tới navigation error handler của host. */
 export const entityResolver: ResolveFn<CustomerDto> = route => {
   const id = route.paramMap.get('id');
   if (!id?.trim()) throw new HttpErrorResponse({ status: 404 });

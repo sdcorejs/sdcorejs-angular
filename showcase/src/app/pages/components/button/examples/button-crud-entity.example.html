@@ -1,5 +1,5 @@
-<sd-button title="Tạo khách hàng" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer/create" />
-<sd-button title="Cập nhật khách hàng" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/update" />
+<sd-button title="Tạo khách hàng" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer" />
+<sd-button title="Cập nhật khách hàng" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/360" />
 <sd-button
   title="Lưu khách hàng"
   prefixIcon="save"
@@ -8,5 +8,5 @@
   [loading]="saving()"
   [disabled]="saving()"
   (click)="save()" />
-<p class="button-note">Chi tiết: <a routerLink="/pattern/customer/1/detail">KH-0001</a></p>
+<p class="button-note">Chi tiết: <a routerLink="/pattern/customer/1/360">KH-0001</a></p>
 <p class="button-note" role="status">{{ message() }}</p>

@@ -12,7 +12,7 @@ Màn mẫu theo entity, chạy trên Core thật với mock API. Mỗi màn là 
 | Xem một bản ghi | [detail](docs/detail.md) | `sd-page-detail` | `product/:id/detail`, `order/:id/detail`, `customer/:id/360` |
 | Tạo / cập nhật một bước | [form](docs/form.md) | `sd-page-form` (`toc` khi nhiều nhóm) | `product/create`, `order/create`, `settings` |
 | Quy trình nhiều bước | [flow](docs/flow.md) | `sd-page` hẹp + `sd-stepper`, nút bước ở footer | `import`, `partner/create` |
-| Xem / sửa ngay trên danh sách | [drawer](docs/drawer.md) | `sd-side-drawer` trong route con | `customer/create`, `customer/:id/detail`, `category/:id/update` |
+| Xem / sửa ngay trên danh sách | [drawer](docs/drawer.md) | `sd-side-drawer` mở bằng `@if` trên danh sách, không đổi URL | `customer`, `category` |
 | Xử lý nhanh từng mục | [split](docs/split.md) | `sd-page-list detail="none"` + `sd-splitter` | `approval` |
 | Chọn entity / enum | [select](docs/select.md) | wrapper `<entity>-select` của feature sở hữu entity | `product-select`, `customer-select` |
 | Hiện quan hệ theo ID | [relation](docs/relation.md) | pipe `<entity>Detail` | `customerDetail`, `productDetail` |
@@ -31,12 +31,12 @@ Thanh công cụ dưới cùng của `/pattern` (vai trò, độ trễ, lỗi gi
 
 ```text
 features/<entity>/
-  routes.ts               route list + route con (create, :id/detail, :id/update), service cấp ở đây
+  routes.ts               route list + route con của trang (create, :id/detail, :id/update), service cấp ở đây
   entity.resolver.ts      tải bản ghi bằng detail(id) trước khi mở trang
   services/<entity>.model.ts  DTO, Req, const/enum, badge
   services/<entity>.service.ts  gọi API qua BaseApiService; không biết có mock hay không
   pages/list|detail|create|update/  trang có route
-  components/             -form, -view, -select, *-side-drawer của entity
+  components/             -form, -view, -select, *-side-drawer của entity (drawer không có route)
   pipes/<entity>-detail.pipe.ts  relation theo ID cho màn khác
 ```
 

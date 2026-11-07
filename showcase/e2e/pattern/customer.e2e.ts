@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { confirmDialog, openPattern, quickSearch, tableRows, throttleGap } from './pattern.support';
 
-// /pattern/customer: CRUD in drawers (child routes of the list), score cards that filter, 360° profile with tabs.
+// /pattern/customer: CRUD in drawers opened on the list (the URL never changes), score cards that filter, 360° profile with tabs.
 
 test.beforeEach(({}, testInfo) => test.skip(testInfo.project.name !== 'asia-bangkok', 'zone-independent'));
 
@@ -31,8 +31,8 @@ test.describe('customer list', () => {
     await openPattern(page, 'customer');
     const link = (await tableRows(page)).first().getByRole('link');
     await link.click();
-    await expect(page).toHaveURL(/\/pattern\/customer\/1\/detail$/);
     await expect(drawer(page)).toContainText('Chi tiết khách hàng #KH-0001');
+    await expect(page).toHaveURL(/\/pattern\/customer$/);
     // The X of the drawer is labelled "Đóng"; the footer has no Close/Cancel button besides it.
     await expect(
       drawer(page)
@@ -47,7 +47,8 @@ test.describe('customer list', () => {
   });
 
   test('keeps delete as a red icon next to X and opens the 360° profile from a button', async ({ page }) => {
-    await openPattern(page, 'customer/1/detail');
+    await openPattern(page, 'customer');
+    await (await tableRows(page)).first().getByRole('link').click();
     const remove = drawer(page).locator('.sd-side-drawer-header-right').getByRole('button', { name: 'Xoá khách hàng' });
     await expect(remove).toBeVisible();
     await expect(remove).not.toContainText('Xoá');
@@ -56,10 +57,11 @@ test.describe('customer list', () => {
     await expect(confirmDialog(page)).toContainText('Xoá khách hàng');
     await confirmDialog(page).getByRole('button', { name: 'Không xoá' }).click();
     await expect(confirmDialog(page)).toHaveCount(0);
-    await expect(page).toHaveURL(/\/pattern\/customer\/1\/detail$/);
+    await expect(drawer(page)).toContainText('Chi tiết khách hàng #KH-0001');
 
     await drawer(page).getByRole('button', { name: 'Hồ sơ 360°' }).click();
     await expect(page).toHaveURL(/\/pattern\/customer\/1\/360$/);
+    await expect(drawer(page)).toHaveCount(0);
   });
 });
 
@@ -69,7 +71,10 @@ test.describe('customer drawers', () => {
     const link = (await tableRows(page)).nth(1).getByRole('link');
     await link.click();
     await drawer(page).getByRole('button', { name: 'Cập nhật khách hàng' }).click();
-    await expect(page).toHaveURL(/\/pattern\/customer\/2\/update$/);
+    // The update drawer replaces the detail drawer: one layer, same URL.
+    await expect(drawer(page)).toHaveCount(1);
+    await expect(drawer(page)).toContainText('Cập nhật khách hàng #KH-0002');
+    await expect(page).toHaveURL(/\/pattern\/customer$/);
     const name = drawer(page).getByLabel('Tên khách hàng');
     await name.fill('Trần Bình (VIP)');
 
@@ -81,6 +86,7 @@ test.describe('customer drawers', () => {
 
     await throttleGap(page);
     await drawer(page).getByRole('button', { name: 'Lưu' }).click();
+    await expect(drawer(page)).toHaveCount(0);
     await expect(page).toHaveURL(/\/pattern\/customer$/);
     await expect((await tableRows(page)).nth(1)).toContainText('Trần Bình (VIP)');
     await expect(link).toBeFocused();
@@ -90,6 +96,7 @@ test.describe('customer drawers', () => {
     await openPattern(page, 'customer');
     await tableRows(page);
     await page.getByRole('button', { name: 'Tạo khách hàng' }).click();
+    await expect(page).toHaveURL(/\/pattern\/customer$/);
     const save = drawer(page).getByRole('button', { name: 'Tạo khách hàng' });
     await save.click();
     await expect(drawer(page).locator('sd-inform')).toHaveCount(2);
@@ -116,6 +123,22 @@ test.describe('customer drawers', () => {
 });
 
 test.describe('customer 360', () => {
+  test('updates in a drawer over the profile, keeps the URL and shows the saved record', async ({ page }) => {
+    await openPattern(page, 'customer/3/360');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Hồ sơ khách hàng #KH-0003');
+    await page.getByRole('button', { name: 'Cập nhật khách hàng' }).click();
+    const name = drawer(page).getByLabel('Tên khách hàng');
+    await expect(name).toBeVisible();
+    await expect(page).toHaveURL(/\/pattern\/customer\/3\/360$/);
+
+    await name.fill('Khách 360 đã cập nhật');
+    await throttleGap(page);
+    await drawer(page).getByRole('button', { name: 'Lưu' }).click();
+    await expect(drawer(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/pattern\/customer\/3\/360$/);
+    await expect(page.locator('sd-page-detail')).toContainText('Khách 360 đã cập nhật');
+  });
+
   test('loads a tab only when it opens, keeps the tab in the URL and shows the empty state of a tab', async ({ page }) => {
     await openPattern(page, 'customer/3/360');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Hồ sơ khách hàng #KH-0003');

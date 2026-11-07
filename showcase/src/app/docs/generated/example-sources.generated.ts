@@ -26742,17 +26742,17 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "components/button/example-crud-chung-khuyen-khich": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-crud-chung-khuyen-khich"],
-    html: `<sd-button title="Tạo mới" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer/create" />
-<sd-button title="Cập nhật" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/update" />
+    html: `<sd-button title="Tạo mới" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer" />
+<sd-button title="Cập nhật" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/360" />
 <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" [loading]="saving()" [disabled]="saving()" (click)="save()" />
 <sd-button title="Xoá" prefixIcon="delete" type="fill" color="error" [disabled]="deleted()" (click)="remove()" />
-<p class="button-note">Xem chi tiết qua hyperlink mã: <a routerLink="/pattern/customer/1/detail">KH-0001</a>.</p>
+<p class="button-note">Xem chi tiết qua hyperlink mã: <a routerLink="/pattern/customer/1/360">KH-0001</a>.</p>
 <p class="button-note" role="status">{{ message() }}</p>`,
   },
   "components/button/example-crud-theo-doi-tuong": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-crud-theo-doi-tuong"],
-    html: `<sd-button title="Tạo khách hàng" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer/create" />
-<sd-button title="Cập nhật khách hàng" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/update" />
+    html: `<sd-button title="Tạo khách hàng" prefixIcon="add" type="fill" color="primary" routerLink="/pattern/customer" />
+<sd-button title="Cập nhật khách hàng" prefixIcon="edit" type="fill" color="primary" routerLink="/pattern/customer/1/360" />
 <sd-button
   title="Lưu khách hàng"
   prefixIcon="save"
@@ -26761,7 +26761,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   [loading]="saving()"
   [disabled]="saving()"
   (click)="save()" />
-<p class="button-note">Chi tiết: <a routerLink="/pattern/customer/1/detail">KH-0001</a></p>
+<p class="button-note">Chi tiết: <a routerLink="/pattern/customer/1/360">KH-0001</a></p>
 <p class="button-note" role="status">{{ message() }}</p>`,
   },
   "components/button/example-dang-luu-loi-thu-lai": {

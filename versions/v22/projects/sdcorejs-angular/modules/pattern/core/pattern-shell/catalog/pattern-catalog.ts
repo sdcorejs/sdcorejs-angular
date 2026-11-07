@@ -71,26 +71,9 @@ export const PATTERN_CATALOG: readonly PatternCatalogGroup[] = [
       {
         link: ['customer'],
         path: 'customer',
-        layout: 'sd-page-list detail="drawer"',
-        shows: 'Score card lọc theo loại khách. Card, filter và request dùng cùng một state.',
-      },
-      {
-        link: ['customer', 'create'],
-        path: 'customer/create',
-        layout: 'Drawer, route con',
-        shows: 'Ba section, sd-inform cảnh báo từng nhóm, BE báo trùng email.',
-      },
-      {
-        link: ['customer', '1', 'detail'],
-        path: 'customer/:id/detail',
-        layout: 'Drawer, route con',
-        shows: 'sd-section-item, footer có Cập nhật, chỉ đóng bằng X. Lấy dữ liệu bằng detail(id).',
-      },
-      {
-        link: ['customer', '1', 'update'],
-        path: 'customer/:id/update',
-        layout: 'Drawer, route con',
-        shows: 'beforeClose chặn X, Esc, backdrop khi còn thay đổi. Chỉ tải lại danh sách khi lưu thành công.',
+        layout: 'sd-page-list + sd-side-drawer',
+        shows:
+          'Score card lọc theo loại khách. Mã mở drawer chi tiết, Tạo khách hàng mở drawer tạo; drawer không đổi URL, tải bản ghi bằng detail(id). beforeClose chặn X, Esc, backdrop khi còn thay đổi.',
       },
       {
         link: ['customer', '1', '360'],
@@ -170,7 +153,7 @@ export const PATTERN_CATALOG: readonly PatternCatalogGroup[] = [
         link: ['category'],
         path: 'category',
         layout: 'sd-page-list',
-        shows: 'Bảng cây 3 cấp, có thao tác theo dòng. Tạo danh mục con bằng drawer.',
+        shows: 'Bảng cây 3 cấp, có thao tác theo dòng. Tạo danh mục con và cập nhật bằng drawer, không đổi URL.',
       },
     ],
   },
