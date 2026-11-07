@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
-import { filter, firstValueFrom, map, startWith } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdTable, SdTableCellDefDirective, type SdTableOption } from '@sdcorejs/angular/components/table';
-import { SdPageList, type SdPageListDetail } from '@sdcorejs/angular/modules/layout';
+import { SdPageList } from '@sdcorejs/angular/modules/layout';
 import { SdPermissionDirective, SdPermissionService } from '@sdcorejs/angular/modules/permission';
 import type { Filter } from '@sdcorejs/utils/models';
+import { CreateSideDrawerComponent } from '../../components/create-side-drawer/create-side-drawer.component';
+import { DetailSideDrawerComponent } from '../../components/detail-side-drawer/detail-side-drawer.component';
 import { SummaryCardsComponent } from '../../components/summary-cards/summary-cards.component';
+import { UpdateSideDrawerComponent } from '../../components/update-side-drawer/update-side-drawer.component';
 import { CustomerService } from '../../services/customer.service';
 import {
   CUSTOMER_STATUS_OPTIONS,
@@ -25,12 +27,29 @@ const SEGMENT_FILTER: Readonly<Record<CustomerSegment, Filter<CustomerDto>>> = {
   vip: { field: 'tier', operator: 'EQUAL', data: 'vip' },
 };
 
+/** Drawer đang mở trên danh sách: tạo, hay chi tiết / cập nhật khách hàng `id`. */
+type CustomerDrawer = { readonly type: 'create' } | { readonly type: 'detail' | 'update'; readonly id: string };
+
+/**
+ * Danh sách khách hàng. Chi tiết, tạo và cập nhật mở trong drawer trên danh sách, không đổi URL; hồ sơ 360° là route con
+ * thay chỗ danh sách.
+ */
 @Component({
   selector: 'list',
   standalone: true,
   templateUrl: './list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SdPageList, SdButton, SdTable, SdTableCellDefDirective, SdPermissionDirective, SummaryCardsComponent],
+  imports: [
+    SdPageList,
+    SdButton,
+    SdTable,
+    SdTableCellDefDirective,
+    SdPermissionDirective,
+    SummaryCardsComponent,
+    CreateSideDrawerComponent,
+    DetailSideDrawerComponent,
+    UpdateSideDrawerComponent,
+  ],
 })
 export class ListComponent {
   readonly #customerService = inject(CustomerService);
@@ -43,15 +62,11 @@ export class ListComponent {
   /** Một state cho score card và request: đổi nhóm thì đọc lại từ trang 1. */
   protected readonly segment = signal<CustomerSegment | null>(null);
   protected readonly counts = signal<CustomerCounts | null>(null);
-  /** Detail, create, update mở trong drawer; hồ sơ 360° (`data.detail: 'page'`) thay chỗ danh sách. */
-  protected readonly detailMode = toSignal(
-    this.#router.events.pipe(
-      filter(event => event instanceof NavigationEnd),
-      startWith(null),
-      map((): SdPageListDetail => (this.#route.firstChild?.snapshot.data['detail'] === 'page' ? 'page' : 'drawer'))
-    ),
-    { requireSync: true }
-  );
+  /**
+   * Mỗi lần mở dựng drawer mới (`@if`), nên form luôn bắt đầu từ dữ liệu mới; đóng thì gỡ khỏi màn. Chi tiết sang cập
+   * nhật thay drawer này bằng drawer kia, không chồng hai lớp.
+   */
+  protected readonly drawer = signal<CustomerDrawer | null>(null);
 
   protected readonly tableOption: SdTableOption<CustomerDto> = {
     type: 'server',
@@ -101,13 +116,25 @@ export class ListComponent {
       segment = next;
       untracked(() => void this.table().reloadFirstPage());
     });
-    // Chỉ tải lại danh sách khi drawer/trang con đã lưu thành công, không phải mỗi lần đóng.
+    // Chỉ tải lại danh sách khi drawer/trang con đã lưu thành công, và sau khi chúng đóng: không phải mỗi lần đóng.
     let changes = this.#customerService.changes();
     effect(() => {
       const next = this.#customerService.changes();
-      if (this.pageList().childActive() || next === changes) return;
+      if (this.drawer() || this.pageList().childActive() || next === changes) return;
       changes = next;
       untracked(() => void this.table().reload(true, false));
     });
+  }
+
+  /** Mã là link mở drawer chi tiết ngay trên danh sách: chặn điều hướng của `href`, URL giữ nguyên. */
+  protected openDetail(event: Event, id: string): void {
+    event.preventDefault();
+    this.drawer.set({ type: 'detail', id });
+  }
+
+  /** Hồ sơ 360° là trang: đóng drawer chi tiết rồi sang route con, danh sách ẩn đi. */
+  protected openProfile(id: string): void {
+    this.drawer.set(null);
+    void this.#router.navigate([id, '360'], { relativeTo: this.#route });
   }
 }

@@ -6,13 +6,13 @@ import {
   ElementRef,
   inject,
   Injector,
+  input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
@@ -30,7 +30,7 @@ import {
 } from '../general-information-form/general-information-form.component';
 
 /**
- * Tạo danh mục trong drawer (route con `create`, `?parent=<id>` cho danh mục con). Danh mục cha do resolver tải.
+ * Tạo danh mục trong drawer, mở từ danh sách bằng `@if` (không đổi URL); `parent` là danh mục cha khi thêm danh mục con.
  * X, Esc và backdrop hỏi trước khi bỏ thay đổi; lưu xong đóng drawer và danh sách tải lại.
  */
 @Component({
@@ -39,12 +39,13 @@ import {
   imports: [SdSideDrawer, SdButton, GeneralInformationFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @let _parent = parent();
     <sd-side-drawer
-      [title]="parent() ? 'Thêm danh mục con của ' + parent()!.name : 'Tạo danh mục'"
+      [title]="_parent ? 'Thêm danh mục con của ' + _parent.name : 'Tạo danh mục'"
       autoId="category-create"
       [beforeClose]="beforeClose"
-      (sdClosed)="closed()">
-      <general-information-form [form]="form" [seed]="seed" [parentName]="parent()?.name ?? null" [errors]="apiErrors.errors()" />
+      (sdClosed)="closed.emit()">
+      <general-information-form [form]="form" [seed]="seed" [parentName]="_parent?.name ?? null" [errors]="apiErrors.errors()" />
       <div sdFooterRight class="d-flex align-items-center gap-8">
         <sd-button
           title="Tạo danh mục"
@@ -62,14 +63,13 @@ export class CreateSideDrawerComponent {
   readonly #categoryService = inject(CategoryService);
   readonly #confirm = inject(SdConfirmService);
   readonly #notify = inject(SdNotifyService);
-  readonly #router = inject(Router);
-  readonly #route = inject(ActivatedRoute);
   readonly #injector = inject(Injector);
+  /** Danh mục cha khi thêm danh mục con; `null` tạo danh mục gốc. */
+  readonly parent = input<Pick<CategoryDto, 'id' | 'name'> | null>(null);
+  /** Drawer đã đóng (X, Esc, backdrop hoặc lưu xong): danh sách gỡ drawer khỏi màn. */
+  readonly closed = output<void>();
   private readonly drawer = viewChild.required(SdSideDrawer);
   private readonly formElement = viewChild.required(GeneralInformationFormComponent, { read: ElementRef });
-  protected readonly parent = toSignal(this.#route.data.pipe(map(data => (data['parent'] as CategoryDto | null) ?? null)), {
-    requireSync: true,
-  });
   protected readonly seed: CategorySaveReq = { code: '', name: '', parentId: null, status: 'active' };
   protected readonly form: CategoryForm = new FormGroup({});
   protected readonly saving = signal(false);
@@ -96,10 +96,6 @@ export class CreateSideDrawerComponent {
   constructor() {
     afterNextRender(() => this.drawer().open());
     inject(DestroyRef).onDestroy(() => this.#unsaved.destroy());
-  }
-
-  protected closed(): void {
-    void this.#router.navigate(['..'], { relativeTo: this.#route });
   }
 
   protected async save(): Promise<void> {
