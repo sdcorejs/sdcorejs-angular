@@ -6,11 +6,11 @@ import {
   ElementRef,
   inject,
   Injector,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
@@ -31,8 +31,8 @@ import {
 } from '../general-information-form/general-information-form.component';
 
 /**
- * Tạo khách hàng trong drawer (route con `create` của danh sách). Ba nhóm, mỗi nhóm còn lỗi hiện `sd-inform`; BE báo
- * trùng email ngay trên field. Lưu thành công thì đóng drawer, danh sách tải lại.
+ * Tạo khách hàng trong drawer, mở từ danh sách bằng `@if` (không đổi URL). Ba nhóm, mỗi nhóm còn lỗi hiện `sd-inform`;
+ * BE báo trùng email ngay trên field. Lưu thành công thì đóng drawer, danh sách tải lại.
  */
 @Component({
   selector: 'create-side-drawer',
@@ -40,7 +40,7 @@ import {
   imports: [SdSideDrawer, SdButton, GeneralInformationFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <sd-side-drawer title="Tạo khách hàng" width="600px" autoId="customer-create" [beforeClose]="beforeClose" (sdClosed)="closed()">
+    <sd-side-drawer title="Tạo khách hàng" width="600px" autoId="customer-create" [beforeClose]="beforeClose" (sdClosed)="closed.emit()">
       <general-information-form [form]="form" [seed]="seed" [errors]="apiErrors.errors()" [invalidGroups]="invalidGroups()" />
       <div sdFooterRight class="d-flex align-items-center gap-8">
         <sd-button
@@ -59,9 +59,9 @@ export class CreateSideDrawerComponent {
   readonly #customerService = inject(CustomerService);
   readonly #confirm = inject(SdConfirmService);
   readonly #notify = inject(SdNotifyService);
-  readonly #router = inject(Router);
-  readonly #route = inject(ActivatedRoute);
   readonly #injector = inject(Injector);
+  /** Drawer đã đóng (X, Esc, backdrop hoặc lưu xong): danh sách gỡ drawer khỏi màn. */
+  readonly closed = output<void>();
   private readonly drawer = viewChild.required(SdSideDrawer);
   // why: sd-side-drawer chuyển nội dung ra body, nên tìm field lỗi trong form chứ không trong host của component.
   private readonly formElement = viewChild.required(GeneralInformationFormComponent, { read: ElementRef });
@@ -82,7 +82,7 @@ export class CreateSideDrawerComponent {
   protected readonly invalidGroups = signal<CustomerFormGroup[]>([]);
   readonly #unsaved = registerSdUnsavedChangesForm(inject(SdUnsavedChangesService), this.form, { id: 'customer-create', dirty: 'value' });
 
-  /** Đóng khi còn thay đổi chưa lưu: hỏi, đồng ý thì bỏ thay đổi (guard rời route không hỏi lại). */
+  /** Đóng khi còn thay đổi chưa lưu: hỏi, đồng ý thì bỏ thay đổi (guard rời trang không hỏi lại). */
   protected readonly beforeClose = async (): Promise<boolean> => {
     if (!this.#unsaved.dirty() || this.saving()) return !this.saving();
     try {
@@ -102,10 +102,6 @@ export class CreateSideDrawerComponent {
   constructor() {
     afterNextRender(() => this.drawer().open());
     inject(DestroyRef).onDestroy(() => this.#unsaved.destroy());
-  }
-
-  protected closed(): void {
-    void this.#router.navigate(['..'], { relativeTo: this.#route });
   }
 
   protected async save(): Promise<void> {

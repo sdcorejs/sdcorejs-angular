@@ -121,7 +121,7 @@ export class ListComponent {
 }
 ```
 
-Chi tiết, tạo và cập nhật là route con của danh sách, nên quay lại vẫn giữ bộ lọc, trang và vị trí cuộn:
+Trang chi tiết, tạo và cập nhật là route con của danh sách, nên quay lại vẫn giữ bộ lọc, trang và vị trí cuộn:
 
 <!-- @source features/product/routes.ts -->
 ```ts
@@ -232,8 +232,8 @@ protected readonly counts = signal<OrderCounts | null>(null);
 - MUST dùng `sd-page-list`; bảng chính là `sd-table` trực tiếp trong thân (hoặc phần tử gắn `sdPageListMain`). Không viết `h-full`, `overflow` hay chiều cao cho danh sách (E1).
 - MUST mở chi tiết bằng link trên mã hoặc tên ở cột dữ liệu đầu tiên. Không có tác vụ Xem/Cập nhật trên dòng, trên thanh chọn nhiều hay ở header.
 - MUST hiện mã dạng chữ khi thiếu quyền xem chi tiết; chuẩn bị cờ quyền trong TS (`hasPermission` sau khi guard đã nạp quyền), không gọi service quyền trong template.
-- MUST đặt chi tiết, tạo, cập nhật là route con của danh sách; `detail="page"` ẩn danh sách, `detail="drawer"` giữ danh sách trên màn.
-- MUST tải lại danh sách khi trang con đã lưu thành công (service đếm số lần thay đổi), không tải lại mỗi lần đóng.
+- MUST đặt trang chi tiết, tạo, cập nhật là route con của danh sách; `detail="page"` ẩn danh sách, `detail="drawer"` hiện trang con trong drawer và giữ danh sách trên màn. Drawer xem/sửa nhanh ([drawer](drawer.md)) không phải route con: mở bằng `@if`, không đổi URL.
+- MUST tải lại danh sách khi trang con hay drawer đã lưu thành công (service đếm số lần thay đổi), không tải lại mỗi lần đóng.
 - MUST giữ một chỗ lọc cho mỗi field (E6): field có cột lọc dưới cột; external filter chỉ chứa field không có cột; có tab trạng thái thì tắt filter dưới cột Trạng thái. Không bật quick search cùng external filter.
 - MUST truyền nguyên `PagingReq` (tham số thứ hai của `items`) vào service; service chuyển sang định dạng của API.
 - SHOULD giữ mặc định `hideInlineFilter: false`; màn ít dữ liệu dùng `'auto'`; không dùng `true` (E7).

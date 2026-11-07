@@ -6,14 +6,16 @@ import {
   ElementRef,
   inject,
   Injector,
+  input,
+  OnInit,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
@@ -32,46 +34,65 @@ import {
 } from '../general-information-form/general-information-form.component';
 
 /**
- * Cập nhật khách hàng trong drawer (route con `:id/update`). X, Esc và backdrop đi qua `beforeClose`: còn thay đổi
- * thì hỏi trước khi bỏ. Lưu thành công thì đóng drawer; danh sách tải lại và focus trở về dòng đã mở.
+ * Cập nhật khách hàng trong drawer, mở bằng `@if` từ drawer chi tiết hoặc hồ sơ 360° (không đổi URL). Drawer mở ngay
+ * rồi tải bản ghi bằng `detail(id)`; trạng thái tải và lỗi do `sd-data-state` hiện. X, Esc và backdrop đi qua
+ * `beforeClose`: còn thay đổi thì hỏi trước khi bỏ. Lưu thành công thì báo `saved` rồi đóng drawer; danh sách tải lại
+ * và focus trở về phần tử đã mở drawer.
  */
 @Component({
   selector: 'update-side-drawer',
   standalone: true,
-  imports: [SdSideDrawer, SdButton, GeneralInformationFormComponent],
+  imports: [SdSideDrawer, SdButton, SdDataState, GeneralInformationFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @let _entity = entity();
     <sd-side-drawer
-      [title]="'Cập nhật khách hàng #' + entity().code"
+      [title]="_entity ? 'Cập nhật khách hàng #' + _entity.code : 'Cập nhật khách hàng'"
       width="600px"
       autoId="customer-update"
       [beforeClose]="beforeClose"
-      (sdClosed)="closed()">
-      <general-information-form [form]="form" [seed]="entity()" [errors]="apiErrors.errors()" [invalidGroups]="invalidGroups()" />
+      (sdClosed)="closed.emit()">
+      <sd-data-state [state]="state()" retryable (sdRetry)="load()">
+        @if (_entity) {
+          <general-information-form [form]="form" [seed]="_entity" [errors]="apiErrors.errors()" [invalidGroups]="invalidGroups()" />
+        }
+      </sd-data-state>
       <div sdFooterRight class="d-flex align-items-center gap-8">
-        <sd-button title="Lưu" prefixIcon="save" type="fill" color="primary" autoId="customer-save" [loading]="saving()" (click)="save()" />
+        <sd-button
+          title="Lưu"
+          prefixIcon="save"
+          type="fill"
+          color="primary"
+          autoId="customer-save"
+          [disabled]="!_entity"
+          [loading]="saving()"
+          (click)="save()" />
       </div>
     </sd-side-drawer>
   `,
 })
-export class UpdateSideDrawerComponent {
+export class UpdateSideDrawerComponent implements OnInit {
   readonly #customerService = inject(CustomerService);
   readonly #confirm = inject(SdConfirmService);
   readonly #notify = inject(SdNotifyService);
-  readonly #router = inject(Router);
-  readonly #route = inject(ActivatedRoute);
   readonly #injector = inject(Injector);
+  readonly id = input.required<string>();
+  /** Lưu thành công, kèm bản ghi API trả về: màn đang hiện bản ghi (hồ sơ 360°) cập nhật theo. */
+  readonly saved = output<CustomerDto>();
+  /** Drawer đã đóng (X, Esc, backdrop hoặc lưu xong): màn mở drawer gỡ nó khỏi màn. */
+  readonly closed = output<void>();
   private readonly drawer = viewChild.required(SdSideDrawer);
   // why: sd-side-drawer chuyển nội dung ra body, nên tìm field lỗi trong form chứ không trong host của component.
   private readonly formElement = viewChild.required(GeneralInformationFormComponent, { read: ElementRef });
-  protected readonly entity = toSignal(this.#route.data.pipe(map(data => data['entity'] as CustomerDto)), { requireSync: true });
+  protected readonly state = signal<'loading' | 'error' | 'success'>('loading');
+  protected readonly entity = signal<CustomerDto | null>(null);
   protected readonly form: CustomerForm = new FormGroup({});
   protected readonly saving = signal(false);
   protected readonly apiErrors = formApiErrors(this.form);
   protected readonly invalidGroups = signal<CustomerFormGroup[]>([]);
   readonly #unsaved = registerSdUnsavedChangesForm(inject(SdUnsavedChangesService), this.form, { id: 'customer-update', dirty: 'value' });
 
-  /** Đóng khi còn thay đổi chưa lưu: hỏi, đồng ý thì bỏ thay đổi (guard rời route không hỏi lại). */
+  /** Đóng khi còn thay đổi chưa lưu: hỏi, đồng ý thì bỏ thay đổi (guard rời trang không hỏi lại). */
   protected readonly beforeClose = async (): Promise<boolean> => {
     if (!this.#unsaved.dirty() || this.saving()) return !this.saving();
     try {
@@ -93,12 +114,24 @@ export class UpdateSideDrawerComponent {
     inject(DestroyRef).onDestroy(() => this.#unsaved.destroy());
   }
 
-  protected closed(): void {
-    void this.#router.navigate(['../..'], { relativeTo: this.#route });
+  ngOnInit(): void {
+    void this.load();
+  }
+
+  /** Tải bản ghi bằng `detail(id)`, không dùng object của dòng; lỗi hiện trong drawer kèm nút thử lại. */
+  protected async load(): Promise<void> {
+    this.state.set('loading');
+    try {
+      this.entity.set(await firstValueFrom(this.#customerService.detail(this.id()).pipe(timeout(10_000))));
+      this.state.set('success');
+    } catch {
+      this.state.set('error');
+    }
   }
 
   protected async save(): Promise<void> {
-    if (this.saving()) return;
+    const entity = this.entity();
+    if (!entity || this.saving()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.#showErrors();
@@ -106,9 +139,10 @@ export class UpdateSideDrawerComponent {
     }
     this.saving.set(true);
     try {
-      await firstValueFrom(this.#customerService.update(this.entity().id, customerSaveReq(this.form)));
+      const customer = await firstValueFrom(this.#customerService.update(entity.id, customerSaveReq(this.form)));
       this.#unsaved.markPristine();
       this.#notify.success('Đã cập nhật khách hàng.');
+      this.saved.emit(customer);
       this.saving.set(false);
       this.drawer().close();
     } catch (error) {

@@ -36,6 +36,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+#### Pattern
+
+- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.
+  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.
+  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.
+  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.
+  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.
+
 #### Theme
 
 - The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).

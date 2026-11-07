@@ -1,4 +1,5 @@
-<sd-page-list title="Danh mục" description="Danh mục sản phẩm ba cấp." detail="drawer">
+@let _drawer = drawer();
+<sd-page-list title="Danh mục" description="Danh mục sản phẩm ba cấp.">
   <sd-button
     headerRight
     *sdPermission="'PATTERN_CATEGORY_C_CREATE'"
@@ -7,14 +8,21 @@
     type="fill"
     color="primary"
     autoId="category-create"
-    [routerLink]="['create']" />
+    (click)="drawer.set({ type: 'create', parent: null })" />
 
   <sd-table autoId="categories" [option]="option">
     <ng-template sdTableCellDef="name" let-category="item">
-      <a *sdPermission="'PATTERN_CATEGORY_U_UPDATE'" [routerLink]="[category.id, 'update']">{{ category.name }}</a>
+      <a *sdPermission="'PATTERN_CATEGORY_U_UPDATE'" href="" (click)="openUpdate($event, category.id)">{{ category.name }}</a>
       @if (!canUpdate) {
         <span>{{ category.name }}</span>
       }
     </ng-template>
   </sd-table>
 </sd-page-list>
+
+@if (_drawer?.type === 'create') {
+  <create-side-drawer [parent]="_drawer.parent" (closed)="drawer.set(null)" />
+}
+@if (_drawer?.type === 'update') {
+  <update-side-drawer [id]="_drawer.id" (closed)="drawer.set(null)" />
+}
