@@ -258,7 +258,7 @@ test('Semantic tier maps roles onto the public palette', () => {
   for (const mode of ['light', 'dark']) {
     // One set of control expressions for light and dark: they only reference the palette of the scope.
     const tokens = declarations(compile(`.x { @include sd.theme($mode: '${mode}'); }`));
-    assert.equal(tokens['--sd-control-border'], 'color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))', mode);
+    assert.equal(tokens['--sd-control-border'], 'color-mix(in srgb, var(--sd-border-strong) 60%, var(--sd-surface))', mode);
     assert.equal(tokens['--sd-control-border-hover'], 'var(--sd-border-strong)', mode);
     assert.equal(tokens['--sd-control-border-focus'], 'var(--sd-border-focus)', mode);
     assert.equal(tokens['--sd-control-border-disabled'], 'var(--sd-border)', mode);

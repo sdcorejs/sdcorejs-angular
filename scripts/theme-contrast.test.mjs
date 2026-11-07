@@ -28,8 +28,10 @@ const PAIRS = [
   ['border-strong', 'surface-muted', 3],
   ['focus-ring-color', 'surface', 3],
   ['focus-ring-color', 'surface-muted', 3],
-  // The outline of a control at rest: a non-text boundary on the page surface (WCAG 1.4.11).
-  ['control-border', 'surface', 3],
+  // The outline of a control at rest. Deliberately under the 3:1 of WCAG 1.4.11 so forms are not heavier than
+  // cards and dividers: the label identifies the field and hover / focus reach 3:1 (border-strong and
+  // focus-ring-color above). It must also stay above `border`, see the separate test below.
+  ['control-border', 'surface', 2],
   ['link', 'surface', 4.5],
   ['primary-contrast', 'primary', 4.5],
   ['view-label-color', 'surface', 4.5],
@@ -153,6 +155,32 @@ for (const preset of PRESETS) {
 
 test('dark — default: every text, boundary, focus, link and status pair meets its minimum', () => {
   assert.deepEqual(failures(tokensOf("$mode: 'dark'")), []);
+});
+
+/**
+ * The rest outline of a control against the outlines it must stay darker than, on `surface`: `border` and the
+ * disabled outline (`control-border-disabled`, which is `border` today). Equal or lighter would make an empty
+ * field look disabled, whatever the absolute ratio.
+ */
+const restOutlineFailures = tokens => {
+  const onSurface = fg => contrast(resolve(tokens, `var(--sd-${fg})`), resolve(tokens, 'var(--sd-surface)'));
+  const rest = onSurface('control-border');
+  return ['border', 'control-border-disabled'].flatMap(other => {
+    const ratio = onSurface(other);
+    return rest > ratio ? [] : [`control-border ${rest.toFixed(3)} is not above ${other} ${ratio.toFixed(3)} on surface`];
+  });
+};
+
+for (const [scope, args] of [...PRESETS.map(preset => [`light — ${preset}`, `$preset: '${preset}'`]), ['dark — default', "$mode: 'dark'"]]) {
+  test(`${scope}: the rest outline of a control is darker than border and the disabled outline`, () => {
+    assert.deepEqual(restOutlineFailures(tokensOf(args)), []);
+  });
+}
+
+test('the rest-outline check fails when border is as dark as the rest outline', () => {
+  const failed = restOutlineFailures(tokensOf('(border: #9a9a9a)'));
+  assert.ok(failed.some(f => f.includes('not above border ')), failed.join('\n'));
+  assert.ok(failed.some(f => f.includes('not above control-border-disabled ')), failed.join('\n'));
 });
 
 test('the matrix fails when a pair is pushed below its threshold', () => {

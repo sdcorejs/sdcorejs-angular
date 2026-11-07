@@ -34,6 +34,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+#### Theme
+
+- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).
+  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.
+  - To keep the 3:1 rest outline, set the previous value at the root:
+
+    ```scss
+    :root {
+      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));
+    }
+    ```
+
 ## [3.5] - 2026-11-05
 
 Packages `19.3.5` · `20.3.5` · `21.3.5` · `22.3.5`, validated against `*.3.4`.

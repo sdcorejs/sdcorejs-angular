@@ -21,11 +21,12 @@ $states: info, success, warning, error;
   --sd-overlay-backdrop: color-mix(in srgb, black #{if($scheme == dark, 60%, 32%)}, transparent);
   --sd-focus-ring-color: var(--sd-primary);
   // Box controls (form fields, search box, entity picker): outline per state, focus ring and disabled
-  // background. why: --sd-border chỉ đạt khoảng 1.7:1 trên surface, và hover cùng màu với nghỉ nên không có
-  // phản hồi. Viền nghỉ trộn border-strong 82% vào surface — tối thiểu 3:1 ở light với mọi preset (80% của
-  // thiết kế chỉ đạt 2.9:1 với copper/forest/plum/rose), khoảng 4:1 ở dark — nên cùng một
-  // biểu thức dùng được cho cả hai mode.
-  --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));
+  // background. why: viền nghỉ trộn border-strong 82% (3:1) đậm hơn mọi đường kẻ khác trên trang (viền card,
+  // divider 1.25–1.66:1), làm form nhiều ô bị nặng. 60% cho khoảng 2.1–2.3:1 ở light với mọi preset, khoảng
+  // 2.9:1 ở dark: dưới mốc 3:1 của WCAG 1.4.11, ô được nhận diện nhờ label, nhưng vẫn đậm hơn --sd-border
+  // (1.4–2:1) nên ô trống không trông như ô vô hiệu (scripts/theme-contrast.test.mjs giữ điều này). Hover
+  // (border-strong) và focus vẫn đạt 3:1. Cùng một biểu thức dùng được cho cả hai mode.
+  --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 60%, var(--sd-surface));
   --sd-control-border-hover: var(--sd-border-strong);
   --sd-control-border-focus: var(--sd-border-focus);
   --sd-control-border-disabled: var(--sd-border);

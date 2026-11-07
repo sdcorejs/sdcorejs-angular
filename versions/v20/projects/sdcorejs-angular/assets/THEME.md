@@ -222,7 +222,7 @@ builder palette and the `sd-select` panel share one internal search field that r
 | State | Token | Value |
 | --- | --- | --- |
 | Corner | `--sd-control-radius` | `8px` |
-| Rest outline | `--sd-control-border` | `color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface))`, at least 3:1 on `surface` |
+| Rest outline | `--sd-control-border` | `color-mix(in srgb, var(--sd-border-strong) 60%, var(--sd-surface))`, at least 2:1 on `surface`, above `--sd-border` |
 | Hover outline | `--sd-control-border-hover` | `var(--sd-border-strong)` |
 | Focus outline | `--sd-control-border-focus` | `var(--sd-border-focus)` |
 | Focus ring | `--sd-control-ring` | `0 0 0 3px color-mix(in srgb, var(--sd-focus-ring-color) 20%, transparent)` |
@@ -240,6 +240,18 @@ builder palette and the `sd-select` panel share one internal search field that r
   `--sd-select-panel-bg` and have 4px of vertical padding. Options keep their 36px height and are inset 4px horizontally
   with a 6px corner, with a 2px gap between neighbouring backgrounds (a transparent 1px border inside the 36px); the
   selected option is `--sd-primary-dark` on `--sd-primary-light`, weight 500.
+
+The rest outline stays under the 3:1 that WCAG 1.4.11 asks of a component boundary: about 2.1–2.3:1 on
+`surface` in light (every preset) and 2.9:1 in dark, so a form with many fields does not look heavier than the
+cards and dividers around it. The label identifies the field, hover (`--sd-border-strong`) and focus reach 3:1,
+and the rest outline stays darker than `--sd-border`, so an empty field never looks disabled. To bring the rest
+outline back to 3:1 (the value up to 3.5):
+
+```scss
+:root {
+  --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));
+}
+```
 
 To keep the look of 3.1, set the tokens back at the root (or on any subtree):
 
@@ -426,7 +438,7 @@ every named preset and the dark palette:
 | `*-dark` (all six colours) | `*-light` (badge `round`, `tag`, `pair`) | 4.5 |
 | `status-*-fg` | `status-*-bg` | 4.5 |
 | `border-strong`, `focus-ring-color` | `surface`, `surface-muted` | 3 |
-| `control-border` | `surface` | 3 |
+| `control-border` | `surface` | 2, and above `border` on `surface` |
 
 These are palette checks. Recheck real component states after changing colours, and keep labels or icons
 for status information.
