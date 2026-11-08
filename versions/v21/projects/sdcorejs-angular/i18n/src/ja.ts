@@ -436,7 +436,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': 'コピーしました！',
   'core.component.code-editor.copy': 'コードをコピー',
 
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'テンプレートに沿った .xlsx ファイルを選択してください（最大 {limit} 行）。',
   'core.component.import-excel.choose-file': 'Excel ファイルを選択',

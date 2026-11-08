@@ -435,7 +435,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': 'Đã copy!',
   'core.component.code-editor.copy': 'Copy code',
 
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'Chọn tệp .xlsx theo mẫu, tối đa {limit} dòng.',
   'core.component.import-excel.choose-file': 'Chọn tệp Excel',

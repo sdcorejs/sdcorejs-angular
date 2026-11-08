@@ -435,7 +435,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': '已复制！',
   'core.component.code-editor.copy': '复制代码',
 
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': '请选择符合模板的 .xlsx 文件，最多 {limit} 行。',
   'core.component.import-excel.choose-file': '选择 Excel 文件',

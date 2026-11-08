@@ -434,7 +434,6 @@ export const EN_MESSAGES = {
   'core.component.code-editor.copied': 'Copied!',
   'core.component.code-editor.copy': 'Copy code',
 
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'Choose an .xlsx template file with up to {limit} rows.',
   'core.component.import-excel.choose-file': 'Choose Excel file',
