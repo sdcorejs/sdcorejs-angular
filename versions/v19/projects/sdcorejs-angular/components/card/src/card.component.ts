@@ -16,12 +16,14 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink, type Params } from '@angular/router';
+import { SdAvatar } from '@sdcorejs/angular/components/avatar';
+import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import type { Color as SdColor } from '@sdcorejs/utils/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
-import { SdCardGroup } from './card-group.component';
+import { SdCardGroup, type ɵSdCardGroupMember } from './card-group.component';
 import { SD_CARD_CONFIGURATION } from './card.configuration';
 import { SD_CARD_DEFAULT_COLOR } from './card.constants';
 import { sdCardStatDelta, sdCardStatValue, type SdCardFormatContext } from './card.format';
@@ -32,7 +34,7 @@ import { sdCardBehaviorAllowed } from './card.utils';
   selector: 'sd-card',
   exportAs: 'sdCard',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink, SdIcon, SdTranslatePipe],
+  imports: [NgTemplateOutlet, RouterLink, SdAvatar, SdBadge, SdIcon, SdTranslatePipe],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +42,8 @@ import { sdCardBehaviorAllowed } from './card.utils';
     '[attr.role]': 'hostRole()',
     '[attr.tabindex]': 'hostTabIndex()',
     '[attr.aria-label]': 'mode() === "link" ? null : accessibleLabel()',
-    '[attr.aria-pressed]': 'mode() === "select" ? (selected() ? "true" : "false") : null',
+    '[attr.aria-pressed]': 'mode() === "select" && !isOption() ? (selected() ? "true" : "false") : null',
+    '[attr.aria-checked]': 'isOption() ? (selected() ? "true" : "false") : null',
     '[attr.aria-disabled]': 'mode() === "select" ? (effectiveDisabled() ? "true" : "false") : null',
     '[attr.data-autoid]': 'resolvedAutoId()',
     '[attr.data-selected]': 'selected() ? "true" : "false"',
@@ -131,6 +134,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   });
   /** Accessible name of the focusable element (host for select/static, anchor for link) for built-in layouts. */
   protected readonly accessibleLabel = computed(() => {
+    const entity = this.entity();
+    if (entity) return sdCardJoinLabel(entity.data.title, entity.data.subtitle, sdCardBadgeText(entity.data.badge));
     const stat = this.stat();
     if (!stat) return null;
     const delta = stat.delta;
@@ -153,14 +158,44 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly effectiveDisabled = computed(() => this.disabled() || (this.#group?.disabled() ?? false));
   protected readonly effectiveColor = computed(() => this.color() ?? this.#group?.color() ?? SD_CARD_DEFAULT_COLOR);
   protected readonly resolvedAutoId = computed(() => (this.autoId() ? `components-card-${this.autoId()}` : undefined));
+  /** The card renders the `option` layout as a selectable choice. */
+  protected readonly isOption = computed(() => this.mode() === 'select' && this.layout() === 'option');
+  /** Option cards read as checkboxes unless they sit in a single-selection group. */
+  protected readonly optionMultiple = computed(() => !this.#group || this.#group.multiple());
+  protected readonly checkIcon = computed(() => {
+    const selected = this.selected();
+    if (this.optionMultiple()) return selected ? 'check_box' : 'check_box_outline_blank';
+    return selected ? 'check_circle' : 'radio_button_unchecked';
+  });
+  protected readonly option = computed(() => {
+    const content = this.content();
+    return content?.layout === 'option' ? content.data : null;
+  });
+  protected readonly entity = computed(() => {
+    const content = this.content();
+    if (content?.layout !== 'entity') return null;
+    const meta = (content.data.meta ?? []).slice(0, 3);
+    return { data: content.data, meta, metaColumns: `repeat(${meta.length}, minmax(0, 1fr))` };
+  });
+  readonly #member: ɵSdCardGroupMember = {
+    element: this.#elementRef.nativeElement,
+    isOption: this.isOption,
+    isEnabled: computed(() => this.mode() === 'select' && !this.effectiveDisabled()),
+    selected: this.selected,
+    value: this.value,
+  };
   protected readonly hostRole = computed(() => {
+    if (this.isOption()) return this.optionMultiple() ? 'checkbox' : 'radio';
     if (this.mode() === 'select') return 'button';
     // why: a static layout card is one labelled region; screen readers announce its summary once.
     return this.mode() === 'static' && this.accessibleLabel() ? 'group' : null;
   });
   protected readonly hostTabIndex = computed(() => {
     if (this.mode() !== 'select') return null;
-    return this.effectiveDisabled() ? -1 : 0;
+    if (this.effectiveDisabled()) return -1;
+    // why: a radiogroup is one tab stop; arrow keys move between its radios.
+    if (this.#group?.radioMode()) return this.#group.ɵisTabStop(this.#member) ? 0 : -1;
+    return 0;
   });
   /** Router link when present; otherwise the external href. */
   protected readonly routerCommands = computed(() => this.link() ?? null);
@@ -194,6 +229,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     const element = this.#elementRef.nativeElement;
     element.addEventListener('click', this.#captureClickListener, { capture: true });
     element.addEventListener('click', this.#bubbleClickListener);
+    this.#group?.ɵregister(this.#member);
 
     effect(() => {
       if (!isDevMode()) return;
@@ -246,6 +282,12 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected onKeydown(event: KeyboardEvent): void {
     // why: only the host itself is the button; keys from the inner anchor or action buttons keep their native meaning.
     if (this.mode() !== 'select' || event.target !== this.#elementRef.nativeElement) return;
+    const step = SD_CARD_ARROW_STEPS[event.key];
+    if (step && this.#group?.radioMode()) {
+      event.preventDefault();
+      this.#group.ɵmoveFocus(this.#member, step);
+      return;
+    }
     if (this.effectiveDisabled() || (event.key !== 'Enter' && event.key !== ' ')) return;
 
     event.preventDefault();
@@ -257,6 +299,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     const element = this.#elementRef.nativeElement;
     element.removeEventListener('click', this.#captureClickListener, { capture: true });
     element.removeEventListener('click', this.#bubbleClickListener);
+    this.#group?.ɵunregister(this.#member);
     this.#subscription.unsubscribe();
   }
 
@@ -266,6 +309,15 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     this.#reported.add(key);
     console[level](`[sd-card] ${message}`);
   }
+}
+
+/** Arrow keys of a radiogroup: right/down move forward, left/up move back. */
+const SD_CARD_ARROW_STEPS: Readonly<Record<string, 1 | -1>> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+
+/** Visible text of a badge for an accessible name. */
+function sdCardBadgeText(badge: SdBadgeData | undefined): string {
+  if (!badge) return '';
+  return [badge.label, badge.title].filter(part => part !== null && part !== undefined && part !== '').join(' ');
 }
 
 /** Joins the non-empty parts of an accessible name with commas. */

@@ -202,6 +202,177 @@ $weight-medium: var(--sd-font-weight-medium, 500);
   }
 }
 
+// ---- option ----
+.sd-card__option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: sp(12);
+  padding: 14px;
+}
+
+.sd-card__option-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sd-radius-8, 8px);
+  background: c('surface-muted');
+  color: c('text');
+}
+
+:host(.sd-selected) .sd-card__option-icon {
+  background: var(--sd-card-accent-light);
+  color: var(--sd-card-accent-dark);
+}
+
+.sd-card__option-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  // why: room for the check mark in the top-right corner.
+  padding-right: sp(20);
+}
+
+.sd-card__option-title-row {
+  display: flex;
+  align-items: center;
+  gap: sp(6);
+  min-width: 0;
+}
+
+.sd-card__option-title {
+  @include ellipsis;
+  min-width: 0;
+  font-size: fs(15);
+  line-height: lh(22);
+  font-weight: $weight-medium;
+}
+
+.sd-card__option-description {
+  font-size: fs(13);
+  line-height: lh(18);
+  color: c('text-secondary');
+  text-wrap: pretty;
+}
+
+.sd-card__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: c('border-strong');
+}
+
+:host(.sd-selected) .sd-card__check,
+.sd-card__entity-check {
+  color: var(--sd-card-accent);
+}
+
+.sd-card__badge {
+  flex: none;
+}
+
+// ---- entity ----
+.sd-card__entity {
+  display: flex;
+  flex-direction: column;
+  gap: sp(10);
+  padding: 12px 14px;
+}
+
+.sd-card__entity-head {
+  display: flex;
+  align-items: center;
+  gap: sp(10);
+  min-width: 0;
+}
+
+.sd-card__entity-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-card__entity-title {
+  @include ellipsis;
+  min-width: 0;
+  font-size: fs(14);
+  line-height: lh(20);
+  font-weight: $weight-medium;
+}
+
+:host(.sd-card--link) .sd-card__entity-title {
+  color: var(--sd-card-accent);
+}
+
+.sd-card__entity-subtitle {
+  @include ellipsis;
+  min-width: 0;
+  font-size: fs(13);
+  line-height: lh(18);
+  color: c('text-secondary');
+}
+
+.sd-card__entity-meta {
+  display: grid;
+  gap: sp(8);
+  margin: 0;
+
+  dt {
+    @include ellipsis;
+    font-size: fs(12);
+    line-height: lh(16);
+    color: c('text-secondary');
+  }
+
+  dd {
+    @include ellipsis;
+    margin: 0;
+    font-size: fs(13);
+    line-height: lh(18);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// sm: one 44px row (42px inside the 1px border).
+.sd-card__entity--sm {
+  flex-direction: row;
+  align-items: center;
+  height: 42px;
+  padding: 0 12px;
+
+  .sd-card__entity-title {
+    flex: 0 1 auto;
+  }
+
+  .sd-card__entity-subtitle {
+    flex: 1 1 0;
+  }
+}
+
+.sd-card__entity-check {
+  flex: none;
+  margin-left: auto;
+}
+
+.sd-card__avatar {
+  display: inline-flex;
+  flex: none;
+}
+
+.sd-card__avatar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: c('surface-muted');
+  color: c('text-secondary');
+}
+
 :host(:not(.sd-card--static):not(.sd-disabled):hover) {
   border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
   background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{map.get(color.$color_map, 'surface')});

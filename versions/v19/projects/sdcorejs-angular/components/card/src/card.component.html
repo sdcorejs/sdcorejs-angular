@@ -1,3 +1,28 @@
+<ng-template #badgeTpl let-badge>
+  <sd-badge
+    class="sd-card__badge"
+    size="sm"
+    [type]="badge.type ?? 'round'"
+    [color]="badge.color"
+    [icon]="badge.icon"
+    [title]="badge.title"
+    [label]="badge.label"
+    [tooltip]="badge.tooltip" />
+</ng-template>
+
+<!-- why: the card's accessible name already carries the title; the avatar is decoration here. -->
+<ng-template #avatarTpl let-avatar let-size="size">
+  <span class="sd-card__avatar" aria-hidden="true">
+    @if (avatar.icon) {
+      <span class="sd-card__avatar-icon" [style.width.px]="size" [style.height.px]="size">
+        <sd-icon [size]="size * 0.55 + 'px'" [name]="avatar.icon" />
+      </span>
+    } @else {
+      <sd-avatar [src]="avatar.src ?? avatar.text" [name]="avatar.text" [size]="size" />
+    }
+  </span>
+</ng-template>
+
 <ng-template #body>
   @switch (layout()) {
     @case ('stat') {
@@ -35,6 +60,72 @@
                 [title]="_stat.data.context"
                 >{{ _stat.data.context }}</span
               >
+            }
+          </div>
+        }
+      }
+    }
+    @case ('option') {
+      @if (option(); as _option) {
+        <div class="sd-card__option">
+          @if (_option.icon) {
+            <span class="sd-card__option-icon"><sd-icon size="22px" [name]="_option.icon" /></span>
+          }
+          <div class="sd-card__option-text">
+            <div class="sd-card__option-title-row">
+              <span class="sd-card__option-title" [title]="_option.title">{{ _option.title }}</span>
+              @if (_option.badge; as _badge) {
+                <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+              }
+            </div>
+            @if (_option.description) {
+              <span class="sd-card__option-description">{{ _option.description }}</span>
+            }
+          </div>
+          <sd-icon class="sd-card__check" size="20px" [name]="checkIcon()" />
+        </div>
+      }
+    }
+    @case ('entity') {
+      @if (entity(); as _entity) {
+        @if (resolvedSize() === 'sm') {
+          <div class="sd-card__entity sd-card__entity--sm">
+            @if (_entity.data.avatar; as _avatar) {
+              <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 24 }" />
+            }
+            <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
+            @if (_entity.data.subtitle) {
+              <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
+            }
+            @if (selected()) {
+              <sd-icon class="sd-card__entity-check" size="20px" name="check_circle" />
+            }
+          </div>
+        } @else {
+          <div class="sd-card__entity">
+            <div class="sd-card__entity-head">
+              @if (_entity.data.avatar; as _avatar) {
+                <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 36 }" />
+              }
+              <div class="sd-card__entity-text">
+                <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
+                @if (_entity.data.subtitle) {
+                  <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
+                }
+              </div>
+              @if (_entity.data.badge; as _badge) {
+                <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+              }
+            </div>
+            @if (_entity.meta.length) {
+              <dl class="sd-card__entity-meta" [style.grid-template-columns]="_entity.metaColumns">
+                @for (_item of _entity.meta; track $index) {
+                  <div>
+                    <dt [title]="_item.label">{{ _item.label }}</dt>
+                    <dd [title]="_item.value">{{ _item.value }}</dd>
+                  </div>
+                }
+              </dl>
             }
           </div>
         }
