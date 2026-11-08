@@ -149,7 +149,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         data-example-template="./examples/card-stat.example.html"
         data-example-style="./examples/card-example.scss"
         [props]="[
-          { name: 'content', value: '{ layout: 'stat', data }' },
+          { name: 'content', value: 'layout: stat' },
           { name: 'format', value: 'number | compact | percent | text' },
           { name: 'delta', value: '{ value, positive }' },
           { name: 'size', value: 'md | sm' },
@@ -165,7 +165,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         data-example-template="./examples/card-option.example.html"
         data-example-style="./examples/card-example.scss"
         [props]="[
-          { name: 'content', value: '{ layout: 'option', data }' },
+          { name: 'content', value: 'layout: option' },
           { name: 'behavior', value: 'select' },
           { name: 'role', value: 'radiogroup / checkbox' },
         ]"
@@ -180,7 +180,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         data-example-template="./examples/card-entity.example.html"
         data-example-style="./examples/card-example.scss"
         [props]="[
-          { name: 'content', value: '{ layout: 'entity', data }' },
+          { name: 'content', value: 'layout: entity' },
           { name: 'meta', value: 'tối đa 3, chỉ md' },
           { name: 'sdCardActions', value: 'ng-template' },
         ]"
@@ -195,7 +195,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         data-example-template="./examples/card-file.example.html"
         data-example-style="./examples/card-example.scss"
         [props]="[
-          { name: 'content', value: '{ layout: 'file', data }' },
+          { name: 'content', value: 'layout: file' },
           { name: 'type', value: 'MIME hoặc đuôi tệp' },
           { name: 'sdCardActions', value: 'ng-template' },
         ]"
@@ -210,7 +210,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         data-example-template="./examples/card-shortcut.example.html"
         data-example-style="./examples/card-example.scss"
         [props]="[
-          { name: 'content', value: '{ layout: 'shortcut', data }' },
+          { name: 'content', value: 'layout: shortcut' },
           { name: 'behavior', value: 'link' },
           { name: 'size', value: 'md | sm' },
         ]"

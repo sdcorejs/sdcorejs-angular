@@ -329,6 +329,9 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
       'The buttons below still pass Material icon names; when switching to Lucide, SdIcon maps them automatically through the corresponding aliases.',
   },
   'components/button/example-trang-thai': { title: 'States' },
+  'components/card/example-behavior': {
+    description: 'A standalone card defaults to static; inside sd-card-group it defaults to select.',
+  },
   'components/card/example-count-card-de-loc': {
     title: 'Count card as a filter',
     description: 'One card is selected; aria-pressed, toggle, counts over the whole dataset, intersected with search.',
@@ -356,9 +359,26 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     description:
       'A 24px icon in a 44px box; color follows role/status, with one consistent icon style. A read-only metric has no click behavior.',
   },
+  'components/card/example-layout-entity': {
+    description: 'The ⋯ button sits outside the anchor, so it never navigates. The sm variant is one row with a check mark.',
+  },
+  'components/card/example-layout-file': {
+    description: 'The file type comes from the extension of the name; sizes use base 1024.',
+  },
+  'components/card/example-layout-option': {
+    description:
+      'A single group of option cards is a radiogroup: Tab enters it once and the arrow keys move and select. A multiple group uses checkboxes.',
+  },
+  'components/card/example-layout-shortcut': {
+    description: 'A shortcut to a screen or a task.',
+  },
+  'components/card/example-layout-stat': {
+    description:
+      'Score card of a list: the revenue card is static inside the group, so it never changes the filter. The sm variant is one 32px row.',
+  },
   'components/card/example-metric-chi-doc': {
     title: 'Read-only metric',
-    description: 'Includes unit and scope; no hover/action cursor is created when it is not clickable.',
+    description: 'Includes unit and scope; behavior static creates no hover or action cursor.',
   },
   'components/card/example-object-comparewith': {
     description: 'The model and option are two objects with different references, yet the ACTIVE card is still selected by code.',
@@ -373,11 +393,15 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     description: 'The delta states the unit and period; an increase is not assumed to be good for every metric.',
   },
   'components/card/example-standalone-card': {
-    description: 'Click the card to toggle its state; the consumer reads the new state via #card=sdCard.',
+    description: 'A standalone card needs behavior=select to toggle; the consumer reads the new state via #card=sdCard.',
   },
   'components/card/example-tien-do-ty-le': {
     title: 'Progress / ratio',
     description: 'Shows both numerator and denominator; when the total is 0 it shows 0%, with no division by 0.',
+  },
+  'components/card/example-trang-thai-cua-layout': {
+    title: 'Layout states',
+    description: 'Loading keeps the height; Retry emits sdRetry and does not trigger the card behavior.',
   },
   'components/code-editor/example-che-do-xem-json': { title: 'JSON view mode' },
   'components/code-editor/example-ngon-ngu-html': { title: 'HTML language' },
