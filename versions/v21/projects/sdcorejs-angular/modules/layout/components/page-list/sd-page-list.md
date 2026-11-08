@@ -67,7 +67,7 @@ sd-page-list (flex column, height 100%)
 `compact()` is `true` while `autoCompact` is on and the viewport is lower than 720px. Then:
 
 - The external filter of the main table starts collapsed. A user who opens it keeps it open until `compact()` changes. `filter.externalFilterCollapsed` on the table option wins over this default.
-- Core has no shared score card: read `compact()` from `SD_PAGE_LIST` and switch your summary to one 36px line.
+- Cards inside the page list follow `compact()` through `SD_CARD_LAYOUT` (`@sdcorejs/angular/components/card`): a card without `size` renders `sm`. A score card is a `sd-card-group` of `layout: 'stat'` cards; add `sd-card-grid--sm` to the group while `compact()` (read from `SD_PAGE_LIST`) is true so the cards wrap on one 32px row.
 
 Secondary areas shrink first; only then does the body scroll to keep the 5-row minimum.
 
@@ -110,3 +110,4 @@ Injected by the body content and by child routes, for example `readonly list = i
 
 - `modules/layout/components/page/sd-page.md` — the frame inside
 - `components/table/sd-table.md` — `SD_TABLE_LAYOUT`, `filter.externalFilterCollapsed`
+- `components/card/sd-card.md` — `SD_CARD_LAYOUT`, `layout: 'stat'`, `sd-card-grid`

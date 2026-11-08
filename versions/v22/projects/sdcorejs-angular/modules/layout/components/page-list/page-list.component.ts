@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
+import { SD_CARD_LAYOUT, type SdCardLayout } from '@sdcorejs/angular/components/card';
 import { SD_TABLE_LAYOUT, type SdTableLayout } from '@sdcorejs/angular/components/table';
 import { SdPageComponent, type SdPageBackLink, type SdPageWidth } from '../page/page.component';
 
@@ -55,9 +56,11 @@ interface SavedScroll {
   providers: [
     { provide: SD_PAGE_LIST, useExisting: forwardRef(() => SdPageList) },
     { provide: SD_TABLE_LAYOUT, useExisting: forwardRef(() => SdPageList) },
+    // why: cards without an explicit `size` follow the compact state (`card.md` §6).
+    { provide: SD_CARD_LAYOUT, useExisting: forwardRef(() => SdPageList) },
   ],
 })
-export class SdPageList implements SdPageListContext, SdTableLayout {
+export class SdPageList implements SdPageListContext, SdTableLayout, SdCardLayout {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   readonly #injector = inject(Injector);
   readonly #destroyRef = inject(DestroyRef);

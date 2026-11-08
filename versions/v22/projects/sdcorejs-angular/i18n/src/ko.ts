@@ -1630,4 +1630,11 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count}명',
   'core.component.avatar.more-label': '{count}명 더 보기',
   'core.component.avatar.more-title': '외 {count}명',
+  // ---- Component: card ----
+  'core.component.card.error': '불러오지 못했습니다',
+  'core.component.card.retry': '다시 시도',
+  'core.component.card.delta-unchanged': '변동 없음',
+  'core.component.card.delta-up': '이전 기간 대비 {value} 증가',
+  'core.component.card.delta-down': '이전 기간 대비 {value} 감소',
+  'core.component.card.loading': '불러오는 중',
 };

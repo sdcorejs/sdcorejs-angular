@@ -1631,4 +1631,11 @@ export const EN_MESSAGES = {
   'core.component.avatar.group-label': '{count} people',
   'core.component.avatar.more-label': 'Show {count} more people',
   'core.component.avatar.more-title': '{count} more people',
+  // ---- Component: card ----
+  'core.component.card.error': "Couldn't load",
+  'core.component.card.retry': 'Retry',
+  'core.component.card.delta-unchanged': 'No change',
+  'core.component.card.delta-up': 'up {value} from previous period',
+  'core.component.card.delta-down': 'down {value} from previous period',
+  'core.component.card.loading': 'Loading',
 } as const;

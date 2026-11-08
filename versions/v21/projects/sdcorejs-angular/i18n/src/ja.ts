@@ -1636,4 +1636,11 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count} 人',
   'core.component.avatar.more-label': 'ほか {count} 人を表示',
   'core.component.avatar.more-title': 'ほか {count} 人',
+  // ---- Component: card ----
+  'core.component.card.error': '読み込めませんでした',
+  'core.component.card.retry': '再試行',
+  'core.component.card.delta-unchanged': '変化なし',
+  'core.component.card.delta-up': '前期比 {value} 増加',
+  'core.component.card.delta-down': '前期比 {value} 減少',
+  'core.component.card.loading': '読み込み中',
 };

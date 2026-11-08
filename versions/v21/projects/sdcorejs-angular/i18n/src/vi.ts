@@ -1635,4 +1635,11 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count} người',
   'core.component.avatar.more-label': 'Xem thêm {count} người',
   'core.component.avatar.more-title': '{count} người khác',
+  // ---- Component: card ----
+  'core.component.card.error': 'Không tải được',
+  'core.component.card.retry': 'Thử lại',
+  'core.component.card.delta-unchanged': 'Không đổi',
+  'core.component.card.delta-up': 'tăng {value} so với kỳ trước',
+  'core.component.card.delta-down': 'giảm {value} so với kỳ trước',
+  'core.component.card.loading': 'Đang tải',
 };
