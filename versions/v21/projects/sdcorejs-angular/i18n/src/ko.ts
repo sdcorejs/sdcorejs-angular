@@ -435,9 +435,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': '복사되었습니다!',
   'core.component.code-editor.copy': '코드 복사',
 
-  // ---- Component: history ----
-  'core.component.history.by': '작성자',
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': '양식에 맞는 .xlsx 파일을 선택하세요. 최대 {limit}행까지 가능합니다.',
   'core.component.import-excel.choose-file': 'Excel 파일 선택',
@@ -1637,4 +1634,22 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.card.delta-up': '이전 기간 대비 {value} 증가',
   'core.component.card.delta-down': '이전 기간 대비 {value} 감소',
   'core.component.card.loading': '불러오는 중',
+  // ---- Component: timeline ----
+  'core.component.timeline.label': '활동',
+  'core.component.timeline.empty': '아직 활동이 없습니다.',
+  'core.component.timeline.load-error': '활동을 불러오지 못했습니다.',
+  'core.component.timeline.load-more-error': '더 불러오지 못했습니다.',
+  'core.component.timeline.retry': '다시 시도',
+  'core.component.timeline.load-more': '{count}개 더 보기',
+  'core.component.timeline.loading': '불러오는 중…',
+  'core.component.timeline.show-more': '더 보기',
+  'core.component.timeline.show-less': '접기',
+  'core.component.timeline.more-changes': '+{count}개 변경 더 보기',
+  'core.component.timeline.today': '오늘',
+  'core.component.timeline.yesterday': '어제',
+  'core.component.timeline.just-now': '방금',
+  'core.component.timeline.minutes-ago': '{count}분 전',
+  'core.component.timeline.edited': '수정됨',
+  'core.component.timeline.comment-action': '님이 댓글을 남김',
+  'core.component.timeline.comment-aria': '{name}님의 댓글',
 };

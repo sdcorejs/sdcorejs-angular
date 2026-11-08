@@ -30,7 +30,6 @@ export const EN_PAGE_CONTENT: Readonly<Record<string, DocsContentTranslation>> =
     description: 'Google Drive-style file browser: folder tree, list/grid, search, preview, upload/download and a transfer queue.',
   },
   'modules-integrations-generic': { description: 'Dynamic form builder and renderer with drag/drop, conditions and runtime preview.' },
-  'components-history': { description: 'Vertical timeline for the change and approval history of a record.' },
   'components-image-editor': {
     description:
       'Free or fixed-ratio crop, 90° rotate, flip, pixel resize, zoom/pan, undo/redo and format choice; returns a real Blob/File on Apply.',
@@ -78,6 +77,7 @@ export const EN_PAGE_CONTENT: Readonly<Record<string, DocsContentTranslation>> =
   'components-tab': { description: 'Declarative tabs supporting icons, badges, disabled, closable and lazy content.' },
   'components-tab-router': { description: 'Browser-tab-style router shell that keeps state when switching back and forth between URLs.' },
   'components-table': { description: 'Local/server data table with pagination, filter, selection, commands and export.' },
+  'components-timeline': { description: 'Vertical timeline for comments, field changes and events of a record; grouped by day, loaded by cursor.' },
   'components-tree': { description: 'Static/lazy tree for catalogs and organizations, supporting selection, commands and templates.' },
   'components-upload-file': { description: 'File and image upload with drag and drop, validation, multi-file and preview.' },
   'components-view': { description: 'Read-only label/value pairs for detail pages.' },
@@ -455,9 +455,6 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     title: 'Accent-insensitive search',
     description: "Type 'duc', 'ha noi' or 'NGUYEN'; results also match accented text.",
   },
-  'components/history/example-lich-su-cap-nhat': { title: 'Update history', description: 'Short update history.' },
-  'components/history/example-luong-phe-duyet': { title: 'Approval flow' },
-  'components/history/example-timeline-rong': { title: 'Empty timeline' },
   'components/image-editor/example-anh-dai-dien-vuong-1-1': {
     title: 'Square 1:1 avatar',
     description:
@@ -852,6 +849,31 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'components/table/example-tree-selector-command-chinh-indent': {
     title: 'Tree + selector + command + indent adjustment',
     description: 'A combined demo of tree rows with a checkbox selector, bulk actions, per-row commands and direct indent changes.',
+  },
+  'components/timeline/example-co-md-nhom-theo-ngay': {
+    title: 'Size md, grouped by day',
+    description: 'All three layouts; Show more appears only when the text is really clamped, and changes from the fourth on fold into +N.',
+  },
+  'components/timeline/example-co-sm-trong-cot-phu': {
+    title: 'Size sm in a side column',
+    description: 'A 360px side column: 24px markers, 13px text, no source.',
+  },
+  'components/timeline/example-luong-duyet': {
+    title: 'Approval flow',
+    description: 'Without day groups: the title stands alone and the actor and full time go on a second line.',
+  },
+  'components/timeline/example-nhat-ky-cap-nhat': {
+    title: 'Change log',
+    description: 'Old values are struck through, empty values show a dash and statuses show as badges; rows from the fourth on fold into +N more changes.',
+  },
+  'components/timeline/example-rong': { title: 'Empty' },
+  'components/timeline/example-tac-vu-cua-binh-luan': {
+    title: 'Comment actions',
+    description: 'Edit / Delete at the end of the first line, shown on hover or focus.',
+  },
+  'components/timeline/example-tai-theo-cursor': {
+    title: 'Cursor paging',
+    description: 'An 800ms mock: loading, load more, error (switch), empty and reload().',
   },
   'components/tree/example-custom-item-template': {
     description: 'sdTreeItemDef receives the context item, treeItem, level, selected, isLeaf, toggle, select.',

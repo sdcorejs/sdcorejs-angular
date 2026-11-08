@@ -435,9 +435,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': '已复制！',
   'core.component.code-editor.copy': '复制代码',
 
-  // ---- Component: history ----
-  'core.component.history.by': '操作人',
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': '请选择符合模板的 .xlsx 文件，最多 {limit} 行。',
   'core.component.import-excel.choose-file': '选择 Excel 文件',
@@ -1624,4 +1621,22 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.card.delta-up': '较上期增加 {value}',
   'core.component.card.delta-down': '较上期减少 {value}',
   'core.component.card.loading': '加载中',
+  // ---- Component: timeline ----
+  'core.component.timeline.label': '动态',
+  'core.component.timeline.empty': '暂无动态。',
+  'core.component.timeline.load-error': '无法加载动态。',
+  'core.component.timeline.load-more-error': '无法加载更多。',
+  'core.component.timeline.retry': '重试',
+  'core.component.timeline.load-more': '再显示 {count} 条',
+  'core.component.timeline.loading': '加载中…',
+  'core.component.timeline.show-more': '展开',
+  'core.component.timeline.show-less': '收起',
+  'core.component.timeline.more-changes': '另有 {count} 项更改',
+  'core.component.timeline.today': '今天',
+  'core.component.timeline.yesterday': '昨天',
+  'core.component.timeline.just-now': '刚刚',
+  'core.component.timeline.minutes-ago': '{count} 分钟前',
+  'core.component.timeline.edited': '已编辑',
+  'core.component.timeline.comment-action': '发表了评论',
+  'core.component.timeline.comment-aria': '{name} 的评论',
 };

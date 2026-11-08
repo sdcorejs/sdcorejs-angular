@@ -1,0 +1,237 @@
+@let _sm = size() === 'sm';
+@let _day = groupBy() === 'day';
+<section
+  class="sd-timeline"
+  role="region"
+  [class.sd-timeline--sm]="_sm"
+  [attr.aria-label]="regionLabel()"
+  [attr.aria-busy]="phase() === 'loading' ? 'true' : null"
+  [attr.data-autoid]="resolvedAutoId()">
+  @if (phase() === 'loading' && entries().length) {
+    <div class="sd-timeline__progress" role="progressbar" [attr.aria-label]="'core.component.timeline.loading' | sdTranslate"></div>
+  }
+  @if (!entries().length && phase() === 'loading') {
+    @for (row of skeletonRows; track $index) {
+      <div class="sd-timeline__skeleton" aria-hidden="true">
+        <span class="sd-timeline__skeleton-marker"></span>
+        <span class="sd-timeline__skeleton-lines">
+          @for (width of row; track $index) {
+            <span class="sd-timeline__skeleton-bar" [style.width.%]="width"></span>
+          }
+        </span>
+      </div>
+    }
+  } @else if (!entries().length && phase() === 'error') {
+    <div class="sd-timeline__state sd-timeline__state--error" role="alert">
+      <sd-icon class="sd-timeline__state-icon sd-timeline__state-icon--error" size="28px" name="error" />
+      <p class="sd-timeline__state-text">{{ 'core.component.timeline.load-error' | sdTranslate }}</p>
+      <sd-button class="sd-timeline__retry" type="outline" size="sm" [title]="'core.component.timeline.retry' | sdTranslate" (click)="reload()" />
+    </div>
+  } @else if (!entries().length) {
+    <div class="sd-timeline__state sd-timeline__state--empty">
+      @if (emptyTemplate(); as _empty) {
+        <ng-container [ngTemplateOutlet]="_empty.template" />
+      } @else {
+        <sd-icon class="sd-timeline__state-icon" size="28px" name="history" />
+        <p class="sd-timeline__state-text">{{ emptyLabel() }}</p>
+      }
+    </div>
+  } @else {
+    <ol class="sd-timeline__list" [attr.role]="feed() ? 'feed' : null" [attr.aria-busy]="feed() && phase() === 'more' ? 'true' : null">
+      @for (group of groups(); track group.key) {
+        @if (_day) {
+          <li class="sd-timeline__group">
+            <div class="sd-timeline__day" role="heading" [attr.aria-level]="headingLevel()">{{ group.heading }}</div>
+            <ol class="sd-timeline__items">
+              @for (view of group.items; track view.key; let last = $last) {
+                <ng-container [ngTemplateOutlet]="itemTpl" [ngTemplateOutletContext]="{ $implicit: view, last }" />
+              }
+            </ol>
+          </li>
+        } @else {
+          @for (view of group.items; track view.key; let last = $last) {
+            <ng-container [ngTemplateOutlet]="itemTpl" [ngTemplateOutletContext]="{ $implicit: view, last }" />
+          }
+        }
+      }
+    </ol>
+    @if (phase() === 'more-error') {
+      <div class="sd-timeline__more-error" role="alert">
+        <sd-icon size="18px" name="error" />
+        <span>{{ 'core.component.timeline.load-more-error' | sdTranslate }}</span>
+        <button type="button" class="sd-timeline__link-button" (click)="loadMore()">{{ 'core.component.timeline.retry' | sdTranslate }}</button>
+      </div>
+    } @else if (phase() === 'more') {
+      <div class="sd-timeline__loading-more" role="status">
+        <span class="sd-timeline__spinner" aria-hidden="true"></span>
+        {{ 'core.component.timeline.loading' | sdTranslate }}
+      </div>
+    } @else if (hasMore()) {
+      <button type="button" class="sd-timeline__link-button sd-timeline__load-more" (click)="loadMore()">
+        {{ 'core.component.timeline.load-more' | sdTranslate: { count: pageSize() } }}
+      </button>
+    }
+    @if (hasMore() && feed()) {
+      <div #sentinel class="sd-timeline__sentinel" aria-hidden="true"></div>
+    }
+  }
+</section>
+
+<ng-template #itemTpl let-view let-last="last">
+  @let _item = view.item;
+  @let _sm = size() === 'sm';
+  <li class="sd-timeline__item" [class.sd-timeline__item--last]="last" [attr.data-item-id]="_item.id">
+    <article
+      class="sd-timeline__entry"
+      [attr.aria-labelledby]="view.labelId"
+      [attr.aria-posinset]="feed() ? view.position : null"
+      [attr.aria-setsize]="feed() ? (hasMore() ? -1 : entries().length) : null">
+      <span class="sd-timeline__sr-only" [id]="view.labelId">{{ view.label }}</span>
+      <span class="sd-timeline__marker-slot" aria-hidden="true">
+        @if (_item.actor; as _actor) {
+          <sd-avatar [src]="_actor.avatar || _actor.name" [name]="_actor.name" [size]="_sm ? 24 : 32" />
+        } @else {
+          <span class="sd-timeline__marker" [class]="_item.color ? 'sd-timeline__marker--' + _item.color : ''">
+            <sd-icon [size]="_sm ? '15px' : '18px'" [name]="view.icon" />
+          </span>
+        }
+      </span>
+      <div class="sd-timeline__body">
+        <div class="sd-timeline__head">
+          @if (groupBy() === 'day') {
+            @if (_item.actor; as _actor) {
+              <span class="sd-timeline__actor">{{ _actor.name }}</span>
+            }
+            <span class="sd-timeline__action">{{ view.action }}</span>
+            @if (view.badge; as _badge) {
+              <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+            }
+            <ng-container [ngTemplateOutlet]="timeTpl" [ngTemplateOutletContext]="{ $implicit: view }" />
+            @if (_item.source && !_sm) {
+              <span class="sd-timeline__source">· {{ _item.source }}</span>
+            }
+          } @else {
+            <span class="sd-timeline__title">{{ view.action }}</span>
+            @if (view.badge; as _badge) {
+              <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+            }
+          }
+          @if (actionsTemplate(); as _actions) {
+            <span class="sd-timeline__actions">
+              <ng-container [ngTemplateOutlet]="_actions.template" [ngTemplateOutletContext]="{ $implicit: _item }" />
+            </span>
+          }
+        </div>
+        @if (groupBy() === 'none') {
+          <div class="sd-timeline__meta">
+            @if (_item.actor; as _actor) {
+              <span>{{ _actor.name }} ·</span>
+            }
+            <ng-container [ngTemplateOutlet]="timeTpl" [ngTemplateOutletContext]="{ $implicit: view }" />
+            @if (_item.source && !_sm) {
+              <span>· {{ _item.source }}</span>
+            }
+          </div>
+        }
+        @if (contentTemplate(); as _content) {
+          <div class="sd-timeline__custom">
+            <ng-container [ngTemplateOutlet]="_content.template" [ngTemplateOutletContext]="{ $implicit: _item }" />
+          </div>
+        } @else {
+          @switch (_item.content.layout) {
+            @case ('comment') {
+              @let _textKey = _item.id + ':text';
+              <div class="sd-timeline__comment">
+                <p class="sd-timeline__text sd-timeline__clamp" [class.sd-timeline__clamp--open]="expanded().has(_textKey)" [attr.data-clamp]="_textKey">
+                  {{ _item.content.data.text }}
+                </p>
+              </div>
+              <ng-container [ngTemplateOutlet]="toggleTpl" [ngTemplateOutletContext]="{ $implicit: _textKey }" />
+            }
+            @case ('change') {
+              @if (view.changes; as _changes) {
+                <dl class="sd-timeline__changes">
+                  @for (row of _changes.rows; track $index) {
+                    <dt class="sd-timeline__change-label" [title]="row.label">{{ row.label }}</dt>
+                    <dd class="sd-timeline__change-value">
+                      <ng-container [ngTemplateOutlet]="valueTpl" [ngTemplateOutletContext]="{ $implicit: row.from, from: true }" />
+                      @if (row.badges) {
+                        <sd-icon class="sd-timeline__arrow" size="16px" name="arrow_forward" />
+                      } @else {
+                        <span class="sd-timeline__arrow" aria-hidden="true">→</span>
+                      }
+                      <ng-container [ngTemplateOutlet]="valueTpl" [ngTemplateOutletContext]="{ $implicit: row.to, from: false }" />
+                    </dd>
+                  }
+                </dl>
+                @if (_changes.hidden) {
+                  @let _changesKey = _item.id + ':changes';
+                  @let _open = expanded().has(_changesKey);
+                  <button type="button" class="sd-timeline__link-button" [attr.aria-expanded]="_open" (click)="toggle(_changesKey)">
+                    {{ _open ? ('core.component.timeline.show-less' | sdTranslate) : ('core.component.timeline.more-changes' | sdTranslate: { count: _changes.hidden }) }}
+                  </button>
+                }
+              }
+              <ng-container [ngTemplateOutlet]="noteTpl" [ngTemplateOutletContext]="{ $implicit: view }" />
+            }
+            @case ('event') {
+              <ng-container [ngTemplateOutlet]="noteTpl" [ngTemplateOutletContext]="{ $implicit: view }" />
+            }
+          }
+        }
+      </div>
+    </article>
+  </li>
+</ng-template>
+
+<ng-template #timeTpl let-view>
+  <time class="sd-timeline__time" [attr.datetime]="view.time.iso || null" [title]="view.timeTitle">{{ view.timeText }}</time>
+  @if (view.item.content.layout === 'comment' && view.item.content.data.edited) {
+    <span class="sd-timeline__edited">· {{ 'core.component.timeline.edited' | sdTranslate }}</span>
+  }
+</ng-template>
+
+<ng-template #noteTpl let-view>
+  @if (view.note) {
+    @let _noteKey = view.item.id + ':text';
+    <p class="sd-timeline__note sd-timeline__clamp" [class.sd-timeline__clamp--open]="expanded().has(_noteKey)" [attr.data-clamp]="_noteKey">
+      {{ view.note }}
+    </p>
+    <ng-container [ngTemplateOutlet]="toggleTpl" [ngTemplateOutletContext]="{ $implicit: _noteKey }" />
+  }
+</ng-template>
+
+<ng-template #toggleTpl let-key>
+  @if (clamped().has(key)) {
+    @let _open = expanded().has(key);
+    <button type="button" class="sd-timeline__link-button sd-timeline__toggle" [attr.aria-expanded]="_open" (click)="toggle(key)">
+      {{ (_open ? 'core.component.timeline.show-less' : 'core.component.timeline.show-more') | sdTranslate }}
+    </button>
+  }
+</ng-template>
+
+<ng-template #valueTpl let-value let-from="from">
+  @switch (value.kind) {
+    @case ('empty') {
+      <span class="sd-timeline__empty-value">—</span>
+    }
+    @case ('badge') {
+      <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: value.badge }" />
+    }
+    @default {
+      <span [class]="from ? 'sd-timeline__from' : 'sd-timeline__to'" [title]="value.text">{{ value.text }}</span>
+    }
+  }
+</ng-template>
+
+<ng-template #badgeTpl let-badge>
+  <sd-badge
+    class="sd-timeline__badge"
+    size="sm"
+    [type]="badge.type ?? 'round'"
+    [color]="badge.color"
+    [icon]="badge.icon"
+    [title]="badge.title"
+    [label]="badge.label"
+    [tooltip]="badge.tooltip" />
+</ng-template>

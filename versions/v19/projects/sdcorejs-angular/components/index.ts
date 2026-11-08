@@ -32,7 +32,7 @@ export * from '@sdcorejs/angular/components/data-state';
 export * from '@sdcorejs/angular/components/job-progress';
 export * from '@sdcorejs/angular/components/audit-diff';
 export * from '@sdcorejs/angular/components/ckeditor-styles';
-export * from '@sdcorejs/angular/components/history';
+export * from '@sdcorejs/angular/components/timeline';
 export * from '@sdcorejs/angular/components/operator';
 export * from '@sdcorejs/angular/components/stepper';
 export * from '@sdcorejs/angular/components/tab';

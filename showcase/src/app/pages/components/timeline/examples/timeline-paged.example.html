@@ -1,0 +1,10 @@
+<div class="timeline-controls">
+  <sd-button type="outline" [title]="'loadMore: ' + loadMore()" (click)="loadMore.set(loadMore() === 'button' ? 'auto' : 'button')" />
+  <sd-button type="outline" [title]="failing() ? 'Lỗi: bật' : 'Lỗi: tắt'" (click)="failing.set(!failing())" />
+  <sd-button type="outline" [title]="empty() ? 'Dữ liệu: rỗng' : 'Dữ liệu: 47 mục'" (click)="empty.set(!empty())" />
+  <sd-button type="outline" title="reload()" (click)="timeline().reload()" />
+</div>
+<div class="timeline-box">
+  <sd-timeline autoId="paged" [option]="option()" (sdLoadError)="lastError.set($any($event)?.message ?? 'error')" />
+</div>
+<p class="timeline-readout">sdLoadError: {{ lastError() || '—' }}</p>

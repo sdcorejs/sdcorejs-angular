@@ -69,7 +69,7 @@ The token is read internally by `@sdcorejs/angular` services and components that
 - `I18nService`: resolves the active catalog from `language` (falling back to `localStorage`, then `'vi'`).
 - Number-formatting pipes and form fields: pick the thousands/decimal separator from `format.number`.
 - Components rendering currency/numeric values inherit the global format — individual components rarely override it.
-- `SdDateTimeService` (`@sdcorejs/angular/services/date-time`): reads `timeZone` once; the date pipes, date forms, `sd-table`, `sd-import-excel`, `sd-form-generic`, `sd-history` and `sd-file-explorer` convert dates through it.
+- `SdDateTimeService` (`@sdcorejs/angular/services/date-time`): reads `timeZone` once; the date pipes, date forms, `sd-table`, `sd-import-excel`, `sd-form-generic`, `sd-timeline` and `sd-file-explorer` convert dates through it.
 
 To read the token in your own code:
 
