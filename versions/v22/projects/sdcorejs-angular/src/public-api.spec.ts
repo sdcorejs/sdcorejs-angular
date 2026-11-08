@@ -517,9 +517,17 @@ describe('sd-angular public API', () => {
 
     expect(leaf.SdCard).toBeDefined();
     expect(leaf.SdCardGroup).toBeDefined();
-    expect(Object.keys(leaf).sort()).toEqual(['SdCard', 'SdCardGroup']);
+    expect(Object.keys(leaf).sort()).toEqual([
+      'SD_CARD_CONFIGURATION',
+      'SD_CARD_LAYOUT',
+      'SdCard',
+      'SdCardActionsDirective',
+      'SdCardGroup',
+    ]);
     expect(components.SdCard).toBe(leaf.SdCard);
     expect(components.SdCardGroup).toBe(leaf.SdCardGroup);
+    expect(components.SdCardActionsDirective).toBe(leaf.SdCardActionsDirective);
+    expect(components.SD_CARD_LAYOUT).toBe(leaf.SD_CARD_LAYOUT);
   });
 
   it('exposes entity-picker and tree-select form entrypoints with generic key models', async () => {

@@ -1,5 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+import { CardBehaviorExampleComponent } from './examples/card-behavior.example';
+import { CardStatExampleComponent } from './examples/card-stat.example';
+import { CardOptionExampleComponent } from './examples/card-option.example';
+import { CardEntityExampleComponent } from './examples/card-entity.example';
+import { CardFileExampleComponent } from './examples/card-file.example';
+import { CardShortcutExampleComponent } from './examples/card-shortcut.example';
+import { CardLayoutStatesExampleComponent } from './examples/card-layout-states.example';
 import { CardCompareExampleComponent } from './examples/card-compare.example';
 import { CardMultipleExampleComponent } from './examples/card-multiple.example';
 import { CardScoreComparisonExampleComponent } from './examples/card-score-comparison.example';
@@ -21,6 +28,13 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
   imports: [
     DemoPageComponent,
     DemoSectionComponent,
+    CardBehaviorExampleComponent,
+    CardStatExampleComponent,
+    CardOptionExampleComponent,
+    CardEntityExampleComponent,
+    CardFileExampleComponent,
+    CardShortcutExampleComponent,
+    CardLayoutStatesExampleComponent,
     CardStandaloneExampleComponent,
     CardSingleExampleComponent,
     CardMultipleExampleComponent,
@@ -39,7 +53,22 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
   template: `<demo-page
     #demoPage
     title="Card"
-    description="Selectable shell cho nội dung do consumer sở hữu; dùng độc lập hoặc trong group single/multiple.">
+    description="Một card với ba behavior (static, link, select) và năm layout nội dung (stat, option, entity, file, shortcut); vẫn chiếu được nội dung tự do.">
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-behavior') {
+      <demo-section
+        heading="Behavior"
+        data-example-typescript="./examples/card-behavior.example.ts"
+        data-example-template="./examples/card-behavior.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'behavior', value: 'static | link | select' },
+          { name: 'link / queryParams / href', value: 'link' },
+          { name: 'click', value: 'link, select' },
+        ]"
+        note="Đứng riêng mặc định là static; trong sd-card-group mặc định là select.">
+        <app-card-behavior-example></app-card-behavior-example>
+      </demo-section>
+    }
     @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-standalone-card') {
       <demo-section
         heading="Standalone card"
@@ -51,7 +80,7 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
           { name: 'click', value: 'Event' },
           { name: 'autoId', value: 'stable E2E suffix' },
         ]"
-        note="Click card để toggle state; consumer đọc state mới qua #card=sdCard.">
+        note="Card đứng riêng cần behavior=select để bật/tắt; consumer đọc state mới qua #card=sdCard.">
         <app-card-standalone-example></app-card-standalone-example>
       </demo-section>
     }
@@ -113,14 +142,109 @@ import { CardStatesExampleComponent } from './examples/card-states.example';
         <app-card-states-example></app-card-states-example>
       </demo-section>
     }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-layout-stat') {
+      <demo-section
+        heading="Layout stat"
+        data-example-typescript="./examples/card-stat.example.ts"
+        data-example-template="./examples/card-stat.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'content', value: 'layout: stat' },
+          { name: 'format', value: 'number | compact | percent | text' },
+          { name: 'delta', value: '{ value, positive }' },
+          { name: 'size', value: 'md | sm' },
+        ]"
+        note="Score card của danh sách: thẻ doanh thu là behavior static nằm trong group nên không đổi bộ lọc. Bản sm là một dòng 32px.">
+        <app-card-stat-example></app-card-stat-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-layout-option') {
+      <demo-section
+        heading="Layout option"
+        data-example-typescript="./examples/card-option.example.ts"
+        data-example-template="./examples/card-option.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'content', value: 'layout: option' },
+          { name: 'behavior', value: 'select' },
+          { name: 'role', value: 'radiogroup / checkbox' },
+        ]"
+        note="Group single toàn option thành radiogroup: Tab vào một lần, mũi tên chuyển và chọn. Group multiple là checkbox.">
+        <app-card-option-example></app-card-option-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-layout-entity') {
+      <demo-section
+        heading="Layout entity"
+        data-example-typescript="./examples/card-entity.example.ts"
+        data-example-template="./examples/card-entity.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'content', value: 'layout: entity' },
+          { name: 'meta', value: 'tối đa 3, chỉ md' },
+          { name: 'sdCardActions', value: 'ng-template' },
+        ]"
+        note="Nút ⋯ nằm ngoài thẻ a nên không điều hướng. Bản sm là một dòng, có dấu chọn.">
+        <app-card-entity-example></app-card-entity-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-layout-file') {
+      <demo-section
+        heading="Layout file"
+        data-example-typescript="./examples/card-file.example.ts"
+        data-example-template="./examples/card-file.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'content', value: 'layout: file' },
+          { name: 'type', value: 'MIME hoặc đuôi tệp' },
+          { name: 'sdCardActions', value: 'ng-template' },
+        ]"
+        note="Loại tệp suy từ đuôi tên; dung lượng theo cơ số 1024.">
+        <app-card-file-example></app-card-file-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-layout-shortcut') {
+      <demo-section
+        heading="Layout shortcut"
+        data-example-typescript="./examples/card-shortcut.example.ts"
+        data-example-template="./examples/card-shortcut.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'content', value: 'layout: shortcut' },
+          { name: 'behavior', value: 'link' },
+          { name: 'size', value: 'md | sm' },
+        ]"
+        note="Lối tắt tới một màn hoặc tác vụ.">
+        <app-card-shortcut-example></app-card-shortcut-example>
+      </demo-section>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai-cua-layout') {
+      <demo-section
+        heading="Trạng thái của layout"
+        data-example-typescript="./examples/card-layout-states.example.ts"
+        data-example-template="./examples/card-layout-states.example.html"
+        data-example-style="./examples/card-example.scss"
+        [props]="[
+          { name: 'loading', value: 'boolean' },
+          { name: 'error', value: 'boolean' },
+          { name: 'sdRetry', value: 'void' },
+          { name: 'disabled', value: 'boolean' },
+        ]"
+        note="Loading giữ nguyên chiều cao; Thử lại phát sdRetry và không kích hoạt behavior.">
+        <app-card-layout-states-example></app-card-layout-states-example>
+      </demo-section>
+    }
     @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-metric-chi-doc') {
       <demo-section
         heading="Metric chỉ đọc"
         data-example-typescript="./examples/card-score-metric.example.ts"
         data-example-template="./examples/card-score-metric.example.html"
         data-example-style="./examples/card-score-example.scss"
-        [props]="[{ name: 'sd-section', value: 'hideHeader' }]"
-        note="Có đơn vị và phạm vi; không tạo hover/cursor hành động khi không click được.">
+        [props]="[
+          { name: 'behavior', value: 'static' },
+          { name: 'content', value: 'stat' },
+        ]"
+        note="Có đơn vị và phạm vi; behavior static không tạo hover/cursor hành động.">
         <app-card-score-metric-example></app-card-score-metric-example>
       </demo-section>
     }

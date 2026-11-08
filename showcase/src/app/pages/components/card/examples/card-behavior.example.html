@@ -1,0 +1,23 @@
+<div class="example-stack">
+  <div class="sd-card-grid">
+    <!-- static: no role, no focus, no hover; the default outside a group. -->
+    <sd-card autoId="behavior-static" [content]="revenue" />
+    <!-- link: one real <a> around the card; opens in a new tab with Ctrl/Cmd+click. -->
+    <sd-card
+      behavior="link"
+      autoId="behavior-link"
+      [link]="[]"
+      [queryParams]="{ status: 'pending' }"
+      [content]="pending"
+      (click)="lastEvent.set('link: điều hướng tới ?status=pending')" />
+    <!-- select: a standalone card toggles itself; inside sd-card-group it drives the model. -->
+    <sd-card
+      #select="sdCard"
+      behavior="select"
+      value="shipping"
+      autoId="behavior-select"
+      [content]="shipping"
+      (click)="lastEvent.set('select: selected() = ' + select.selected())" />
+  </div>
+  <p class="model-readout">{{ lastEvent() }}</p>
+</div>

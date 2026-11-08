@@ -221,8 +221,8 @@ test.describe('E1-5 at 1440×650', () => {
 
   test('compact folds the score card and the external filter so the page still fits', async ({ page }) => {
     await open(page, crowded);
-    await expect(page.locator('[data-autoid="components-card-group-order-summary"]')).toHaveClass(/summary--compact/);
-    expect(Math.round((await page.locator('[data-autoid="components-card-group-order-summary"]').boundingBox())!.height)).toBe(36);
+    await expect(page.locator('[data-autoid="components-card-group-order-summary"]')).toHaveClass(/sd-card-grid--sm/);
+    expect(Math.round((await page.locator('[data-autoid="components-card-group-order-summary"]').boundingBox())!.height)).toBe(32);
     await expect(page.locator('sd-page-list external-filter .sd-external-filter-body')).toHaveCount(0);
     expectFits(await measure(page), 'compact');
   });

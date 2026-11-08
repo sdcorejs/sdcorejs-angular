@@ -1,0 +1,24 @@
+<div class="example-stack">
+  <div class="sd-card-grid">
+    @for (shortcut of shortcuts; track shortcut.key) {
+      <sd-card
+        behavior="link"
+        [link]="[]"
+        [queryParams]="{ shortcut: shortcut.key }"
+        [autoId]="'shortcut-' + shortcut.key"
+        [content]="{ layout: 'shortcut', data: shortcut.data }" />
+    }
+  </div>
+  <!-- sm: icon and label on one row. -->
+  <div class="sd-card-grid sd-card-grid--sm">
+    @for (shortcut of compactShortcuts; track shortcut.key) {
+      <sd-card
+        behavior="link"
+        size="sm"
+        [link]="[]"
+        [queryParams]="{ shortcut: shortcut.key }"
+        [autoId]="'shortcut-sm-' + shortcut.key"
+        [content]="{ layout: 'shortcut', data: shortcut.data }" />
+    }
+  </div>
+</div>

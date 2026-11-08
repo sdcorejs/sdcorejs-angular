@@ -1,0 +1,166 @@
+@use 'card-shared' as *;
+
+// Loading and error states of the built-in layouts (`card.md` §6).
+
+// ---- loading: grey blocks where the text goes; every block keeps its line box so the height never changes ----
+@mixin skeleton($width, $height, $line) {
+  display: block;
+  width: $width;
+  max-width: 100%;
+  height: $height;
+  margin-block: calc((#{$line} - #{$height}) / 2);
+  overflow: hidden;
+  border-radius: var(--sd-radius-4, 4px);
+  background: c('surface-muted');
+  color: transparent;
+}
+
+:host(.sd-card--loading) {
+  cursor: progress;
+
+  .sd-card__stat-value {
+    @include skeleton(56px, 22px, 32px);
+  }
+
+  .sd-card__stat--sm .sd-card__stat-value {
+    @include skeleton(40px, 12px, 20px);
+  }
+
+  .sd-card__stat-row {
+    align-items: center;
+  }
+
+  .sd-card__delta,
+  .sd-card__stat-icon {
+    visibility: hidden;
+  }
+
+  .sd-card__stat-context {
+    @include skeleton(110px, 10px, 16px);
+  }
+
+  .sd-card__entity-title,
+  .sd-card__option-title {
+    @include skeleton(60%, 12px, 20px);
+  }
+
+  .sd-card__option-title {
+    margin-block: 5px;
+  }
+
+  .sd-card__entity-subtitle,
+  .sd-card__option-description,
+  .sd-card__shortcut-description,
+  .sd-card__file-name {
+    @include skeleton(85%, 10px, 18px);
+  }
+
+  .sd-card__shortcut-label {
+    @include skeleton(60%, 12px, 20px);
+  }
+
+  .sd-card__file-meta {
+    @include skeleton(60%, 10px, 16px);
+  }
+
+  .sd-card__entity-meta dt,
+  .sd-card__entity-meta dd {
+    @include skeleton(70%, 10px, 16px);
+  }
+
+  .sd-card__entity-meta dd {
+    margin-block: 4px;
+  }
+
+  .sd-card__avatar {
+    border-radius: 50%;
+    background: c('surface-muted');
+
+    > * {
+      visibility: hidden;
+    }
+  }
+
+  .sd-card__option-icon,
+  .sd-card__file-media {
+    background: c('surface-muted');
+
+    > * {
+      visibility: hidden;
+    }
+  }
+
+  .sd-card__shortcut-icon {
+    border-radius: var(--sd-radius-4, 4px);
+    background: c('surface-muted');
+    color: transparent;
+  }
+
+  .sd-card__badge,
+  .sd-card__check,
+  .sd-card__entity-check,
+  .sd-card__file-check {
+    visibility: hidden;
+  }
+}
+
+// ---- error ----
+.sd-card__stat-value--empty {
+  color: c('text-secondary');
+}
+
+:host(.sd-card--link) .sd-card__stat-value--empty,
+:host(.sd-card--select) .sd-card__stat-value--empty {
+  color: c('text-secondary');
+}
+
+.sd-card__stat-context--failed {
+  overflow: visible;
+  color: c('error-dark');
+}
+
+.sd-card__error {
+  display: flex;
+  align-items: center;
+  gap: sp(8);
+  min-height: 44px;
+  padding: 10px 14px;
+  color: c('error-dark');
+  font-size: fs(13);
+  line-height: lh(18);
+}
+
+.sd-card__error-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+// Text button; the 32px (44px coarse) hit area overflows the text line without changing the layout height.
+.sd-card__retry {
+  min-height: 32px;
+  margin: -8px 0;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  padding: 0 4px;
+  background: transparent;
+  color: var(--sd-card-accent);
+  font: inherit;
+  font-weight: $weight-medium;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: var(--sd-focus-ring-offset, 2px);
+  }
+}
+
+@media (pointer: coarse) {
+  .sd-card__retry {
+    min-height: 44px;
+    margin: -14px 0;
+  }
+}

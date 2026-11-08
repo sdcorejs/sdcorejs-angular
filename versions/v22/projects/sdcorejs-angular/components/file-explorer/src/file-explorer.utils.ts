@@ -6,6 +6,7 @@ import {
 } from './file-explorer-icons.generated';
 import type { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { SdFileExplorerItem } from './file-explorer.model';
+import { ɵsdFormatBytes } from '@sdcorejs/angular/utilities/extensions';
 
 /** Family of an item: picks the type label and the preview renderer. The glyph comes from `sdFileExplorerIconName`. */
 export type SdFileExplorerFileType =
@@ -118,22 +119,9 @@ export function sdFileExplorerPreviewKind(type: SdFileExplorerFileType): SdFileE
   return 'none';
 }
 
-/**
- * Human-readable size: `846 KB`, `2,4 MB` (vi) / `2.4 MB` (en).
- * One decimal below 10 units, none above — the precision users expect from file managers.
- */
+/** Human-readable size: `846 KB`, `2,4 MB` (vi) / `2.4 MB` (en). Same rules as `sd-card` file sizes. */
 export function sdFileExplorerFormatSize(bytes: number | null | undefined, locale: string): string {
-  if (typeof bytes !== 'number' || !Number.isFinite(bytes) || bytes < 0) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit++;
-  }
-  const digits = value < 10 ? 1 : 0;
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value)} ${units[unit]}`;
+  return ɵsdFormatBytes(bytes, locale);
 }
 
 /** Parses `SdFileExplorerItem.modifiedAt`; `null` when missing or invalid. */

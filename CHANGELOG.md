@@ -35,14 +35,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.
 
 **Highlights**
 
 - `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state
+- `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`
 - `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
 
 ### Changed (BREAKING for consumers)
+
+#### Card
+
+- A standalone `sd-card` (outside `sd-card-group`) is `static` by default: no role, no focus, its native click passes through, it no longer toggles `selected()` and it never emits `(click)`. Cards inside a group still default to `select` and look and behave as before.
+  - **Migration:** add `behavior="select"` to a standalone card that must toggle.
+
+    ```diff
+    - <sd-card #card="sdCard" value="participating" (click)="onToggle(card.selected())">…</sd-card>
+    + <sd-card #card="sdCard" behavior="select" value="participating" (click)="onToggle(card.selected())">…</sd-card>
+    ```
+
+- `value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.
 
 #### History
 
@@ -89,6 +102,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
 
+#### Card
+
+- `behavior: 'static' | 'link' | 'select'` (`SdCardBehavior`): resolves to `select` inside `sd-card-group` and to `static` elsewhere.
+  - `link` wraps the card in one `<a class="sd-card__link">`: `RouterLink` from `link` + `queryParams`, or `href` + `target` (`_blank` adds `rel="noopener noreferrer"`); `link` wins over `href` with a dev-mode warning. `(click)` emits after navigation started. A disabled link has no `href`, `aria-disabled="true"` and `tabindex="-1"`; the focus ring is drawn on the card.
+  - A group ignores cards whose behavior is not `select`, so a read-only card can sit in a filter group.
+- `content: SdCardContent` renders a built-in layout (`{ layout, data }`), checked at compile time per layout; without it the card projects `ng-content` as before.
+  - `stat` (`SdCardStatData`): label, value, delta chip, context line, optional icon. `format` is `number` (with `precision`), `compact` (`86,4 triệu` in Vietnamese, `86.4M` elsewhere; `SD_CARD_CONFIGURATION.compactDisplay` overrides), `percent` (a ratio) or `text`, in the active i18n locale. `null` shows `—`; the full number goes into `title` and the accessible name. A `link` stat whose value is `0` renders static.
+  - `option` (`SdCardOptionData`, `select` only): icon tile, title, description, badge and a check mark. A single group of option cards becomes `role="radiogroup"` with one tab stop and arrow-key selection; a multiple group uses checkboxes.
+  - `entity` (`SdCardEntityData`): avatar (text, image or icon), title, subtitle, badge and up to three meta fields; `sm` is one row.
+  - `file` (`SdCardFileData`): thumbnail or a type icon (pdf, sheet, doc, image, other) from the MIME type or extension, a two-line name and "TYPE · size".
+  - `shortcut` (`SdCardShortcutData`, `link` only): icon, label, description; `sm` is one row.
+  - An invalid behavior for a layout (for example `option` with `link`) logs a dev-mode error and renders static.
+- `size: 'md' | 'sm'` (`SdCardSize`); without it a card turns `sm` while the new `SD_CARD_LAYOUT` token reports `compact()`. `sd-page-list` provides it. `option` and `file` stay `md`.
+- `loading` (skeleton, `aria-busy`, no activation, same height) and `error` with the `sdRetry` output (Retry never triggers the card behavior); both need `content`.
+- `SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.
+- Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).
+- i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.
+
 #### Tab
 
 - `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.
@@ -122,6 +153,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.
   - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.
   - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.
+- The score cards of the customer and order lists use `sd-card` with `layout: 'stat'`, `loading` until the counts arrive and automatic `sm` in compact mode; the order revenue tile is a `behavior="static"` card at the end of the group. The `.summary*` styles are gone; the group uses `sd-card-grid`. The compact row is 32px high (was 36px).
 - The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy="none" size="sm"`: "created" with an `add` icon, submit (`send`, primary), approve (`check`, success, "Đã duyệt" badge) and reject (`close`, error, "Từ chối" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.
 - Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.
 

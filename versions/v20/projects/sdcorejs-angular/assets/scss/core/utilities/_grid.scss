@@ -147,3 +147,18 @@ $grid-breakpoints: (
     grid-row: 1 / -1;
   }
 }
+
+// --------------------------------------------------------------------------
+// sd-card group layout: auto-fit tiles (md) or a wrapping row (sm)
+// --------------------------------------------------------------------------
+.sd-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.sd-card-grid--sm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

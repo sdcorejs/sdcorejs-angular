@@ -1,9 +1,196 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { Router, provideRouter } from '@angular/router';
 import type { Color as SdColor } from '@sdcorejs/utils/models';
 import { SdCardGroup, type SdCardCompareWith } from './card-group.component';
 import { SdCard } from './card.component';
+import type { SdCardContent } from './card.model';
+
+@Component({
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  template: `
+    <div data-testid="static-wrapper">
+      <sd-card data-testid="static" autoId="static">Static</sd-card>
+    </div>
+
+    <sd-card-group data-testid="mixed-group" [(model)]="mixedModel">
+      <sd-card data-testid="mixed-select" [value]="'a'">A</sd-card>
+      <sd-card data-testid="mixed-static" behavior="static" [value]="'b'">B</sd-card>
+      <sd-card data-testid="mixed-novalue" behavior="select">No value</sd-card>
+    </sd-card-group>
+
+    <sd-card
+      #linkCard="sdCard"
+      data-testid="link"
+      behavior="link"
+      [link]="['/orders']"
+      [queryParams]="{ status: 'pending' }"
+      [disabled]="linkDisabled()"
+      (click)="onLinkClick()">
+      Orders
+    </sd-card>
+    <sd-card data-testid="href" behavior="link" href="https://example.com/report.pdf" target="_blank">Report</sd-card>
+    <sd-card data-testid="link-and-href" behavior="link" [link]="'/a'" href="https://example.com">Both</sd-card>
+    <sd-card data-testid="link-without-behavior" [link]="'/a'">Static with link</sd-card>
+    <sd-card data-testid="option-link" behavior="link" [link]="'/x'" [content]="optionContent" />
+  `,
+})
+class CardBehaviorHost {
+  readonly mixedModel = signal<string | string[] | null>(null);
+  readonly linkDisabled = signal(false);
+  readonly optionContent: SdCardContent = { layout: 'option', data: { title: 'Option' } };
+  readonly events: string[] = [];
+  staticParentClicks = 0;
+
+  onLinkClick(): void {
+    this.events.push('click');
+  }
+}
+
+describe('SdCard behavior', () => {
+  let fixture: ComponentFixture<CardBehaviorHost>;
+  let host: CardBehaviorHost;
+  let errorSpy: jasmine.Spy;
+  let warnSpy: jasmine.Spy;
+  let navigateSpy: jasmine.Spy;
+
+  const element = (testId: string): HTMLElement => {
+    const result = fixture.nativeElement.querySelector(`[data-testid="${testId}"]`) as HTMLElement | null;
+    if (!result) throw new Error(`Missing test element: ${testId}`);
+    return result;
+  };
+  const card = <T = unknown>(testId: string): SdCard<T> =>
+    fixture.debugElement.query(By.css(`[data-testid="${testId}"]`)).componentInstance as SdCard<T>;
+  const anchor = (testId: string): HTMLAnchorElement => {
+    const result = element(testId).querySelector('a.sd-card__link') as HTMLAnchorElement | null;
+    if (!result) throw new Error(`Missing link in: ${testId}`);
+    return result;
+  };
+
+  beforeEach(async () => {
+    errorSpy = spyOn(console, 'error');
+    warnSpy = spyOn(console, 'warn');
+    await TestBed.configureTestingModule({ imports: [CardBehaviorHost], providers: [provideRouter([])] }).compileComponents();
+    const router = TestBed.inject(Router);
+    navigateSpy = spyOn(router, 'navigateByUrl').and.callFake(() => {
+      host.events.push('navigate');
+      return Promise.resolve(true);
+    });
+    fixture = TestBed.createComponent(CardBehaviorHost);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    element('static-wrapper').addEventListener('click', () => host.staticParentClicks++);
+  });
+
+  describe('static (standalone default)', () => {
+    it('has no role, tabindex or aria-pressed', () => {
+      const staticCard = element('static');
+      expect(staticCard.hasAttribute('role')).toBeFalse();
+      expect(staticCard.hasAttribute('tabindex')).toBeFalse();
+      expect(staticCard.hasAttribute('aria-pressed')).toBeFalse();
+    });
+
+    it('does not toggle selected or emit click, and lets the native click reach its parent', () => {
+      const emitted: Event[] = [];
+      card('static').click.subscribe(event => emitted.push(event));
+      element('static').click();
+      element('static').click();
+      expect(card('static').selected()).toBeFalse();
+      expect(emitted).toEqual([]);
+      expect(host.staticParentClicks).toBe(2);
+    });
+
+    it('ignores Enter and Space', () => {
+      const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      element('static').dispatchEvent(event);
+      expect(event.defaultPrevented).toBeFalse();
+      expect(card('static').selected()).toBeFalse();
+    });
+  });
+
+  describe('inside a group', () => {
+    it('defaults to select with button semantics', () => {
+      expect(element('mixed-select').getAttribute('role')).toBe('button');
+      element('mixed-select').click();
+      expect(host.mixedModel()).toBe('a');
+    });
+
+    it('ignores a static card in selection and toggling', () => {
+      element('mixed-static').click();
+      expect(host.mixedModel()).toBeNull();
+      host.mixedModel.set('b');
+      fixture.detectChanges();
+      expect(card('mixed-static').selected()).toBeFalse();
+      expect(element('mixed-static').hasAttribute('role')).toBeFalse();
+    });
+
+    it('reports a select card without value and ignores its click', () => {
+      expect(errorSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*value/));
+      element('mixed-novalue').click();
+      expect(host.mixedModel()).toBeNull();
+    });
+  });
+
+  describe('link', () => {
+    it('renders an anchor with the router href including query params', () => {
+      expect(anchor('link').getAttribute('href')).toBe('/orders?status=pending');
+      expect(element('link').hasAttribute('role')).toBeFalse();
+      expect(element('link').hasAttribute('tabindex')).toBeFalse();
+    });
+
+    it('navigates on click and emits click after navigation started', () => {
+      anchor('link').click();
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(host.events).toEqual(['navigate', 'click']);
+    });
+
+    it('leaves Enter on the anchor to the browser', () => {
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      anchor('link').dispatchEvent(event);
+      expect(event.defaultPrevented).toBeFalse();
+    });
+
+    it('drops href, sets aria-disabled and leaves the tab order when disabled', () => {
+      host.linkDisabled.set(true);
+      fixture.detectChanges();
+      const link = anchor('link');
+      expect(link.hasAttribute('href')).toBeFalse();
+      expect(link.getAttribute('aria-disabled')).toBe('true');
+      expect(link.getAttribute('tabindex')).toBe('-1');
+      link.click();
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(host.events).toEqual([]);
+    });
+
+    it('renders an external href with its target', () => {
+      const link = anchor('href');
+      expect(link.getAttribute('href')).toBe('https://example.com/report.pdf');
+      expect(link.getAttribute('target')).toBe('_blank');
+    });
+
+    it('prefers link over href and warns', () => {
+      expect(anchor('link-and-href').getAttribute('href')).toBe('/a');
+      expect(warnSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*link.*href/));
+    });
+
+    it('warns when link is set but the behavior is not link', () => {
+      expect(element('link-without-behavior').querySelector('a')).toBeNull();
+      expect(warnSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*behavior/));
+    });
+  });
+
+  describe('layout constraints', () => {
+    it('reports option with behavior link and renders it as static', () => {
+      expect(errorSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*"link".*"option"/));
+      const optionCard = element('option-link');
+      expect(optionCard.querySelector('a')).toBeNull();
+      expect(optionCard.hasAttribute('role')).toBeFalse();
+      expect(optionCard.hasAttribute('tabindex')).toBeFalse();
+    });
+  });
+});
 
 interface StatusOption {
   id: number;
@@ -19,6 +206,7 @@ interface StatusOption {
         #standalone="sdCard"
         data-testid="standalone"
         autoId="standalone"
+        behavior="select"
         [value]="'standalone'"
         [disabled]="standaloneDisabled()"
         [color]="standaloneColor()"

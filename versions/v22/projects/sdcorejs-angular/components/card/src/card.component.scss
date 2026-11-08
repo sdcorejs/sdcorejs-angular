@@ -1,20 +1,20 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
-
-$card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
+@use 'card-shared' as *;
+@use 'card-layouts';
+@use 'card-states';
 
 :host {
-  --sd-card-accent: #{map.get(color.$color_map, 'primary')};
-  --sd-card-accent-light: #{map.get(color.$color_map, 'primary-light')};
-  --sd-card-accent-dark: #{map.get(color.$color_map, 'primary-dark')};
+  --sd-card-accent: #{c('primary')};
+  --sd-card-accent-light: #{c('primary-light')};
+  --sd-card-accent-dark: #{c('primary-dark')};
 
+  position: relative;
   display: block;
   box-sizing: border-box;
-  border: 1px solid #{map.get(color.$color_map, 'border')};
+  border: 1px solid #{c('border')};
   border-radius: var(--sd-radius-8, 8px);
   padding: 16px;
-  background: #{map.get(color.$color_map, 'surface')};
-  color: #{map.get(color.$color_map, 'text')};
+  background: #{c('surface')};
+  color: #{c('text')};
   cursor: pointer;
   outline: none;
   transition:
@@ -27,20 +27,50 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
 
 @each $name in $card-colors {
   :host(.sd-c-#{$name}) {
-    --sd-card-accent: #{map.get(color.$color_map, $name)};
-    --sd-card-accent-light: #{map.get(color.$color_map, '#{$name}-light')};
-    --sd-card-accent-dark: #{map.get(color.$color_map, '#{$name}-dark')};
+    --sd-card-accent: #{c($name)};
+    --sd-card-accent-light: #{c('#{$name}-light')};
+    --sd-card-accent-dark: #{c('#{$name}-dark')};
   }
 }
 
-:host(:not(.sd-disabled):hover) {
-  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
-  background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{map.get(color.$color_map, 'surface')});
+:host(.sd-card--static) {
+  cursor: default;
+  user-select: auto;
 }
 
-:host(:not(.sd-disabled):active) {
+:host(.sd-card--link) {
+  padding: 0;
+}
+
+.sd-card__link {
+  display: block;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 16px;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+:host(.sd-disabled) .sd-card__link {
+  cursor: not-allowed;
+}
+
+// Built-in layouts own their padding; the host and the anchor keep only border and background.
+:host(.sd-card--content),
+:host(.sd-card--content) .sd-card__link {
+  padding: 0;
+}
+
+:host(:not(.sd-card--static):not(.sd-disabled):hover) {
+  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{c('border')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{c('surface')});
+}
+
+:host(:not(.sd-card--static):not(.sd-disabled):active) {
   border-color: var(--sd-card-accent-dark);
-  background: color-mix(in srgb, var(--sd-card-accent-light) 55%, #{map.get(color.$color_map, 'surface')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 55%, #{c('surface')});
   transform: translateY(1px);
 }
 
@@ -55,24 +85,52 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
   background: color-mix(in srgb, var(--sd-card-accent) 14%, var(--sd-card-accent-light));
 }
 
-:host(:focus-visible) {
+:host(:focus-visible),
+:host(:has(.sd-card__link:focus-visible)) {
   border-color: var(--sd-card-accent);
   box-shadow:
-    0 0 0 2px #{map.get(color.$color_map, 'surface')},
+    0 0 0 2px #{c('surface')},
     0 0 0 4px var(--sd-card-accent);
 }
 
 :host(.sd-disabled) {
-  border-color: #{map.get(color.$color_map, 'border')};
-  background: #{map.get(color.$color_map, 'disabled-bg')};
-  color: #{map.get(color.$color_map, 'disabled-text')};
+  border-color: #{c('border')};
+  background: #{c('disabled-bg')};
+  color: #{c('disabled-text')};
   cursor: not-allowed;
 }
 
 :host(.sd-selected.sd-disabled) {
-  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
-  background: color-mix(in srgb, var(--sd-card-accent-light) 45%, #{map.get(color.$color_map, 'disabled-bg')});
+  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{c('border')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 45%, #{c('disabled-bg')});
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-card-accent) 35%, transparent);
+}
+
+// why: a built-in layout can paint a background up to the edge (the file thumbnail), and child backgrounds cover
+// an inset box-shadow, so the 2px selected ring looked 1px there. A layout card draws its inner ring on an overlay
+// above the content instead; projected-content cards keep the inset shadow above.
+:host(.sd-card--content.sd-selected) {
+  box-shadow: none;
+}
+
+:host(.sd-card--content.sd-selected)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--sd-radius-8, 8px) - 1px);
+  box-shadow: inset 0 0 0 1px var(--sd-card-accent);
+  pointer-events: none;
+}
+
+:host(.sd-card--content.sd-selected.sd-disabled)::after {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-card-accent) 35%, transparent);
+}
+
+// Same specificity as the rule that removes the host shadow, declared later: a focused layout card keeps its ring.
+:host(.sd-card--content:focus-visible) {
+  box-shadow:
+    0 0 0 2px #{c('surface')},
+    0 0 0 4px var(--sd-card-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

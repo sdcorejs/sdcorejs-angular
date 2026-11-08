@@ -1614,6 +1614,13 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count} 人',
   'core.component.avatar.more-label': '查看另外 {count} 人',
   'core.component.avatar.more-title': '另外 {count} 人',
+  // ---- Component: card ----
+  'core.component.card.error': '无法加载',
+  'core.component.card.retry': '重试',
+  'core.component.card.delta-unchanged': '无变化',
+  'core.component.card.delta-up': '较上期增加 {value}',
+  'core.component.card.delta-down': '较上期减少 {value}',
+  'core.component.card.loading': '加载中',
   // ---- Component: timeline ----
   'core.component.timeline.label': '动态',
   'core.component.timeline.empty': '暂无动态。',
