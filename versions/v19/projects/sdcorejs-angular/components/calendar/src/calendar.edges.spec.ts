@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, flushMicrotasks, tick, type ComponentFixture } from '@angular/core/testing';
+import { findCssRule } from '../../../testing';
 import { centerOf, mouse, mouseDrag, pointer, press } from '../../../testing/schedule-testing';
 import { SdCalendar } from './calendar.component';
 import type { SdCalendarEvent, SdCalendarMoveRequest, SdCalendarOption } from './calendar.model';
@@ -187,6 +188,12 @@ describe('SdCalendar · edge cases', () => {
     press(grid, 'PageUp');
     settle();
     expect(label()).toBe('Chủ Nhật 11/10, 00:00');
+  }));
+
+  it('[CAL-B-04] does not select text while sweeping or dragging in the grid (E2E screenshot)', fakeAsync(() => {
+    mount({});
+    expect(findCssRule(/sd-calendar__columns/)?.getPropertyValue('user-select')).toBe('none');
+    expect(findCssRule(/sd-calendar__all-day-grid/)?.getPropertyValue('user-select')).toBe('none');
   }));
 
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {

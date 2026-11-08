@@ -385,6 +385,8 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__all-day-grid {
   display: grid;
+  // why: sweeping and dragging must not select the titles under the pointer.
+  user-select: none;
   grid-template-columns: repeat(var(--sd-calendar-days), minmax(0, 1fr));
   grid-auto-rows: 22px;
   gap: 2px 0;
@@ -469,6 +471,8 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__columns {
   position: relative;
   display: grid;
+  // why: sweeping and dragging must not select the titles under the pointer.
+  user-select: none;
   grid-template-columns: repeat(var(--sd-calendar-days), minmax(0, 1fr));
   height: calc(#{$hour} * 24);
 
