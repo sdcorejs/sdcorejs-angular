@@ -35,7 +35,14 @@ export function weekEvents(): SdCalendarEvent<CalendarDto>[] {
     { id: 'one-on-one', title: '1:1 với Minh', start: '2026/10/22 10:00:00', end: '2026/10/22 10:30:00', data: { room: 'Online' } },
     { id: 'leave', title: 'Nghỉ phép · Lan', start: '2026/10/22', end: '2026/10/23', allDay: true, color: 'secondary', data: { room: '' } },
     { id: 'deadline', title: 'Hạn chót báo cáo Q3', start: '2026/10/23', allDay: true, color: 'error', data: { room: '' } },
-    { id: 'night', title: 'Trực đêm', start: '2026/10/22 22:00:00', end: '2026/10/23 06:00:00', color: '#7b5ea7', data: { room: 'Kho' } },
+    {
+      id: 'night',
+      title: 'Trực đêm',
+      start: '2026/10/22 22:00:00',
+      end: '2026/10/23 06:00:00',
+      color: 'rebeccapurple',
+      data: { room: 'Kho' },
+    },
     { id: 'old', title: 'Sự kiện tuần trước', start: '2026/10/12 09:00:00', end: '2026/10/12 10:00:00', data: { room: 'Sen' } },
   ];
 }

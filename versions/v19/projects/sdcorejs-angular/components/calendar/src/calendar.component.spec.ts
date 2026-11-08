@@ -142,7 +142,7 @@ describe('SdCalendar · rendering and data source', () => {
       settle();
       expect(calendar.date()).toBe('2026/11/09');
       expect(last()).toEqual({ from: '2026/11/09', to: '2026/11/15', view: 'week' });
-      fixture.componentRef.setInput('date', '2026/10/22');
+      fixture.componentRef.setInput('date', '2026/10/21');
       settle();
       fixture.componentRef.setInput('firstDayOfWeek', 0);
       settle();
@@ -212,6 +212,31 @@ describe('SdCalendar · rendering and data source', () => {
       } finally {
         restore();
       }
+    }));
+
+    it('[CAL-C-03] disables previous/next when that range lies wholly outside minDate/maxDate and shades days outside them', fakeAsync(() => {
+      const { host, fixture, settle } = render({ minDate: '2026/10/19', maxDate: '2026-10-23T03:00:00Z' });
+      expect(action(host, 'prev').disabled).toBeTrue();
+      expect(action(host, 'next').disabled).toBeTrue();
+      expect(qa(host, '[data-day-column][data-out-of-range]').map(column => column.dataset['date'])).toEqual(['2026/10/24', '2026/10/25']);
+      fixture.componentRef.setInput('minDate', 'TODAY');
+      fixture.componentRef.setInput('maxDate', null);
+      settle();
+      expect(action(host, 'prev').disabled).toBeTrue();
+      expect(action(host, 'next').disabled).toBeFalse();
+      expect(qa(host, '[data-day-column][data-out-of-range]').length).toBe(7);
+      fixture.componentRef.setInput('date', '2026/11/09');
+      settle();
+      expect(action(host, 'prev').disabled).toBeTrue();
+      expect(qa(host, '[data-day-column][data-out-of-range]').length).toBe(0);
+    }));
+
+    it('[CAL-C-07] labels the time column with the offset of the configured zone', fakeAsync(() => {
+      const { host, fixture, settle } = render();
+      expect(text(q(host, '[data-zone]'))).toBe('GMT+7');
+      fixture.componentRef.setInput('view', 'day');
+      settle();
+      expect(text(q(host, '[data-zone]'))).toBe('GMT+7');
     }));
 
     it('[CAL-C-07] places an instant on the calendar day of the configured zone', fakeAsync(() => {

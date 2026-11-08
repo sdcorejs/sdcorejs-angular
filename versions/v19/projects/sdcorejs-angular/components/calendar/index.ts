@@ -1,3 +1,4 @@
+export * from './src/calendar.component';
 export * from './src/calendar.configuration';
 export type * from './src/calendar.model';
 export {

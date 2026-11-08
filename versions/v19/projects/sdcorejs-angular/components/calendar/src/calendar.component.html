@@ -1,0 +1,379 @@
+@let _view = displayView();
+@let _disabled = disabled();
+<section
+  class="sd-calendar"
+  role="region"
+  [class.sd-calendar--compact]="compact()"
+  [attr.aria-label]="regionLabel()"
+  [attr.data-autoid]="rootAutoId()"
+  [attr.data-view]="activeView()"
+  [attr.data-display]="_view"
+  [attr.data-from]="visible().from"
+  [attr.data-to]="visible().to">
+  <header class="sd-calendar__toolbar">
+    <div class="sd-calendar__nav">
+      <button type="button" class="sd-calendar__today" data-action="today" [attr.data-autoid]="childAutoId('today')" (click)="goToday()">
+        {{ 'core.component.calendar.today' | sdTranslate }}
+      </button>
+      <button
+        type="button"
+        class="sd-calendar__icon-button"
+        data-action="prev"
+        [attr.aria-label]="prevLabel()"
+        [attr.data-autoid]="childAutoId('prev')"
+        [disabled]="prevDisabled()"
+        (click)="shift(-1)">
+        <sd-icon name="chevron_left" size="22px" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="sd-calendar__icon-button"
+        data-action="next"
+        [attr.aria-label]="nextLabel()"
+        [attr.data-autoid]="childAutoId('next')"
+        [disabled]="nextDisabled()"
+        (click)="shift(1)">
+        <sd-icon name="chevron_right" size="22px" aria-hidden="true" />
+      </button>
+    </div>
+    <div class="sd-calendar__title" data-title>{{ title() }}</div>
+    <div class="sd-calendar__views" role="group" [attr.aria-label]="'core.component.calendar.views' | sdTranslate">
+      @for (option of viewOptions(); track option) {
+        <button
+          type="button"
+          class="sd-calendar__view"
+          [attr.data-view-option]="option"
+          [attr.data-autoid]="childAutoId('view-' + option)"
+          [attr.aria-pressed]="option === activeView()"
+          (click)="setView(option)">
+          {{ viewLabel(option) }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (busy()) {
+    <div class="sd-calendar__progress" role="progressbar" [attr.aria-label]="'core.component.calendar.label' | sdTranslate">
+      <span class="sd-calendar__progress-bar"></span>
+    </div>
+  }
+  @if (phase() === 'error') {
+    <div class="sd-calendar__band" data-band="load-error">
+      <sd-icon class="sd-calendar__band-icon" name="error" size="18px" aria-hidden="true" />
+      <span class="sd-calendar__band-text">{{ 'core.component.calendar.load-error' | sdTranslate }}</span>
+      <button type="button" class="sd-calendar__band-button" data-action="retry" [attr.data-autoid]="childAutoId('retry')" (click)="reload()">
+        {{ 'core.component.calendar.retry' | sdTranslate }}
+      </button>
+    </div>
+  }
+  <div class="sd-calendar__status sd-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</div>
+  <span class="sd-visually-hidden" [id]="gridInstructionsId">{{ 'core.component.calendar.grid-instructions' | sdTranslate }}</span>
+  <span class="sd-visually-hidden" [id]="eventInstructionsId">{{ 'core.component.calendar.event-instructions' | sdTranslate }}</span>
+
+  @if (invalid()) {
+    <sd-data-state class="sd-calendar__invalid" state="error" compact [title]="'core.component.calendar.invalid-data' | sdTranslate" />
+  } @else if (_view === 'week' || _view === 'day') {
+    @let _days = dayViews();
+    @let _allDay = allDay();
+    <div #scroller class="sd-calendar__scroller" data-region="scroller" [style.--sd-calendar-days]="_days.length">
+      <div class="sd-calendar__head">
+        @if (_view === 'week') {
+          <div class="sd-calendar__day-headers">
+            <div class="sd-calendar__corner" data-zone>{{ zoneLabel() }}</div>
+            @for (day of _days; track day.day) {
+              <div class="sd-calendar__day-header" data-day-header [attr.data-date]="day.day" [attr.data-today]="day.today || null">
+                <span class="sd-calendar__weekday">{{ day.weekdayShort }}</span>
+                <button type="button" class="sd-calendar__day-number" [attr.aria-label]="day.label" (click)="openDay(day.day)">
+                  {{ day.dayNumber }}
+                </button>
+                @if (day.holiday; as holiday) {
+                  <span class="sd-calendar__holiday" [attr.data-holiday]="holiday.type" [attr.title]="holiday.label">{{ holiday.label }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+        <div class="sd-calendar__all-day">
+          <div class="sd-calendar__all-day-label">
+            @if (_view === 'day') {
+              <span class="sd-calendar__zone" data-zone>{{ zoneLabel() }}</span>
+            }
+            {{ 'core.component.calendar.all-day' | sdTranslate }}
+          </div>
+          <div class="sd-calendar__all-day-grid">
+            @for (bar of _allDay.bars; track bar.key) {
+              <div
+                class="sd-calendar__bar"
+                role="button"
+                [attr.tabindex]="_disabled ? -1 : 0"
+                [attr.aria-label]="bar.label"
+                [attr.aria-describedby]="eventInstructionsId"
+                [attr.data-event-id]="bar.event.id"
+                [attr.data-autoid]="bar.autoId"
+                [attr.data-start]="bar.range.start"
+                [attr.data-end]="bar.range.end"
+                [attr.data-all-day]="bar.placement.allDay"
+                [attr.data-color]="bar.color"
+                [attr.data-past]="bar.past || null"
+                [attr.data-selected]="bar.selected || null"
+                [attr.data-clipped-start]="bar.clippedStart || null"
+                [attr.data-clipped-end]="bar.clippedEnd || null"
+                [style.--sd-calendar-event-color]="bar.customColor"
+                [style.grid-column]="bar.from + 1 + ' / ' + (bar.to + 2)"
+                [style.grid-row]="bar.row + 1">
+                @if (bar.clippedStart) {
+                  <sd-icon class="sd-calendar__clip" name="chevron_left" size="16px" aria-hidden="true" />
+                }
+                <span class="sd-calendar__dot" aria-hidden="true"></span>
+                @if (bar.recurring) {
+                  <sd-icon class="sd-calendar__repeat" name="repeat" size="13px" aria-hidden="true" />
+                }
+                <span class="sd-calendar__bar-title">{{ bar.text }}</span>
+                @if (_view === 'day' && bar.spanText) {
+                  <span class="sd-calendar__bar-span">{{ bar.spanText }}</span>
+                }
+                @if (bar.clippedEnd) {
+                  <sd-icon class="sd-calendar__clip" name="chevron_right" size="16px" aria-hidden="true" />
+                }
+              </div>
+            }
+            @for (count of _allDay.more; track $index) {
+              @if (count) {
+                <button
+                  type="button"
+                  class="sd-calendar__more"
+                  data-more
+                  [attr.data-date]="_days[$index].day"
+                  [style.grid-column]="$index + 1"
+                  [style.grid-row]="_allDay.rows + 1"
+                  (click)="openDay(_days[$index].day)">
+                  {{ 'core.component.calendar.more-short' | sdTranslate: { count } }}
+                </button>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <div class="sd-calendar__body">
+        <div class="sd-calendar__gutter" aria-hidden="true">
+          @for (hour of hours; track hour) {
+            <span class="sd-calendar__hour" [style.top]="'calc(var(--sd-calendar-hour-height) * ' + hour + ')'">{{ hour < 10 ? '0' + hour : hour }}:00</span>
+          }
+        </div>
+        <div
+          class="sd-calendar__columns"
+          data-region="time-grid"
+          role="group"
+          tabindex="0"
+          [attr.aria-label]="title()"
+          [attr.aria-describedby]="gridInstructionsId"
+          [attr.aria-busy]="busy() || null"
+          [attr.aria-disabled]="_disabled || null">
+          @for (day of _days; track day.day; let column = $index) {
+            <div
+              class="sd-calendar__column"
+              data-day-column
+              [attr.data-date]="day.day"
+              [attr.data-today]="day.today || null"
+              [attr.data-off]="day.off || null"
+              [attr.data-out-of-range]="day.outOfRange || null">
+              @for (segment of day.offSegments; track segment.start) {
+                <div
+                  class="sd-calendar__off"
+                  data-off-hours
+                  aria-hidden="true"
+                  [style.top]="skeletonTop(segment.start)"
+                  [style.height]="'calc(var(--sd-calendar-hour-height) * ' + (segment.end - segment.start) / 60 + ')'"></div>
+              }
+              @if (skeleton()) {
+                @for (shape of skeletonBlocks; track $index) {
+                  @if (shape[0] === column) {
+                    <div
+                      class="sd-calendar__skeleton"
+                      data-skeleton
+                      aria-hidden="true"
+                      [style.top]="skeletonTop(shape[1])"
+                      [style.height]="skeletonHeight(shape[2])"></div>
+                  }
+                }
+              }
+              @for (block of blocksOf(day.day); track block.key) {
+                <div
+                  class="sd-calendar__event"
+                  role="button"
+                  [attr.tabindex]="_disabled ? -1 : 0"
+                  [attr.aria-label]="block.label"
+                  [attr.aria-describedby]="eventInstructionsId"
+                  [attr.data-event-id]="block.event.id"
+                  [attr.data-autoid]="block.autoId"
+                  [attr.data-start]="block.range.start"
+                  [attr.data-end]="block.range.end"
+                  [attr.data-all-day]="false"
+                  [attr.data-color]="block.color"
+                  [attr.data-size]="block.size"
+                  [attr.data-past]="block.past || null"
+                  [attr.data-selected]="block.selected || null"
+                  [style.--sd-calendar-event-color]="block.customColor"
+                  [style.--sd-calendar-column]="block.column"
+                  [style.--sd-calendar-columns]="block.columns"
+                  [style.top]="block.top"
+                  [style.height]="block.height">
+                  <span class="sd-calendar__dot" aria-hidden="true"></span>
+                  @if (eventTemplate(); as _template) {
+                    <div class="sd-calendar__event-content">
+                      <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="block.context" />
+                    </div>
+                  } @else {
+                    <div class="sd-calendar__event-content">
+                      <span class="sd-calendar__event-title">
+                        @if (block.recurring) {
+                          <sd-icon class="sd-calendar__repeat" name="repeat" size="13px" aria-hidden="true" />
+                        }
+                        {{ block.event.title }}@if (block.size === 'sm' || block.size === 'xs') {
+                          <span>, {{ block.timeText.slice(0, 5) }}</span>
+                        }
+                      </span>
+                      @if (block.size === 'lg' || block.size === 'md') {
+                        <span class="sd-calendar__event-time">{{ block.timeText }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+              @if (day.today) {
+                <div class="sd-calendar__now" data-now aria-hidden="true" [style.top]="nowTop()"></div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else if (_view === 'month') {
+    <div
+      class="sd-calendar__month"
+      role="grid"
+      [style.--sd-calendar-month-columns]="monthHeaders().length"
+      [attr.aria-label]="title()" [attr.aria-busy]="busy() || null" [attr.aria-disabled]="_disabled || null">
+      <div class="sd-calendar__month-head" role="row">
+        @for (weekday of monthHeaders(); track $index) {
+          <div class="sd-calendar__month-weekday" role="columnheader">{{ weekday }}</div>
+        }
+      </div>
+      @for (week of monthWeeks(); track $index) {
+        <div class="sd-calendar__month-row" role="row">
+          @for (cell of week; track cell.day.day) {
+            <div
+              class="sd-calendar__cell"
+              role="gridcell"
+              [attr.tabindex]="cell.day.day === visible().from ? 0 : -1"
+              [attr.aria-label]="cell.label"
+              [attr.data-date]="cell.day.day"
+              [attr.data-today]="cell.day.today || null"
+              [attr.data-off]="cell.day.off || null"
+              [attr.data-out-of-month]="!cell.inMonth || null"
+              [attr.data-out-of-range]="cell.day.outOfRange || null"
+              (click)="openDay(cell.day.day)"
+              (keydown)="onCellKeydown($event, cell.day.day)">
+              <div class="sd-calendar__cell-head">
+                <span class="sd-calendar__cell-number">{{ cell.day.dayNumber }}</span>
+                @if (cell.day.holiday; as holiday) {
+                  <span class="sd-calendar__cell-holiday" [attr.data-holiday]="holiday.type" [attr.title]="holiday.label">{{ holiday.label }}</span>
+                }
+              </div>
+              @if (dayCellTemplate(); as _template) {
+                <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="cell.context" />
+              } @else {
+                @for (line of cell.lines; track line.key) {
+                  @if (line.item; as item) {
+                    <div
+                      class="sd-calendar__chip"
+                      [class.sd-calendar__chip--bar]="line.bar"
+                      [attr.data-event-id]="item.event.id"
+                      [attr.data-autoid]="item.autoId"
+                      [attr.data-color]="item.color"
+                      [attr.data-past]="item.past || null"
+                      [attr.data-selected]="item.selected || null"
+                      [attr.data-join-start]="line.joinStart || null"
+                      [attr.data-join-end]="line.joinEnd || null"
+                      [attr.title]="item.label"
+                      [style.--sd-calendar-event-color]="item.customColor">
+                      <span class="sd-calendar__dot" aria-hidden="true"></span>
+                      @if (line.showTitle) {
+                        <span class="sd-calendar__chip-text">{{ line.text }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <div class="sd-calendar__chip sd-calendar__chip--gap" aria-hidden="true"></div>
+                  }
+                }
+                @if (cell.more) {
+                  <button type="button" class="sd-calendar__month-more" data-more tabindex="-1" [attr.data-date]="cell.day.day" (click)="openDay(cell.day.day)">
+                    {{ 'core.component.calendar.more' | sdTranslate: { count: cell.more } }}
+                  </button>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="sd-calendar__agenda" [attr.aria-busy]="busy() || null">
+      @for (group of agenda(); track group.day.day) {
+        <div class="sd-calendar__agenda-day" role="group" data-agenda-day [attr.data-date]="group.day.day" [attr.aria-label]="group.heading">
+          <div class="sd-calendar__agenda-heading" [attr.data-today]="group.day.today || null">
+            <span>{{ group.heading }}</span>
+            @if (group.day.today) {
+              <span class="sd-calendar__agenda-today">{{ 'core.component.calendar.today' | sdTranslate }}</span>
+            }
+            @if (group.day.holiday; as holiday) {
+              <span class="sd-calendar__agenda-holiday" [attr.data-holiday]="holiday.type">{{ holiday.label }}</span>
+            }
+          </div>
+          <div class="sd-calendar__agenda-rows">
+            @for (row of group.rows; track row.key) {
+              <div
+                class="sd-calendar__agenda-row"
+                role="button"
+                [attr.tabindex]="_disabled ? -1 : 0"
+                [attr.aria-label]="row.label"
+                [attr.data-event-id]="row.event.id"
+                [attr.data-autoid]="row.autoId"
+                [attr.data-color]="row.color"
+                [attr.data-past]="row.past || null"
+                [attr.data-selected]="row.selected || null"
+                [style.--sd-calendar-event-color]="row.customColor">
+                <span class="sd-calendar__agenda-time">{{ row.timeText }}</span>
+                <span class="sd-calendar__agenda-title">
+                  <span class="sd-calendar__dot" aria-hidden="true"></span>
+                  <span class="sd-calendar__agenda-text">{{ row.event.title }}</span>
+                  @if (row.recurring) {
+                    <sd-icon class="sd-calendar__repeat" name="repeat" size="15px" aria-hidden="true" />
+                  }
+                </span>
+                @if (wide() && agendaItemTemplate(); as _template) {
+                  <span class="sd-calendar__agenda-place" data-agenda-place>
+                    <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="row.context" />
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      } @empty {
+        @if (!busy()) {
+          @if (emptyTemplate(); as _empty) {
+            <ng-container [ngTemplateOutlet]="_empty.template" [ngTemplateOutletContext]="{ $implicit: visible() }" />
+          } @else {
+            <div class="sd-calendar__empty">
+              <sd-icon class="sd-calendar__empty-icon" name="event_available" size="28px" aria-hidden="true" />
+              <p class="sd-calendar__empty-text" data-empty>
+                {{ 'core.component.calendar.empty-agenda' | sdTranslate: { count: agendaCount() } }}
+              </p>
+            </div>
+          }
+        }
+      }
+    </div>
+  }
+</section>

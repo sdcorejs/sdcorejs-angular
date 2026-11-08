@@ -1,0 +1,926 @@
+@use 'sass:map';
+
+// Default light values of the palette, used only as `var()` fallbacks (calendar.md §14).
+$fallbacks: (
+  'primary': #005cbb,
+  'primary-light': #dbe8f5,
+  'primary-contrast': #ffffff,
+  'secondary': #5c6270,
+  'secondary-light': #ebecee,
+  'info': #006a6a,
+  'info-light': #dbeaea,
+  'success': #2e7d32,
+  'success-light': #e2ede2,
+  'warning': #a66300,
+  'warning-light': #f3e9db,
+  'error': #ba1a1a,
+  'error-light': #f5dfdf,
+  'surface': #fdfbff,
+  'surface-muted': #e7e8ed,
+  'surface-inverse': #1a1b1f,
+  'text': #1a1b1f,
+  'text-secondary': #44474f,
+  'border': #c4c6d0,
+  'border-strong': #74777f,
+  'status-error-bg': #f5dfdf,
+  'status-error-fg': #9c1616,
+  'focus-ring-color': #005cbb,
+  'calendar-line': #dedee5,
+  'calendar-line-half': #efeef3,
+  'calendar-off-hours': #f3f3f7,
+  'calendar-now': #ba1a1a,
+  'calendar-today': #005cbb,
+);
+$palette: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
+
+@function tok($name) {
+  @return var(--sd-#{$name}, map.get($fallbacks, $name));
+}
+
+@function fs($px) {
+  @return var(--sd-font-size-#{$px}, #{$px}px);
+}
+
+@function lh($px) {
+  @return var(--sd-line-height-#{$px}, #{$px}px);
+}
+
+@function radius($px) {
+  @return var(--sd-radius-#{$px}, #{$px}px);
+}
+
+$medium: var(--sd-font-weight-medium, 500);
+$hour: var(--sd-calendar-hour-height);
+
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin focus-ring {
+  outline: var(--sd-focus-ring-width, 2px) solid tok(focus-ring-color);
+  outline-offset: var(--sd-focus-ring-offset, 2px);
+}
+
+@mixin bare-button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+:host {
+  // Sizes, not theme tokens (§14): override them on the host.
+  --sd-calendar-hour-height: 48px;
+  --sd-calendar-gutter-width: 56px;
+  --sd-calendar-event-radius: #{radius(6)};
+
+  display: block;
+  min-width: 0;
+}
+
+.sd-calendar {
+  --sd-calendar-reserve: 8px;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid tok(border);
+  border-radius: radius(12);
+  background: tok(surface);
+  color: tok(text);
+  font-size: fs(14);
+  line-height: lh(20);
+
+  &[data-display='day'] {
+    --sd-calendar-reserve: 24px;
+  }
+}
+
+// ---- toolbar ----
+.sd-calendar__toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 12px 0 14px;
+  border-bottom: 1px solid tok(calendar-line);
+}
+
+.sd-calendar__nav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-calendar__today {
+  @include bare-button;
+
+  height: var(--sd-control-height-sm, 32px);
+  margin-right: 4px;
+  padding: 0 14px;
+  border: 1px solid tok(border);
+  border-radius: radius(8);
+  font-size: fs(14);
+  font-weight: $medium;
+}
+
+.sd-calendar__icon-button {
+  @include bare-button;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sd-control-height-sm, 32px);
+  height: var(--sd-control-height-sm, 32px);
+  border-radius: radius(999);
+  color: tok(text-secondary);
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.38;
+  }
+}
+
+.sd-calendar__title {
+  @include ellipsis;
+
+  flex: 1;
+  min-width: 0;
+  font-size: fs(18);
+  line-height: lh(24);
+  font-weight: $medium;
+}
+
+.sd-calendar__views {
+  display: flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid tok(border);
+  border-radius: radius(8);
+}
+
+.sd-calendar__view {
+  @include bare-button;
+
+  height: 30px;
+  padding: 0 12px;
+  font-size: fs(13);
+  font-weight: $medium;
+
+  & + & {
+    border-left: 1px solid tok(border);
+  }
+
+  &[aria-pressed='true'] {
+    background: tok(primary-light);
+    color: tok(text);
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+@media (hover: hover) {
+  .sd-calendar__today:hover,
+  .sd-calendar__icon-button:not(:disabled):hover,
+  .sd-calendar__view:not([aria-pressed='true']):hover {
+    background: color-mix(in srgb, tok(text) 6%, transparent);
+  }
+}
+
+// ---- progress, bands, status ----
+.sd-calendar__progress {
+  position: relative;
+  flex: none;
+  height: 2px;
+  overflow: hidden;
+  background: tok(primary-light);
+}
+
+.sd-calendar__progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: tok(primary);
+  animation: sd-calendar-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes sd-calendar-progress {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.sd-calendar__band {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, tok(error) 28%, tok(surface));
+  background: tok(status-error-bg);
+  color: tok(status-error-fg);
+  font-size: fs(13);
+}
+
+.sd-calendar__band-icon {
+  flex: none;
+  color: tok(error);
+}
+
+.sd-calendar__band-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-calendar__band-button {
+  @include bare-button;
+
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid tok(error);
+  border-radius: radius(8);
+  font-weight: $medium;
+}
+
+.sd-calendar__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.sd-calendar__invalid {
+  flex: 1;
+  min-height: 0;
+}
+
+// ---- week and day ----
+.sd-calendar__scroller {
+  position: relative;
+  // why: with a host height the scroller takes the rest of the column; without one it falls back to 620px.
+  flex: 1 1 620px;
+  min-height: 0;
+  overflow: auto;
+  // why: the sticky head grows when all-day bars arrive; scroll anchoring would then push the grid down by that much.
+  overflow-anchor: none;
+}
+
+.sd-calendar__head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: tok(surface);
+}
+
+.sd-calendar__day-headers {
+  display: grid;
+  grid-template-columns: var(--sd-calendar-gutter-width) repeat(var(--sd-calendar-days), minmax(0, 1fr));
+  height: 72px;
+}
+
+.sd-calendar__day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  border-left: 1px solid tok(calendar-line);
+}
+
+.sd-calendar__weekday {
+  color: tok(text-secondary);
+  font-size: fs(11);
+  line-height: lh(14);
+  font-weight: $medium;
+  letter-spacing: 0.04em;
+
+  [data-today] > & {
+    color: tok(calendar-today);
+  }
+}
+
+.sd-calendar__day-number {
+  @include bare-button;
+
+  width: 32px;
+  height: 32px;
+  border-radius: radius(999);
+  font-size: fs(18);
+  font-weight: $medium;
+
+  [data-today] > & {
+    background: tok(calendar-today);
+    color: tok(primary-contrast);
+  }
+}
+
+.sd-calendar__holiday {
+  @include ellipsis;
+
+  max-width: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
+  color: tok(text-secondary);
+  font-size: fs(11);
+  line-height: lh(14);
+
+  &[data-holiday='off'] {
+    color: tok(error);
+  }
+}
+
+.sd-calendar__corner,
+.sd-calendar__zone {
+  display: block;
+  color: tok(text-secondary);
+  font-size: fs(11);
+  line-height: lh(14);
+  text-align: right;
+}
+
+.sd-calendar__corner {
+  align-self: end;
+  padding: 0 8px 6px 0;
+}
+
+.sd-calendar__all-day {
+  display: grid;
+  grid-template-columns: var(--sd-calendar-gutter-width) minmax(0, 1fr);
+  min-height: 30px;
+  border-top: 1px solid tok(calendar-line);
+  border-bottom: 1px solid tok(border);
+}
+
+.sd-calendar__all-day-label {
+  padding: 8px 8px 0 0;
+  color: tok(text-secondary);
+  font-size: fs(11);
+  line-height: lh(14);
+  text-align: right;
+}
+
+.sd-calendar__all-day-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--sd-calendar-days), minmax(0, 1fr));
+  grid-auto-rows: 22px;
+  gap: 2px 0;
+  padding: 4px 0;
+}
+
+.sd-calendar__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0 2px;
+  padding: 0 6px;
+  border: 1px solid var(--sd-calendar-event-border);
+  border-radius: radius(4);
+  background: var(--sd-calendar-event-bg);
+  font-size: fs(12);
+  line-height: lh(16);
+  font-weight: 600;
+  cursor: pointer;
+
+  &[data-clipped-start] {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  &[data-clipped-end] {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.sd-calendar__bar-title {
+  @include ellipsis;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-calendar__bar-span {
+  flex: none;
+  color: tok(text-secondary);
+  font-size: fs(11);
+  font-weight: 400;
+}
+
+.sd-calendar__clip {
+  flex: none;
+  color: tok(text-secondary);
+}
+
+.sd-calendar__more {
+  @include bare-button;
+  @include ellipsis;
+
+  padding: 0 6px;
+  color: tok(primary);
+  font-size: fs(12);
+  font-weight: $medium;
+  text-align: left;
+}
+
+.sd-calendar__body {
+  display: grid;
+  grid-template-columns: var(--sd-calendar-gutter-width) minmax(0, 1fr);
+}
+
+.sd-calendar__gutter {
+  position: relative;
+  height: calc(#{$hour} * 24);
+}
+
+.sd-calendar__hour {
+  position: absolute;
+  right: 8px;
+  margin-top: -7px;
+  color: tok(text-secondary);
+  font-size: fs(11);
+  line-height: lh(14);
+}
+
+.sd-calendar__columns {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--sd-calendar-days), minmax(0, 1fr));
+  height: calc(#{$hour} * 24);
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+.sd-calendar__column {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid tok(calendar-line);
+  // why: hour and half-hour lines are two repeating gradients, not one element per slot (§7, SC-44).
+  background-image:
+    linear-gradient(to bottom, transparent calc(100% - 1px), tok(calendar-line) calc(100% - 1px)),
+    linear-gradient(to bottom, transparent calc(50% - 1px), tok(calendar-line-half) calc(50% - 1px), tok(calendar-line-half) 50%, transparent 50%);
+  background-size: 100% $hour;
+
+  &[data-off],
+  &[data-out-of-range] {
+    background-color: tok(calendar-off-hours);
+  }
+
+  &[data-out-of-range] {
+    cursor: not-allowed;
+  }
+}
+
+.sd-calendar__off {
+  position: absolute;
+  right: 0;
+  left: 0;
+  background: tok(calendar-off-hours);
+  pointer-events: none;
+}
+
+.sd-calendar__now {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  height: 2px;
+  background: tok(calendar-now);
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    top: -4px;
+    left: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: radius(999);
+    background: inherit;
+    content: '';
+  }
+}
+
+.sd-calendar__skeleton {
+  position: absolute;
+  right: var(--sd-calendar-reserve);
+  left: 2px;
+  border-radius: radius(6);
+  background: tok(surface-muted);
+}
+
+// ---- event colours and states (§8.1, §8.3) ----
+.sd-calendar__event,
+.sd-calendar__bar,
+.sd-calendar__chip,
+.sd-calendar__agenda-row {
+  --sd-calendar-event-bg: color-mix(in srgb, var(--sd-calendar-event-color) 14%, #{tok(surface)});
+  --sd-calendar-event-border: color-mix(in srgb, var(--sd-calendar-event-color) 28%, #{tok(surface)});
+  --sd-calendar-event-dot: var(--sd-calendar-event-color);
+
+  @each $color in $palette {
+    &[data-color='#{$color}'] {
+      --sd-calendar-event-color: #{tok($color)};
+      --sd-calendar-event-bg: #{tok('#{$color}-light')};
+    }
+  }
+
+  &[data-past] {
+    --sd-calendar-event-dot: color-mix(in srgb, var(--sd-calendar-event-color) 45%, #{tok(surface)});
+  }
+}
+
+.sd-calendar__event,
+.sd-calendar__bar,
+.sd-calendar__chip--bar {
+  &[data-past] {
+    border-color: color-mix(in srgb, var(--sd-calendar-event-border) 50%, #{tok(surface)});
+    background: color-mix(in srgb, var(--sd-calendar-event-bg) 45%, #{tok(surface)});
+  }
+}
+
+.sd-calendar__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: radius(999);
+  background: var(--sd-calendar-event-dot);
+}
+
+.sd-calendar__repeat {
+  flex: none;
+  vertical-align: -2px;
+  color: tok(text-secondary);
+}
+
+.sd-calendar__event {
+  position: absolute;
+  left: calc(2px + (100% - 2px - var(--sd-calendar-reserve)) * var(--sd-calendar-column) / var(--sd-calendar-columns));
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  box-sizing: border-box;
+  width: calc((100% - 2px - var(--sd-calendar-reserve)) / var(--sd-calendar-columns));
+  padding: 2px 6px;
+  overflow: hidden;
+  border: 1px solid var(--sd-calendar-event-border);
+  border-radius: var(--sd-calendar-event-radius);
+  background: var(--sd-calendar-event-bg);
+  color: tok(text);
+  font-size: fs(12);
+  line-height: lh(16);
+  cursor: pointer;
+
+  > .sd-calendar__dot {
+    margin-top: 5px;
+  }
+
+  &[data-size='sm'],
+  &[data-size='xs'] {
+    align-items: center;
+    padding: 0 6px;
+
+    > .sd-calendar__dot {
+      margin-top: 0;
+    }
+  }
+
+  &[data-size='xs'] {
+    font-size: fs(11);
+    line-height: lh(14);
+  }
+}
+
+.sd-calendar__event,
+.sd-calendar__bar {
+  &[data-selected] {
+    z-index: 2;
+    border-color: var(--sd-calendar-event-color);
+    box-shadow: var(--sd-shadow-md);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@media (hover: hover) {
+  .sd-calendar__event:hover,
+  .sd-calendar__bar:hover {
+    background: color-mix(in srgb, var(--sd-calendar-event-color) 7%, var(--sd-calendar-event-bg));
+    box-shadow: var(--sd-shadow-sm);
+  }
+}
+
+.sd-calendar__event-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-calendar__event-title {
+  @include ellipsis;
+
+  font-weight: 600;
+}
+
+.sd-calendar__event-time {
+  @include ellipsis;
+
+  color: tok(text-secondary);
+}
+
+// ---- month ----
+.sd-calendar__month {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sd-calendar__month-head,
+.sd-calendar__month-row {
+  display: grid;
+  grid-template-columns: repeat(var(--sd-calendar-month-columns, 7), minmax(0, 1fr));
+}
+
+.sd-calendar__month-weekday {
+  padding: 8px 8px 6px;
+  border-bottom: 1px solid tok(calendar-line);
+  color: tok(text-secondary);
+  font-size: fs(11);
+  font-weight: $medium;
+}
+
+.sd-calendar__month-row {
+  flex: 1 0 auto;
+}
+
+.sd-calendar__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  min-height: 104px;
+  box-sizing: border-box;
+  padding: 4px;
+  border-bottom: 1px solid tok(calendar-line);
+  border-left: 1px solid tok(calendar-line);
+  cursor: pointer;
+
+  &[data-off] {
+    background: tok(calendar-off-hours);
+  }
+
+  &[data-out-of-range] {
+    background: tok(calendar-off-hours);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+.sd-calendar__cell-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sd-calendar__cell-number {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: radius(999);
+  font-size: fs(13);
+  font-weight: $medium;
+
+  [data-out-of-month] & {
+    color: tok(border-strong);
+  }
+
+  [data-today] & {
+    background: tok(calendar-today);
+    color: tok(primary-contrast);
+  }
+}
+
+.sd-calendar__cell-holiday {
+  @include ellipsis;
+
+  min-width: 0;
+  color: tok(text-secondary);
+  font-size: fs(11);
+
+  &[data-holiday='off'] {
+    color: tok(error);
+  }
+}
+
+.sd-calendar__chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: radius(4);
+  font-size: fs(12);
+  line-height: 20px;
+
+  &--bar {
+    background: var(--sd-calendar-event-bg);
+  }
+
+  &--bar[data-join-start] {
+    margin-left: -5px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  &--bar[data-join-end] {
+    margin-right: -5px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.sd-calendar__chip-text {
+  @include ellipsis;
+
+  min-width: 0;
+}
+
+.sd-calendar__month-more {
+  @include bare-button;
+
+  align-self: flex-start;
+  padding: 0 4px;
+  color: tok(primary);
+  font-size: fs(12);
+  font-weight: $medium;
+}
+
+// ---- agenda ----
+.sd-calendar__agenda {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sd-calendar__agenda-day {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid tok(calendar-line);
+}
+
+.sd-calendar__agenda-heading {
+  display: flex;
+  flex-direction: column;
+  font-size: fs(13);
+  font-weight: $medium;
+
+  &[data-today] {
+    color: tok(primary);
+  }
+}
+
+.sd-calendar__agenda-today {
+  font-size: fs(12);
+  font-weight: 400;
+}
+
+.sd-calendar__agenda-holiday {
+  color: tok(text-secondary);
+  font-size: fs(12);
+  font-weight: 400;
+
+  &[data-holiday='off'] {
+    color: tok(error);
+  }
+}
+
+.sd-calendar__agenda-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sd-calendar__agenda-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  min-height: 32px;
+  padding: 2px 8px;
+  border-radius: radius(8);
+  cursor: pointer;
+
+  &:has(.sd-calendar__agenda-place) {
+    grid-template-columns: 92px minmax(0, 1fr) minmax(0, 0.6fr);
+  }
+
+  &[data-selected] {
+    background: tok(primary-light);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  > .sd-calendar__agenda-title .sd-calendar__dot {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (hover: hover) {
+  .sd-calendar__agenda-row:not([data-selected]):hover {
+    background: color-mix(in srgb, tok(text) 4%, transparent);
+  }
+}
+
+.sd-calendar__agenda-time {
+  color: tok(text-secondary);
+  font-size: fs(13);
+}
+
+.sd-calendar__agenda-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: fs(14);
+  font-weight: $medium;
+}
+
+.sd-calendar__agenda-text {
+  @include ellipsis;
+
+  min-width: 0;
+}
+
+.sd-calendar__agenda-place {
+  @include ellipsis;
+
+  color: tok(text-secondary);
+  font-size: fs(13);
+}
+
+.sd-calendar__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 152px;
+  color: tok(text-secondary);
+}
+
+.sd-calendar__empty-icon {
+  color: tok(border-strong);
+}
+
+.sd-calendar__empty-text {
+  margin: 0;
+  font-size: fs(14);
+}
