@@ -1,6 +1,5 @@
 import { ɵsdNormalizeCalendarDay, sdSerializeTemporalValue, type SdTemporalValueTransform } from '@sdcorejs/angular/forms/models';
 import { sdTimeToMinutes } from '@sdcorejs/angular/forms/time';
-import { DateUtilities } from '@sdcorejs/utils/fns';
 import type { SdCalendarEvent, SdCalendarRange, SdCalendarView, SdCalendarVisibleRange, SdCalendarWorkingHours } from './calendar.model';
 
 /**
@@ -16,6 +15,7 @@ export interface SdCalendarClock {
   readonly timeZone: string;
   toFormat(value: unknown, format: string): string;
   parse(value: unknown): Date | null;
+  parseFrom(value: unknown, format: string): Date | null;
   beginOfNextDay(value: unknown): Date | null;
 }
 
@@ -372,19 +372,19 @@ export function sdCalendarReadDay(value: unknown, clock: SdCalendarClock): strin
   return ɵsdNormalizeCalendarDay(value, clock);
 }
 
-const localZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const WALL_CLOCK = 'yyyy/MM/dd HH:mm';
 
 /**
  * Wall-clock day and minutes of a value in the clock's zone.
  *
- * why: read from the zoned parts, not from `SdDateTimeService.toWallClock`: its carrier is a local `Date`, and a
+ * why: read as text (`toFormat`), not through `SdDateTimeService.toWallClock`: that carrier is a local `Date`, and a
  * wall clock that falls in a DST gap of the browser's own zone (02:30 on a spring-forward day) would shift by an hour.
  */
 function wallClock(value: unknown, clock: SdCalendarClock): { day: string; minutes: number } | null {
   if (value === null || value === undefined || value === '') return null;
-  const parts = DateUtilities.toZonedParts(value, clock.timeZone === 'local' ? localZone() : clock.timeZone);
-  if (!parts) return null;
-  return { day: sdCalendarDay(parts.year, parts.month, parts.day), minutes: parts.hour * 60 + parts.minute };
+  const text = clock.toFormat(value, WALL_CLOCK);
+  if (!text) return null;
+  return { day: text.slice(0, 10), minutes: Number(text.slice(11, 13)) * 60 + Number(text.slice(14, 16)) };
 }
 
 /**
@@ -453,14 +453,8 @@ export function sdCalendarPlace(event: SdCalendarEvent, clock: SdCalendarClock):
 
 /** Instant of a wall clock (`minutes` may be 1440: midnight of the next day) in the clock's zone. */
 function instantOf(day: string, minutes: number, clock: SdCalendarClock): Date {
-  const { year, month, day: date } = partsOf(day);
-  if (clock.timeZone === 'local') return new Date(year, month - 1, date, 0, minutes, 0, 0);
-  // why: straight from the zoned parts, like `SdDateTimeService.fromWallClock`, without a local carrier in between.
-  const next = sdCalendarDayParts(minutes >= MINUTES_PER_DAY ? sdCalendarAddDays(day, 1) : day)!;
-  return DateUtilities.fromZonedParts(
-    { year: next.year, month: next.month, day: next.day, hour: Math.floor((minutes % MINUTES_PER_DAY) / 60), minute: minutes % 60 },
-    clock.timeZone
-  );
+  // why: parsed from text in the zone (`parseFrom`), like the reading above, so no local carrier sits in between.
+  return clock.parseFrom(`${sdCalendarSerialize(day, minutes, clock, null).slice(0, 16)}`, WALL_CLOCK)!;
 }
 
 /**

@@ -1,40 +1,40 @@
 @use 'sass:map';
 
-// Default light values of the palette, used only as `var()` fallbacks (calendar.md §14).
-$fallbacks: (
-  'primary': #005cbb,
-  'primary-light': #dbe8f5,
-  'primary-contrast': #ffffff,
-  'secondary': #5c6270,
-  'secondary-light': #ebecee,
-  'info': #006a6a,
-  'info-light': #dbeaea,
-  'success': #2e7d32,
-  'success-light': #e2ede2,
-  'warning': #a66300,
-  'warning-light': #f3e9db,
-  'error': #ba1a1a,
-  'error-light': #f5dfdf,
-  'surface': #fdfbff,
-  'surface-muted': #e7e8ed,
-  'surface-inverse': #1a1b1f,
-  'text': #1a1b1f,
-  'text-secondary': #44474f,
-  'border': #c4c6d0,
-  'border-strong': #74777f,
-  'status-error-bg': #f5dfdf,
-  'status-error-fg': #9c1616,
-  'focus-ring-color': #005cbb,
-  'calendar-line': #dedee5,
-  'calendar-line-half': #efeef3,
-  'calendar-off-hours': #f3f3f7,
-  'calendar-now': #ba1a1a,
-  'calendar-today': #005cbb,
+// Tokens the calendar reads, each with the default light value as its fallback (calendar.md §14).
+$tokens: (
+  'primary': var(--sd-primary, #005cbb),
+  'primary-light': var(--sd-primary-light, #dbe8f5),
+  'primary-contrast': var(--sd-primary-contrast, #ffffff),
+  'secondary': var(--sd-secondary, #5c6270),
+  'secondary-light': var(--sd-secondary-light, #ebecee),
+  'info': var(--sd-info, #006a6a),
+  'info-light': var(--sd-info-light, #dbeaea),
+  'success': var(--sd-success, #2e7d32),
+  'success-light': var(--sd-success-light, #e2ede2),
+  'warning': var(--sd-warning, #a66300),
+  'warning-light': var(--sd-warning-light, #f3e9db),
+  'error': var(--sd-error, #ba1a1a),
+  'error-light': var(--sd-error-light, #f5dfdf),
+  'surface': var(--sd-surface, #fdfbff),
+  'surface-muted': var(--sd-surface-muted, #e7e8ed),
+  'surface-inverse': var(--sd-surface-inverse, #1a1b1f),
+  'text': var(--sd-text, #1a1b1f),
+  'text-secondary': var(--sd-text-secondary, #44474f),
+  'border': var(--sd-border, #c4c6d0),
+  'border-strong': var(--sd-border-strong, #74777f),
+  'status-error-bg': var(--sd-status-error-bg, #f5dfdf),
+  'status-error-fg': var(--sd-status-error-fg, #9c1616),
+  'focus-ring-color': var(--sd-focus-ring-color, #005cbb),
+  'calendar-line': var(--sd-calendar-line, #dedee5),
+  'calendar-line-half': var(--sd-calendar-line-half, #efeef3),
+  'calendar-off-hours': var(--sd-calendar-off-hours, #f3f3f7),
+  'calendar-now': var(--sd-calendar-now, #ba1a1a),
+  'calendar-today': var(--sd-calendar-today, #005cbb),
 );
 $palette: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
 
 @function tok($name) {
-  @return var(--sd-#{$name}, map.get($fallbacks, $name));
+  @return map.get($tokens, $name);
 }
 
 @function fs($px) {
