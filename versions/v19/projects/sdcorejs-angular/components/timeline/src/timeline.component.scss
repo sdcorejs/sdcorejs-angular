@@ -95,7 +95,7 @@ $weight-medium: var(--sd-font-weight-medium, 500);
     bottom: 0;
     left: calc(var(--sd-timeline-marker) / 2 - 0.5px);
     width: 1px;
-    background: var(--sd-timeline-line, #{c('border')});
+    background: var(--sd-timeline-line);
   }
 }
 

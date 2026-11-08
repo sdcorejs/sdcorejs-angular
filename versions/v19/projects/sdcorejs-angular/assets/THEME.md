@@ -386,6 +386,11 @@ values; by default they point at the shared tokens:
 - `--sd-chip-calendar-chip-locked-bg`: `var(--sd-chip-locked-bg)`, the background of a chip that `removable` keeps.
 - `--sd-chip-calendar-more-hover-bg`: `var(--sd-chip-more-hover-bg)`, the hover background of the “+N” button.
 
+## Timeline token
+
+`--sd-timeline-line` (`var(--sd-border)` in light and dark) is the 1px connector between the markers of `sd-timeline`.
+Set it to a stronger or tinted colour when the timeline sits on a background close to `--sd-border`.
+
 ## Upload file tokens
 
 `sd-upload-file` (design handoff wave 3 · 4b–4d). Field colours come from the palette (`--sd-primary`, `--sd-border-strong`,

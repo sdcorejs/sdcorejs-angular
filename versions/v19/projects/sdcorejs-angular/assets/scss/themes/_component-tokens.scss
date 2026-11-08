@@ -269,6 +269,8 @@ $component-tokens: (
   'table-tree-root-text': (#1f2330, #e3e2e6),
   'table-export-panel-bg': (#f6f6f6, #25272c),
   'table-export-text': (#000000, #e3e2e6),
+  // timeline — connector between entries; the theme border by default.
+  'timeline-line': (var(--sd-border), var(--sd-border)),
   // tree
   'tree-selected-mix': (#ffffff, #1d1f23),
   'tree-text': (#102047, #e3e2e6),

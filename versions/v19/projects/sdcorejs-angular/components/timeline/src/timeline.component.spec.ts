@@ -160,6 +160,19 @@ describe('SdTimeline with items', () => {
     expect(item('e2').querySelector('.item-action')?.getAttribute('data-ref')).toBe('e2');
   });
 
+  it('exposes a labelled region, leveled day headings and a spoken summary per entry', () => {
+    const region = root().querySelector('section') as HTMLElement;
+    expect(region.getAttribute('role')).toBe('region');
+    expect(region.getAttribute('aria-label')).toBe('Hoạt động');
+    expect(region.getAttribute('data-autoid')).toBe('components-timeline-activity');
+    expect(root().querySelector('.sd-timeline__day')?.getAttribute('aria-level')).toBe('3');
+    const article = item('c1').querySelector('article') as HTMLElement;
+    const label = document.getElementById(article.getAttribute('aria-labelledby')!);
+    expect(article.getAttribute('aria-labelledby')).toBe('activity-item-c1');
+    expect(label?.textContent).toContain('Bình luận của Thu Hà');
+    expect(item('c1').querySelector('time')?.getAttribute('title')).toMatch(/\(GMT\+7\)$/);
+  });
+
   it('puts the actor, time and source on a second line without day groups', () => {
     host.groupBy.set('none');
     fixture.detectChanges();
