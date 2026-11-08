@@ -1,10 +1,4 @@
-<!-- Read-only: a plain section, not an sd-card, so there is no hover, cursor or focus to suggest an action. -->
-<div class="score-grid">
-  <sd-section hideHeader>
-    <div class="score">
-      <span class="score__label">{{ metric.label }}</span>
-      <strong class="score__value">{{ metric.value }}</strong>
-      <span class="score__hint">{{ metric.hint }}</span>
-    </div>
-  </sd-section>
+<!-- Read-only: behavior="static" has no hover, cursor or focus that would suggest an action. -->
+<div class="sd-card-grid">
+  <sd-card behavior="static" autoId="score-metric" [content]="metric" />
 </div>

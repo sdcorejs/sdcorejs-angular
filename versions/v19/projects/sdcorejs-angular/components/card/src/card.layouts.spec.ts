@@ -201,6 +201,16 @@ describe('SdCard layouts', () => {
     });
   });
 
+  describe('content types', () => {
+    it('rejects data that does not match the layout at compile time', () => {
+      // @ts-expect-error stat data has a label, not a title
+      const stat: SdCardContent = { layout: 'stat', data: { title: 'x' } };
+      // @ts-expect-error option data has a title, not a label and a value
+      const option: SdCardContent = { layout: 'option', data: { label: 'x', value: 1 } };
+      expect([stat, option].length).toBe(2);
+    });
+  });
+
   describe('projected content', () => {
     it('ignores ng-content padding rules once content is set', () => {
       stat({ label: 'Tổng đơn', value: 1 });

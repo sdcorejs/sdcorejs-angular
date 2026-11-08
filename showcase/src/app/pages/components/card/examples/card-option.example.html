@@ -1,0 +1,21 @@
+<div class="example-stack">
+  <!-- Single group of option cards: radiogroup, one tab stop, arrow keys move focus and selection. -->
+  <sd-card-group class="sd-card-grid" autoId="option-policy" aria-label="Xử lý dòng trùng mã" [(model)]="policy">
+    @for (option of policies; track option.key) {
+      <sd-card [value]="option.key" [autoId]="'option-policy-' + option.key" [content]="{ layout: 'option', data: option.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">policy: {{ policy() ?? 'null' }}</p>
+
+  <!-- Multiple group: checkboxes; a disabled card is skipped. -->
+  <sd-card-group class="sd-card-grid" autoId="option-kind" aria-label="Loại đối tác" multiple [(model)]="kinds">
+    @for (option of partnerKinds; track option.key) {
+      <sd-card
+        [value]="option.key"
+        [autoId]="'option-kind-' + option.key"
+        [disabled]="option.disabled ?? false"
+        [content]="{ layout: 'option', data: option.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">kinds: {{ kinds() }}</p>
+</div>

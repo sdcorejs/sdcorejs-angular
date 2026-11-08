@@ -2518,6 +2518,79 @@ export class ButtonStatesExampleComponent {
   font-size: 13px;
 }`,
   },
+  "components/card/example-behavior": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, type SdCardContent } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-behavior-example',
+  standalone: true,
+  imports: [SdCard],
+  templateUrl: './card-behavior.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardBehaviorExampleComponent {
+  readonly revenue: SdCardContent = {
+    layout: 'stat',
+    data: { label: 'Doanh thu', value: 86_400_000, format: 'compact', context: '31 đơn hoàn tất' },
+  };
+  readonly pending: SdCardContent = {
+    layout: 'stat',
+    data: { label: 'Chờ xác nhận', value: 18, delta: { value: 6, positive: 'down' }, context: '12 đơn quá 24 giờ', contextColor: 'warning' },
+  };
+  readonly shipping: SdCardContent = { layout: 'stat', data: { label: 'Đang giao', value: 9, context: 'Bấm để lọc' } };
+  readonly lastEvent = signal('Chưa có interaction');
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
   "components/card/example-count-card-de-loc": {
     typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
@@ -2740,6 +2813,12 @@ export class CardStatesExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/card/example-icon-canh-nhan": {
@@ -3234,20 +3313,432 @@ export class CardScoreIconTileExampleComponent {
   }
 }`,
   },
+  "components/card/example-layout-entity": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdCard, SdCardActionsDirective, SdCardGroup, type SdCardEntityData } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-entity-example',
+  standalone: true,
+  imports: [SdButton, SdCard, SdCardActionsDirective, SdCardGroup],
+  templateUrl: './card-entity.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardEntityExampleComponent {
+  readonly company: SdCardEntityData = {
+    title: 'Công ty TNHH Minh Phát',
+    subtitle: 'KH0012',
+    avatar: { text: 'Minh Phát' },
+    badge: { title: 'VIP', color: 'warning' },
+    meta: [
+      { label: 'Công nợ', value: '128,4 tr' },
+      { label: 'Đơn', value: '48' },
+      { label: 'Phụ trách', value: 'Thu Hà' },
+    ],
+  };
+  readonly warehouse: SdCardEntityData = {
+    title: 'Kho Hà Nội',
+    subtitle: 'Long Biên · 1.240 mã hàng',
+    avatar: { icon: 'warehouse' },
+  };
+  readonly customers: readonly { readonly code: string; readonly data: SdCardEntityData }[] = [
+    { code: 'KH0031', data: { title: 'Trần Bảo Ngọc', subtitle: 'KH0031', avatar: { text: 'Bảo Ngọc' } } },
+    { code: 'KH0047', data: { title: 'Phạm Gia Huy', subtitle: 'KH0047', avatar: { text: 'Gia Huy' } } },
+    { code: 'KH0052', data: { title: 'Lê Thu Trang', subtitle: 'KH0052', avatar: { text: 'Thu Trang' } } },
+  ];
+  readonly picked = signal<string | string[] | null>(['KH0047']);
+  readonly lastAction = signal('Chưa có tác vụ');
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
+  "components/card/example-layout-file": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdCard, SdCardActionsDirective, SdCardGroup, type SdCardFileData } from '@sdcorejs/angular/components/card';
+
+/** Inline placeholder picture so the example has a thumbnail without a network request. */
+const STORE_THUMBNAIL =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 88"><rect width="160" height="88" fill="#cfe3f5"/>' +
+      '<rect x="30" y="34" width="100" height="54" fill="#7aa7d1"/><rect x="66" y="56" width="28" height="32" fill="#3d6f9e"/></svg>'
+  );
+
+@Component({
+  selector: 'app-card-file-example',
+  standalone: true,
+  imports: [SdButton, SdCard, SdCardActionsDirective, SdCardGroup],
+  templateUrl: './card-file.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardFileExampleComponent {
+  readonly files: readonly { readonly id: string; readonly data: SdCardFileData }[] = [
+    { id: 'contract', data: { name: 'Hợp đồng nguyên tắc 2026.pdf', size: 1_258_291 } },
+    { id: 'store', data: { name: 'Ảnh cửa hàng Q1.jpg', size: 2_516_582, thumbnail: STORE_THUMBNAIL } },
+    { id: 'prices', data: { name: 'Bảng giá áp dụng Q4.xlsx', size: 90_112 } },
+    { id: 'handover', data: { name: 'Biên bản bàn giao.docx', size: 143_360 } },
+  ];
+  readonly selected = signal<string | string[] | null>(['handover']);
+  readonly lastAction = signal('Chưa có tác vụ');
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
+  "components/card/example-layout-option": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, SdCardGroup, type SdCardOptionData } from '@sdcorejs/angular/components/card';
+
+type DuplicatePolicy = 'skip' | 'overwrite';
+type PartnerKind = 'personal' | 'business' | 'agency';
+
+@Component({
+  selector: 'app-card-option-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-option.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardOptionExampleComponent {
+  readonly policy = signal<DuplicatePolicy | DuplicatePolicy[] | null>('skip');
+  readonly policies: readonly { readonly key: DuplicatePolicy; readonly data: SdCardOptionData }[] = [
+    {
+      key: 'skip',
+      data: { icon: 'skip_next', title: 'Bỏ qua dòng trùng', description: 'Sản phẩm đã có giữ nguyên. 3 dòng trùng mã không được nhập.' },
+    },
+    {
+      key: 'overwrite',
+      data: {
+        icon: 'published_with_changes',
+        title: 'Ghi đè sản phẩm đã có',
+        description: 'Tên, đơn vị và giá của 3 sản phẩm sẽ bị thay. Không hoàn tác được.',
+        badge: { title: 'Không hoàn tác', color: 'warning' },
+      },
+    },
+  ];
+  readonly kinds = signal<PartnerKind | PartnerKind[] | null>(['personal']);
+  readonly partnerKinds: readonly { readonly key: PartnerKind; readonly data: SdCardOptionData; readonly disabled?: boolean }[] = [
+    { key: 'personal', data: { icon: 'person', title: 'Cá nhân', description: 'Khách lẻ, không cần mã số thuế' } },
+    { key: 'business', data: { icon: 'business', title: 'Doanh nghiệp', description: 'Cần mã số thuế' }, disabled: true },
+    { key: 'agency', data: { icon: 'storefront', title: 'Đại lý', description: 'Có bảng giá và hạn mức riêng' } },
+  ];
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
+  "components/card/example-layout-shortcut": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdCard, type SdCardShortcutData } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-shortcut-example',
+  standalone: true,
+  imports: [SdCard],
+  templateUrl: './card-shortcut.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardShortcutExampleComponent {
+  readonly shortcuts: readonly { readonly key: string; readonly data: SdCardShortcutData }[] = [
+    { key: 'order', data: { icon: 'add_shopping_cart', label: 'Tạo đơn hàng', description: 'Đơn bán lẻ hoặc đại lý' } },
+    { key: 'import', data: { icon: 'upload_file', label: 'Nhập sản phẩm', description: 'Từ tệp Excel' } },
+    { key: 'roles', data: { icon: 'admin_panel_settings', label: 'Vai trò và quyền', description: '3 vai trò' } },
+  ];
+  readonly compactShortcuts: readonly { readonly key: string; readonly data: SdCardShortcutData }[] = [
+    { key: 'order', data: { icon: 'add_shopping_cart', label: 'Tạo đơn hàng' } },
+    { key: 'customer', data: { icon: 'person_add', label: 'Tạo khách hàng' } },
+    { key: 'import', data: { icon: 'upload_file', label: 'Nhập sản phẩm' } },
+  ];
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
+  "components/card/example-layout-stat": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdCard, SdCardGroup, type SdCardContent } from '@sdcorejs/angular/components/card';
+
+type OrderFilter = 'pending' | 'shipping' | 'done';
+
+@Component({
+  selector: 'app-card-stat-example',
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  templateUrl: './card-stat.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardStatExampleComponent {
+  readonly filter = signal<OrderFilter | OrderFilter[] | null>('shipping');
+  readonly cards: readonly { readonly key: OrderFilter; readonly content: SdCardContent }[] = [
+    {
+      key: 'pending',
+      content: { layout: 'stat', data: { label: 'Chờ xác nhận', value: 18, delta: { value: 6, positive: 'down' }, icon: 'schedule' } },
+    },
+    { key: 'shipping', content: { layout: 'stat', data: { label: 'Đang giao', value: 9, context: 'Đang lọc' } } },
+    {
+      key: 'done',
+      content: { layout: 'stat', data: { label: 'Tỉ lệ hoàn tất', value: 0.874, format: 'percent', delta: { value: 0.021 } } },
+    },
+  ];
+  readonly revenue: SdCardContent = {
+    layout: 'stat',
+    data: { label: 'Doanh thu', value: 1_820_000_000, format: 'compact', context: 'Không đổi so với tháng trước', delta: { value: 0 } },
+  };
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}`,
+  },
   "components/card/example-metric-chi-doc": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdCard, type SdCardContent } from '@sdcorejs/angular/components/card';
 
 @Component({
   selector: 'app-card-score-metric-example',
   standalone: true,
-  imports: [SdSection],
+  imports: [SdCard],
   templateUrl: './card-score-metric.example.html',
   styleUrl: './card-score-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CardScoreMetricExampleComponent {
-  readonly metric = { label: 'Giá trị đơn hàng', value: '567 triệu ₫', hint: '24 đơn hàng · Toàn bộ dữ liệu mẫu' };
+  readonly metric: SdCardContent = {
+    layout: 'stat',
+    data: { label: 'Giá trị đơn hàng', value: 567_000_000, format: 'compact', context: '24 đơn hàng · Toàn bộ dữ liệu mẫu' },
+  };
 }`,
     scss: `:host {
   display: flex;
@@ -3417,6 +3908,12 @@ export class CardMultipleExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/card/example-object-comparewith": {
@@ -3488,6 +3985,12 @@ export class CardCompareExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/card/example-score-card-gon": {
@@ -3673,6 +4176,12 @@ export class CardSingleExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/card/example-so-sanh-hai-ky": {
@@ -3876,6 +4385,12 @@ export class CardStandaloneExampleComponent {
   margin: 0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/card/example-tien-do-ty-le": {
@@ -4000,6 +4515,87 @@ export class CardScoreProgressExampleComponent {
     color: var(--sd-text-secondary, #5f6368);
     font-weight: 600;
   }
+}`,
+  },
+  "components/card/example-trang-thai-cua-layout": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdCard, SdCardGroup, type SdCardContent } from '@sdcorejs/angular/components/card';
+
+@Component({
+  selector: 'app-card-layout-states-example',
+  standalone: true,
+  imports: [SdButton, SdCard, SdCardGroup],
+  templateUrl: './card-layout-states.example.html',
+  styleUrl: './card-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CardLayoutStatesExampleComponent {
+  readonly loading = signal(true);
+  readonly failed = signal(true);
+  readonly retries = signal(0);
+  readonly selected = signal<string | string[] | null>('selected');
+  readonly kind = signal<string | string[] | null>(null);
+  readonly pending: SdCardContent = { layout: 'stat', data: { label: 'Chờ xác nhận', value: null, context: '12 đơn quá 24 giờ' } };
+  readonly customer: SdCardContent = {
+    layout: 'entity',
+    data: { title: 'Công ty TNHH Minh Phát', subtitle: 'KH0012', avatar: { text: 'Minh Phát' } },
+  };
+  readonly business: SdCardContent = { layout: 'option', data: { icon: 'business', title: 'Doanh nghiệp', description: 'Cần mã số thuế' } };
+  readonly shipping: SdCardContent = { layout: 'stat', data: { label: 'Đang giao', value: 9, context: 'Đang lọc' } };
+
+  retry(): void {
+    this.retries.update(count => count + 1);
+    this.failed.set(false);
+  }
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.example-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+// The consumer owns layout; SdCardGroup deliberately provides no grid or gap.
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.demo-card {
+  max-width: 360px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content span,
+.card-content small,
+.model-readout {
+  color: var(--sd-text-secondary, #5f6368);
+}
+
+.model-readout {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }`,
   },
   "components/code-editor": {
@@ -26914,6 +27510,32 @@ Bởi Nguyễn Văn A"></sd-badge>
     autoId="secondary-icon-disabled"></sd-button>
 </div>`,
   },
+  "components/card/example-behavior": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-behavior"],
+    html: `<div class="example-stack">
+  <div class="sd-card-grid">
+    <!-- static: no role, no focus, no hover; the default outside a group. -->
+    <sd-card autoId="behavior-static" [content]="revenue" />
+    <!-- link: one real <a> around the card; opens in a new tab with Ctrl/Cmd+click. -->
+    <sd-card
+      behavior="link"
+      autoId="behavior-link"
+      [link]="[]"
+      [queryParams]="{ status: 'pending' }"
+      [content]="pending"
+      (click)="lastEvent.set('link: điều hướng tới ?status=pending')" />
+    <!-- select: a standalone card toggles itself; inside sd-card-group it drives the model. -->
+    <sd-card
+      #select="sdCard"
+      behavior="select"
+      value="shipping"
+      autoId="behavior-select"
+      [content]="shipping"
+      (click)="lastEvent.set('select: selected() = ' + select.selected())" />
+  </div>
+  <p class="model-readout">{{ lastEvent() }}</p>
+</div>`,
+  },
   "components/card/example-count-card-de-loc": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-count-card-de-loc"],
     html: `<sd-card-group class="score-grid" autoId="score-filter" [(model)]="selected" (sdChange)="onSelect($event)">
@@ -26978,6 +27600,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   <sd-card
     #standalone="sdCard"
     class="demo-card"
+    behavior="select"
     value="standalone-state"
     autoId="state-standalone"
     color="success"
@@ -27082,17 +27705,121 @@ Bởi Nguyễn Văn A"></sd-badge>
   }
 </div>`,
   },
+  "components/card/example-layout-entity": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-layout-entity"],
+    html: `<div class="example-stack">
+  <div class="sd-card-grid">
+    <!-- md · link: the ⋯ button sits outside the anchor, so it never navigates. -->
+    <sd-card behavior="link" autoId="entity-link" [link]="[]" [queryParams]="{ customer: 'KH0012' }" [content]="{ layout: 'entity', data: company }">
+      <ng-template sdCardActions>
+        <sd-button type="text" prefixIcon="more_horiz" tooltip="Tác vụ" (click)="lastAction.set('⋯ của Minh Phát')" />
+      </ng-template>
+    </sd-card>
+    <sd-card autoId="entity-static" [content]="{ layout: 'entity', data: warehouse }" />
+  </div>
+
+  <!-- sm · select multiple: one row per record, check mark when selected. -->
+  <sd-card-group class="sd-card-grid" autoId="entity-pick" aria-label="Chọn khách hàng" multiple [(model)]="picked">
+    @for (customer of customers; track customer.code) {
+      <sd-card size="sm" [value]="customer.code" [autoId]="'entity-pick-' + customer.code" [content]="{ layout: 'entity', data: customer.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">picked: {{ picked() }} · {{ lastAction() }}</p>
+</div>`,
+  },
+  "components/card/example-layout-file": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-layout-file"],
+    html: `<div class="example-stack">
+  <!-- The type comes from the extension; the ⋯ menu never toggles the selection. -->
+  <sd-card-group class="sd-card-grid" autoId="file-grid" aria-label="Tệp đính kèm" multiple [(model)]="selected">
+    @for (file of files; track file.id) {
+      <sd-card [value]="file.id" [autoId]="'file-' + file.id" [content]="{ layout: 'file', data: file.data }">
+        <ng-template sdCardActions>
+          <sd-button type="text" prefixIcon="more_horiz" tooltip="Tác vụ" (click)="lastAction.set('⋯ của ' + file.data.name)" />
+        </ng-template>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">selected: {{ selected() }} · {{ lastAction() }}</p>
+</div>`,
+  },
+  "components/card/example-layout-option": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-layout-option"],
+    html: `<div class="example-stack">
+  <!-- Single group of option cards: radiogroup, one tab stop, arrow keys move focus and selection. -->
+  <sd-card-group class="sd-card-grid" autoId="option-policy" aria-label="Xử lý dòng trùng mã" [(model)]="policy">
+    @for (option of policies; track option.key) {
+      <sd-card [value]="option.key" [autoId]="'option-policy-' + option.key" [content]="{ layout: 'option', data: option.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">policy: {{ policy() ?? 'null' }}</p>
+
+  <!-- Multiple group: checkboxes; a disabled card is skipped. -->
+  <sd-card-group class="sd-card-grid" autoId="option-kind" aria-label="Loại đối tác" multiple [(model)]="kinds">
+    @for (option of partnerKinds; track option.key) {
+      <sd-card
+        [value]="option.key"
+        [autoId]="'option-kind-' + option.key"
+        [disabled]="option.disabled ?? false"
+        [content]="{ layout: 'option', data: option.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">kinds: {{ kinds() }}</p>
+</div>`,
+  },
+  "components/card/example-layout-shortcut": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-layout-shortcut"],
+    html: `<div class="example-stack">
+  <div class="sd-card-grid">
+    @for (shortcut of shortcuts; track shortcut.key) {
+      <sd-card
+        behavior="link"
+        [link]="[]"
+        [queryParams]="{ shortcut: shortcut.key }"
+        [autoId]="'shortcut-' + shortcut.key"
+        [content]="{ layout: 'shortcut', data: shortcut.data }" />
+    }
+  </div>
+  <!-- sm: icon and label on one row. -->
+  <div class="sd-card-grid sd-card-grid--sm">
+    @for (shortcut of compactShortcuts; track shortcut.key) {
+      <sd-card
+        behavior="link"
+        size="sm"
+        [link]="[]"
+        [queryParams]="{ shortcut: shortcut.key }"
+        [autoId]="'shortcut-sm-' + shortcut.key"
+        [content]="{ layout: 'shortcut', data: shortcut.data }" />
+    }
+  </div>
+</div>`,
+  },
+  "components/card/example-layout-stat": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-layout-stat"],
+    html: `<div class="example-stack">
+  <!-- md: score card of a list; the static revenue card sits in the group but never toggles the filter. -->
+  <sd-card-group class="sd-card-grid" autoId="stat-md" aria-label="Tóm tắt đơn hàng" [(model)]="filter">
+    @for (card of cards; track card.key) {
+      <sd-card [value]="card.key" [autoId]="'stat-md-' + card.key" [content]="card.content" />
+    }
+    <sd-card behavior="static" autoId="stat-md-revenue" [content]="revenue" />
+  </sd-card-group>
+
+  <!-- sm: one row with label and value; icon, delta and context are dropped. -->
+  <sd-card-group class="sd-card-grid sd-card-grid--sm" autoId="stat-sm" aria-label="Tóm tắt đơn hàng (gọn)" [(model)]="filter">
+    @for (card of cards; track card.key) {
+      <sd-card size="sm" [value]="card.key" [autoId]="'stat-sm-' + card.key" [content]="card.content" />
+    }
+    <sd-card behavior="static" size="sm" autoId="stat-sm-revenue" [content]="revenue" />
+  </sd-card-group>
+  <p class="model-readout">model: {{ filter() ?? 'null' }}</p>
+</div>`,
+  },
   "components/card/example-metric-chi-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-metric-chi-doc"],
-    html: `<!-- Read-only: a plain section, not an sd-card, so there is no hover, cursor or focus to suggest an action. -->
-<div class="score-grid">
-  <sd-section hideHeader>
-    <div class="score">
-      <span class="score__label">{{ metric.label }}</span>
-      <strong class="score__value">{{ metric.value }}</strong>
-      <span class="score__hint">{{ metric.hint }}</span>
-    </div>
-  </sd-section>
+    html: `<!-- Read-only: behavior="static" has no hover, cursor or focus that would suggest an action. -->
+<div class="sd-card-grid">
+  <sd-card behavior="static" autoId="score-metric" [content]="metric" />
 </div>`,
   },
   "components/card/example-multiple-selection": {
@@ -27181,7 +27908,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   "components/card/example-standalone-card": {
     ...SHOWCASE_PAGE_SOURCES["components/card/example-standalone-card"],
     html: `<div class="example-stack">
-  <sd-card #card="sdCard" class="demo-card" value="participating" autoId="standalone" (click)="onCardClick(card.selected())">
+  <sd-card #card="sdCard" class="demo-card" behavior="select" value="participating" autoId="standalone" (click)="onCardClick(card.selected())">
     <div class="card-content">
       <strong>Participation</strong>
       <span>Toàn bộ nội dung này do consumer project vào.</span>
@@ -27204,6 +27931,31 @@ Bởi Nguyễn Văn A"></sd-badge>
       </div>
     </sd-section>
   }
+</div>`,
+  },
+  "components/card/example-trang-thai-cua-layout": {
+    ...SHOWCASE_PAGE_SOURCES["components/card/example-trang-thai-cua-layout"],
+    html: `<div class="example-stack">
+  <div class="sd-card-grid">
+    <!-- loading: grey blocks where the text goes; the height stays the same when loading ends. -->
+    <sd-card autoId="state-stat-loading" [loading]="loading()" [content]="pending" />
+    <sd-card autoId="state-entity-loading" [loading]="loading()" [content]="customer" />
+    <!-- error: "Retry" emits sdRetry and never triggers the card behavior. -->
+    <sd-card autoId="state-stat-error" [error]="failed()" [content]="pending" (sdRetry)="retry()" />
+  </div>
+  <div class="sd-card-grid">
+    <sd-card-group autoId="state-option" aria-label="Loại đối tác" [(model)]="kind">
+      <sd-card value="business" autoId="state-option-disabled" disabled [content]="business" />
+    </sd-card-group>
+    <sd-card-group autoId="state-select" aria-label="Lọc đơn" [(model)]="selected">
+      <sd-card value="selected" autoId="state-stat-selected" [content]="shipping" />
+    </sd-card-group>
+  </div>
+  <div class="example-actions">
+    <sd-button type="outline" [title]="loading() ? 'Tải xong' : 'Tải lại'" (click)="loading.set(!loading())" />
+    <sd-button type="outline" title="Báo lỗi" (click)="failed.set(true)" />
+  </div>
+  <p class="model-readout">sdRetry: {{ retries() }}</p>
 </div>`,
   },
   "components/code-editor/example-che-do-xem-json": {

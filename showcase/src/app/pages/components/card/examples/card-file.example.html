@@ -1,0 +1,13 @@
+<div class="example-stack">
+  <!-- The type comes from the extension; the ⋯ menu never toggles the selection. -->
+  <sd-card-group class="sd-card-grid" autoId="file-grid" aria-label="Tệp đính kèm" multiple [(model)]="selected">
+    @for (file of files; track file.id) {
+      <sd-card [value]="file.id" [autoId]="'file-' + file.id" [content]="{ layout: 'file', data: file.data }">
+        <ng-template sdCardActions>
+          <sd-button type="text" prefixIcon="more_horiz" tooltip="Tác vụ" (click)="lastAction.set('⋯ của ' + file.data.name)" />
+        </ng-template>
+      </sd-card>
+    }
+  </sd-card-group>
+  <p class="model-readout">selected: {{ selected() }} · {{ lastAction() }}</p>
+</div>

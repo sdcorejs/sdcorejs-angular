@@ -40,3 +40,9 @@
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 12px;
 }
+
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

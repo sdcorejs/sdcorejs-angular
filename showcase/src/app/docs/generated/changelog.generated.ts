@@ -57,15 +57,255 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "anchor": "unreleased",
     "unreleased": true,
     "packageVersions": [],
-    "summaryMarkdown": "",
-    "markdown": "### Changed\n\n#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
+    "summaryMarkdown": "> [!IMPORTANT]\n> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior=\"select\"` to keep the toggle.\n\n**Highlights**\n\n- `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state\n- `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`",
+    "markdown": "> [!IMPORTANT]\n> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior=\"select\"` to keep the toggle.\n\n**Highlights**\n\n- `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state\n- `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`\n\n### Changed (BREAKING for consumers)\n\n#### Card\n\n- A standalone `sd-card` (outside `sd-card-group`) is `static` by default: no role, no focus, its native click passes through, it no longer toggles `selected()` and it never emits `(click)`. Cards inside a group still default to `select` and look and behave as before.\n  - **Migration:** add `behavior=\"select\"` to a standalone card that must toggle.\n\n    ```diff\n    - <sd-card #card=\"sdCard\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    + <sd-card #card=\"sdCard\" behavior=\"select\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    ```\n\n- `value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.\n\n#### Tab router\n\n- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```\n\n### Added\n\n#### Anchor\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.\n\n#### Card\n\n- `behavior: 'static' | 'link' | 'select'` (`SdCardBehavior`): resolves to `select` inside `sd-card-group` and to `static` elsewhere.\n  - `link` wraps the card in one `<a class=\"sd-card__link\">`: `RouterLink` from `link` + `queryParams`, or `href` + `target` (`_blank` adds `rel=\"noopener noreferrer\"`); `link` wins over `href` with a dev-mode warning. `(click)` emits after navigation started. A disabled link has no `href`, `aria-disabled=\"true\"` and `tabindex=\"-1\"`; the focus ring is drawn on the card.\n  - A group ignores cards whose behavior is not `select`, so a read-only card can sit in a filter group.\n- `content: SdCardContent` renders a built-in layout (`{ layout, data }`), checked at compile time per layout; without it the card projects `ng-content` as before.\n  - `stat` (`SdCardStatData`): label, value, delta chip, context line, optional icon. `format` is `number` (with `precision`), `compact` (`86,4 triệu` in Vietnamese, `86.4M` elsewhere; `SD_CARD_CONFIGURATION.compactDisplay` overrides), `percent` (a ratio) or `text`, in the active i18n locale. `null` shows `—`; the full number goes into `title` and the accessible name. A `link` stat whose value is `0` renders static.\n  - `option` (`SdCardOptionData`, `select` only): icon tile, title, description, badge and a check mark. A single group of option cards becomes `role=\"radiogroup\"` with one tab stop and arrow-key selection; a multiple group uses checkboxes.\n  - `entity` (`SdCardEntityData`): avatar (text, image or icon), title, subtitle, badge and up to three meta fields; `sm` is one row.\n  - `file` (`SdCardFileData`): thumbnail or a type icon (pdf, sheet, doc, image, other) from the MIME type or extension, a two-line name and \"TYPE · size\".\n  - `shortcut` (`SdCardShortcutData`, `link` only): icon, label, description; `sm` is one row.\n  - An invalid behavior for a layout (for example `option` with `link`) logs a dev-mode error and renders static.\n- `size: 'md' | 'sm'` (`SdCardSize`); without it a card turns `sm` while the new `SD_CARD_LAYOUT` token reports `compact()`. `sd-page-list` provides it. `option` and `file` stay `md`.\n- `loading` (skeleton, `aria-busy`, no activation, same height) and `error` with the `sdRetry` output (Retry never triggers the card behavior); both need `content`.\n- `SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.\n- Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).\n- i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.\n\n#### Tab\n\n- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.\n\n#### Table\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.\n\n#### General\n\n- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.\n\n### Changed\n\n#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The score cards of the customer and order lists use `sd-card` with `layout: 'stat'`, `loading` until the counts arrive and automatic `sm` in compact mode; the order revenue tile is a `behavior=\"static\"` card at the end of the group. The `.summary*` styles are gone; the group uses `sd-card-grid`. The compact row is 32px high (was 36px).\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
     "sections": [
+      {
+        "key": "changed",
+        "title": "Changed (BREAKING for consumers)",
+        "level": 3,
+        "anchor": "unreleased-changed-breaking-for-consumers",
+        "markdown": "#### Card\n\n- A standalone `sd-card` (outside `sd-card-group`) is `static` by default: no role, no focus, its native click passes through, it no longer toggles `selected()` and it never emits `(click)`. Cards inside a group still default to `select` and look and behave as before.\n  - **Migration:** add `behavior=\"select\"` to a standalone card that must toggle.\n\n    ```diff\n    - <sd-card #card=\"sdCard\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    + <sd-card #card=\"sdCard\" behavior=\"select\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    ```\n\n- `value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.\n\n#### Tab router\n\n- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```",
+        "items": [],
+        "children": [
+          {
+            "key": "card",
+            "title": "Card",
+            "level": 4,
+            "anchor": "unreleased-changed-breaking-for-consumers-card",
+            "markdown": "- A standalone `sd-card` (outside `sd-card-group`) is `static` by default: no role, no focus, its native click passes through, it no longer toggles `selected()` and it never emits `(click)`. Cards inside a group still default to `select` and look and behave as before.\n  - **Migration:** add `behavior=\"select\"` to a standalone card that must toggle.\n\n    ```diff\n    - <sd-card #card=\"sdCard\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    + <sd-card #card=\"sdCard\" behavior=\"select\" value=\"participating\" (click)=\"onToggle(card.selected())\">…</sd-card>\n    ```\n\n- `value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.",
+            "items": [
+              {
+                "text": "A standalone `sd-card` (outside `sd-card-group`) is `static` by default: no role, no focus, its native click passes through, it no longer toggles `selected()` and it never emits `(click)`. Cards inside a group still default to `select` and look and behave as before.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "**Migration:** add `behavior=\"select\"` to a standalone card that must toggle.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "text": "`value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "tab-router",
+            "title": "Tab router",
+            "level": 4,
+            "anchor": "unreleased-changed-breaking-for-consumers-tab-router",
+            "markdown": "- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```",
+            "items": [
+              {
+                "text": "A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "**Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "unreleased-added",
+        "markdown": "#### Anchor\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.\n\n#### Card\n\n- `behavior: 'static' | 'link' | 'select'` (`SdCardBehavior`): resolves to `select` inside `sd-card-group` and to `static` elsewhere.\n  - `link` wraps the card in one `<a class=\"sd-card__link\">`: `RouterLink` from `link` + `queryParams`, or `href` + `target` (`_blank` adds `rel=\"noopener noreferrer\"`); `link` wins over `href` with a dev-mode warning. `(click)` emits after navigation started. A disabled link has no `href`, `aria-disabled=\"true\"` and `tabindex=\"-1\"`; the focus ring is drawn on the card.\n  - A group ignores cards whose behavior is not `select`, so a read-only card can sit in a filter group.\n- `content: SdCardContent` renders a built-in layout (`{ layout, data }`), checked at compile time per layout; without it the card projects `ng-content` as before.\n  - `stat` (`SdCardStatData`): label, value, delta chip, context line, optional icon. `format` is `number` (with `precision`), `compact` (`86,4 triệu` in Vietnamese, `86.4M` elsewhere; `SD_CARD_CONFIGURATION.compactDisplay` overrides), `percent` (a ratio) or `text`, in the active i18n locale. `null` shows `—`; the full number goes into `title` and the accessible name. A `link` stat whose value is `0` renders static.\n  - `option` (`SdCardOptionData`, `select` only): icon tile, title, description, badge and a check mark. A single group of option cards becomes `role=\"radiogroup\"` with one tab stop and arrow-key selection; a multiple group uses checkboxes.\n  - `entity` (`SdCardEntityData`): avatar (text, image or icon), title, subtitle, badge and up to three meta fields; `sm` is one row.\n  - `file` (`SdCardFileData`): thumbnail or a type icon (pdf, sheet, doc, image, other) from the MIME type or extension, a two-line name and \"TYPE · size\".\n  - `shortcut` (`SdCardShortcutData`, `link` only): icon, label, description; `sm` is one row.\n  - An invalid behavior for a layout (for example `option` with `link`) logs a dev-mode error and renders static.\n- `size: 'md' | 'sm'` (`SdCardSize`); without it a card turns `sm` while the new `SD_CARD_LAYOUT` token reports `compact()`. `sd-page-list` provides it. `option` and `file` stay `md`.\n- `loading` (skeleton, `aria-busy`, no activation, same height) and `error` with the `sdRetry` output (Retry never triggers the card behavior); both need `content`.\n- `SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.\n- Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).\n- i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.\n\n#### Tab\n\n- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.\n\n#### Table\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.\n\n#### General\n\n- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+        "items": [],
+        "children": [
+          {
+            "key": "anchor",
+            "title": "Anchor",
+            "level": 4,
+            "anchor": "unreleased-added-anchor",
+            "markdown": "- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.",
+            "items": [
+              {
+                "text": "`syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "card",
+            "title": "Card",
+            "level": 4,
+            "anchor": "unreleased-added-card",
+            "markdown": "- `behavior: 'static' | 'link' | 'select'` (`SdCardBehavior`): resolves to `select` inside `sd-card-group` and to `static` elsewhere.\n  - `link` wraps the card in one `<a class=\"sd-card__link\">`: `RouterLink` from `link` + `queryParams`, or `href` + `target` (`_blank` adds `rel=\"noopener noreferrer\"`); `link` wins over `href` with a dev-mode warning. `(click)` emits after navigation started. A disabled link has no `href`, `aria-disabled=\"true\"` and `tabindex=\"-1\"`; the focus ring is drawn on the card.\n  - A group ignores cards whose behavior is not `select`, so a read-only card can sit in a filter group.\n- `content: SdCardContent` renders a built-in layout (`{ layout, data }`), checked at compile time per layout; without it the card projects `ng-content` as before.\n  - `stat` (`SdCardStatData`): label, value, delta chip, context line, optional icon. `format` is `number` (with `precision`), `compact` (`86,4 triệu` in Vietnamese, `86.4M` elsewhere; `SD_CARD_CONFIGURATION.compactDisplay` overrides), `percent` (a ratio) or `text`, in the active i18n locale. `null` shows `—`; the full number goes into `title` and the accessible name. A `link` stat whose value is `0` renders static.\n  - `option` (`SdCardOptionData`, `select` only): icon tile, title, description, badge and a check mark. A single group of option cards becomes `role=\"radiogroup\"` with one tab stop and arrow-key selection; a multiple group uses checkboxes.\n  - `entity` (`SdCardEntityData`): avatar (text, image or icon), title, subtitle, badge and up to three meta fields; `sm` is one row.\n  - `file` (`SdCardFileData`): thumbnail or a type icon (pdf, sheet, doc, image, other) from the MIME type or extension, a two-line name and \"TYPE · size\".\n  - `shortcut` (`SdCardShortcutData`, `link` only): icon, label, description; `sm` is one row.\n  - An invalid behavior for a layout (for example `option` with `link`) logs a dev-mode error and renders static.\n- `size: 'md' | 'sm'` (`SdCardSize`); without it a card turns `sm` while the new `SD_CARD_LAYOUT` token reports `compact()`. `sd-page-list` provides it. `option` and `file` stay `md`.\n- `loading` (skeleton, `aria-busy`, no activation, same height) and `error` with the `sdRetry` output (Retry never triggers the card behavior); both need `content`.\n- `SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.\n- Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).\n- i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.",
+            "items": [
+              {
+                "text": "`behavior: 'static' | 'link' | 'select'` (`SdCardBehavior`): resolves to `select` inside `sd-card-group` and to `static` elsewhere.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "`link` wraps the card in one `<a class=\"sd-card__link\">`: `RouterLink` from `link` + `queryParams`, or `href` + `target` (`_blank` adds `rel=\"noopener noreferrer\"`); `link` wins over `href` with a dev-mode warning. `(click)` emits after navigation started. A disabled link has no `href`, `aria-disabled=\"true\"` and `tabindex=\"-1\"`; the focus ring is drawn on the card.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "A group ignores cards whose behavior is not `select`, so a read-only card can sit in a filter group.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "text": "`content: SdCardContent` renders a built-in layout (`{ layout, data }`), checked at compile time per layout; without it the card projects `ng-content` as before.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "`stat` (`SdCardStatData`): label, value, delta chip, context line, optional icon. `format` is `number` (with `precision`), `compact` (`86,4 triệu` in Vietnamese, `86.4M` elsewhere; `SD_CARD_CONFIGURATION.compactDisplay` overrides), `percent` (a ratio) or `text`, in the active i18n locale. `null` shows `—`; the full number goes into `title` and the accessible name. A `link` stat whose value is `0` renders static.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`option` (`SdCardOptionData`, `select` only): icon tile, title, description, badge and a check mark. A single group of option cards becomes `role=\"radiogroup\"` with one tab stop and arrow-key selection; a multiple group uses checkboxes.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`entity` (`SdCardEntityData`): avatar (text, image or icon), title, subtitle, badge and up to three meta fields; `sm` is one row.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`file` (`SdCardFileData`): thumbnail or a type icon (pdf, sheet, doc, image, other) from the MIME type or extension, a two-line name and \"TYPE · size\".",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`shortcut` (`SdCardShortcutData`, `link` only): icon, label, description; `sm` is one row.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "An invalid behavior for a layout (for example `option` with `link`) logs a dev-mode error and renders static.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "text": "`size: 'md' | 'sm'` (`SdCardSize`); without it a card turns `sm` while the new `SD_CARD_LAYOUT` token reports `compact()`. `sd-page-list` provides it. `option` and `file` stay `md`.",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "`loading` (skeleton, `aria-busy`, no activation, same height) and `error` with the `sdRetry` output (Retry never triggers the card behavior); both need `content`.",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "`SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "tab",
+            "title": "Tab",
+            "level": 4,
+            "anchor": "unreleased-added-tab",
+            "markdown": "- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.",
+            "items": [
+              {
+                "text": "`sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "table",
+            "title": "Table",
+            "level": 4,
+            "anchor": "unreleased-added-table",
+            "markdown": "- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.",
+            "items": [
+              {
+                "text": "`syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`paginate.total: 'unknown'` restores the page size only.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "general",
+            "title": "General",
+            "level": 4,
+            "anchor": "unreleased-added-general",
+            "markdown": "- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+            "items": [
+              {
+                "text": "The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          }
+        ]
+      },
       {
         "key": "changed",
         "title": "Changed",
         "level": 3,
         "anchor": "unreleased-changed",
-        "markdown": "#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
+        "markdown": "#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The score cards of the customer and order lists use `sd-card` with `layout: 'stat'`, `loading` until the counts arrive and automatic `sm` in compact mode; the order revenue tile is a `behavior=\"static\"` card at the end of the group. The `.summary*` styles are gone; the group uses `sd-card-grid`. The compact row is 32px high (was 36px).\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
         "items": [],
         "children": [
           {
@@ -73,7 +313,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
             "title": "Pattern",
             "level": 4,
             "anchor": "unreleased-changed-pattern",
-            "markdown": "- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.",
+            "markdown": "- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The score cards of the customer and order lists use `sd-card` with `layout: 'stat'`, `loading` until the counts arrive and automatic `sm` in compact mode; the order revenue tile is a `behavior=\"static\"` card at the end of the group. The `.summary*` styles are gone; the group uses `sd-card-grid`. The compact row is 32px high (was 36px).\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.",
             "items": [
               {
                 "text": "Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.",
@@ -100,6 +340,16 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
                     "children": []
                   }
                 ]
+              },
+              {
+                "text": "The score cards of the customer and order lists use `sd-card` with `layout: 'stat'`, `loading` until the counts arrive and automatic `sm` in compact mode; the order revenue tile is a `behavior=\"static\"` card at the end of the group. The `.summary*` styles are gone; the group uses `sd-card-grid`. The compact row is 32px high (was 36px).",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.",
+                "ordered": false,
+                "children": []
               }
             ],
             "children": []

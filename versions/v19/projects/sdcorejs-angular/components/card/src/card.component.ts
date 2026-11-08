@@ -166,6 +166,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     if (file) return sdCardJoinLabel(file.data.name, file.info.extension, file.info.size);
     const stat = this.stat();
     if (!stat) return null;
+    // why: no number is known while loading or after a failure; the state text is appended by accessibleLabel.
+    if (this.failed() || this.busy()) return stat.data.label;
     const delta = stat.delta;
     let deltaText = '';
     if (delta) {
@@ -174,7 +176,6 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
           ? this.#i18n.t('core.component.card.delta-unchanged')
           : this.#i18n.t(`core.component.card.delta-${delta.direction}`, { value: delta.display });
     }
-    if (this.failed() || this.busy()) return stat.data.label;
     return sdCardJoinLabel(stat.data.label, stat.value.full, deltaText, stat.data.context);
   });
   /** Read-only selection state; always `false` unless the card behaves as `select`. */

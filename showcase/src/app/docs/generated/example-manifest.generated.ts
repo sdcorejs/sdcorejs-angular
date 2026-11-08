@@ -72,12 +72,18 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-tac-vu-nghiep-vu"
   | "components/button/example-toggle-icon-set-bang-alias"
   | "components/button/example-trang-thai"
+  | "components/card/example-behavior"
   | "components/card/example-count-card-de-loc"
   | "components/card/example-disabled-va-color"
   | "components/card/example-icon-canh-nhan"
   | "components/card/example-icon-click-de-loc"
   | "components/card/example-icon-trang-thai"
   | "components/card/example-icon-trong-nen-mau"
+  | "components/card/example-layout-entity"
+  | "components/card/example-layout-file"
+  | "components/card/example-layout-option"
+  | "components/card/example-layout-shortcut"
+  | "components/card/example-layout-stat"
   | "components/card/example-metric-chi-doc"
   | "components/card/example-multiple-selection"
   | "components/card/example-object-comparewith"
@@ -86,6 +92,7 @@ export type ShowcaseExampleSourceKey =
   | "components/card/example-so-sanh-hai-ky"
   | "components/card/example-standalone-card"
   | "components/card/example-tien-do-ty-le"
+  | "components/card/example-trang-thai-cua-layout"
   | "components/code-editor/example-che-do-xem-json"
   | "components/code-editor/example-ngon-ngu-html"
   | "components/code-editor/example-ngon-ngu-typescript"
@@ -1004,11 +1011,18 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Đang lưu… disabled chống gửi lặp; lỗi giữ input và có Thử lại.",
   },
   {
+    sourceKey: "components/card/example-behavior",
+    pageKey: "components/card",
+    sectionId: "example-behavior",
+    title: "Behavior",
+    description: "Đứng riêng mặc định là static; trong sd-card-group mặc định là select.",
+  },
+  {
     sourceKey: "components/card/example-standalone-card",
     pageKey: "components/card",
     sectionId: "example-standalone-card",
     title: "Standalone card",
-    description: "Click card để toggle state; consumer đọc state mới qua #card=sdCard.",
+    description: "Card đứng riêng cần behavior=select để bật/tắt; consumer đọc state mới qua #card=sdCard.",
   },
   {
     sourceKey: "components/card/example-single-selection",
@@ -1039,11 +1053,53 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Gồm selected+disabled, group disabled, inherited color, override color và standalone selected state.",
   },
   {
+    sourceKey: "components/card/example-layout-stat",
+    pageKey: "components/card",
+    sectionId: "example-layout-stat",
+    title: "Layout stat",
+    description: "Score card của danh sách: thẻ doanh thu là behavior static nằm trong group nên không đổi bộ lọc. Bản sm là một dòng 32px.",
+  },
+  {
+    sourceKey: "components/card/example-layout-option",
+    pageKey: "components/card",
+    sectionId: "example-layout-option",
+    title: "Layout option",
+    description: "Group single toàn option thành radiogroup: Tab vào một lần, mũi tên chuyển và chọn. Group multiple là checkbox.",
+  },
+  {
+    sourceKey: "components/card/example-layout-entity",
+    pageKey: "components/card",
+    sectionId: "example-layout-entity",
+    title: "Layout entity",
+    description: "Nút ⋯ nằm ngoài thẻ a nên không điều hướng. Bản sm là một dòng, có dấu chọn.",
+  },
+  {
+    sourceKey: "components/card/example-layout-file",
+    pageKey: "components/card",
+    sectionId: "example-layout-file",
+    title: "Layout file",
+    description: "Loại tệp suy từ đuôi tên; dung lượng theo cơ số 1024.",
+  },
+  {
+    sourceKey: "components/card/example-layout-shortcut",
+    pageKey: "components/card",
+    sectionId: "example-layout-shortcut",
+    title: "Layout shortcut",
+    description: "Lối tắt tới một màn hoặc tác vụ.",
+  },
+  {
+    sourceKey: "components/card/example-trang-thai-cua-layout",
+    pageKey: "components/card",
+    sectionId: "example-trang-thai-cua-layout",
+    title: "Trạng thái của layout",
+    description: "Loading giữ nguyên chiều cao; Thử lại phát sdRetry và không kích hoạt behavior.",
+  },
+  {
     sourceKey: "components/card/example-metric-chi-doc",
     pageKey: "components/card",
     sectionId: "example-metric-chi-doc",
     title: "Metric chỉ đọc",
-    description: "Có đơn vị và phạm vi; không tạo hover/cursor hành động khi không click được.",
+    description: "Có đơn vị và phạm vi; behavior static không tạo hover/cursor hành động.",
   },
   {
     sourceKey: "components/card/example-icon-canh-nhan",

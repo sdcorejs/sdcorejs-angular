@@ -1,0 +1,19 @@
+<div class="example-stack">
+  <div class="sd-card-grid">
+    <!-- md · link: the ⋯ button sits outside the anchor, so it never navigates. -->
+    <sd-card behavior="link" autoId="entity-link" [link]="[]" [queryParams]="{ customer: 'KH0012' }" [content]="{ layout: 'entity', data: company }">
+      <ng-template sdCardActions>
+        <sd-button type="text" prefixIcon="more_horiz" tooltip="Tác vụ" (click)="lastAction.set('⋯ của Minh Phát')" />
+      </ng-template>
+    </sd-card>
+    <sd-card autoId="entity-static" [content]="{ layout: 'entity', data: warehouse }" />
+  </div>
+
+  <!-- sm · select multiple: one row per record, check mark when selected. -->
+  <sd-card-group class="sd-card-grid" autoId="entity-pick" aria-label="Chọn khách hàng" multiple [(model)]="picked">
+    @for (customer of customers; track customer.code) {
+      <sd-card size="sm" [value]="customer.code" [autoId]="'entity-pick-' + customer.code" [content]="{ layout: 'entity', data: customer.data }" />
+    }
+  </sd-card-group>
+  <p class="model-readout">picked: {{ picked() }} · {{ lastAction() }}</p>
+</div>
