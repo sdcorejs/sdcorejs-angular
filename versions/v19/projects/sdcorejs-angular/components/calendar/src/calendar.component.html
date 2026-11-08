@@ -6,6 +6,7 @@
   class="sd-calendar"
   role="region"
   [class.sd-calendar--compact]="compact()"
+  [attr.data-compact]="compact() || null"
   [attr.aria-label]="regionLabel()"
   [attr.data-autoid]="rootAutoId()"
   [attr.data-view]="activeView()"
@@ -77,6 +78,28 @@
       </button>
     </div>
   }
+  @if (strip().length) {
+    <div class="sd-calendar__strip" data-day-strip (pointerdown)="onStripPointerDown($event)" (pointerup)="onStripPointerUp($event)">
+      @for (cell of strip(); track cell.day) {
+        <button
+          type="button"
+          class="sd-calendar__strip-day"
+          [attr.data-date]="cell.day"
+          [attr.data-today]="cell.today || null"
+          [attr.aria-current]="cell.current ? 'date' : null"
+          [attr.aria-label]="cell.label"
+          (click)="pickDay(cell.day)">
+          <span class="sd-calendar__strip-weekday">{{ cell.weekdayShort }}</span>
+          <span class="sd-calendar__strip-number">{{ cell.dayNumber }}</span>
+          @if (cell.events) {
+            <span class="sd-calendar__strip-dot" data-dot aria-hidden="true"></span>
+          } @else {
+            <span class="sd-calendar__strip-dot sd-calendar__strip-dot--empty" aria-hidden="true"></span>
+          }
+        </button>
+      }
+    </div>
+  }
   <div class="sd-calendar__status sd-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</div>
   <span class="sd-visually-hidden" [id]="gridInstructionsId">{{ 'core.component.calendar.grid-instructions' | sdTranslate }}</span>
   <span class="sd-visually-hidden" [id]="eventInstructionsId">{{ 'core.component.calendar.event-instructions' | sdTranslate }}</span>
@@ -120,7 +143,13 @@
     @let _ghost = ghost();
     @let _proposal = dragProposal();
     @let _cursor = cursor();
-    <div #scroller class="sd-calendar__scroller" data-region="scroller" [style.--sd-calendar-days]="_days.length">
+    <div
+      #scroller
+      class="sd-calendar__scroller"
+      data-region="scroller"
+      [style.--sd-calendar-days]="_days.length"
+      [style.--sd-calendar-print-start]="printHours().start"
+      [style.--sd-calendar-print-hours]="printHours().hours">
       <div class="sd-calendar__head" data-head>
         @if (_view === 'week') {
           <div class="sd-calendar__day-headers">
@@ -228,7 +257,7 @@
           (keydown)="onGridKeydown($event)"
           (pointerdown)="onGridPointerDown($event)"
           (pointermove)="onGridPointerMove($event)"
-          (pointerup)="onGridPointerUp()"
+          (pointerup)="onGridPointerUp($event)"
           (pointercancel)="onGridPointerCancel()">
           @for (day of _days; track day.day; let column = $index) {
             <div
@@ -396,11 +425,18 @@
               (keydown)="onCellKeydown($event, cell.day.day)">
               <div class="sd-calendar__cell-head">
                 <span class="sd-calendar__cell-number">{{ cell.day.dayNumber }}</span>
-                @if (cell.day.holiday; as holiday) {
+                @if (!compact() && cell.day.holiday; as holiday) {
                   <span class="sd-calendar__cell-holiday" [attr.data-holiday]="holiday.type" [attr.title]="holiday.label">{{ holiday.label }}</span>
                 }
               </div>
-              @if (dayCellTemplate(); as _template) {
+              @if (compact()) {
+                <div class="sd-calendar__cell-dots" aria-hidden="true">
+                  @for (dot of cell.dots; track dot.color + (dot.customColor ?? '')) {
+                    <span class="sd-calendar__cell-dot" data-dot [attr.data-color]="dot.color" [style.--sd-calendar-event-color]="dot.customColor"></span>
+                  }
+                </div>
+              } @else {
+                @if (dayCellTemplate(); as _template) {
                 <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="cell.context" />
               } @else {
                 @for (line of cell.lines; track line.key) {
@@ -440,6 +476,7 @@
                     {{ 'core.component.calendar.more' | sdTranslate: { count: cell.more } }}
                   </button>
                 }
+              }
               }
             </div>
           }

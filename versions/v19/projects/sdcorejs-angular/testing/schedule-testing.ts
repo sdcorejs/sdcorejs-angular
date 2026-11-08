@@ -258,7 +258,8 @@ export function clickWithJitter(element: Element): void {
 }
 
 function touchList(target: EventTarget, at: Point): Touch[] {
-  return [new Touch({ identifier: 1, target, clientX: at.x, clientY: at.y })];
+  // why: CDK reads pageX/pageY of a touch, which do not follow clientX/clientY in a synthetic Touch.
+  return [new Touch({ identifier: 1, target, clientX: at.x, clientY: at.y, pageX: at.x + window.scrollX, pageY: at.y + window.scrollY })];
 }
 
 /** Dispatches a touch event with one finger at `at`. */

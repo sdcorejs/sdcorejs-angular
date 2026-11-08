@@ -540,7 +540,8 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__event,
 .sd-calendar__bar,
 .sd-calendar__chip,
-.sd-calendar__agenda-row {
+.sd-calendar__agenda-row,
+.sd-calendar__cell-dot {
   --sd-calendar-event-bg: color-mix(in srgb, var(--sd-calendar-event-color) 14%, #{tok(surface)});
   --sd-calendar-event-border: color-mix(in srgb, var(--sd-calendar-event-color) 28%, #{tok(surface)});
   --sd-calendar-event-dot: var(--sd-calendar-event-color);
@@ -598,6 +599,9 @@ $hour: var(--sd-calendar-hour-height);
   font-size: fs(12);
   line-height: lh(16);
   cursor: pointer;
+  transition:
+    box-shadow 0.15s,
+    background-color 0.15s;
 
   > .sd-calendar__dot {
     margin-top: 5px;
@@ -1124,5 +1128,220 @@ $hour: var(--sd-calendar-hour-height);
 @media (hover: hover) {
   .sd-calendar__scope-button:hover {
     background: color-mix(in srgb, #{tok(surface)} 12%, transparent);
+  }
+}
+
+// ---- compact (§12) ----
+.sd-calendar--compact {
+  --sd-calendar-gutter-width: 48px;
+  --sd-calendar-reserve: 16px;
+
+  &[data-display='day'] {
+    --sd-calendar-reserve: 16px;
+  }
+
+  .sd-calendar__toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    height: auto;
+    padding: 8px 12px;
+  }
+
+  .sd-calendar__title {
+    order: -1;
+    flex: 1 1 0;
+  }
+
+  .sd-calendar__nav {
+    order: -1;
+  }
+
+  .sd-calendar__today,
+  .sd-calendar__icon-button {
+    height: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-calendar__icon-button {
+    width: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-calendar__views {
+    flex: 1 0 100%;
+  }
+
+  .sd-calendar__view {
+    flex: 1;
+    height: 42px;
+  }
+
+  .sd-calendar__cell {
+    align-items: center;
+    min-height: 56px;
+  }
+
+  .sd-calendar__cell-number {
+    width: 32px;
+    height: 32px;
+  }
+
+  .sd-calendar__agenda-day {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sd-calendar__agenda-row {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 44px;
+
+    > .sd-calendar__agenda-time {
+      order: 1;
+      font-size: fs(12);
+    }
+  }
+}
+
+.sd-calendar__strip {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  padding: 4px 8px 6px;
+  border-top: 1px solid tok(calendar-line);
+  border-bottom: 1px solid tok(calendar-line);
+  touch-action: pan-y;
+}
+
+.sd-calendar__strip-day {
+  @include bare-button;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 56px;
+  border-radius: radius(12);
+
+  &[data-today]:not([aria-current]) {
+    border: 1px solid tok(primary);
+    color: tok(primary);
+  }
+
+  &[aria-current='date'] {
+    background: tok(primary);
+    color: tok(primary-contrast);
+  }
+}
+
+.sd-calendar__strip-weekday {
+  font-size: fs(11);
+}
+
+.sd-calendar__strip-number {
+  font-size: fs(16);
+  font-weight: $medium;
+}
+
+.sd-calendar__strip-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: radius(999);
+  background: currentColor;
+
+  &--empty {
+    visibility: hidden;
+  }
+}
+
+.sd-calendar__cell-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.sd-calendar__cell-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: radius(999);
+  background: var(--sd-calendar-event-color);
+}
+
+.sd-calendar--compact .sd-calendar__columns {
+  touch-action: pan-y;
+}
+
+// ---- motion, forced colours, print (SC-34, SC-35, §16) ----
+@media (prefers-reduced-motion: reduce) {
+  .sd-calendar__event,
+  .sd-calendar__bar {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .sd-calendar__event,
+  .sd-calendar__bar,
+  .sd-calendar__chip--bar {
+    border-color: CanvasText;
+  }
+
+  .sd-calendar__event[data-selected],
+  .sd-calendar__bar[data-selected] {
+    border: 2px solid Highlight;
+    border-color: Highlight;
+  }
+
+  .sd-calendar__event[data-pending],
+  .sd-calendar__bar[data-pending],
+  .sd-calendar__ghost {
+    border-color: Highlight;
+  }
+
+  .sd-calendar__now {
+    background-color: Highlight;
+  }
+
+  .sd-calendar {
+    border-color: CanvasText;
+  }
+}
+
+@media print {
+  .sd-calendar__nav,
+  .sd-calendar__views,
+  .sd-calendar__progress,
+  .sd-calendar__band,
+  .sd-calendar__strip,
+  .sd-calendar__scope {
+    display: none;
+  }
+
+  .sd-calendar {
+    height: auto;
+    overflow: visible;
+  }
+
+  .sd-calendar__scroller {
+    height: auto;
+    overflow: visible;
+  }
+
+  .sd-calendar__head {
+    position: static;
+  }
+
+  .sd-calendar__body {
+    // why: only the working hours are printed; the grid is shifted up by the hours before them.
+    height: calc(var(--sd-calendar-hour-height) * var(--sd-calendar-print-hours, 24));
+    overflow: hidden;
+  }
+
+  .sd-calendar__gutter,
+  .sd-calendar__columns {
+    margin-top: calc(var(--sd-calendar-hour-height) * var(--sd-calendar-print-start, 0) * -1);
+  }
+
+  .sd-calendar__event {
+    border: 1px solid var(--sd-calendar-event-color);
+    background: transparent;
+    break-inside: avoid;
   }
 }

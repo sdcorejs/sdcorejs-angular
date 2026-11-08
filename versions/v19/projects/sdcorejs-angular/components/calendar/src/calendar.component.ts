@@ -96,6 +96,8 @@ const CLICK_SLOP = 5;
 /** Auto-scroll zone at the top and bottom of the scroll area (px) and its top speed (px per frame) (§9.3). */
 const EDGE = 40;
 const EDGE_SPEED = 16;
+/** Horizontal travel (px) of a swipe that changes the day or week (§12). */
+const SWIPE = 60;
 /** Where the first-load skeleton draws its blocks: [day index, start minute, minutes]. */
 const SKELETON: readonly (readonly [number, number, number])[] = [
   [0, 540, 60],
@@ -184,6 +186,8 @@ interface SdCalendarMonthCell<T> {
   readonly label: string;
   readonly lines: readonly SdCalendarMonthLine<T>[];
   readonly more: number;
+  /** Compact month: up to three dots, one per colour (§12). */
+  readonly dots: readonly { readonly color: string; readonly customColor: string | null }[];
   readonly context: SdCalendarDayCellTemplateContext<T>;
 }
 
@@ -334,6 +338,7 @@ export class SdCalendar<T = unknown> {
   #pickup: Point | null = null;
   #edgeFrame = 0;
   #resizeSession: { readonly id: string; readonly placement: SdCalendarPlacement; readonly y: number } | null = null;
+  #stripPress: { readonly x: number; readonly y: number } | null = null;
 
   /** Host narrower than 600px (§12): measured on the host, not the viewport. */
   protected readonly compact = computed(() => {
@@ -637,6 +642,7 @@ export class SdCalendar<T = unknown> {
 
     // why: one effect owns loading and the range output, so a range emits once and only together with its load.
     effect(() => {
+      untracked(() => this.#measureOnce());
       const option = this.option();
       const range = this.visible();
       untracked(() => {
@@ -738,6 +744,39 @@ export class SdCalendar<T = unknown> {
       document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     });
   }
+
+  /** The 7-day strip of a compact week (§12). */
+  protected readonly strip = computed(() => {
+    if (!this.compact() || this.activeView() !== 'week') return [];
+    const anchor = this.#anchor();
+    const placed = this.#placed();
+    return sdCalendarVisibleDays({ ...this.#rangeInput(), view: 'week' }).map(day => {
+      const view = this.#dayView(day);
+      return {
+        day,
+        weekdayShort: view.weekdayShort,
+        dayNumber: view.dayNumber,
+        label: view.label,
+        today: view.today,
+        current: day === anchor,
+        events: placed.some(({ placement }) => placement.firstDay <= day && placement.lastDay >= day),
+      };
+    });
+  });
+
+  /** Hours printed (§16): from the earliest working hour to the latest one of the days on screen. */
+  protected readonly printHours = computed(() => {
+    const hours = this.#workingHours();
+    let start = 1440;
+    let end = 0;
+    for (const day of this.days()) {
+      for (const span of sdCalendarWorkingRanges(hours, sdCalendarWeekday(day)) ?? []) {
+        start = Math.min(start, span.start);
+        end = Math.max(end, span.end);
+      }
+    }
+    return end > start ? { start: start / 60, hours: (end - start) / 60 } : { start: 0, hours: 24 };
+  });
 
   /** Aborts a running load and a waiting move, then calls `onLoad` again for the range on screen. */
   reload(): void {
@@ -874,10 +913,12 @@ export class SdCalendar<T = unknown> {
     this.#ghost.set({ ...span, day: press.day, pending: false, blocked: !this.#creatable(press.day, span) });
   }
 
-  protected onGridPointerUp(): void {
+  protected onGridPointerUp(domEvent?: PointerEvent): void {
     const press = this.#press;
     if (!press) return;
     this.#press = null;
+    // §12: a horizontal touch swipe of at least 60px on the day grid moves one day.
+    if (press.touch && domEvent && this.displayView() === 'day' && this.#swipe(press, domEvent)) return;
     document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     const ghost = this.#ghost();
     if (!this.#operation.busy()) this.#ghost.set(null);
@@ -890,6 +931,25 @@ export class SdCalendar<T = unknown> {
     if (press.moved && (press.touch || !ghost)) return;
     const span = press.moved && ghost ? { start: ghost.start, end: ghost.end } : sdCalendarSlot(press.anchor, this.stepValue());
     void this.#create(press.day, span);
+  }
+
+  protected pickDay(day: string): void {
+    this.date.set(day);
+    this.#announceTitle();
+  }
+
+  protected onStripPointerDown(domEvent: PointerEvent): void {
+    this.#stripPress = { x: domEvent.clientX, y: domEvent.clientY };
+  }
+
+  /** §12: a horizontal swipe of the strip moves one week. */
+  protected onStripPointerUp(domEvent: PointerEvent): void {
+    const press = this.#stripPress;
+    this.#stripPress = null;
+    const dx = press ? domEvent.clientX - press.x : 0;
+    if (!press || Math.abs(dx) < SWIPE || Math.abs(dx) <= Math.abs(domEvent.clientY - press.y)) return;
+    this.date.set(sdCalendarAddDays(this.#anchor(), dx < 0 ? 7 : -7));
+    this.#announceTitle();
   }
 
   protected onGridPointerCancel(): void {
@@ -1466,6 +1526,22 @@ export class SdCalendar<T = unknown> {
     return direction > 0 ? shifted[0] : shifted[shifted.length - 1];
   }
 
+  /** Width of the host before the first ResizeObserver callback, so the first load already fits a narrow host. */
+  #measureOnce(): void {
+    if (this.#width() !== null || typeof ResizeObserver === 'undefined') return;
+    const width = this.#host.nativeElement.getBoundingClientRect().width;
+    if (width > 0) this.#width.set(width);
+  }
+
+  /** Moves one day for a horizontal swipe; returns whether the press was one. */
+  #swipe(press: { readonly x: number; readonly y: number }, domEvent: PointerEvent): boolean {
+    const dx = domEvent.clientX - press.x;
+    if (Math.abs(dx) < SWIPE || Math.abs(dx) <= Math.abs(domEvent.clientY - press.y)) return false;
+    this.date.set(sdCalendarAddDays(this.#anchor(), dx < 0 ? 1 : -1));
+    this.#announceTitle();
+    return true;
+  }
+
   #minutesAt(clientY: number, column: HTMLElement): number {
     const rect = column.getBoundingClientRect();
     return Math.min(1439, Math.max(0, ((clientY - rect.top) / this.#hourHeight()) * 60));
@@ -1701,12 +1777,19 @@ export class SdCalendar<T = unknown> {
             count: events.length,
           });
       const inMonth = sdCalendarDayParts(day)!.month === month;
+      const dots = new Map<string, { color: string; customColor: string | null }>();
+      for (const event of events) {
+        const color = event.color ?? 'primary';
+        if (dots.size < 3 && !dots.has(color))
+          dots.set(color, PALETTE.has(color) ? { color, customColor: null } : { color: 'custom', customColor: color });
+      }
       return {
         day: view,
         inMonth,
         label,
         lines: shown,
         more,
+        dots: [...dots.values()],
         context: { $implicit: day, date: day, events, holiday: view.holiday, today: view.today, inMonth, off: view.off },
       };
     });

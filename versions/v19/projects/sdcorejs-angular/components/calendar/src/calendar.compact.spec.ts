@@ -119,7 +119,8 @@ describe('SdCalendar · compact, touch and print', () => {
 
   it('[CAL-C-18] swipes the day grid and the strip by at least 60px to change day and week', fakeAsync(() => {
     const { host, calendar, settle } = mount({}, '390px');
-    const grid = q(host, '[data-region="time-grid"]') ?? host;
+    // The day column covers the whole grid; a finger always lands on it (or on a block inside it).
+    const grid = (): HTMLElement => q(host, '[data-day-column]') ?? host;
     const swipe = (target: HTMLElement, dx: number): void => {
       const from = centerOf(target);
       pointer(target, 'pointerdown', from, 'touch');
@@ -127,11 +128,11 @@ describe('SdCalendar · compact, touch and print', () => {
       pointer(target, 'pointerup', { x: from.x + dx, y: from.y + 5 }, 'touch');
       settle();
     };
-    swipe(grid, -80);
+    swipe(grid(), -80);
     expect(calendar.date()).toBe('2026/10/23');
-    swipe(grid, 50);
+    swipe(grid(), 50);
     expect(calendar.date()).toBe('2026/10/23');
-    swipe(grid, 80);
+    swipe(grid(), 80);
     expect(calendar.date()).toBe('2026/10/22');
     swipe(q(host, '[data-day-strip]') ?? host, -80);
     expect(calendar.date()).toBe('2026/10/29');
