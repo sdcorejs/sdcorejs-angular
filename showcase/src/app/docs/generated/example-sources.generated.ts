@@ -2790,7 +2790,7 @@ export class CalendarUrlExampleComponent {
 }`,
   },
   "components/calendar/example-lich-hop-nguon-client": {
-    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
 import {
   SdCalendar,
   type SdCalendarCreateArgs,
@@ -2843,6 +2843,7 @@ export class CalendarPlaygroundExampleComponent {
 
   /** The consumer's store: the calendar only reads it through onLoad. */
   readonly events = signal<MeetingEvent[]>(demoEvents());
+  readonly calendar = viewChild.required(SdCalendar);
   readonly selected = signal<MeetingEvent | null>(null);
   readonly log = signal<string[]>([]);
   /** The demo dialog of a create or of a move reason; the calendar waits on its promise. */
@@ -2867,6 +2868,25 @@ export class CalendarPlaygroundExampleComponent {
 
   toggle(flag: { set(value: boolean): void; (): boolean }): void {
     flag.set(!flag());
+  }
+
+  /** Performance check (TESTING §10): 500 events in the week of 19–25/10, then reload. */
+  loadMany(): void {
+    const many: MeetingEvent[] = Array.from({ length: 500 }, (_, index) => {
+      const day = 19 + (index % 7);
+      const start = 7 * 60 + ((index * 37) % (11 * 60));
+      const time = (minutes: number): string => \`\${String(Math.floor(minutes / 60)).padStart(2, '0')}:\${String(minutes % 60).padStart(2, '0')}:00\`;
+      return {
+        id: \`bulk-\${index}\`,
+        title: \`Sự kiện \${index + 1}\`,
+        start: \`2026/10/\${day} \${time(start)}\`,
+        end: \`2026/10/\${day} \${time(start + 30 + (index % 4) * 15)}\`,
+        color: ['primary', 'success', 'warning', 'info'][index % 4],
+        data: { room: 'Phòng Sen', owner: 'Lan' },
+      };
+    });
+    this.events.set(many);
+    this.calendar().reload();
   }
 
   cycleStep(): void {
@@ -28727,7 +28747,8 @@ Bởi Nguyễn Văn A"></sd-badge>
   <sd-button type="outline" [title]="'option.create: ' + withCreate()" (click)="toggle(withCreate)" />
   <sd-button type="outline" [title]="'option.move: ' + withMove()" (click)="toggle(withMove)" />
   <sd-button type="outline" [title]="'movable khoá sự kiện đã qua: ' + lockPast()" (click)="toggle(lockPast)" />
-  <sd-button type="outline" [title]="'onMove: ' + moveMode()" (click)="cycleMode()" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" autoId="playground-mode" (click)="cycleMode()" />
+  <sd-button type="outline" title="500 sự kiện" autoId="playground-many" (click)="loadMany()" />
 </div>
 <div class="calendar-layout">
   <div class="calendar-box">

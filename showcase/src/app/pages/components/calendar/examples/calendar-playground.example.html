@@ -12,7 +12,8 @@
   <sd-button type="outline" [title]="'option.create: ' + withCreate()" (click)="toggle(withCreate)" />
   <sd-button type="outline" [title]="'option.move: ' + withMove()" (click)="toggle(withMove)" />
   <sd-button type="outline" [title]="'movable khoá sự kiện đã qua: ' + lockPast()" (click)="toggle(lockPast)" />
-  <sd-button type="outline" [title]="'onMove: ' + moveMode()" (click)="cycleMode()" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" autoId="playground-mode" (click)="cycleMode()" />
+  <sd-button type="outline" title="500 sự kiện" autoId="playground-many" (click)="loadMany()" />
 </div>
 <div class="calendar-layout">
   <div class="calendar-box">
