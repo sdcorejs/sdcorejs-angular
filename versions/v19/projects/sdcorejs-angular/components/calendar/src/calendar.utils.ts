@@ -131,6 +131,13 @@ export function sdCalendarAddMonths(day: string, months: number): string {
   return sdCalendarDay(year, month + months, 1);
 }
 
+/** The same day number `months` away, clamped to the last day of that month (month view PageUp/PageDown). */
+export function sdCalendarAddMonthsKeepDay(day: string, months: number): string {
+  const { year, month, day: date } = partsOf(day);
+  const last = sdCalendarDayParts(sdCalendarDay(year, month + months + 1, 0))!.day;
+  return sdCalendarDay(year, month + months, Math.min(date, last));
+}
+
 /** 0 (Sunday) – 6 (Saturday). */
 export function sdCalendarWeekday(day: string): number {
   const { year, month, day: date } = partsOf(day);
@@ -380,7 +387,7 @@ const WALL_CLOCK = 'yyyy/MM/dd HH:mm';
  * why: read as text (`toFormat`), not through `SdDateTimeService.toWallClock`: that carrier is a local `Date`, and a
  * wall clock that falls in a DST gap of the browser's own zone (02:30 on a spring-forward day) would shift by an hour.
  */
-function wallClock(value: unknown, clock: SdCalendarClock): { day: string; minutes: number } | null {
+export function sdCalendarReadWallClock(value: unknown, clock: SdCalendarClock): { day: string; minutes: number } | null {
   if (value === null || value === undefined || value === '') return null;
   const text = clock.toFormat(value, WALL_CLOCK);
   if (!text) return null;
@@ -414,8 +421,8 @@ export function sdCalendarPlace(event: SdCalendarEvent, clock: SdCalendarClock):
       endInstant,
     };
   }
-  const start = wallClock(event.start, clock);
-  const end = wallClock(event.end, clock);
+  const start = sdCalendarReadWallClock(event.start, clock);
+  const end = sdCalendarReadWallClock(event.end, clock);
   const startInstant = clock.parse(event.start)?.getTime();
   const endInstant = clock.parse(event.end)?.getTime();
   const nextDay = clock.beginOfNextDay(event.start)?.getTime();
@@ -477,7 +484,7 @@ export function sdCalendarSerialize(
 
 /** The current span of a placed event, serialized like a new one so `request.from` and `request.to` match. */
 export function sdCalendarRangeOf(
-  placement: SdCalendarPlacement,
+  placement: Pick<SdCalendarPlacement, 'allDay' | 'startDay' | 'startMinutes' | 'endDay' | 'endMinutes'>,
   clock: SdCalendarClock,
   transform: SdTemporalValueTransform | null | undefined
 ): SdCalendarRange {

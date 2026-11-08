@@ -237,6 +237,9 @@ export function mouseDrag(element: Element, to: Point, options: DragOptions & { 
   options.step?.();
   mouse(document, 'mousemove', { x: from.x, y: from.y + 3 });
   options.step?.();
+  // why: the move that crosses the threshold only starts the drag; CDK reports positions from the next one on.
+  mouse(document, 'mousemove', to);
+  options.step?.();
   mouse(document, 'mousemove', to);
   options.step?.();
   options.beforeRelease?.();
@@ -287,6 +290,8 @@ export function touchDrag(element: Element, to: Point, hold: (ms: number) => voi
   hold(holdMs);
   options.step?.();
   touch(document, 'touchmove', { x: from.x, y: from.y + 3 }, element);
+  options.step?.();
+  touch(document, 'touchmove', to, element);
   options.step?.();
   touch(document, 'touchmove', to, element);
   options.step?.();

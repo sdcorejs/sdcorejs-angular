@@ -4,6 +4,7 @@ import {
   SD_CALENDAR_STEPS,
   sdCalendarAddDays,
   sdCalendarAddMonths,
+  sdCalendarAddMonthsKeepDay,
   sdCalendarAllDayLayout,
   sdCalendarClampAgendaDays,
   sdCalendarClockText,
@@ -19,6 +20,7 @@ import {
   sdCalendarPlace,
   sdCalendarRangeOf,
   sdCalendarReadDay,
+  sdCalendarReadWallClock,
   sdCalendarResizeEnd,
   sdCalendarSerialize,
   sdCalendarShiftDate,
@@ -61,6 +63,9 @@ describe('sd-calendar utils', () => {
       expect(sdCalendarAddDays('2026/03/01', -1)).toBe('2026/02/28');
       expect(sdCalendarAddMonths('2026/01/31', 1)).toBe('2026/02/01');
       expect(sdCalendarAddMonths('2026/01/15', -1)).toBe('2025/12/01');
+      expect(sdCalendarAddMonthsKeepDay('2026/10/31', 1)).toBe('2026/11/30');
+      expect(sdCalendarAddMonthsKeepDay('2024/02/29', 12)).toBe('2025/02/28');
+      expect(sdCalendarAddMonthsKeepDay('2026/11/30', -12)).toBe('2025/11/30');
       expect(sdCalendarWeekday('2026/10/22')).toBe(4);
       expect(sdCalendarWeekday('2026/11/08')).toBe(0);
       expect(sdCalendarDayDiff('2026/10/22', '2026/11/04')).toBe(13);
@@ -457,6 +462,8 @@ describe('sd-calendar utils', () => {
       expect(sdCalendarPlace(event({ start: '2026/10/22', end: '2026/10/21', allDay: true }), hcm)).toBeNull();
       expect(sdCalendarPlace(event({ start: 'x', allDay: true }), hcm)).toBeNull();
       expect(sdCalendarReadDay('TODAY', hcm)).toBeNull();
+      expect(sdCalendarReadWallClock('2026-10-22T07:05:00Z', hcm)).toEqual({ day: '2026/10/22', minutes: 845 });
+      expect(sdCalendarReadWallClock('', hcm)).toBeNull();
       // 'local' reads in the browser zone; a zone-less value keeps its digits wherever the test runs.
       expect(sdCalendarPlace(event({ start: '2026/10/22 09:00:00', end: '2026/10/22 10:30:00' }), clockFor('local'))).toEqual(
         jasmine.objectContaining({ startDay: '2026/10/22', startMinutes: 540, endMinutes: 630 })

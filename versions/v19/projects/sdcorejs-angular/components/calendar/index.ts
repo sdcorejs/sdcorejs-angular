@@ -13,10 +13,18 @@ export type {
   SdCalendarEmptyTemplateContext,
   SdCalendarEventTemplateContext,
 } from './src/calendar.templates';
-// @internal Pure helpers shared with sd-scheduler. Not covered by SemVer.
+// @internal Pipeline pieces and pure helpers shared with sd-scheduler. Not covered by SemVer.
+export { SdCalendarLoader as ɵSdCalendarLoader, type SdCalendarLoadPhase as ɵSdCalendarLoadPhase } from './src/calendar-loader';
+export {
+  SdCalendarOperation as ɵSdCalendarOperation,
+  sdCalendarAllows as ɵsdCalendarAllows,
+  sdCalendarCallMove as ɵsdCalendarCallMove,
+  type SdCalendarMoveOutcome as ɵSdCalendarMoveOutcome,
+} from './src/calendar-move';
 export {
   sdCalendarAddDays as ɵsdCalendarAddDays,
   sdCalendarAddMonths as ɵsdCalendarAddMonths,
+  sdCalendarAddMonthsKeepDay as ɵsdCalendarAddMonthsKeepDay,
   sdCalendarAllDayLayout as ɵsdCalendarAllDayLayout,
   sdCalendarClampAgendaDays as ɵsdCalendarClampAgendaDays,
   sdCalendarClockText as ɵsdCalendarClockText,
@@ -32,6 +40,7 @@ export {
   sdCalendarPlace as ɵsdCalendarPlace,
   sdCalendarRangeOf as ɵsdCalendarRangeOf,
   sdCalendarReadDay as ɵsdCalendarReadDay,
+  sdCalendarReadWallClock as ɵsdCalendarReadWallClock,
   sdCalendarResizeEnd as ɵsdCalendarResizeEnd,
   sdCalendarSerialize as ɵsdCalendarSerialize,
   sdCalendarShiftDate as ɵsdCalendarShiftDate,

@@ -924,3 +924,159 @@ $hour: var(--sd-calendar-hour-height);
   margin: 0;
   font-size: fs(14);
 }
+
+// ---- interaction (§8.3, §9) ----
+.sd-calendar__columns--create .sd-calendar__column:not([data-out-of-range]) {
+  cursor: cell;
+}
+
+.sd-calendar__event[data-movable] {
+  touch-action: none;
+}
+
+.sd-calendar__event[data-pending],
+.sd-calendar__bar[data-pending] {
+  // Saving at the proposed position: full width, dashed (§8.3).
+  left: 2px;
+  z-index: 3;
+  width: calc(100% - 2px - var(--sd-calendar-reserve));
+  border: 1px dashed var(--sd-calendar-event-color);
+}
+
+.sd-calendar__event[data-dragging] {
+  // The original position while dragging: a dashed frame, the proposal is drawn on top.
+  border: 1px dashed var(--sd-calendar-event-border);
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+.sd-calendar__event[data-failed],
+.sd-calendar__bar[data-failed] {
+  outline: 2px solid tok(error);
+  outline-offset: 1px;
+}
+
+.sd-calendar__sync {
+  flex: none;
+  color: var(--sd-calendar-event-color, #{tok(primary)});
+  animation: sd-calendar-spin 1s linear infinite;
+}
+
+@keyframes sd-calendar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sd-calendar__resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  cursor: ns-resize;
+  touch-action: none;
+
+  &::after {
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    width: 16px;
+    height: 3px;
+    margin-left: -8px;
+    border-radius: radius(2);
+    background: var(--sd-calendar-event-color);
+    content: '';
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) {
+  .sd-calendar__event:hover .sd-calendar__resize::after {
+    opacity: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  // §9.4: on touch only the selected block resizes, with a 24px target and a 24×6px handle.
+  .sd-calendar__event:not([data-selected]) .sd-calendar__resize {
+    display: none;
+  }
+
+  .sd-calendar__event[data-selected] .sd-calendar__resize {
+    height: 24px;
+
+    &::after {
+      width: 24px;
+      height: 6px;
+      margin-left: -12px;
+      opacity: 1;
+    }
+  }
+}
+
+.sd-calendar__ghost,
+.sd-calendar__proposal {
+  position: absolute;
+  right: var(--sd-calendar-reserve);
+  left: 2px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  overflow: hidden;
+  border-radius: var(--sd-calendar-event-radius);
+  font-size: fs(12);
+  line-height: lh(16);
+  pointer-events: none;
+}
+
+.sd-calendar__ghost {
+  border: 1px dashed tok(primary);
+  background: color-mix(in srgb, #{tok(primary-light)} 92%, transparent);
+
+  &[data-blocked] {
+    border-color: tok(border-strong);
+  }
+}
+
+.sd-calendar__proposal {
+  border: 1px solid tok(primary);
+  background: tok(primary-light);
+  box-shadow: var(--sd-shadow-lg);
+}
+
+.sd-calendar__cursor {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: none;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 2px solid tok(focus-ring-color);
+  border-radius: radius(4);
+  background: color-mix(in srgb, #{tok(primary)} 8%, transparent);
+  font-size: fs(11);
+  pointer-events: none;
+
+  .sd-calendar__columns:focus-visible & {
+    display: block;
+  }
+}
+
+.sd-calendar__columns:focus-visible {
+  outline: none;
+}
+
+.sd-calendar__chip {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-calendar__sync {
+    animation: none;
+  }
+}
