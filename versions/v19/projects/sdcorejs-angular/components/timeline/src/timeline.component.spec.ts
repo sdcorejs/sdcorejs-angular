@@ -1,11 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SD_CORE_CONFIGURATION, type ISdCoreConfiguration } from '@sdcorejs/angular/configurations';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import type { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdTimeline } from './timeline.component';
-import type { SdTimelineItem } from './timeline.model';
+import type { SdTimelineItem, SdTimelineLoadArgs, SdTimelineLoadResult, SdTimelineOption } from './timeline.model';
 import { SdTimelineEmptyDirective, SdTimelineItemActionsDirective } from './timeline.templates';
 
 const LONG_TEXT = Array.from({ length: 12 }, (_, index) => `Dòng ${index + 1} của một bình luận khá dài để chắc chắn bị cắt.`).join('\n');
@@ -166,5 +166,191 @@ describe('SdTimeline with items', () => {
     expect(root().querySelector('.sd-timeline__day')).toBeNull();
     expect(item('c1').querySelector('.sd-timeline__meta')?.textContent).toContain('Thu Hà');
     expect(item('c1').querySelector('time')?.textContent).toMatch(/\d\d:\d\d \d\d\/\d\d\/\d{4}/);
+  });
+});
+
+interface Deferred {
+  args: SdTimelineLoadArgs;
+  resolve: (result: SdTimelineLoadResult) => void;
+  reject: (error: unknown) => void;
+}
+
+const page = (prefix: string, count: number, startHour = 9, day = '2026-11-08'): SdTimelineItem[] =>
+  Array.from({ length: count }, (_, index) => ({
+    id: `${prefix}${index}`,
+    at: `${day}T${String(Math.max(startHour - index, 0)).padStart(2, '0')}:00:00Z`,
+    content: { layout: 'event', data: { title: `${prefix}${index}` } },
+  }));
+
+@Component({
+  standalone: true,
+  imports: [SdTimeline],
+  template: `<sd-timeline #timeline data-testid="paged" [option]="option()" (sdLoadError)="errors.push($event)" />`,
+})
+class PagedTimelineHost {
+  readonly calls: Deferred[] = [];
+  readonly errors: unknown[] = [];
+  readonly loadMore = signal<'button' | 'auto'>('button');
+  readonly option = computed<SdTimelineOption>(() => ({
+    loadMore: this.loadMore(),
+    dataSource: {
+      onLoad: args =>
+        new Promise<SdTimelineLoadResult>((resolve, reject) => {
+          this.calls.push({ args, resolve, reject });
+        }),
+    },
+  }));
+  readonly timeline = viewChild.required<SdTimeline>('timeline');
+}
+
+describe('SdTimeline with a data source', () => {
+  let fixture: ComponentFixture<PagedTimelineHost>;
+  let host: PagedTimelineHost;
+  const root = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="paged"]') as HTMLElement;
+  const section = (): HTMLElement => root().querySelector('section') as HTMLElement;
+  const flush = async (): Promise<void> => {
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+  const last = (): Deferred => host.calls[host.calls.length - 1];
+  const button = (selector: string): HTMLButtonElement => root().querySelector(selector) as HTMLButtonElement;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [PagedTimelineHost],
+      providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { timeZone: 'Asia/Ho_Chi_Minh' } as ISdCoreConfiguration }],
+    }).compileComponents();
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+  });
+
+  const create = async (): Promise<void> => {
+    fixture = TestBed.createComponent(PagedTimelineHost);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    await flush();
+  };
+
+  it('shows skeleton rows while the first page loads, then the items and a load-more button', async () => {
+    await create();
+    expect(host.calls.length).toBe(1);
+    expect(host.calls[0].args.cursor).toBeNull();
+    expect(host.calls[0].args.pageSize).toBe(20);
+    expect(root().querySelectorAll('.sd-timeline__skeleton').length).toBe(3);
+    expect(section().getAttribute('aria-busy')).toBe('true');
+    host.calls[0].resolve({ items: page('a', 2), nextCursor: 'c2' });
+    await flush();
+    expect(root().querySelectorAll('.sd-timeline__item').length).toBe(2);
+    expect(section().hasAttribute('aria-busy')).toBeFalse();
+    expect(button('.sd-timeline__load-more').textContent).toContain('Xem thêm 20 mục');
+  });
+
+  it('appends a page that starts on the same day to the last day group', async () => {
+    await create();
+    host.calls[0].resolve({ items: page('a', 2, 9), nextCursor: 'c2' });
+    await flush();
+    button('.sd-timeline__load-more').click();
+    await flush();
+    expect(last().args.cursor).toBe('c2');
+    expect(root().textContent).toContain('Đang tải…');
+    last().resolve({ items: page('b', 2, 5), nextCursor: null });
+    await flush();
+    expect(root().querySelectorAll('.sd-timeline__day').length).toBe(1);
+    expect(root().querySelectorAll('.sd-timeline__item').length).toBe(4);
+    expect(root().querySelector('.sd-timeline__load-more')).toBeNull();
+  });
+
+  it('shows the first-load error instead of the empty text and retries from the start', async () => {
+    await create();
+    host.calls[0].reject(new Error('boom'));
+    await flush();
+    expect(root().textContent).toContain('Không tải được lịch sử.');
+    expect(root().textContent).not.toContain('Chưa có hoạt động.');
+    expect(host.errors.length).toBe(1);
+    button('.sd-timeline__retry').click();
+    await flush();
+    expect(host.calls.length).toBe(2);
+    expect(last().args.cursor).toBeNull();
+  });
+
+  it('keeps the items after a load-more error and retries with the same cursor', async () => {
+    await create();
+    host.calls[0].resolve({ items: page('a', 2), nextCursor: 'c2' });
+    await flush();
+    button('.sd-timeline__load-more').click();
+    await flush();
+    last().reject(new Error('boom'));
+    await flush();
+    expect(root().querySelectorAll('.sd-timeline__item').length).toBe(2);
+    expect(root().textContent).toContain('Không tải thêm được.');
+    button('.sd-timeline__more-error .sd-timeline__link-button').click();
+    await flush();
+    expect(last().args.cursor).toBe('c2');
+  });
+
+  it('aborts the running load on reload and ignores its result', async () => {
+    await create();
+    const first = host.calls[0];
+    host.timeline().reload();
+    await flush();
+    expect(first.args.signal.aborted).toBeTrue();
+    first.resolve({ items: page('old', 1), nextCursor: null });
+    await flush();
+    expect(root().querySelector('[data-item-id="old0"]')).toBeNull();
+    last().resolve({ items: page('new', 1), nextCursor: null });
+    await flush();
+    expect(root().querySelector('[data-item-id="new0"]')).not.toBeNull();
+  });
+
+  it('keeps the shown items with a progress bar while reloading', async () => {
+    await create();
+    host.calls[0].resolve({ items: page('a', 2), nextCursor: null });
+    await flush();
+    host.timeline().reload();
+    await flush();
+    expect(root().querySelectorAll('.sd-timeline__item').length).toBe(2);
+    expect(root().querySelector('.sd-timeline__progress')).not.toBeNull();
+  });
+
+  it('loads the next page when the sentinel intersects in auto mode', async () => {
+    let callback: IntersectionObserverCallback | null = null;
+    const original = window.IntersectionObserver;
+    (window as { IntersectionObserver: unknown }).IntersectionObserver = class {
+      constructor(cb: IntersectionObserverCallback) {
+        callback = cb;
+      }
+      observe(): void {}
+      disconnect(): void {}
+      unobserve(): void {}
+    };
+    try {
+      fixture = TestBed.createComponent(PagedTimelineHost);
+      host = fixture.componentInstance;
+      host.loadMore.set('auto');
+      fixture.detectChanges();
+      await flush();
+      host.calls[0].resolve({ items: page('a', 2), nextCursor: 'c2' });
+      await flush();
+      expect(root().querySelector('.sd-timeline__list')?.getAttribute('role')).toBe('feed');
+      expect(root().querySelector('article')?.getAttribute('aria-setsize')).toBe('-1');
+      expect(callback).not.toBeNull();
+      callback!([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver);
+      await flush();
+      expect(last().args.cursor).toBe('c2');
+    } finally {
+      (window as { IntersectionObserver: unknown }).IntersectionObserver = original;
+    }
+  });
+});
+
+describe('SdTimeline dev checks', () => {
+  it('reports a duplicate id once', async () => {
+    const errorSpy = spyOn(console, 'error');
+    await TestBed.configureTestingModule({ imports: [TimelineHost] }).compileComponents();
+    const fixture = TestBed.createComponent(TimelineHost);
+    fixture.componentInstance.items.set([...ITEMS, { ...ITEMS[4] }]);
+    fixture.detectChanges();
+    fixture.componentInstance.items.set([...ITEMS, { ...ITEMS[4] }, { ...ITEMS[4] }]);
+    fixture.detectChanges();
+    expect(errorSpy.calls.allArgs().filter(args => String(args[0]).includes('duplicate')).length).toBe(1);
   });
 });

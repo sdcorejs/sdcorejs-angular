@@ -324,6 +324,126 @@ $weight-medium: var(--sd-font-weight-medium, 500);
   color: c('text-secondary');
 }
 
+.sd-timeline__state-icon--error {
+  color: c('error-dark');
+}
+
+// ---- loading ----
+.sd-timeline__skeleton {
+  display: grid;
+  grid-template-columns: var(--sd-timeline-marker) minmax(0, 1fr);
+  gap: var(--sd-timeline-gap);
+  padding-bottom: var(--sd-timeline-item-space);
+}
+
+.sd-timeline__skeleton-marker {
+  width: var(--sd-timeline-marker);
+  height: var(--sd-timeline-marker);
+  border-radius: 50%;
+  background: c('surface-muted');
+}
+
+.sd-timeline__skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: sp(8);
+  padding-top: var(--sd-timeline-body-offset);
+}
+
+.sd-timeline__skeleton-bar {
+  height: 10px;
+  border-radius: var(--sd-radius-4, 4px);
+  background: c('surface-muted');
+}
+
+.sd-timeline__progress {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  background: c('primary-light');
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -40%;
+    width: 40%;
+    background: c('primary');
+    animation: sd-timeline-progress 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes sd-timeline-progress {
+  to {
+    left: 100%;
+  }
+}
+
+.sd-timeline__load-more,
+.sd-timeline__loading-more {
+  margin-top: sp(8);
+}
+
+.sd-timeline__loading-more {
+  display: flex;
+  align-items: center;
+  gap: sp(8);
+  color: c('text-secondary');
+  font-size: fs(13);
+}
+
+.sd-timeline__spinner {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 2px solid c('border');
+  border-top-color: c('primary');
+  border-radius: 50%;
+  animation: sd-timeline-spin 0.8s linear infinite;
+}
+
+@keyframes sd-timeline-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sd-timeline__more-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: sp(8);
+  border-radius: var(--sd-radius-8, 8px);
+  padding: 8px 10px;
+  background: c('error-light');
+  color: c('error-dark');
+  font-size: fs(13);
+
+  .sd-timeline__link-button {
+    margin-left: auto;
+  }
+}
+
+.sd-timeline__sentinel {
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-timeline__progress::after,
+  .sd-timeline__spinner {
+    animation: none;
+  }
+
+  .sd-timeline__progress::after {
+    left: 0;
+    width: 100%;
+  }
+}
+
 .sd-timeline__sr-only {
   position: absolute;
   width: 1px;

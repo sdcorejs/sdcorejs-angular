@@ -1,7 +1,33 @@
 @let _sm = size() === 'sm';
 @let _day = groupBy() === 'day';
-<section class="sd-timeline" role="region" [class.sd-timeline--sm]="_sm" [attr.aria-label]="regionLabel()" [attr.data-autoid]="resolvedAutoId()">
-  @if (!entries().length) {
+<section
+  class="sd-timeline"
+  role="region"
+  [class.sd-timeline--sm]="_sm"
+  [attr.aria-label]="regionLabel()"
+  [attr.aria-busy]="phase() === 'loading' ? 'true' : null"
+  [attr.data-autoid]="resolvedAutoId()">
+  @if (phase() === 'loading' && entries().length) {
+    <div class="sd-timeline__progress" role="progressbar" [attr.aria-label]="'core.component.timeline.loading' | sdTranslate"></div>
+  }
+  @if (!entries().length && phase() === 'loading') {
+    @for (row of skeletonRows; track $index) {
+      <div class="sd-timeline__skeleton" aria-hidden="true">
+        <span class="sd-timeline__skeleton-marker"></span>
+        <span class="sd-timeline__skeleton-lines">
+          @for (width of row; track $index) {
+            <span class="sd-timeline__skeleton-bar" [style.width.%]="width"></span>
+          }
+        </span>
+      </div>
+    }
+  } @else if (!entries().length && phase() === 'error') {
+    <div class="sd-timeline__state sd-timeline__state--error" role="alert">
+      <sd-icon class="sd-timeline__state-icon sd-timeline__state-icon--error" size="28px" name="error" />
+      <p class="sd-timeline__state-text">{{ 'core.component.timeline.load-error' | sdTranslate }}</p>
+      <sd-button class="sd-timeline__retry" type="outline" size="sm" [title]="'core.component.timeline.retry' | sdTranslate" (click)="reload()" />
+    </div>
+  } @else if (!entries().length) {
     <div class="sd-timeline__state sd-timeline__state--empty">
       @if (emptyTemplate(); as _empty) {
         <ng-container [ngTemplateOutlet]="_empty.template" />
@@ -11,7 +37,7 @@
       }
     </div>
   } @else {
-    <ol class="sd-timeline__list">
+    <ol class="sd-timeline__list" [attr.role]="feed() ? 'feed' : null" [attr.aria-busy]="feed() && phase() === 'more' ? 'true' : null">
       @for (group of groups(); track group.key) {
         @if (_day) {
           <li class="sd-timeline__group">
@@ -29,6 +55,25 @@
         }
       }
     </ol>
+    @if (phase() === 'more-error') {
+      <div class="sd-timeline__more-error" role="alert">
+        <sd-icon size="18px" name="error" />
+        <span>{{ 'core.component.timeline.load-more-error' | sdTranslate }}</span>
+        <button type="button" class="sd-timeline__link-button" (click)="loadMore()">{{ 'core.component.timeline.retry' | sdTranslate }}</button>
+      </div>
+    } @else if (phase() === 'more') {
+      <div class="sd-timeline__loading-more" role="status">
+        <span class="sd-timeline__spinner" aria-hidden="true"></span>
+        {{ 'core.component.timeline.loading' | sdTranslate }}
+      </div>
+    } @else if (hasMore()) {
+      <button type="button" class="sd-timeline__link-button sd-timeline__load-more" (click)="loadMore()">
+        {{ 'core.component.timeline.load-more' | sdTranslate: { count: pageSize() } }}
+      </button>
+    }
+    @if (hasMore() && feed()) {
+      <div #sentinel class="sd-timeline__sentinel" aria-hidden="true"></div>
+    }
   }
 </section>
 
@@ -36,7 +81,11 @@
   @let _item = view.item;
   @let _sm = size() === 'sm';
   <li class="sd-timeline__item" [class.sd-timeline__item--last]="last" [attr.data-item-id]="_item.id">
-    <article class="sd-timeline__entry" [attr.aria-labelledby]="view.labelId">
+    <article
+      class="sd-timeline__entry"
+      [attr.aria-labelledby]="view.labelId"
+      [attr.aria-posinset]="feed() ? view.position : null"
+      [attr.aria-setsize]="feed() ? (hasMore() ? -1 : entries().length) : null">
       <span class="sd-timeline__sr-only" [id]="view.labelId">{{ view.label }}</span>
       <span class="sd-timeline__marker-slot" aria-hidden="true">
         @if (_item.actor; as _actor) {
