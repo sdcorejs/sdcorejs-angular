@@ -469,6 +469,17 @@ describe('SdCard file, shortcut and actions', () => {
       expect(host.selectedFile()).toBe('report');
     });
 
+    it('draws the selected ring of a layout card above the content so the thumbnail cannot cover it', () => {
+      element('file-card').click();
+      fixture.detectChanges();
+      const card = element('file-card');
+      // why: the test page loads no theme, so give the accent a concrete colour for the computed shadow.
+      card.style.setProperty('--sd-card-accent', 'rgb(0, 92, 187)');
+      expect(getComputedStyle(card).boxShadow).toBe('none');
+      expect(getComputedStyle(card, '::after').boxShadow).toContain('inset');
+      expect(getComputedStyle(card, '::after').pointerEvents).toBe('none');
+    });
+
     it('keeps clicks from navigating a link card', () => {
       expect(element('entity-link').querySelector('a.sd-card__link [data-testid="entity-menu"]')).toBeNull();
       element('entity-menu').click();
