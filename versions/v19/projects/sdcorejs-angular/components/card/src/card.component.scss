@@ -1,5 +1,6 @@
 @use 'card-shared' as *;
 @use 'card-layouts';
+@use 'card-states';
 
 :host {
   --sd-card-accent: #{c('primary')};

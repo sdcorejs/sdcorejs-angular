@@ -27,7 +27,7 @@ import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 import { SdCardActionsDirective } from './card-actions.directive';
 import { SdCardGroup, type ɵSdCardGroupMember } from './card-group.component';
-import { SD_CARD_CONFIGURATION } from './card.configuration';
+import { SD_CARD_CONFIGURATION, SD_CARD_LAYOUT } from './card.configuration';
 import { SD_CARD_DEFAULT_COLOR } from './card.constants';
 import { sdCardFileInfo, sdCardStatDelta, sdCardStatValue, type SdCardFormatContext } from './card.format';
 import type { SdCardBehavior, SdCardContent, SdCardSize } from './card.model';
@@ -48,6 +48,7 @@ import { sdCardBehaviorAllowed } from './card.utils';
     '[attr.aria-pressed]': 'mode() === "select" && !isOption() ? (selected() ? "true" : "false") : null',
     '[attr.aria-checked]': 'isOption() ? (selected() ? "true" : "false") : null',
     '[attr.aria-disabled]': 'mode() === "select" ? (effectiveDisabled() ? "true" : "false") : null',
+    '[attr.aria-busy]': 'busy() ? "true" : null',
     '[attr.data-autoid]': 'resolvedAutoId()',
     '[attr.data-selected]': 'selected() ? "true" : "false"',
     '[attr.data-disabled]': 'effectiveDisabled() ? "true" : "false"',
@@ -56,6 +57,8 @@ import { sdCardBehaviorAllowed } from './card.utils';
     '[class.sd-card--select]': 'mode() === "select"',
     '[class.sd-card--content]': 'layout() !== undefined',
     '[class.sd-card--sm]': 'layout() !== undefined && resolvedSize() === "sm"',
+    '[class.sd-card--loading]': 'busy()',
+    '[class.sd-card--error]': 'failed()',
     '[class.sd-selected]': 'selected()',
     '[class.sd-disabled]': 'effectiveDisabled()',
     '[class.sd-c-primary]': 'effectiveColor() === "primary"',
@@ -79,6 +82,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly #reported = new Set<string>();
   readonly #i18n = inject(I18nService);
   readonly #configuration = inject(SD_CARD_CONFIGURATION, { optional: true });
+  readonly #layoutContext = inject(SD_CARD_LAYOUT, { optional: true });
 
   /** Value used by the nearest group selection model. Required for `select` inside a group. */
   readonly value = input<NonNullable<T> | undefined>(undefined);
@@ -88,6 +92,10 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly content = input<SdCardContent | undefined>(undefined);
   /** Density; layouts without an `sm` variant (`option`, `file`) always render `md`. */
   readonly size = input<SdCardSize | undefined>(undefined);
+  /** Skeleton state of a built-in layout; blocks activation and keeps the card height. No effect without `content`. */
+  readonly loading = input(false, { transform: booleanAttribute });
+  /** Failed state of a built-in layout with a "Retry" button (`sdRetry`). No effect without `content`. */
+  readonly error = input(false, { transform: booleanAttribute });
   /** Router commands for `behavior="link"` (rendered through `RouterLink`). */
   readonly link = input<string | readonly unknown[] | undefined>(undefined);
   /** Query params that go with `link`. */
@@ -106,6 +114,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   });
   /** `select`: emits the accepted native `Event` after the selection changed. `link`: emits after navigation started. */
   readonly click = output<Event>();
+  /** The user pressed "Retry" in the error state; the card's behavior is not triggered. */
+  readonly sdRetry = output<void>();
 
   /** Behavior requested by the consumer or implied by the presence of a group. */
   readonly #requestedBehavior = computed<SdCardBehavior>(() => this.behavior() ?? (this.#group ? 'select' : 'static'));
@@ -123,8 +133,14 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly resolvedSize = computed<SdCardSize>(() => {
     const layout = this.layout();
     if (layout === 'option' || layout === 'file') return 'md';
-    return this.size() ?? 'md';
+    return this.size() ?? (this.#layoutContext?.compact() ? 'sm' : 'md');
   });
+  /** Loading applies to built-in layouts only. */
+  protected readonly busy = computed(() => this.loading() && this.layout() !== undefined);
+  /** Error applies to built-in layouts only; loading wins over error. */
+  protected readonly failed = computed(() => this.error() && this.layout() !== undefined && !this.busy());
+  /** The card ignores activation: disabled, or busy loading (which keeps its normal colors). */
+  readonly #inert = computed(() => this.effectiveDisabled() || this.busy());
   readonly #formatContext = computed<SdCardFormatContext>(() => ({
     locale: this.#i18n.locale(),
     compactDisplay: this.#configuration?.compactDisplay,
@@ -137,6 +153,13 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   });
   /** Accessible name of the focusable element (host for select/static, anchor for link) for built-in layouts. */
   protected readonly accessibleLabel = computed(() => {
+    const label = this.#contentLabel();
+    if (!label) return label;
+    if (this.busy()) return sdCardJoinLabel(label, this.#i18n.t('core.component.card.loading'));
+    if (this.failed()) return sdCardJoinLabel(label, this.#i18n.t('core.component.card.error'));
+    return label;
+  });
+  readonly #contentLabel = computed(() => {
     const entity = this.entity();
     if (entity) return sdCardJoinLabel(entity.data.title, entity.data.subtitle, sdCardBadgeText(entity.data.badge));
     const file = this.file();
@@ -151,6 +174,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
           ? this.#i18n.t('core.component.card.delta-unchanged')
           : this.#i18n.t(`core.component.card.delta-${delta.direction}`, { value: delta.display });
     }
+    if (this.failed() || this.busy()) return stat.data.label;
     return sdCardJoinLabel(stat.data.label, stat.value.full, deltaText, stat.data.context);
   });
   /** Read-only selection state; always `false` unless the card behaves as `select`. */
@@ -203,7 +227,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly #member: ɵSdCardGroupMember = {
     element: this.#elementRef.nativeElement,
     isOption: this.isOption,
-    isEnabled: computed(() => this.mode() === 'select' && !this.effectiveDisabled()),
+    isEnabled: computed(() => this.mode() === 'select' && !this.#inert()),
     selected: this.selected,
     value: this.value,
   };
@@ -224,7 +248,9 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly routerCommands = computed(() => this.link() ?? null);
 
   readonly #captureClickListener = (event: Event): void => {
-    if (this.mode() === 'static' || !this.effectiveDisabled()) return;
+    if (this.mode() === 'static' || !this.#inert()) return;
+    // why: the retry button stays usable while the rest of a disabled card is blocked.
+    if (!this.effectiveDisabled() && (event.target as Element | null)?.closest?.('.sd-card__retry')) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -233,7 +259,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
 
   readonly #bubbleClickListener = (event: Event): void => {
     // why: the action area belongs to the consumer; its clicks never select, navigate or reach the card's listeners.
-    if ((event.target as Element | null)?.closest?.('.sd-card__actions')) {
+    if ((event.target as Element | null)?.closest?.('.sd-card__actions, .sd-card__retry')) {
       event.stopPropagation();
       event.stopImmediatePropagation();
       return;
@@ -245,7 +271,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     // consumers from receiving this native event as well as the explicit output.
     event.stopPropagation();
     event.stopImmediatePropagation();
-    if (this.effectiveDisabled()) return;
+    if (this.#inert()) return;
     if (mode === 'link') {
       // why: the anchor's own listeners (RouterLink) ran before the click bubbled here, so navigation already started.
       if ((event.target as Element | null)?.closest('.sd-card__link')) this.click.emit(event);
@@ -293,7 +319,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
       this.#clickSubject
         .pipe(
           throttleTime(300, undefined, { leading: true, trailing: false }),
-          filter(() => !this.effectiveDisabled())
+          filter(() => !this.#inert())
         )
         .subscribe(event => {
           // why: consumers must observe the new selected/model state from their click handler,
@@ -320,11 +346,15 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
       this.#group.ɵmoveFocus(this.#member, step);
       return;
     }
-    if (this.effectiveDisabled() || (event.key !== 'Enter' && event.key !== ' ')) return;
+    if (this.#inert() || (event.key !== 'Enter' && event.key !== ' ')) return;
 
     event.preventDefault();
     event.stopPropagation();
     this.#elementRef.nativeElement.click();
+  }
+
+  protected retry(): void {
+    this.sdRetry.emit();
   }
 
   ngOnDestroy(): void {

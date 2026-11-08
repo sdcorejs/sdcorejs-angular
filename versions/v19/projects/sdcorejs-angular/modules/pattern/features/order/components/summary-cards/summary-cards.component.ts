@@ -13,7 +13,7 @@ const CARDS: readonly { readonly key: CardKey; readonly label: string }[] = [
 
 /**
  * Score card của danh sách đơn: ba thẻ đầu lọc theo trạng thái, đồng bộ với tab vì cùng một state; thẻ doanh thu
- * là thẻ `static` cuối nhóm, chỉ để xem. Khi `sd-page-list` thu gọn (màn thấp), các thẻ thành một dòng 32px.
+ * là thẻ `static` cuối nhóm, chỉ để xem. Khi `sd-page-list` thu gọn (màn thấp), thẻ tự về size `sm` (một dòng 32px) và nhóm xếp thành hàng.
  */
 @Component({
   selector: 'summary-cards',
@@ -29,9 +29,9 @@ const CARDS: readonly { readonly key: CardKey; readonly label: string }[] = [
       [(model)]="selected"
       (sdChange)="choose($event)">
       @for (card of cards(); track card.key) {
-        <sd-card [value]="card.key" [autoId]="'order-summary-' + card.key" [content]="card.content" [size]="compact() ? 'sm' : 'md'" />
+        <sd-card [value]="card.key" [autoId]="'order-summary-' + card.key" [loading]="!counts()" [content]="card.content" />
       }
-      <sd-card behavior="static" autoId="order-summary-revenue" [content]="revenue()" [size]="compact() ? 'sm' : 'md'" />
+      <sd-card behavior="static" autoId="order-summary-revenue" [loading]="!counts()" [content]="revenue()" />
     </sd-card-group>
   `,
 })

@@ -12,7 +12,7 @@ const CARDS: readonly { readonly key: 'all' | CustomerSegment; readonly label: s
 
 /**
  * Score card của danh sách khách hàng: mỗi thẻ là một nhóm khách và là bộ lọc của danh sách.
- * Khi `sd-page-list` thu gọn (màn thấp), các thẻ thành một dòng 32px.
+ * Khi `sd-page-list` thu gọn (màn thấp), thẻ tự về size `sm` (một dòng 32px) và nhóm xếp thành hàng.
  */
 @Component({
   selector: 'summary-cards',
@@ -28,7 +28,7 @@ const CARDS: readonly { readonly key: 'all' | CustomerSegment; readonly label: s
       [(model)]="selected"
       (sdChange)="choose($event)">
       @for (card of cards(); track card.key) {
-        <sd-card [value]="card.key" [autoId]="'customer-segment-' + card.key" [content]="card.content" [size]="compact() ? 'sm' : 'md'" />
+        <sd-card [value]="card.key" [autoId]="'customer-segment-' + card.key" [loading]="!counts()" [content]="card.content" />
       }
     </sd-card-group>
   `,

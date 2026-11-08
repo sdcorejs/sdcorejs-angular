@@ -24,160 +24,181 @@
 </ng-template>
 
 <ng-template #body>
-  @switch (layout()) {
-    @case ('stat') {
-      @if (stat(); as _stat) {
-        @if (resolvedSize() === 'sm') {
-          <div class="sd-card__stat sd-card__stat--sm">
-            <span class="sd-card__stat-label" [title]="_stat.data.label">{{ _stat.data.label }}</span>
-            <span class="sd-card__stat-value" [title]="_stat.value.full">{{ _stat.value.display }}</span>
-          </div>
-        } @else {
-          <div class="sd-card__stat">
-            <div class="sd-card__stat-head">
+  @if (failed() && layout() !== 'stat') {
+    <div class="sd-card__error">
+      <sd-icon size="20px" name="error" />
+      <span class="sd-card__error-text">{{ 'core.component.card.error' | sdTranslate }}</span>
+      <button type="button" class="sd-card__retry" (click)="retry()">{{ 'core.component.card.retry' | sdTranslate }}</button>
+    </div>
+  } @else {
+    @switch (layout()) {
+      @case ('stat') {
+        @if (stat(); as _stat) {
+          @if (resolvedSize() === 'sm') {
+            <div class="sd-card__stat sd-card__stat--sm">
               <span class="sd-card__stat-label" [title]="_stat.data.label">{{ _stat.data.label }}</span>
-              @if (_stat.data.icon) {
-                <sd-icon class="sd-card__stat-icon" size="20px" [name]="_stat.data.icon" />
-              }
+              <span class="sd-card__stat-value" [class.sd-card__stat-value--empty]="failed()" [title]="failed() ? '' : _stat.value.full">{{
+                failed() ? '—' : _stat.value.display
+              }}</span>
             </div>
-            <div class="sd-card__stat-row">
-              <span class="sd-card__stat-value" [title]="_stat.value.full">{{ _stat.value.display }}</span>
-              @if (_stat.delta; as _delta) {
-                <span class="sd-card__delta" [class]="'sd-card__delta--' + _delta.tone">
-                  @if (_delta.direction === 'flat') {
-                    {{ 'core.component.card.delta-unchanged' | sdTranslate }}
-                  } @else {
-                    <sd-icon size="14px" [name]="_delta.direction === 'up' ? 'arrow_upward' : 'arrow_downward'" />
-                    {{ _delta.display }}
-                  }
-                </span>
-              }
-            </div>
-            @if (_stat.data.context) {
-              <span
-                class="sd-card__stat-context"
-                [class]="_stat.data.contextColor ? 'sd-card__stat-context--' + _stat.data.contextColor : ''"
-                [title]="_stat.data.context"
-                >{{ _stat.data.context }}</span
-              >
-            }
-          </div>
-        }
-      }
-    }
-    @case ('option') {
-      @if (option(); as _option) {
-        <div class="sd-card__option">
-          @if (_option.icon) {
-            <span class="sd-card__option-icon"><sd-icon size="22px" [name]="_option.icon" /></span>
-          }
-          <div class="sd-card__option-text">
-            <div class="sd-card__option-title-row">
-              <span class="sd-card__option-title" [title]="_option.title">{{ _option.title }}</span>
-              @if (_option.badge; as _badge) {
-                <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
-              }
-            </div>
-            @if (_option.description) {
-              <span class="sd-card__option-description">{{ _option.description }}</span>
-            }
-          </div>
-          <sd-icon class="sd-card__check" size="20px" [name]="checkIcon()" />
-        </div>
-      }
-    }
-    @case ('entity') {
-      @if (entity(); as _entity) {
-        @if (resolvedSize() === 'sm') {
-          <div class="sd-card__entity sd-card__entity--sm">
-            @if (_entity.data.avatar; as _avatar) {
-              <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 24 }" />
-            }
-            <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
-            @if (_entity.data.subtitle) {
-              <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
-            }
-            @if (selected()) {
-              <sd-icon class="sd-card__entity-check" size="20px" name="check_circle" />
-            }
-          </div>
-        } @else {
-          <div class="sd-card__entity">
-            <div class="sd-card__entity-head">
-              @if (_entity.data.avatar; as _avatar) {
-                <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 36 }" />
-              }
-              <div class="sd-card__entity-text">
-                <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
-                @if (_entity.data.subtitle) {
-                  <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
+          } @else {
+            <div class="sd-card__stat">
+              <div class="sd-card__stat-head">
+                <span class="sd-card__stat-label" [title]="_stat.data.label">{{ _stat.data.label }}</span>
+                @if (_stat.data.icon) {
+                  <sd-icon class="sd-card__stat-icon" size="20px" [name]="_stat.data.icon" />
                 }
               </div>
-              @if (_entity.data.badge; as _badge) {
-                <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+              <div class="sd-card__stat-row">
+                <span
+                  class="sd-card__stat-value"
+                  [class.sd-card__stat-value--empty]="failed()"
+                  [title]="failed() ? '' : _stat.value.full"
+                  >{{ failed() ? '—' : _stat.value.display }}</span
+                >
+                @if (!failed() && _stat.delta; as _delta) {
+                  <span class="sd-card__delta" [class]="'sd-card__delta--' + _delta.tone">
+                    @if (_delta.direction === 'flat') {
+                      {{ 'core.component.card.delta-unchanged' | sdTranslate }}
+                    } @else {
+                      <sd-icon size="14px" [name]="_delta.direction === 'up' ? 'arrow_upward' : 'arrow_downward'" />
+                      {{ _delta.display }}
+                    }
+                  </span>
+                }
+              </div>
+              @if (failed()) {
+                <span class="sd-card__stat-context sd-card__stat-context--failed">
+                  {{ 'core.component.card.error' | sdTranslate }} ·
+                  <button type="button" class="sd-card__retry" (click)="retry()">{{ 'core.component.card.retry' | sdTranslate }}</button>
+                </span>
+              } @else if (_stat.data.context) {
+                <span
+                  class="sd-card__stat-context"
+                  [class]="_stat.data.contextColor ? 'sd-card__stat-context--' + _stat.data.contextColor : ''"
+                  [title]="_stat.data.context"
+                  >{{ _stat.data.context }}</span
+                >
               }
             </div>
-            @if (_entity.meta.length) {
-              <dl class="sd-card__entity-meta" [style.grid-template-columns]="_entity.metaColumns">
-                @for (_item of _entity.meta; track $index) {
-                  <div>
-                    <dt [title]="_item.label">{{ _item.label }}</dt>
-                    <dd [title]="_item.value">{{ _item.value }}</dd>
-                  </div>
+          }
+        }
+      }
+      @case ('option') {
+        @if (option(); as _option) {
+          <div class="sd-card__option">
+            @if (_option.icon) {
+              <span class="sd-card__option-icon"><sd-icon size="22px" [name]="_option.icon" /></span>
+            }
+            <div class="sd-card__option-text">
+              <div class="sd-card__option-title-row">
+                <span class="sd-card__option-title" [title]="_option.title">{{ _option.title }}</span>
+                @if (_option.badge; as _badge) {
+                  <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
                 }
-              </dl>
-            }
+              </div>
+              @if (_option.description) {
+                <span class="sd-card__option-description">{{ _option.description }}</span>
+              }
+            </div>
+            <sd-icon class="sd-card__check" size="20px" [name]="checkIcon()" />
           </div>
         }
       }
-    }
-    @case ('file') {
-      @if (file(); as _file) {
-        <div class="sd-card__file">
-          <div class="sd-card__file-media" [class]="'sd-card__file-media--' + _file.info.kind">
-            @if (_file.data.thumbnail) {
-              <img class="sd-card__file-thumb" alt="" loading="lazy" [src]="_file.data.thumbnail" />
-            } @else {
-              <sd-icon size="36px" [name]="_file.info.icon" />
-            }
-            @if (selected()) {
-              <sd-icon class="sd-card__file-check" size="22px" name="check_circle" />
-            }
-          </div>
-          <div class="sd-card__file-body">
-            <span class="sd-card__file-name" [title]="_file.data.name">{{ _file.data.name }}</span>
-            @if (_file.meta) {
-              <span class="sd-card__file-meta">{{ _file.meta }}</span>
-            }
-          </div>
-        </div>
+      @case ('entity') {
+        @if (entity(); as _entity) {
+          @if (resolvedSize() === 'sm') {
+            <div class="sd-card__entity sd-card__entity--sm">
+              @if (_entity.data.avatar; as _avatar) {
+                <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 24 }" />
+              }
+              <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
+              @if (_entity.data.subtitle) {
+                <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
+              }
+              @if (selected()) {
+                <sd-icon class="sd-card__entity-check" size="20px" name="check_circle" />
+              }
+            </div>
+          } @else {
+            <div class="sd-card__entity">
+              <div class="sd-card__entity-head">
+                @if (_entity.data.avatar; as _avatar) {
+                  <ng-container [ngTemplateOutlet]="avatarTpl" [ngTemplateOutletContext]="{ $implicit: _avatar, size: 36 }" />
+                }
+                <div class="sd-card__entity-text">
+                  <span class="sd-card__entity-title" [title]="_entity.data.title">{{ _entity.data.title }}</span>
+                  @if (_entity.data.subtitle) {
+                    <span class="sd-card__entity-subtitle" [title]="_entity.data.subtitle">{{ _entity.data.subtitle }}</span>
+                  }
+                </div>
+                @if (_entity.data.badge; as _badge) {
+                  <ng-container [ngTemplateOutlet]="badgeTpl" [ngTemplateOutletContext]="{ $implicit: _badge }" />
+                }
+              </div>
+              @if (_entity.meta.length) {
+                <dl class="sd-card__entity-meta" [style.grid-template-columns]="_entity.metaColumns">
+                  @for (_item of _entity.meta; track $index) {
+                    <div>
+                      <dt [title]="_item.label">{{ _item.label }}</dt>
+                      <dd [title]="_item.value">{{ _item.value }}</dd>
+                    </div>
+                  }
+                </dl>
+              }
+            </div>
+          }
+        }
       }
-    }
-    @case ('shortcut') {
-      @if (shortcut(); as _shortcut) {
-        @if (resolvedSize() === 'sm') {
-          <div class="sd-card__shortcut sd-card__shortcut--sm">
-            <sd-icon class="sd-card__shortcut-icon" size="20px" [name]="_shortcut.icon" />
-            <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
-          </div>
-        } @else {
-          <div class="sd-card__shortcut">
-            <sd-icon class="sd-card__shortcut-icon" size="24px" [name]="_shortcut.icon" />
-            <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
-            @if (_shortcut.description) {
-              <span class="sd-card__shortcut-description">{{ _shortcut.description }}</span>
-            }
+      @case ('file') {
+        @if (file(); as _file) {
+          <div class="sd-card__file">
+            <div class="sd-card__file-media" [class]="'sd-card__file-media--' + _file.info.kind">
+              @if (_file.data.thumbnail) {
+                <img class="sd-card__file-thumb" alt="" loading="lazy" [src]="_file.data.thumbnail" />
+              } @else {
+                <sd-icon size="36px" [name]="_file.info.icon" />
+              }
+              @if (selected()) {
+                <sd-icon class="sd-card__file-check" size="22px" name="check_circle" />
+              }
+            </div>
+            <div class="sd-card__file-body">
+              <span class="sd-card__file-name" [title]="_file.data.name">{{ _file.data.name }}</span>
+              @if (_file.meta) {
+                <span class="sd-card__file-meta">{{ _file.meta }}</span>
+              }
+            </div>
           </div>
         }
       }
-    }
-    @default {
-      <ng-content />
+      @case ('shortcut') {
+        @if (shortcut(); as _shortcut) {
+          @if (resolvedSize() === 'sm') {
+            <div class="sd-card__shortcut sd-card__shortcut--sm">
+              <sd-icon class="sd-card__shortcut-icon" size="20px" [name]="_shortcut.icon" />
+              <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
+            </div>
+          } @else {
+            <div class="sd-card__shortcut">
+              <sd-icon class="sd-card__shortcut-icon" size="24px" [name]="_shortcut.icon" />
+              <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
+              @if (_shortcut.description) {
+                <span class="sd-card__shortcut-description">{{ _shortcut.description }}</span>
+              }
+            </div>
+          }
+        }
+      }
+      @default {
+        <ng-content />
+      }
     }
   }
 </ng-template>
 
-@if (mode() === 'link') {
+<!-- why: the retry button of the error state cannot sit inside an anchor, so a failed link card renders no anchor. -->
+@if (mode() === 'link' && !failed()) {
   @let _disabled = effectiveDisabled();
   @if (routerCommands(); as _commands) {
     <a

@@ -7,6 +7,7 @@ import type { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdCardActionsDirective } from './card-actions.directive';
 import { SdCardGroup } from './card-group.component';
 import { SdCard } from './card.component';
+import { SD_CARD_LAYOUT, type SdCardLayout } from './card.configuration';
 import type { SdCardBehavior, SdCardContent, SdCardEntityData, SdCardOptionData, SdCardSize, SdCardStatData } from './card.model';
 
 const PLANS: readonly SdCardOptionData[] = [
@@ -471,5 +472,121 @@ describe('SdCard file, shortcut and actions', () => {
       expect(element('stat-actions').querySelector('button')).toBeNull();
       expect(warnSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*sdCardActions/));
     });
+  });
+});
+
+@Component({
+  standalone: true,
+  imports: [SdCard, SdCardGroup],
+  template: `
+    <sd-card-group [(model)]="model">
+      <sd-card
+        data-testid="stat"
+        value="stat"
+        [loading]="loading()"
+        [error]="error()"
+        [content]="{ layout: 'stat', data: { label: 'Tổng đơn', value: value() } }"
+        (click)="clicks = clicks + 1"
+        (sdRetry)="retries = retries + 1" />
+      <sd-card
+        data-testid="entity"
+        value="entity"
+        [loading]="loading()"
+        [error]="error()"
+        [content]="{ layout: 'entity', data: { title: 'Nguyễn Văn An', subtitle: 'Khách VIP' } }"
+        (sdRetry)="retries = retries + 1" />
+      <sd-card data-testid="option" value="option" [content]="{ layout: 'option', data: { title: 'Gói' } }" />
+      <sd-card data-testid="file" value="file" [content]="{ layout: 'file', data: { name: 'a.pdf' } }" />
+      <sd-card data-testid="projected" value="projected" [loading]="loading()">Projected</sd-card>
+    </sd-card-group>
+  `,
+})
+class CardStateHost {
+  readonly model = signal<string | string[] | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal(false);
+  readonly value = signal<number | null>(1234);
+  clicks = 0;
+  retries = 0;
+}
+
+describe('SdCard states and size', () => {
+  let fixture: ComponentFixture<CardStateHost>;
+  let host: CardStateHost;
+  const compact = signal(false);
+  const element = (testId: string): HTMLElement => fixture.nativeElement.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+
+  beforeEach(async () => {
+    compact.set(false);
+    await TestBed.configureTestingModule({
+      imports: [CardStateHost],
+      providers: [{ provide: SD_CARD_LAYOUT, useValue: { compact } satisfies SdCardLayout }],
+    }).compileComponents();
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    fixture = TestBed.createComponent(CardStateHost);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('switches to sm when the surrounding layout is compact, except option and file', () => {
+    expect(element('stat').classList.contains('sd-card--sm')).toBeFalse();
+    compact.set(true);
+    fixture.detectChanges();
+    expect(element('stat').classList.contains('sd-card--sm')).toBeTrue();
+    expect(element('entity').classList.contains('sd-card--sm')).toBeTrue();
+    expect(element('option').classList.contains('sd-card--sm')).toBeFalse();
+    expect(element('file').classList.contains('sd-card--sm')).toBeFalse();
+  });
+
+  it('marks a loading card busy, blocks activation and keeps its height', () => {
+    const loadedHeight = element('stat').offsetHeight;
+    const loadedEntityHeight = element('entity').offsetHeight;
+    host.loading.set(true);
+    fixture.detectChanges();
+    expect(element('stat').getAttribute('aria-busy')).toBe('true');
+    expect(element('stat').offsetHeight).toBe(loadedHeight);
+    expect(element('entity').offsetHeight).toBe(loadedEntityHeight);
+    expect(element('stat').querySelector('.sd-card__stat-label')?.textContent).toContain('Tổng đơn');
+    element('stat').click();
+    element('stat').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    expect(host.model()).toBeNull();
+    expect(host.clicks).toBe(0);
+    expect(element('stat').getAttribute('aria-label')).toContain('Đang tải');
+  });
+
+  it('ignores loading without content', () => {
+    host.loading.set(true);
+    fixture.detectChanges();
+    expect(element('projected').hasAttribute('aria-busy')).toBeFalse();
+  });
+
+  it('shows an em dash and a retry button for a failed stat without selecting the card', () => {
+    host.error.set(true);
+    fixture.detectChanges();
+    const stat = element('stat');
+    expect(stat.querySelector('.sd-card__stat-value')?.textContent?.trim()).toBe('—');
+    expect(stat.querySelector('.sd-card__stat-context')?.textContent).toContain('Không tải được');
+    (stat.querySelector('button.sd-card__retry') as HTMLButtonElement).click();
+    expect(host.retries).toBe(1);
+    expect(host.model()).toBeNull();
+    expect(host.clicks).toBe(0);
+  });
+
+  it('never shows zero for a failed stat', () => {
+    host.value.set(0);
+    host.error.set(true);
+    fixture.detectChanges();
+    expect(element('stat').querySelector('.sd-card__stat-value')?.textContent?.trim()).toBe('—');
+  });
+
+  it('replaces other layouts with an error row and a retry button', () => {
+    host.error.set(true);
+    fixture.detectChanges();
+    const entity = element('entity');
+    expect(entity.querySelector('.sd-card__entity')).toBeNull();
+    expect(entity.querySelector('.sd-card__error')?.textContent).toContain('Không tải được');
+    (entity.querySelector('button.sd-card__retry') as HTMLButtonElement).click();
+    expect(host.retries).toBe(1);
+    expect(host.model()).toBeNull();
   });
 });
