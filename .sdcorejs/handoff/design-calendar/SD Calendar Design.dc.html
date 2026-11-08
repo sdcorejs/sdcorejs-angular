@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<header data-screen-label="00 Header" style="font-family:'Be Vietnam Pro',sans-serif;max-width:1240px;margin:0 auto;padding:56px 32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · components/calendar (mới)</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;color:#1a1b1f">sd-calendar: thiết kế</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;line-height:1.6;text-wrap:pretty">Thiết kế chi tiết cho đợt 1 trong <a href="Schedule Components Proposal.dc.html">đề xuất bộ component lịch</a>. Màu lấy từ palette theme default (--sd-primary, --sd-*-light, --sd-text); token riêng của component có tiền tố --sd-calendar-. Dữ liệu mẫu: tuần 19–25/10/2026, hôm nay Thứ Năm 22/10, 10:40. Bản bấm thử ở <a href="Schedule Components Proposal.dc.html#demo">mục 04 của đề xuất</a>.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding:8px 0 40px;border-bottom:1px solid #dddcd6">
+    <a href="#giai-phau">01 Giải phẫu</a>
+    <a href="#che-do">02 Chế độ xem</a>
+    <a href="#su-kien">03 Khối sự kiện</a>
+    <a href="#tuong-tac">04 Tương tác</a>
+    <a href="#trang-thai">05 Trạng thái</a>
+    <a href="#mobile">06 Mobile</a>
+    <a href="#thong-so">07 Thông số</a>
+  </nav>
+</header>
+
+<section id="giai-phau" data-screen-label="01 Giải phẫu" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:16px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Giải phẫu</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Chế độ Tuần trên desktop, cắt hiển thị 07:00–19:00. Tiêu đề ngày và hàng cả ngày dính ở đầu vùng cuộn dọc nên luôn thẳng cột với lưới giờ.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>view="week" · desktop</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">rộng 960px</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:36px 32px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center">
+        <div style="position:relative;width:960px;flex:none">
+          <div style="border:1px solid #c4c6d0;border-radius:12px;background:#fdfbff;overflow:hidden;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f;line-height:1.4">
+            <div style="display:flex;align-items:center;gap:12px;height:56px;box-sizing:border-box;padding:0 12px 0 14px;border-bottom:1px solid #dedee5">
+              <div style="display:flex;align-items:center;gap:2px">
+                <span style="height:32px;padding:0 14px;margin-right:4px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;font-size:14px;font-weight:500">Hôm nay</span>
+                <span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_left</span>
+                <span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_right</span>
+              </div>
+              <span style="flex:1;font-size:18px;line-height:24px;font-weight:500">19 – 25 tháng 10, 2026</span>
+              <div style="display:flex;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden;font-size:13px;font-weight:500">
+                <span style="height:32px;padding:0 12px;display:flex;align-items:center">Tháng</span>
+                <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0;background:#dbe8f5;color:#001b3f">Tuần</span>
+                <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0">Ngày</span>
+                <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0">Danh sách</span>
+              </div>
+            </div>
+            <div style="border-bottom:1px solid #c4c6d0">
+              <div style="display:flex">
+                <div style="width:56px;flex:none;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 8px 8px 0;box-sizing:border-box;font-size:11px;color:#44474f">GMT+7</div>
+                <div style="flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr))">
+                  <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+                    <div style="height:72px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px 4px;border-left:1px solid #dedee5;min-width:0">
+                      <span style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:.04em;color:{{ d.wdColor }}">{{ d.wd }}</span>
+                      <span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;background:{{ d.numBg }};color:{{ d.numFg }}">{{ d.num }}</span>
+                      <span style="height:14px;font-size:11px;line-height:14px;color:#44474f;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.holiday }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;border-top:1px solid #dedee5">
+                <div style="width:56px;flex:none;box-sizing:border-box;padding:8px 8px 0 0;text-align:right;font-size:11px;line-height:14px;color:#44474f">Cả ngày</div>
+                <div style="flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:22px;row-gap:2px;padding:4px 0;box-sizing:border-box;border-left:1px solid #dedee5">
+                  <sc-for list="{{ weekBars }}" as="b" hint-placeholder-count="2"><div style="grid-column:{{ b.col }};grid-row:{{ b.row }};margin:0 8px 0 2px;box-sizing:border-box;border:1px solid {{ b.bd }};border-radius:6px;background:{{ b.bg }};font-size:12px;line-height:20px;font-weight:500;padding:0 6px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:6px;height:6px;border-radius:99px;background:{{ b.dot }};flex:none"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.title }}</span></div></sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex">
+              <div style="width:56px;flex:none;position:relative;height:576px">
+                <sc-for list="{{ hoursA }}" as="h" hint-placeholder-count="11"><span style="position:absolute;right:8px;top:{{ h.top }}px;font-size:11px;line-height:14px;color:#44474f">{{ h.label }}</span></sc-for>
+              </div>
+              <div style="flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));height:576px">
+                <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+                  <div style="position:relative;border-left:1px solid #dedee5">
+                    <sc-for list="{{ d.shade }}" as="z" hint-placeholder-count="0"><div style="position:absolute;left:0;right:0;top:{{ z.top }}px;height:{{ z.h }}px;background:#f3f3f7"></div></sc-for>
+                    <div style="position:absolute;inset:0;background:repeating-linear-gradient(to bottom,#dedee5 0,#dedee5 1px,transparent 1px,transparent 48px)"></div>
+                    <div style="position:absolute;top:24px;left:0;right:0;bottom:0;background:repeating-linear-gradient(to bottom,#efeef3 0,#efeef3 1px,transparent 1px,transparent 48px)"></div>
+                    <div style="position:absolute;top:0;bottom:0;left:2px;right:8px">
+                      <sc-for list="{{ d.ev }}" as="e" hint-placeholder-count="0">
+                        <div style="position:absolute;top:{{ e.top }}px;height:{{ e.height }}px;left:{{ e.left }}%;width:calc({{ e.width }}% - 2px);box-sizing:border-box;border:1px {{ e.bs }} {{ e.bd }};border-radius:6px;background:{{ e.bg }};color:#1a1b1f;padding:{{ e.pd }};overflow:hidden;font-size:{{ e.fs }};line-height:{{ e.lh }};display:flex;flex-direction:column;box-shadow:{{ e.shadow }};outline:{{ e.outline }};outline-offset:{{ e.ooff }};opacity:{{ e.op }};z-index:{{ e.z }}">
+                          <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ e.dot }};flex:none"></span><sc-if value="{{ e.rec }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined';font-size:13px;line-height:16px;flex:none">repeat</span></sc-if><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ e.title }}</span></span>
+                          <sc-if value="{{ e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.time }}</span></sc-if>
+                          <sc-if value="{{ e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.place }}</span></sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ d.isToday }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:-1px;right:0;top:{{ nowTopA }}px;height:2px;background:#ba1a1a;z-index:5"><span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:99px;background:#ba1a1a"></span></div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <sc-for list="{{ marks }}" as="m" hint-placeholder-count="11"><span style="position:absolute;top:{{ m.top }}px;left:{{ m.left }}px;z-index:10;width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center;box-shadow:0 0 0 2px #ffffff">{{ m.n }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+      <sc-for list="{{ legend }}" as="l" hint-placeholder-count="11">
+        <div style="display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px">
+          <span style="width:22px;height:22px;border-radius:999px;background:#c2255c;color:#ffffff;font:700 12px/22px 'Be Vietnam Pro',sans-serif;text-align:center">{{ l.n }}</span>
+          <span style="color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">{{ l.t }}.</strong> {{ l.d }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="che-do" data-screen-label="02 Chế độ xem" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Chế độ xem</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Tuần ở mục 01. Ba chế độ còn lại dùng chung thanh công cụ và cách tô màu sự kiện. Tháng chỉ để nhìn tổng quan và đi vào ngày; không kéo thả ở Tháng trong đợt 1.</p>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>view="month"</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">ô tối thiểu 104px · tối đa 3 dòng</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:32px;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center">
+        <div style="width:960px;flex:none;border:1px solid #c4c6d0;border-radius:12px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4">
+          <div style="display:flex;align-items:center;gap:12px;height:56px;box-sizing:border-box;padding:0 12px 0 14px;border-bottom:1px solid #dedee5">
+            <div style="display:flex;align-items:center;gap:2px">
+              <span style="height:32px;padding:0 14px;margin-right:4px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;font-size:14px;font-weight:500">Hôm nay</span>
+              <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_left</span>
+              <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_right</span>
+            </div>
+            <span style="flex:1;font-size:18px;line-height:24px;font-weight:500">Tháng 10, 2026</span>
+            <div style="display:flex;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden;font-size:13px;font-weight:500">
+              <span style="height:32px;padding:0 12px;display:flex;align-items:center;background:#dbe8f5;color:#001b3f">Tháng</span>
+              <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0">Tuần</span>
+              <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0">Ngày</span>
+              <span style="height:32px;padding:0 12px;display:flex;align-items:center;border-left:1px solid #c4c6d0">Danh sách</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #dedee5">
+            <sc-for list="{{ monthHeads }}" as="w" hint-placeholder-count="7"><span style="padding:8px 8px 6px;font-size:11px;font-weight:500;letter-spacing:.04em;color:#44474f">{{ w }}</span></sc-for>
+          </div>
+          <sc-for list="{{ monthWeeks }}" as="wk" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #dedee5">
+              <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                <div style="min-height:104px;box-sizing:border-box;border-left:1px solid #dedee5;background:{{ c.bg }};padding:4px;display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <div style="display:flex;align-items:center;gap:4px;min-width:0">
+                    <span style="width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex:none;background:{{ c.numBg }};color:{{ c.numFg }}">{{ c.num }}</span>
+                    <sc-if value="{{ c.hasHoliday }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:#44474f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ c.holiday }}</span></sc-if>
+                  </div>
+                  <sc-for list="{{ c.items }}" as="it" hint-placeholder-count="0"><span style="display:flex;align-items:center;gap:4px;min-width:0;height:20px;padding:0 4px;margin-left:{{ it.ml }};margin-right:{{ it.mr }};border-radius:{{ it.rad }};background:{{ it.bg }};font-size:12px"><span style="width:{{ it.dw }};height:6px;border-radius:99px;flex:none;background:{{ it.dot }}"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.label }}</span></span></sc-for>
+                  <sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:20px;font-weight:500;color:#004a99;padding:0 4px">{{ c.more }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));border-top:1px solid #dddcd6">
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Thứ tự trong ô.</strong> Sự kiện cả ngày trước, giữ cùng hàng qua các ngày để thanh nhiều ngày liền mạch; sau đó sự kiện có giờ theo giờ bắt đầu.</div>
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Quá 3 dòng.</strong> Hiện 2 dòng và “+N khác”. Bấm “+N khác” hoặc vào ô sẽ mở chế độ Ngày của ngày đó.</div>
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Ngoài tháng.</strong> Số ngày màu #74777f, vẫn hiện sự kiện. Cuối tuần và ngày lễ off dùng nền --sd-calendar-off-hours.</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:20px;align-items:start">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+        <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>view="day"</span>
+        <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">cắt 08:00–16:00</span>
+      </div>
+      <div style="background:#f9f9f9;padding:24px">
+        <div style="border:1px solid #c4c6d0;border-radius:12px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4">
+          <div style="display:flex;align-items:center;gap:8px;height:56px;box-sizing:border-box;padding:0 12px;border-bottom:1px solid #dedee5">
+            <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_left</span>
+            <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_right</span>
+            <span style="flex:1;min-width:0;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Thứ Năm, 22 tháng 10, 2026</span>
+          </div>
+          <div style="display:flex;border-bottom:1px solid #c4c6d0">
+            <div style="width:56px;flex:none;box-sizing:border-box;padding:8px 8px 0 0;text-align:right;font-size:11px;line-height:14px;color:#44474f">Cả ngày</div>
+            <div style="flex:1;min-width:0;padding:4px 8px 4px 2px;border-left:1px solid #dedee5">
+              <div style="height:22px;box-sizing:border-box;border:1px solid #d0d0d7;border-radius:6px;background:#ebecee;font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px;padding:0 6px"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_left</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nghỉ phép · Lan</span><span style="font-size:11px;font-weight:400;color:#44474f">21/10 – 23/10</span><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_right</span></div>
+            </div>
+          </div>
+          <div style="display:flex">
+            <div style="width:56px;flex:none;position:relative;height:384px">
+              <sc-for list="{{ dayHours }}" as="h" hint-placeholder-count="7"><span style="position:absolute;right:8px;top:{{ h.top }}px;font-size:11px;line-height:14px;color:#44474f">{{ h.label }}</span></sc-for>
+            </div>
+            <div style="flex:1;position:relative;height:384px;border-left:1px solid #dedee5">
+              <sc-for list="{{ dayShade }}" as="z" hint-placeholder-count="1"><div style="position:absolute;left:0;right:0;top:{{ z.top }}px;height:{{ z.h }}px;background:#f3f3f7"></div></sc-for>
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(to bottom,#dedee5 0,#dedee5 1px,transparent 1px,transparent 48px)"></div>
+              <div style="position:absolute;top:24px;left:0;right:0;bottom:0;background:repeating-linear-gradient(to bottom,#efeef3 0,#efeef3 1px,transparent 1px,transparent 48px)"></div>
+              <div style="position:absolute;top:0;bottom:0;left:2px;right:24px">
+                <sc-for list="{{ dayEv }}" as="e" hint-placeholder-count="3">
+                  <div style="position:absolute;top:{{ e.top }}px;height:{{ e.height }}px;left:{{ e.left }}%;width:calc({{ e.width }}% - 2px);box-sizing:border-box;border:1px {{ e.bs }} {{ e.bd }};border-radius:6px;background:{{ e.bg }};color:#1a1b1f;padding:{{ e.pd }};overflow:hidden;font-size:{{ e.fs }};line-height:{{ e.lh }};display:flex;flex-direction:column;box-shadow:{{ e.shadow }};z-index:{{ e.z }}">
+                    <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ e.dot }};flex:none"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ e.title }}</span></span>
+                    <sc-if value="{{ e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.time }}</span></sc-if>
+                    <sc-if value="{{ e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.place }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:absolute;left:-1px;right:0;top:{{ nowTopD }}px;height:2px;background:#ba1a1a;z-index:5"><span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:99px;background:#ba1a1a"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #dddcd6;font-size:14px;color:#3a3c42;text-wrap:pretty">Một cột, chừa 24px bên phải. Thanh nhiều ngày có mũi tên ở đầu bị cắt và ghi khoảng ngày. Tiêu đề ghi đủ thứ, ngày, tháng; ẩn hàng tiêu đề ngày.</div>
+    </div>
+
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+        <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>view="agenda"</span>
+        <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">agendaDays = 14</span>
+      </div>
+      <div style="background:#f9f9f9;padding:24px">
+        <div style="border:1px solid #c4c6d0;border-radius:12px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4">
+          <div style="display:flex;align-items:center;gap:8px;height:56px;box-sizing:border-box;padding:0 12px;border-bottom:1px solid #dedee5">
+            <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_left</span>
+            <span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_right</span>
+            <span style="flex:1;min-width:0;font-size:16px;font-weight:500">22/10 – 04/11/2026</span>
+          </div>
+          <sc-for list="{{ agenda }}" as="g" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 12px;padding:10px 12px 10px 16px;border-bottom:1px solid #dedee5">
+              <div style="display:flex;flex-direction:column;padding-top:5px"><span style="font-size:13px;font-weight:500;color:{{ g.color }}">{{ g.title }}</span><sc-if value="{{ g.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#005cbb">{{ g.sub }}</span></sc-if></div>
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
+                  <div style="display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center;min-height:32px;padding:2px 8px;border-radius:8px">
+                    <span style="font-size:13px;color:#44474f;white-space:nowrap">{{ it.time }}</span>
+                    <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:8px;height:8px;border-radius:99px;flex:none;background:{{ it.dot }}"></span><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.title }}</span><sc-if value="{{ it.rec }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined';font-size:15px;color:#44474f;flex:none">repeat</span></sc-if></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #dddcd6;font-size:14px;color:#3a3c42;text-wrap:pretty">Bắt đầu từ ngày neo, bỏ ngày trống. Hàng cao 32px, hover nền #f3f4f9. Địa điểm hiện ở cột thứ ba khi component rộng từ 720px.</div>
+    </div>
+  </div>
+</section>
+<section id="su-kien" data-screen-label="03 Khối sự kiện" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Khối sự kiện</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Chữ trên khối luôn là --sd-text và chữ phụ #44474f; màu sự kiện chỉ nằm ở nền nhạt, viền và chấm tròn. Nhờ vậy cả 6 màu đều đạt tương phản trên 10:1 và vẫn phân biệt được khi in đen trắng.</p>
+
+  <h3 style="margin:8px 0 0;font-weight:600;font-size:18px">Nội dung theo chiều cao</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#fdfbff;padding:20px;border-bottom:1px solid #ecebe6;height:110px;box-sizing:border-box;font-family:Roboto,sans-serif">
+          <div style="position:relative;height:{{ s.boxH }}px;width:190px">
+            <div style="position:absolute;top:0;height:{{ s.e.height }}px;left:0;width:100%;box-sizing:border-box;border:1px solid {{ s.e.bd }};border-radius:6px;background:{{ s.e.bg }};color:#1a1b1f;padding:{{ s.e.pd }};overflow:hidden;font-size:{{ s.e.fs }};line-height:{{ s.e.lh }};display:flex;flex-direction:column">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ s.e.dot }};flex:none"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ s.e.title }}</span></span>
+              <sc-if value="{{ s.e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ s.e.time }}</span></sc-if>
+              <sc-if value="{{ s.e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ s.e.place }}</span></sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px">
+          <span style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><strong style="font-weight:600">{{ s.label }}</strong><span style="font:400 12px/20px 'JetBrains Mono',monospace;color:#6b6d73">{{ s.h }}</span></span>
+          <span style="font-size:13px;color:#3a3c42">{{ s.note }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <h3 style="margin:16px 0 0;font-weight:600;font-size:18px">Màu</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
+    <sc-for list="{{ colors }}" as="c" hint-placeholder-count="6">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+        <div style="background:#fdfbff;padding:16px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif">
+          <div style="height:{{ c.e.height }}px;box-sizing:border-box;border:1px solid {{ c.e.bd }};border-radius:6px;background:{{ c.e.bg }};color:#1a1b1f;padding:2px 6px;font-size:12px;line-height:16px;display:flex;flex-direction:column">
+            <span style="display:flex;align-items:center;gap:4px;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ c.e.dot }};flex:none"></span>{{ c.e.title }}</span>
+            <span style="color:#44474f">{{ c.e.time }}</span>
+          </div>
+        </div>
+        <div style="padding:10px 14px;display:flex;flex-direction:column;gap:2px">
+          <strong style="font:600 13px 'JetBrains Mono',monospace">'{{ c.name }}'</strong>
+          <span style="font:400 11px/16px 'JetBrains Mono',monospace;color:#6b6d73;word-break:break-word">{{ c.token }}</span>
+          <span style="font:400 11px/16px 'JetBrains Mono',monospace;color:#6b6d73">{{ c.hex }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <p style="margin:0;max-width:780px;font-size:14px;color:#3a3c42;text-wrap:pretty">event.color là một trong 6 tên trên hoặc một mã màu bất kỳ. Với mã màu tự do, nền là color-mix 14% màu đó với --sd-surface, viền 28%, chữ vẫn là --sd-text.</p>
+
+  <h3 style="margin:16px 0 0;font-weight:600;font-size:18px">Trạng thái</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+    <sc-for list="{{ states }}" as="s" hint-placeholder-count="7">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#fdfbff;padding:22px 24px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif">
+          <div style="position:relative;height:{{ s.e.height }}px;width:190px">
+            <div style="position:absolute;inset:0;box-sizing:border-box;border:1px {{ s.e.bs }} {{ s.e.bd }};border-radius:6px;background:{{ s.e.bg }};color:#1a1b1f;padding:2px 6px;overflow:hidden;font-size:12px;line-height:16px;display:flex;flex-direction:column;box-shadow:{{ s.e.shadow }};outline:{{ s.e.outline }};outline-offset:{{ s.e.ooff }}">
+              <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ s.e.dot }};flex:none"></span><sc-if value="{{ s.e.spin }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined';font-size:14px;line-height:16px;flex:none;color:#005cbb">progress_activity</span></sc-if><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ s.e.title }}</span></span>
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ s.e.time }}</span>
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ s.e.place }}</span>
+              <sc-if value="{{ s.e.handle }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:50%;bottom:3px;width:16px;margin-left:-8px;height:3px;border-radius:2px;background:#005cbb"></span></sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px">
+          <strong style="font-weight:600;font-size:14px">{{ s.label }}</strong>
+          <span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ s.note }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <h3 style="margin:16px 0 0;font-weight:600;font-size:18px">Thanh cả ngày</h3>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="background:#fdfbff;padding:20px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif;overflow-x:auto">
+      <div style="min-width:640px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:22px;row-gap:4px;border:1px solid #dedee5;border-radius:8px;padding:6px 0;background:#ffffff">
+        <div style="grid-column:2 / 3;grid-row:1;margin:0 8px 0 2px;box-sizing:border-box;border:1px solid #eabcbf;border-radius:6px;background:#f5dfdf;font-size:12px;line-height:20px;font-weight:500;padding:0 6px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:6px;height:6px;border-radius:99px;background:#ba1a1a;flex:none"></span>Hạn chót Q3</div>
+        <div style="grid-column:3 / 6;grid-row:2;margin:0 8px 0 2px;box-sizing:border-box;border:1px solid #d0d0d7;border-radius:6px;background:#ebecee;font-size:12px;line-height:20px;font-weight:500;padding:0 6px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:6px;height:6px;border-radius:99px;background:#5c6270;flex:none"></span>Nghỉ phép · Lan</div>
+        <div style="grid-column:1 / 3;grid-row:3;margin:0 8px 0 0;box-sizing:border-box;border:1px solid #b6d2d5;border-left:0;border-radius:0 6px 6px 0;background:#dbeaea;font-size:12px;line-height:20px;font-weight:500;padding:0 6px 0 2px;display:flex;align-items:center;gap:2px;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_left</span>Công tác Đà Nẵng</div>
+        <div style="grid-column:6 / 8;grid-row:3;margin:0 0 0 2px;box-sizing:border-box;border:1px solid #b6cfec;border-right:0;border-radius:6px 0 0 6px;background:#dbe8f5;font-size:12px;line-height:20px;font-weight:500;padding:0 2px 0 6px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:6px;height:6px;border-radius:99px;background:#005cbb;flex:none"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">Hội thảo Angular VN</span><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_right</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Một ngày, nhiều ngày.</strong> Cao 22px, bo 6px, chừa 8px ở cuối để bấm được ô trống bên dưới.</div>
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Bị cắt bởi khoảng xem.</strong> Mất bo góc và viền ở phía bị cắt, thay bằng mũi tên. Bấm mũi tên không điều hướng; mũi tên chỉ là dấu hiệu.</div>
+      <div style="padding:12px 20px;font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">Xếp hàng.</strong> Sắp theo ngày bắt đầu rồi độ dài giảm dần, đặt vào hàng trống đầu tiên. Tối đa 3 hàng, phần dư thu vào “+N” trên từng ngày.</div>
+    </div>
+  </div>
+</section>
+
+<section id="tuong-tac" data-screen-label="04 Tương tác" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Tương tác</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Mỗi khung là một cột ngày, 13:00–17:00. Kéo thả dùng @angular/cdk/drag-drop với ngưỡng 5px; dưới ngưỡng thì tính là bấm (phát sdSelect). Mọi thay đổi đi qua option.move.onMove; component chỉ cập nhật khi onMove chấp nhận.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px">
+    <sc-for list="{{ boards }}" as="b" hint-placeholder-count="6">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f9f9f9;padding:20px;border-bottom:1px solid #ecebe6">
+          <div style="display:flex;border:1px solid #c4c6d0;border-radius:10px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4">
+            <div style="width:48px;flex:none;position:relative;height:192px">
+              <sc-for list="{{ miniHours }}" as="h" hint-placeholder-count="3"><span style="position:absolute;right:6px;top:{{ h.top }}px;font-size:11px;line-height:14px;color:#44474f">{{ h.label }}</span></sc-for>
+            </div>
+            <div style="flex:1;position:relative;height:192px;border-left:1px solid #dedee5">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(to bottom,#dedee5 0,#dedee5 1px,transparent 1px,transparent 48px)"></div>
+              <div style="position:absolute;top:24px;left:0;right:0;bottom:0;background:repeating-linear-gradient(to bottom,#efeef3 0,#efeef3 1px,transparent 1px,transparent 48px)"></div>
+              <sc-if value="{{ b.hasFocus }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:2px;right:2px;top:{{ b.focus.top }}px;height:{{ b.focus.h }}px;box-sizing:border-box;border:2px solid #005cbb;border-radius:4px;background:rgba(0,92,187,.08);z-index:4;font-size:11px;line-height:18px;color:#004a99;padding:0 4px;font-weight:500">{{ b.focus.label }}</div></sc-if>
+              <div style="position:absolute;top:0;bottom:0;left:2px;right:12px">
+                <sc-for list="{{ b.items }}" as="e" hint-placeholder-count="1">
+                  <div style="position:absolute;top:{{ e.top }}px;height:{{ e.height }}px;left:0;right:0;box-sizing:border-box;border:1px {{ e.bs }} {{ e.bd }};border-radius:6px;background:{{ e.bg }};color:#1a1b1f;padding:{{ e.pd }};overflow:hidden;font-size:12px;line-height:16px;display:flex;flex-direction:column;box-shadow:{{ e.shadow }};outline:{{ e.outline }};outline-offset:{{ e.ooff }};opacity:{{ e.op }};z-index:{{ e.z }}">
+                    <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ e.dot }};flex:none"></span><sc-if value="{{ e.rec }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Material Symbols Outlined';font-size:13px;line-height:16px;flex:none">repeat</span></sc-if><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ e.title }}</span></span>
+                    <sc-if value="{{ e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.time }}</span></sc-if>
+                    <sc-if value="{{ e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.place }}</span></sc-if>
+                    <sc-if value="{{ e.handle }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:50%;bottom:3px;width:16px;margin-left:-8px;height:3px;border-radius:2px;background:{{ e.dot }}"></span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ b.hasScope }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;left:6px;right:6px;bottom:6px;z-index:6;background:#2f3036;color:#f1f0f4;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:12px">
+                  <span>“Họp giao ban tuần” là sự kiện lặp. Áp dụng cho:</span>
+                  <div style="display:flex;flex-wrap:wrap;gap:0 2px;margin-left:-6px">
+                    <span style="height:28px;padding:0 6px;border-radius:4px;display:flex;align-items:center;color:#aac7ff;font-weight:500;outline:2px solid #aac7ff;outline-offset:-2px">Chỉ lần này</span>
+                    <span style="height:28px;padding:0 6px;display:flex;align-items:center;color:#aac7ff;font-weight:500">Lần này và sau</span>
+                    <span style="height:28px;padding:0 6px;display:flex;align-items:center;color:#aac7ff;font-weight:500">Tất cả</span>
+                    <span style="height:28px;padding:0 6px;display:flex;align-items:center;color:#f1f0f4;font-weight:500">Huỷ</span>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 18px 18px;display:flex;flex-direction:column;gap:4px">
+          <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73">{{ b.n }}</span>{{ b.title }}</span>
+          <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">{{ b.desc }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section id="trang-thai" data-screen-label="05 Trạng thái" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Trạng thái của component</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px">
+
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div style="background:#f9f9f9;padding:20px;border-bottom:1px solid #ecebe6">
+        <div aria-hidden="true" style="border:1px solid #c4c6d0;border-radius:10px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif">
+          <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid #dedee5;font-size:14px;font-weight:500">26 – 30 tháng 10, 2026</div>
+          <div style="height:2px;background:#dbe8f5;position:relative"><span style="position:absolute;left:18%;width:34%;top:0;bottom:0;background:#005cbb"></span></div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:150px">
+            <div style="position:relative;border-left:0"><span style="position:absolute;top:20px;left:4px;right:10px;height:40px;border-radius:6px;background:#e9e9ee"></span></div>
+            <div style="position:relative;border-left:1px solid #dedee5"><span style="position:absolute;top:70px;left:4px;right:10px;height:56px;border-radius:6px;background:#e9e9ee"></span></div>
+            <div style="position:relative;border-left:1px solid #dedee5"><span style="position:absolute;top:8px;left:4px;right:10px;height:28px;border-radius:6px;background:#e9e9ee"></span><span style="position:absolute;top:96px;left:4px;right:10px;height:40px;border-radius:6px;background:#e9e9ee"></span></div>
+            <div style="position:relative;border-left:1px solid #dedee5"><span style="position:absolute;top:44px;left:4px;right:10px;height:48px;border-radius:6px;background:#e9e9ee"></span></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 18px 18px;display:flex;flex-direction:column;gap:4px">
+        <strong style="font-weight:600;font-size:15px">Đang tải</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Thanh chạy 2px dưới thanh công cụ, aria-busy="true" trên lưới. Lần tải đầu hiện khối xương tĩnh; khi chuyển khoảng chỉ hiện thanh chạy. Vẫn điều hướng được, nhưng không dời sự kiện.</span>
+      </div>
+    </div>
+
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div style="background:#f9f9f9;padding:20px;border-bottom:1px solid #ecebe6">
+        <div style="border:1px solid #c4c6d0;border-radius:10px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif">
+          <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid #dedee5;font-size:14px;font-weight:500">26 – 30 tháng 10, 2026</div>
+          <div role="alert" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#f5dfdf;color:#410002;font-size:13px;border-bottom:1px solid #eabcbf">
+            <span style="font-family:'Material Symbols Outlined';font-size:18px;color:#ba1a1a">error</span>
+            <span style="flex:1;min-width:0">Không tải được lịch tuần này.</span>
+            <span style="height:28px;padding:0 10px;border:1px solid #ba1a1a;border-radius:6px;display:flex;align-items:center;font-weight:500;color:#93000a;background:#ffffff">Thử lại</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:110px">
+            <div></div><div style="border-left:1px solid #dedee5"></div><div style="border-left:1px solid #dedee5"></div><div style="border-left:1px solid #dedee5"></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 18px 18px;display:flex;flex-direction:column;gap:4px">
+        <strong style="font-weight:600;font-size:15px">Lỗi tải</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">dataSource.onLoad ném lỗi: dải --sd-status-error-bg / -fg ngay dưới thanh công cụ. “Thử lại” gọi lại onLoad. Lưới vẫn hiện để người dùng chuyển sang khoảng khác.</span>
+      </div>
+    </div>
+
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div style="background:#f9f9f9;padding:20px;border-bottom:1px solid #ecebe6">
+        <div style="border:1px solid #c4c6d0;border-radius:10px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif">
+          <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid #dedee5;font-size:14px;font-weight:500">05/11 – 18/11/2026</div>
+          <div style="height:152px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#44474f;font-size:14px">
+            <span style="font-family:'Material Symbols Outlined';font-size:28px;color:#74777f">event_available</span>
+            <span>Không có sự kiện trong 14 ngày này.</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 18px 18px;display:flex;flex-direction:column;gap:4px">
+        <strong style="font-weight:600;font-size:15px">Danh sách trống</strong>
+        <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Chỉ Danh sách có trạng thái trống; Tuần, Ngày và Tháng trống vẫn là lưới để tạo sự kiện. Nội dung thay được qua sdCalendarEmptyTemplate.</span>
+      </div>
+    </div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:14px 20px;font-size:14px"><strong style="font-weight:600">readonly</strong><span style="color:#3a3c42;text-wrap:pretty">Không tạo, không dời, không hiện tay nắm; con trỏ trên ô trống là default. Vẫn điều hướng, đổi chế độ và phát sdSelect.</span></div>
+    <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">disabled</strong><span style="color:#3a3c42;text-wrap:pretty">Như readonly, thêm aria-disabled trên vùng lưới và bỏ sự kiện khỏi thứ tự Tab. Màu giữ nguyên để vẫn đọc được lịch.</span></div>
+    <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">move.movable = false</strong><span style="color:#3a3c42;text-wrap:pretty">Áp dụng theo từng sự kiện (option.move.movable): khối đó không có tay nắm, con trỏ pointer, Alt + phím mũi tên không dời. onMove vẫn có thể từ chối khi thả.</span></div>
+  </div>
+</section>
+
+<section id="mobile" data-screen-label="06 Mobile" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Mobile</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Ngưỡng tính theo bề rộng của chính component (ResizeObserver), không theo viewport, nên lịch đặt trong cột hẹp trên desktop cũng chuyển giao diện này. Dưới 600px: view="week" hiển thị như Ngày kèm dải 7 ngày, nút chuyển chế độ còn 3 lựa chọn, mọi vùng chạm cao 44px.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center;background:#ecebe6;border-radius:12px;padding:32px 20px">
+
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <div style="width:390px;max-width:100%;border:1px solid #c4c6d0;border-radius:16px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4;box-shadow:0 2px 10px rgba(26,27,31,.08)">
+        <div style="display:flex;align-items:center;gap:4px;padding:6px 6px 0 14px">
+          <span style="flex:1;font-size:18px;font-weight:500">Tháng 10, 2026</span>
+          <span style="height:44px;padding:0 12px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;font-size:14px;font-weight:500;box-sizing:border-box">Hôm nay</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_left</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_right</span>
+        </div>
+        <div style="display:flex;margin:6px 10px 8px;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden;font-size:14px;font-weight:500">
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;background:#dbe8f5;color:#001b3f">Ngày</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0">Tháng</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0">Danh sách</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;padding:4px 8px 6px;border-top:1px solid #dedee5;border-bottom:1px solid #dedee5">
+          <sc-for list="{{ strip }}" as="d" hint-placeholder-count="7"><span style="height:56px;border-radius:12px;background:{{ d.bg }};color:{{ d.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:11px;color:{{ d.wdColor }}">{{ d.wd }}</span><span style="font-size:16px;font-weight:500;line-height:20px">{{ d.num }}</span><span style="width:4px;height:4px;border-radius:99px;background:{{ d.dot }}"></span></span></sc-for>
+        </div>
+        <div style="display:flex;border-bottom:1px solid #c4c6d0">
+          <div style="width:48px;flex:none;box-sizing:border-box;padding:8px 6px 0 0;text-align:right;font-size:11px;line-height:14px;color:#44474f">Cả ngày</div>
+          <div style="flex:1;min-width:0;padding:4px 8px 4px 2px;border-left:1px solid #dedee5"><div style="height:24px;box-sizing:border-box;border:1px solid #d0d0d7;border-radius:6px;background:#ebecee;font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px;padding:0 6px"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_left</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nghỉ phép · Lan</span><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#44474f">chevron_right</span></div></div>
+        </div>
+        <div style="display:flex">
+          <div style="width:48px;flex:none;position:relative;height:384px">
+            <sc-for list="{{ dayHours }}" as="h" hint-placeholder-count="7"><span style="position:absolute;right:6px;top:{{ h.top }}px;font-size:11px;line-height:14px;color:#44474f">{{ h.label }}</span></sc-for>
+          </div>
+          <div style="flex:1;position:relative;height:384px;border-left:1px solid #dedee5">
+            <sc-for list="{{ dayShade }}" as="z" hint-placeholder-count="1"><div style="position:absolute;left:0;right:0;top:{{ z.top }}px;height:{{ z.h }}px;background:#f3f3f7"></div></sc-for>
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(to bottom,#dedee5 0,#dedee5 1px,transparent 1px,transparent 48px)"></div>
+            <div style="position:absolute;top:0;bottom:0;left:2px;right:16px">
+              <sc-for list="{{ dayEv }}" as="e" hint-placeholder-count="3">
+                <div style="position:absolute;top:{{ e.top }}px;height:{{ e.height }}px;left:{{ e.left }}%;width:calc({{ e.width }}% - 2px);box-sizing:border-box;border:1px solid {{ e.bd }};border-radius:6px;background:{{ e.bg }};color:#1a1b1f;padding:{{ e.pd }};overflow:hidden;font-size:12px;line-height:16px;display:flex;flex-direction:column">
+                  <span style="display:flex;align-items:center;gap:4px;min-width:0;font-weight:600"><span style="width:6px;height:6px;border-radius:99px;background:{{ e.dot }};flex:none"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ e.title }}</span></span>
+                  <sc-if value="{{ e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.time }}</span></sc-if>
+                  <sc-if value="{{ e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#44474f">{{ e.place }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="position:absolute;left:-1px;right:0;top:{{ nowTopD }}px;height:2px;background:#ba1a1a;z-index:5"><span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:99px;background:#ba1a1a"></span></div>
+          </div>
+        </div>
+      </div>
+      <span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">Tuần trên 390px → Ngày + dải ngày</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <div style="width:390px;max-width:100%;border:1px solid #c4c6d0;border-radius:16px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4;box-shadow:0 2px 10px rgba(26,27,31,.08)">
+        <div style="display:flex;align-items:center;gap:4px;padding:6px 6px 0 14px">
+          <span style="flex:1;font-size:18px;font-weight:500">Tháng 10, 2026</span>
+          <span style="height:44px;padding:0 12px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;font-size:14px;font-weight:500;box-sizing:border-box">Hôm nay</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_left</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_right</span>
+        </div>
+        <div style="display:flex;margin:6px 10px 8px;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden;font-size:14px;font-weight:500">
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center">Ngày</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0;background:#dbe8f5;color:#001b3f">Tháng</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0">Danh sách</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid #dedee5;border-bottom:1px solid #dedee5">
+          <sc-for list="{{ monthHeads }}" as="w" hint-placeholder-count="7"><span style="padding:6px 0;font-size:11px;font-weight:500;color:#44474f;text-align:center">{{ w }}</span></sc-for>
+        </div>
+        <sc-for list="{{ monthWeeks }}" as="wk" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #dedee5">
+            <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+              <div style="height:56px;box-sizing:border-box;background:{{ c.bg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+                <span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;background:{{ c.numBg }};color:{{ c.numFg }}">{{ c.num }}</span>
+                <div style="display:flex;gap:3px;height:6px"><sc-for list="{{ c.dots }}" as="o" hint-placeholder-count="0"><span style="width:6px;height:6px;border-radius:99px;background:{{ o.c }}"></span></sc-for></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div style="padding:12px 14px;font-size:13px;color:#44474f">Chạm vào ngày để mở chế độ Ngày.</div>
+      </div>
+      <span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">Tháng: chỉ chấm màu, tối đa 3</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <div style="width:390px;max-width:100%;border:1px solid #c4c6d0;border-radius:16px;background:#fdfbff;overflow:hidden;font-family:Roboto,sans-serif;color:#1a1b1f;line-height:1.4;box-shadow:0 2px 10px rgba(26,27,31,.08)">
+        <div style="display:flex;align-items:center;gap:4px;padding:6px 6px 0 14px">
+          <span style="flex:1;font-size:18px;font-weight:500">22/10 – 04/11</span>
+          <span style="height:44px;padding:0 12px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;font-size:14px;font-weight:500;box-sizing:border-box">Hôm nay</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_left</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">chevron_right</span>
+        </div>
+        <div style="display:flex;margin:6px 10px 8px;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden;font-size:14px;font-weight:500">
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center">Ngày</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0">Tháng</span>
+          <span style="flex:1;height:42px;display:flex;align-items:center;justify-content:center;border-left:1px solid #c4c6d0;background:#dbe8f5;color:#001b3f">Danh sách</span>
+        </div>
+        <sc-for list="{{ agenda }}" as="g" hint-placeholder-count="4">
+          <div style="border-top:1px solid #dedee5;padding:8px 10px 6px">
+            <div style="display:flex;align-items:baseline;gap:8px;padding:0 6px 2px"><span style="font-size:13px;font-weight:500;color:{{ g.color }}">{{ g.title }}</span><sc-if value="{{ g.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#005cbb">{{ g.sub }}</span></sc-if></div>
+            <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 6px">
+                <span style="width:8px;height:8px;border-radius:99px;flex:none;background:{{ it.dot }}"></span>
+                <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span><span style="font-size:12px;color:#44474f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.time }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font:500 12px 'JetBrains Mono',monospace;color:#44474f">Danh sách: một cột, hàng 44px</span>
+    </div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:14px 20px;font-size:14px"><strong style="font-weight:600">Chạm ô trống</strong><span style="color:#3a3c42;text-wrap:pretty">Tạo khối một slot và gọi create.onCreate ngay. Không có quét để tạo trên cảm ứng, vì kéo dọc dành cho cuộn.</span></div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Chạm giữ 400 ms</strong><span style="color:#3a3c42;text-wrap:pretty">Khối nhấc lên (rung nhẹ nếu thiết bị hỗ trợ) rồi mới kéo được. Kéo đến mép trên hoặc dưới thì lưới tự cuộn. Kéo mép dưới để đổi giờ chỉ có khi khối đang chọn, tay nắm phóng to thành 24×6px.</span></div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Vuốt ngang</strong><span style="color:#3a3c42;text-wrap:pretty">Trên lưới Ngày và trên dải ngày: vuốt sang ngày hoặc tuần trước, sau. Ngưỡng 60px và vận tốc ngang lớn hơn dọc.</span></div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Chi tiết</strong><span style="color:#3a3c42;text-wrap:pretty">Component chỉ phát sdSelect. Ứng dụng mở bottom sheet hoặc trang chi tiết.</span></div>
+  </div>
+</section>
+
+<section id="thong-so" data-screen-label="07 Thông số" style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:72px 32px 96px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Thông số</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:20px;align-items:start">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Kích thước</div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Thanh công cụ</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">56px · nút 32px · mobile 44px, 2 hàng</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Tiêu đề ngày</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">72px · số ngày 32px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Hàng cả ngày</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">22px/hàng · cách 2px · tối đa 3</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Cột giờ</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">56px · mobile 48px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Một giờ</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">48px (15 phút = 12px)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Khối sự kiện</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">bo 6 · đệm 2/6 · tối thiểu 16px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Chừa bên phải cột</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">Tuần 8px · Ngày 24px · mobile 16px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Ô tháng</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">≥ 104px · mobile 56px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Dải ngày mobile</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">56px · bo 12</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font-size:14px"><span>Chữ</span><span style="font:400 13px/20px 'JetBrains Mono',monospace;color:#3a3c42">tiêu đề 18/24 500 · khối 12/16 600 · nhãn 11/14</span></div>
+    </div>
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Token của component</div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span>--sd-calendar-hour-height</span><span style="color:#3a3c42">48px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span>--sd-calendar-gutter-width</span><span style="color:#3a3c42">56px</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#dedee5;border:1px solid #c4c6d0;flex:none"></span>--sd-calendar-line</span><span style="color:#3a3c42">mix(border 55%, surface)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#efeef3;border:1px solid #c4c6d0;flex:none"></span>--sd-calendar-line-half</span><span style="color:#3a3c42">mix(border 25%, surface)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#f3f3f7;border:1px solid #c4c6d0;flex:none"></span>--sd-calendar-off-hours</span><span style="color:#3a3c42">mix(surface-muted 45%, surface)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#ba1a1a;flex:none"></span>--sd-calendar-now</span><span style="color:#3a3c42">var(--sd-error)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;background:#005cbb;flex:none"></span>--sd-calendar-today</span><span style="color:#3a3c42">var(--sd-primary)</span></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:9px 20px;border-top:1px solid #ecebe6;font:400 13px/20px 'JetBrains Mono',monospace"><span>--sd-calendar-event-radius</span><span style="color:#3a3c42">6px</span></div>
+      <div style="padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px;color:#3a3c42;text-wrap:pretty">Token màu trộn từ palette (border, surface, surface-muted) nên light, dark và mọi preset dùng chung một biểu thức. Hex ở các mục trên là giá trị đã giải của theme default.</div>
+    </div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Trợ năng</div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Vùng</strong><span style="color:#3a3c42;text-wrap:pretty">Gốc là role="region" với ariaLabel. Tiêu đề khoảng là aria-live="polite".</span></div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Lưới giờ</strong><span style="color:#3a3c42;text-wrap:pretty">Một điểm Tab, aria-activedescendant trỏ tới khung đang chọn. Nhãn khung: “Thứ Năm 22/10, 14:30”.</span></div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Sự kiện</strong><span style="color:#3a3c42;text-wrap:pretty">role="button", theo thứ tự Tab theo ngày rồi giờ. aria-label: tên, thứ, ngày, giờ bắt đầu và kết thúc, “lặp hằng tuần”, địa điểm. aria-describedby trỏ tới hướng dẫn phím ẩn.</span></div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Tháng</strong><span style="color:#3a3c42;text-wrap:pretty">role="grid", roving tabindex trên ô ngày, phím như sd-date: mũi tên, Home, End, PageUp, PageDown.</span></div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Thông báo</strong><span style="color:#3a3c42;text-wrap:pretty">Một vùng aria-live polite cho tạo, dời, huỷ, từ chối. Ví dụ: “Đã dời Demo sprint 42 sang Thứ Sáu 23/10, 13:30”.</span></div>
+    <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Chuyển động</strong><span style="color:#3a3c42;text-wrap:pretty">prefers-reduced-motion: bỏ hiệu ứng trượt khi thả và khi đổi khoảng, giữ nguyên thanh chạy.</span></div>
+  </div>
+</section></x-dc>
+<script type="text/x-dc" data-dc-script>
+const C = {
+  primary: { base: '#005cbb', light: '#dbe8f5', bd: '#b6cfec' },
+  info: { base: '#006a6a', light: '#dbeaea', bd: '#b6d2d5' },
+  success: { base: '#2e7d32', light: '#e2ede2', bd: '#c3d8c6' },
+  warning: { base: '#a66300', light: '#f3e9db', bd: '#e5d0b8' },
+  error: { base: '#ba1a1a', light: '#f5dfdf', bd: '#eabcbf' },
+  secondary: { base: '#5c6270', light: '#ebecee', bd: '#d0d0d7' }
+};
+const H = 48;
+const pad = n => String(n).padStart(2, '0');
+const hmm = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+function ev(t, s, e, c, o) {
+  o = o || {};
+  const from = o.from ?? 420, h = Math.max((e - s) / 60 * H - 2, 16), compact = h < 34, k = C[c], col = o.col || 0, ncol = o.ncol || 1;
+  return Object.assign({
+    title: compact ? t + ', ' + hmm(s) : t, time: hmm(s) + ' – ' + hmm(e), showTime: !compact,
+    place: o.place || '', showPlace: !!o.place && h >= 62, rec: !!o.rec, spin: false, handle: false,
+    top: (s - from) / 60 * H + 1, height: h, left: col / ncol * 100, width: 100 / ncol, z: 1,
+    pd: compact ? '0 6px' : '2px 6px', fs: h < 20 ? '11px' : '12px', lh: h < 20 ? '14px' : '16px',
+    bg: k.light, bd: k.bd, bs: 'solid', dot: k.base, shadow: 'none', outline: 'none', ooff: '0px', op: 1
+  }, o.st || {});
+}
+const fixed = e => Object.assign(e, { top: 0, left: 0, width: 100 });
+const shadeOf = (off, from, to) => off ? [{ top: 0, h: (to - from) / 60 * H }] : [[0, 480], [720, 780], [1050, 1440]]
+  .map(([a, b]) => [Math.max(a, from), Math.min(b, to)]).filter(([a, b]) => b > a).map(([a, b]) => ({ top: (a - from) / 60 * H, h: (b - a) / 60 * H }));
+const hours = (a, b, from) => Array.from({ length: b - a + 1 }, (_, i) => ({ top: ((a + i) * 60 - from) / 60 * H - 7, label: pad(a + i) + ':00' }));
+const thu = from => [
+  ev('Hẹn khách: Công ty An Phát', 570, 630, 'success', { from, col: 0, ncol: 2, place: 'Văn phòng khách hàng' }),
+  ev('1:1 với Minh', 600, 630, 'primary', { from, col: 1, ncol: 2 }),
+  ev('Đào tạo an toàn thông tin', 810, 900, 'secondary', { from, place: 'Hội trường' })
+];
+const WEEK = [
+  { wd: 'T2', num: 19, ev: [ev('Họp giao ban tuần', 540, 570, 'primary', { rec: true })] },
+  { wd: 'T3', num: 20, hol: 'Ngày Phụ nữ VN', ev: [ev('Review thiết kế sd-calendar', 840, 930, 'info', { place: 'Phòng Sen' })] },
+  { wd: 'T4', num: 21, ev: [ev('Phỏng vấn ứng viên Frontend', 600, 660, 'warning', { place: 'Phòng Cúc' })] },
+  { wd: 'T5', num: 22, today: true, ev: thu(420) },
+  { wd: 'T6', num: 23, ev: [ev('Demo sprint 42', 900, 990, 'primary', { place: 'Phòng Sen' })] },
+  { wd: 'T7', num: 24, off: true, ev: [] },
+  { wd: 'CN', num: 25, off: true, ev: [] }
+];
+const tm = (label, c) => ({ label, bg: 'transparent', dot: C[c].base, dw: '6px', rad: '4px', ml: '0px', mr: '0px', c });
+const bar = (label, c, pos) => ({ label, bg: C[c].light, dot: C[c].base, dw: pos === 'start' || pos === 'single' ? '6px' : '0px', c,
+  rad: { start: '4px 0 0 4px', mid: '0', end: '0 4px 4px 0', single: '4px' }[pos], ml: pos === 'mid' || pos === 'end' ? '-5px' : '0px', mr: pos === 'start' || pos === 'mid' ? '-5px' : '0px' });
+const MONTH = {
+  '8/28': [tm('09:00 Họp giao ban tuần', 'primary')],
+  '9/5': [tm('09:00 Họp giao ban tuần', 'primary'), tm('09:00 Kick-off dự án Ngân Hà', 'primary')],
+  '9/8': [tm('14:00 Đào tạo Angular Signals', 'secondary')],
+  '9/12': [tm('09:00 Họp giao ban tuần', 'primary')],
+  '9/14': [tm('15:00 Phỏng vấn ứng viên BA', 'warning')],
+  '9/19': [tm('09:00 Họp giao ban tuần', 'primary')],
+  '9/20': [tm('14:00 Review thiết kế sd-calendar', 'info')],
+  '9/21': [bar('Nghỉ phép · Lan', 'secondary', 'start'), tm('10:00 Phỏng vấn ứng viên Frontend', 'warning')],
+  '9/22': [bar('', 'secondary', 'mid'), tm('09:30 Hẹn khách: An Phát', 'success'), tm('10:00 1:1 với Minh', 'primary'), tm('13:30 Đào tạo an toàn thông tin', 'secondary')],
+  '9/23': [bar('', 'secondary', 'end'), bar('Hạn chót báo cáo Q3', 'error', 'single'), tm('15:00 Demo sprint 42', 'primary')],
+  '9/26': [tm('09:00 Họp giao ban tuần', 'primary')],
+  '9/27': [tm('14:00 Họp HĐQT', 'error')],
+  '9/29': [tm('10:00 Hẹn khách: Minh Long', 'success')],
+  '9/30': [bar('Sinh nhật công ty', 'info', 'single')]
+};
+const ag = (time, title, c, place, rec) => ({ time, title, dot: C[c].base, place: place || '', hasPlace: !!place, rec: !!rec });
+const AGENDA = [
+  { title: 'Thứ Năm, 22/10', sub: 'Hôm nay', color: '#005cbb', items: [ag('Cả ngày', 'Nghỉ phép · Lan', 'secondary'), ag('09:30 – 10:30', 'Hẹn khách: Công ty An Phát', 'success', 'Văn phòng khách hàng'), ag('10:00 – 10:30', '1:1 với Minh', 'primary', 'Online'), ag('13:30 – 15:00', 'Đào tạo an toàn thông tin', 'secondary', 'Hội trường')] },
+  { title: 'Thứ Sáu, 23/10', sub: '', color: '#1a1b1f', items: [ag('Cả ngày', 'Nghỉ phép · Lan', 'secondary'), ag('Cả ngày', 'Hạn chót báo cáo Q3', 'error'), ag('15:00 – 16:30', 'Demo sprint 42', 'primary', 'Phòng Sen')] },
+  { title: 'Thứ Hai, 26/10', sub: '', color: '#1a1b1f', items: [ag('09:00 – 09:30', 'Họp giao ban tuần', 'primary', 'Phòng Sen · Online', true)] },
+  { title: 'Thứ Ba, 27/10', sub: '', color: '#1a1b1f', items: [ag('14:00 – 16:00', 'Họp HĐQT', 'error', 'Phòng Lan')] }
+];
+const STATES = [
+  ['Mặc định', 'Nền --sd-primary-light, chấm --sd-primary, chữ --sd-text.', {}],
+  ['Hover', 'Nền trộn thêm 7% màu chính, bóng nhẹ, hiện tay nắm ở mép dưới.', { bg: 'color-mix(in srgb, #005cbb 7%, #dbe8f5)', shadow: '0 1px 3px rgba(26,27,31,.16)', handle: true }],
+  ['Đang chọn', 'Viền màu chính và bóng. Giữ đến khi bấm ra ngoài hoặc nhấn Esc.', { bd: '#005cbb', shadow: '0 2px 8px rgba(26,27,31,.2)' }],
+  ['Focus bàn phím', 'Vòng 2px --sd-focus-ring-color, cách khối 2px. Chỉ hiện khi focus bằng bàn phím.', { outline: '2px solid #005cbb', ooff: '2px' }],
+  ['Đang kéo', 'Nổi trên lưới, chiếm hết bề ngang cột. Chỗ cũ để lại khung nét đứt.', { bd: '#005cbb', shadow: '0 8px 20px rgba(26,27,31,.22)' }],
+  ['Đang lưu', 'Viền nét đứt và vòng xoay trong lúc chờ move. Không kéo tiếp được.', { bs: 'dashed', bd: '#005cbb', spin: true }],
+  ['Đã qua', 'Khi bật dimPast: nền và chấm nhạt đi, chữ giữ màu để đủ tương phản.', { bg: 'color-mix(in srgb, #dbe8f5 45%, #fdfbff)', dot: '#8fb3dc', bd: '#e1e6ee' }]
+];
+const F = 780;
+const BOARDS = [
+  { n: '1', title: 'Quét để tạo', desc: 'Nhấn giữ trên ô trống rồi kéo dọc. Khối nét đứt bám theo bước step. Thả chuột gọi create.onCreate({ start, end }); khối giữ nguyên tới khi consumer trả sự kiện đã tạo hoặc huỷ. Bấm một lần không kéo thì tạo khối dài một slot.',
+    items: [ev('Sự kiện mới', 840, 930, 'primary', { from: F, st: { bs: 'dashed', bd: '#005cbb', bg: 'rgba(219,232,245,.92)', z: 3 } })] },
+  { n: '2', title: 'Kéo để dời', desc: 'Kéo khối sang giờ hoặc cột khác, bước 15 phút. Chỗ cũ giữ khung nét đứt để người dùng biết điểm xuất phát. Esc huỷ, khối về chỗ cũ.',
+    items: [ev('Demo sprint 42', 900, 990, 'primary', { from: F, st: { bs: 'dashed', bd: '#005cbb', bg: 'transparent', op: 0.55 } }), ev('Demo sprint 42', 810, 900, 'primary', { from: F, place: 'Phòng Sen', st: { bd: '#005cbb', shadow: '0 8px 20px rgba(26,27,31,.22)', z: 3 } })] },
+  { n: '3', title: 'Kéo mép dưới', desc: 'Con trỏ ns-resize trong 8px cuối khối. Giờ kết thúc cập nhật trực tiếp trong khối. Tối thiểu 15 phút, không vượt qua 24:00.',
+    items: [ev('Phỏng vấn ứng viên Frontend', 840, 945, 'warning', { from: F, place: 'Phòng Cúc', st: { bd: '#a66300', shadow: '0 2px 8px rgba(26,27,31,.2)', handle: true } })] },
+  { n: '4', title: 'Bàn phím trên lưới', desc: 'Lưới là một điểm Tab. Mũi tên di chuyển khung đang chọn, Enter tạo sự kiện tại đó. Khung hiện giờ bắt đầu; trình đọc màn hình đọc “Thứ Năm, 14:30”.',
+    focus: { top: 72, h: 24, label: '14:30' }, items: [ev('Demo sprint 42', 930, 1005, 'primary', { from: F })] },
+  { n: '5', title: 'Sự kiện lặp', desc: 'Dời một lần của chuỗi lặp thì khối giữ vị trí mới ở dạng nét đứt và hiện thanh hỏi phạm vi. Focus vào lựa chọn đầu tiên; Esc hoặc Huỷ trả về chỗ cũ.',
+    scope: true, items: [ev('Họp giao ban tuần', 840, 870, 'primary', { from: F, rec: true, st: { bs: 'dashed', bd: '#005cbb' } })] },
+  { n: '6', title: 'Bị từ chối', desc: 'onMove trả false hoặc lỗi: khối về chỗ cũ, viền --sd-error giữ đến khi bỏ qua. Dải thông báo dưới thanh công cụ có nút Bỏ qua; phát sdMoveError và đọc qua aria-live.',
+    items: [ev('Demo sprint 42', 900, 990, 'primary', { from: F, place: 'Phòng Sen', st: { outline: '2px solid #ba1a1a', ooff: '1px' } })] }
+];
+const LEGEND = [
+  ['Điều hướng', '“Hôm nay” về khoảng chứa hôm nay. Mũi tên lùi, tiến một đơn vị của chế độ đang xem; aria-label theo đơn vị (“Tuần trước”).'],
+  ['Tiêu đề khoảng', 'Định dạng theo chế độ. Tuần qua hai tháng ghi “28/09 – 04/10/2026”. Vùng aria-live polite.'],
+  ['Chuyển chế độ', 'Nhóm nút aria-pressed. Input views quyết định nút nào hiện.'],
+  ['Tiêu đề ngày', 'Hôm nay: vòng tròn --sd-primary, chữ trắng. Bấm số ngày để mở chế độ Ngày.'],
+  ['Ngày lễ', 'Loại observance ghi tên màu chữ phụ. Loại off ghi tên màu --sd-error và tô nền cả cột.'],
+  ['Hàng cả ngày', 'Sự kiện nhiều ngày nối thành một thanh. Quá 3 hàng thì thu lại, hiện “+N”.'],
+  ['Ngoài giờ làm việc', 'Nền --sd-calendar-off-hours. Chỉ để nhìn; vẫn tạo được sự kiện trừ khi create.creatable chặn.'],
+  ['Giờ hiện tại', 'Đường 2px --sd-error, chỉ ở cột hôm nay, cập nhật mỗi phút theo múi giờ cấu hình.'],
+  ['Chồng giờ', 'Sự kiện giao nhau chia đều bề ngang cụm. Mỗi cột chừa 8px bên phải để luôn bấm được ô trống.'],
+  ['Sự kiện lặp', 'Icon repeat trước tên. Mỗi lần lặp là một khối riêng.'],
+  ['Cột giờ', '1 giờ = 48px. Nét liền mỗi giờ, nét nhạt mỗi nửa giờ. Nhãn múi giờ ở góc trên.']
+];
+const MARKS = [[49, -11], [189, -11], [729, -11], [519, 69], [185, 107], [-10, 139], [949, 438], [549, 365], [435, 294], [167, 270], [-10, 222]];
+
+class Component extends DCLogic {
+  renderVals() {
+    const monthWeeks = [];
+    for (let w = 0; w < 5; w++) {
+      const cells = [];
+      for (let i = 0; i < 7; i++) {
+        const dt = new Date(2026, 8, 28 + w * 7 + i), m = dt.getMonth(), n = dt.getDate(), key = m + '/' + n, today = key === '9/22';
+        const items = MONTH[key] || [], shown = items.length > 3 ? items.slice(0, 2) : items;
+        cells.push({
+          num: n, today, numBg: today ? '#005cbb' : 'transparent', numFg: today ? '#ffffff' : m === 9 ? '#1a1b1f' : '#74777f',
+          bg: i >= 5 ? '#f3f3f7' : '#fdfbff', holiday: key === '9/20' ? 'Ngày Phụ nữ VN' : '', hasHoliday: key === '9/20',
+          items: shown, hasMore: items.length > shown.length, more: '+' + (items.length - shown.length) + ' khác',
+          dots: [...new Set(items.map(x => x.c))].slice(0, 3).map(c => ({ c: C[c].base }))
+        });
+      }
+      monthWeeks.push({ cells });
+    }
+    return {
+      weekDays: WEEK.map(d => ({
+        wd: d.wd, num: d.num, holiday: d.hol || '', isToday: !!d.today,
+        wdColor: d.today ? '#005cbb' : '#44474f', numBg: d.today ? '#005cbb' : 'transparent', numFg: d.today ? '#ffffff' : '#1a1b1f',
+        shade: shadeOf(d.off, 420, 1140), ev: d.ev
+      })),
+      weekBars: [['Nghỉ phép · Lan', '3 / 6', '1', 'secondary'], ['Hạn chót báo cáo Q3', '5 / 6', '2', 'error']].map(([title, col, row, c]) => ({ title, col, row, bg: C[c].light, bd: C[c].bd, dot: C[c].base })),
+      hoursA: hours(8, 18, 420), nowTopA: (640 - 420) / 60 * H - 1,
+      marks: MARKS.map(([left, top], i) => ({ n: i + 1, left, top })),
+      legend: LEGEND.map(([t, d], i) => ({ n: i + 1, t, d })),
+      monthHeads: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'], monthWeeks,
+      dayEv: thu(480), dayShade: shadeOf(false, 480, 960), dayHours: hours(9, 15, 480), nowTopD: (640 - 480) / 60 * H - 1,
+      agenda: AGENDA.map(g => Object.assign({ hasSub: !!g.sub }, g)),
+      sizes: [[90, '≥ 62px', 'Tên, giờ, địa điểm'], [60, '34–61px', 'Tên và giờ'], [30, '< 34px', 'Một dòng: tên, giờ bắt đầu'], [15, '16px tối thiểu', 'Dưới 20 phút vẫn cao 16px']]
+        .map(([min, h, note]) => { const e = fixed(ev('Review thiết kế sd-calendar', 840, 840 + min, 'info', { from: 840, place: 'Phòng Sen' })); return { label: min + ' phút', h, note, e, boxH: e.height }; }),
+      colors: Object.keys(C).map(k => ({ name: k, token: '--sd-' + k + '-light · --sd-' + k, hex: C[k].light + ' · ' + C[k].base, e: fixed(ev('Tên sự kiện', 600, 660, k, { from: 600 })) })),
+      states: STATES.map(([label, note, st]) => ({ label, note, e: fixed(ev('Review thiết kế sd-calendar', 840, 930, 'primary', { from: 840, place: 'Phòng Sen', st })) })),
+      boards: BOARDS.map(b => ({ n: b.n, title: b.title, desc: b.desc, items: b.items, hasFocus: !!b.focus, focus: b.focus || {}, hasScope: !!b.scope })),
+      miniHours: hours(14, 16, F),
+      strip: [['T2', 19, 1], ['T3', 20, 1], ['T4', 21, 1], ['T5', 22, 1], ['T6', 23, 1], ['T7', 24, 0], ['CN', 25, 0]].map(([wd, num, has]) => {
+        const sel = num === 22;
+        return { wd, num, bg: sel ? '#005cbb' : 'transparent', fg: sel ? '#ffffff' : '#1a1b1f', wdColor: sel ? '#ffffff' : '#44474f', dot: has ? (sel ? '#ffffff' : '#005cbb') : 'transparent' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+body{margin:0;background:#f6f5f1}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a96;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1200px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px">
+  <div style="display:flex;flex-wrap:wrap;gap:8px 16px;font:500 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">
+    <span>sdcorejs-angular · modules/pattern</span>
+    <span>đề xuất · 08/11/2026</span>
+  </div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">13 pattern mới cho Core UI</h1>
+  <p style="margin:0;max-width:820px;color:#3a3c42;font-size:17px;text-wrap:pretty">Mỗi pattern gồm spec ngắn (dùng khi nào, bố cục, hành vi, Core cần thêm gì) và một màn mẫu mức mid-fidelity, theo cách dựng của <code>/pattern</code> hiện tại: drawer không gắn route như PR #137, header của drawer do Core dựng (A2), tên màn theo E14. Số liệu trong màn mẫu là dữ liệu giả.</p>
+  <nav style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 24px;font-size:14px;padding-top:8px">
+    <a href="#P13">P13 record-360</a>
+    <a href="#P7">P7 editable-grid</a>
+    <a href="#P8">P8 overview</a>
+    <a href="#P1">P1 board</a>
+    <a href="#P4">P4 saved-views</a>
+    <a href="#P5">P5 mobile</a>
+    <a href="#P6">P6 activity</a>
+    <a href="#P3">P3 attachments</a>
+    <a href="#P9">P9 bulk-edit</a>
+    <a href="#P2">P2 schedule</a>
+    <a href="#P10">P10 permission-matrix</a>
+    <a href="#P11">P11 settings-hub</a>
+    <a href="#P12">P12 tree-detail</a>
+  </nav>
+</header>
+
+<section id="P13" data-screen-label="P13 record-360" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P13</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">record-360</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Chi tiết của một bản ghi có nhiều quan hệ: khách hàng, nhà cung cấp, nhân viên, dự án. Ngoài tab còn hai cách bố trí nữa, mỗi cách hợp với một kiểu đọc.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:18px 20px;background:#ffffff;border:1px solid #e6e5e0;border-radius:12px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:4px 6px;border-radius:4px;background:#ecebe6;color:#44464c">13a</span><strong style="font-size:16px">Chỉ có tab</strong></div>
+      <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Như hồ sơ 360° hiện tại. Hợp khi mỗi phần là một không gian làm việc riêng, có lọc và thao tác (dự án: Công việc, Ngân sách, Tài liệu). Nhược điểm: phải bấm từng tab mới biết phần đó có gì.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:18px 20px;background:#ffffff;border:2px solid #005cbb;border-radius:12px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:4px 6px;border-radius:4px;background:#005cbb;color:#ffffff">13b</span><strong style="font-size:16px">Tab Tổng quan và các tab chi tiết</strong><span style="margin-left:auto;font:600 11px 'JetBrains Mono',monospace;color:#005cbb">MẶC ĐỊNH</span></div>
+      <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Tab đầu tiên là trang tóm tắt: các chỉ số chính, và mỗi quan hệ là một thẻ hiện vài dòng mới nhất cùng "Xem tất cả". Các tab còn lại giữ nguyên như 13a, nhãn tab có số đếm. Nhìn được toàn cảnh mà không mất chỗ làm việc của từng phần.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:18px 20px;background:#ffffff;border:1px solid #e6e5e0;border-radius:12px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:4px 6px;border-radius:4px;background:#ecebe6;color:#44464c">13c</span><strong style="font-size:16px">Một trang cuộn, có mục lục</strong></div>
+      <span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Các phần xếp dọc, mục lục <code>sd-anchor</code> dính bên trái, phần nào cuộn tới gần mới tải. Hợp với hồ sơ đọc từ trên xuống hoặc cần in, như hồ sơ nhân sự hay hợp đồng.</span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:5px 7px;border-radius:5px;background:#005cbb;color:#ffffff">13b</span><span style="font-weight:600">Hồ sơ khách hàng · tab Tổng quan</span></div>
+    <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+      <div style="min-width:1040px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);position:relative;z-index:1">
+          <div style="padding:14px 20px;display:flex;align-items:center;gap:10px">
+            <span style="width:36px;height:36px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">arrow_back</span>
+            <div style="display:flex;flex-direction:column;min-width:0;flex:1">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px;font-weight:500;line-height:28px">Hồ sơ khách hàng #KH0012</span><span style="height:22px;padding:0 10px;border-radius:11px;background:#dff3e6;color:#14532d;display:flex;align-items:center;font-size:12px;font-weight:500">Đang hoạt động</span></div>
+              <span style="font-size:14px;color:#5f6368">Công ty TNHH Minh Phát · Doanh nghiệp</span>
+            </div>
+            <span style="height:36px;padding:0 12px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">more_horiz</span>Thao tác khác</span>
+            <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">edit</span>Cập nhật khách hàng</span>
+          </div>
+          <div style="display:flex;gap:4px;padding:0 20px;border-top:1px solid #eceef2">
+            <span style="padding:12px 14px;font-weight:500;color:#005cbb;box-shadow:inset 0 -2px 0 #005cbb">Tổng quan</span>
+            <span style="padding:12px 14px;color:#44474f;display:flex;align-items:center;gap:6px">Đơn hàng<span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#eceef2;font-size:12px;display:flex;align-items:center;justify-content:center">48</span></span>
+            <span style="padding:12px 14px;color:#44474f;display:flex;align-items:center;gap:6px">Công nợ<span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#fbe3e1;color:#8c1010;font-size:12px;display:flex;align-items:center;justify-content:center">2</span></span>
+            <span style="padding:12px 14px;color:#44474f;display:flex;align-items:center;gap:6px">Tài liệu<span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#eceef2;font-size:12px;display:flex;align-items:center;justify-content:center">4</span></span>
+            <span style="padding:12px 14px;color:#44474f">Hoạt động</span>
+          </div>
+        </div>
+        <div style="padding:20px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px;border-right:1px solid #eceef2"><span style="font-size:13px;color:#5f6368">Công nợ</span><span style="font-size:20px;font-weight:500;font-variant-numeric:tabular-nums">128,4 triệu</span><span style="font-size:12px;color:#8c1010">84,2 triệu quá hạn</span></div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px;border-right:1px solid #eceef2"><span style="font-size:13px;color:#5f6368">Doanh số 12 tháng</span><span style="font-size:20px;font-weight:500;font-variant-numeric:tabular-nums">1,82 tỷ</span><span style="font-size:12px;color:#5f6368">48 đơn</span></div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px;border-right:1px solid #eceef2"><span style="font-size:13px;color:#5f6368">Đơn gần nhất</span><span style="font-size:20px;font-weight:500;font-variant-numeric:tabular-nums">02/11/2026</span><span style="font-size:12px;color:#5f6368">DH2408 · Đang giao</span></div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5f6368">Phụ trách</span><span style="font-size:20px;font-weight:500">Trần Thu Hà</span><span style="font-size:12px;color:#5f6368">Kinh doanh miền Nam</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start">
+              <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column">
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eceef2"><span style="font-weight:500">Đơn hàng gần đây</span><span style="font-size:13px;color:#5f6368">48</span><span style="margin-left:auto;font-size:13px;color:#005cbb">Xem tất cả</span></div>
+                <sc-for list="{{ p13Orders }}" as="o" hint-placeholder-count="5">
+                  <div style="display:grid;grid-template-columns:72px 1fr auto;gap:8px;align-items:center;padding:9px 16px;border-bottom:1px solid #f1f2f5"><span style="color:#005cbb;font-variant-numeric:tabular-nums">{{ o.code }}</span><span style="display:flex;flex-direction:column;min-width:0"><span style="font-variant-numeric:tabular-nums">{{ o.total }} ₫</span><span style="font-size:12px;color:#5f6368">{{ o.date }}</span></span><span style="height:22px;padding:0 10px;border-radius:11px;display:flex;align-items:center;font-size:12px;font-weight:500;background:{{ o.bg }};color:{{ o.fg }}">{{ o.status }}</span></div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column">
+                  <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eceef2"><span style="font-weight:500">Công nợ</span><span style="font-size:13px;color:#8c1010">2 hoá đơn quá hạn</span><span style="margin-left:auto;font-size:13px;color:#005cbb">Xem tất cả</span></div>
+                  <sc-for list="{{ p13Debts }}" as="d" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:80px 1fr auto;gap:8px;align-items:center;padding:9px 16px;border-bottom:1px solid #f1f2f5"><span style="font-variant-numeric:tabular-nums">{{ d.code }}</span><span style="font-size:13px;color:{{ d.fg }}">{{ d.due }}</span><span style="font-variant-numeric:tabular-nums">{{ d.amount }} ₫</span></div>
+                  </sc-for>
+                </div>
+                <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column">
+                  <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eceef2"><span style="font-weight:500">Tài liệu</span><span style="font-size:13px;color:#5f6368">4</span><span style="margin-left:auto;font-size:13px;color:#005cbb">Xem tất cả</span></div>
+                  <sc-for list="{{ p13Docs }}" as="f" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #f1f2f5"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:{{ f.color }}">{{ f.icon }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.name }}</span><span style="font-size:12px;color:#5f6368">{{ f.size }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Thông tin chung</div>
+              <div style="display:grid;grid-template-columns:110px 1fr;gap:10px 12px;padding:12px 16px;font-size:13px"><span style="color:#5f6368">Mã số thuế</span><span>0312 456 789</span><span style="color:#5f6368">Hạng</span><span>VIP</span><span style="color:#5f6368">Điện thoại</span><span>028 3822 1190</span><span style="color:#5f6368">Email</span><span>ketoan@minhphat.vn</span><span style="color:#5f6368">Địa chỉ</span><span>12 Lê Lợi, Q.1, TP.HCM</span></div>
+            </div>
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;display:flex;align-items:center;border-bottom:1px solid #eceef2"><span style="font-weight:500">Hoạt động</span><span style="margin-left:auto;font-size:13px;color:#005cbb">Xem tất cả</span></div>
+              <sc-for list="{{ p13Activity }}" as="a" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:2px;padding:10px 16px;border-bottom:1px solid #f1f2f5"><span style="font-size:13px"><strong style="font-weight:500">{{ a.who }}</strong> {{ a.what }}</span><span style="font-size:12px;color:#5f6368">{{ a.when }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+      <li>Dải chỉ số: tối đa 4 ô, mỗi ô là một con số kèm một dòng ngữ cảnh. Ô nào có danh sách tương ứng thì bấm vào mở đúng tab đó với bộ lọc có sẵn (ví dụ "quá hạn").</li>
+      <li>Thẻ quan hệ hiện tối đa 5 dòng mới nhất. "Xem tất cả" chuyển sang tab tương ứng, không mở trang mới. Thẻ không có dòng nào thì hiện một dòng trống ngắn, không ẩn thẻ.</li>
+      <li>Nhãn tab có số đếm. Số màu lỗi chỉ dùng khi có việc cần xử lý (2 hoá đơn quá hạn), không dùng cho tổng.</li>
+      <li>Cột phải là thông tin chung dạng <code>sd-section-item</code> (theo A3), luôn hiện ở tab Tổng quan. Các tab khác dùng hết bề rộng.</li>
+      <li>Mỗi thẻ tự tải và có trạng thái riêng (theo <code>states.md</code>): một thẻ lỗi thì các thẻ khác vẫn hiện bình thường.</li>
+    </ol>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px/1 'JetBrains Mono',monospace;padding:5px 7px;border-radius:5px;background:#1a1b1f;color:#ffffff">13c</span><span style="font-weight:600">Hồ sơ nhân viên · một trang cuộn có mục lục</span></div>
+    <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+      <div style="min-width:1040px;height:440px;display:flex;flex-direction:column;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="flex:none;background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:10px;position:relative;z-index:1">
+          <span style="width:36px;height:36px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">arrow_back</span>
+          <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Hồ sơ nhân viên #NV0841</span><span style="color:#5f6368">Phạm Quốc Bảo · Kế toán tổng hợp</span></div>
+          <span style="height:36px;padding:0 12px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">print</span>In hồ sơ</span>
+          <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">edit</span>Cập nhật nhân viên</span>
+        </div>
+        <div style="flex:1;min-height:0;display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:20px 20px 0;overflow:hidden">
+          <div style="display:flex;flex-direction:column;gap:2px;font-size:14px">
+            <span style="font-size:12px;color:#5f6368;padding:0 12px 6px">Mục lục</span>
+            <span style="padding:7px 12px;color:#44474f">Thông tin cá nhân</span>
+            <span style="padding:7px 12px;color:#44474f">Liên hệ</span>
+            <span style="padding:7px 12px;color:#005cbb;font-weight:500;box-shadow:inset 2px 0 0 #005cbb;background:#eef3fb;border-radius:0 6px 6px 0">Hợp đồng lao động</span>
+            <span style="padding:7px 12px;color:#44474f">Lương và phụ cấp</span>
+            <span style="padding:7px 12px;color:#44474f">Đào tạo</span>
+            <span style="padding:7px 12px;color:#44474f">Tài liệu</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;overflow:hidden">
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;opacity:.55">
+              <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Liên hệ</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;padding:14px 16px"><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Điện thoại</span><span>0908 112 345</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Email công ty</span><span>bao.pq@minhphat.vn</span></div></div>
+            </div>
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;display:flex;align-items:center;border-bottom:1px solid #eceef2"><span style="font-weight:500">Hợp đồng lao động</span><span style="margin-left:auto;font-size:13px;color:#005cbb">Thêm hợp đồng</span></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;padding:14px 16px"><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Loại hợp đồng</span><span>Không xác định thời hạn</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Ngày hiệu lực</span><span>01/03/2022</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Số hợp đồng</span><span>HĐLĐ-2022-0841</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Người ký</span><span>Nguyễn Văn Thành</span></div></div>
+            </div>
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Lương và phụ cấp</div>
+              <div style="padding:20px 16px;display:flex;align-items:center;gap:10px;color:#5f6368"><span style="width:16px;height:16px;border-radius:50%;border:2px solid #c4c6d0;border-top-color:#005cbb;box-sizing:border-box"></span>Đang tải…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+      <li>Mục lục dính khi cuộn, mục đang xem được tô. Bấm vào mục thì cuộn tới phần đó và ghi <code>#hop-dong</code> lên URL để chia sẻ được.</li>
+      <li>Phần nào cuộn tới gần mới tải ("Lương và phụ cấp" đang tải). In hồ sơ thì tải hết trước rồi mới in.</li>
+      <li>Thao tác của từng phần nằm ở header của phần đó ("Thêm hợp đồng"), không dồn lên header trang.</li>
+    </ol>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px 32px;padding:20px 24px;background:#ffffff;border:1px solid #e6e5e0;border-radius:12px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Quy tắc chọn</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mặc định 13b. Dùng 13a khi không có gì đáng tóm tắt. Dùng 13c khi người dùng đọc lần lượt từng phần hoặc cần in. Không trộn 13b với 13c trong cùng một trang.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-tab</code> có <code>badge</code> màu theo trạng thái. <code>sd-anchor</code> có chế độ dính và tô mục đang xem. Một thẻ quan hệ dùng chung (tiêu đề, số đếm, "Xem tất cả", trạng thái riêng).</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Route mẫu</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>customer/:id/360</code> đổi sang 13b. Thêm <code>partner/:id</code> theo 13c nếu cần một ví dụ dạng trang dài.</span></div>
+  </div>
+</section>
+
+<section id="P7" data-screen-label="P7 editable-grid" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P7</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">editable-grid</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Bảng nhập nhiều dòng ngay trong form: dòng hàng của đơn, phiếu nhập, báo giá. Chốt một bản dựng bằng <code>sd-table</code> (hiện là <code>lines-table-form</code>), bỏ bản <code>&lt;table&gt;</code>.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Dùng khi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Người dùng gõ tay dưới khoảng 50 dòng, mỗi dòng không quá 6 field.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Không dùng khi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Dữ liệu đã có trong tệp: dùng <code>sd-import-excel</code>. Mỗi dòng có nhiều field: bảng chỉ để xem, bấm vào dòng thì mở drawer để sửa.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Vì sao chọn sd-table</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Header dính, có chế độ thẻ trên mobile (P5), xoá dòng dùng command như mọi bảng khác, tổng đặt ở footer. Bản <code>&lt;table&gt;</code> phải tự viết lại tất cả những thứ đó.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Hàm focus một ô theo dòng và field. Đánh dấu dòng có lỗi. Chỉ số dòng (STT) do bảng tự đánh.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9;padding:20px">
+    <div style="min-width:760px;max-width:820px;margin:0 auto;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eceef2"><span style="font-weight:500">Dòng hàng</span><span style="font-size:13px;color:#5f6368">3 dòng</span><span style="font-size:13px;color:#8c1010;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:16px">error</span>1 dòng lỗi</span><span style="margin-left:auto;height:32px;padding:0 10px;border-radius:6px;display:flex;align-items:center;gap:4px;color:#005cbb;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Thêm dòng</span></div>
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 96px 128px 128px 48px;font-size:13px;font-weight:500;color:#44474f;background:#f2f3f4;height:40px;align-items:center">
+        <span style="padding:0 12px;text-align:right">#</span><span style="padding:0 8px">Sản phẩm <span style="color:#ba1a1a">*</span></span><span style="padding:0 8px;text-align:right">Số lượng <span style="color:#ba1a1a">*</span></span><span style="padding:0 8px;text-align:right">Đơn giá (₫) <span style="color:#ba1a1a">*</span></span><span style="padding:0 8px;text-align:right">Thành tiền (₫)</span><span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 96px 128px 128px 48px;align-items:center;min-height:48px;border-bottom:1px solid #eceef2">
+        <span style="padding:0 12px;text-align:right;color:#5f6368;font-variant-numeric:tabular-nums">1</span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 10px"><span>SP-0012 · Nước suối 500ml</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">arrow_drop_down</span></span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-variant-numeric:tabular-nums">24</span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-variant-numeric:tabular-nums">5.500</span></span>
+        <span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">132.000</span>
+        <span style="display:flex;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#ba1a1a">delete</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 96px 128px 128px 48px;align-items:center;min-height:48px;border-bottom:1px solid #eceef2">
+        <span style="padding:0 12px;text-align:right;color:#5f6368;font-variant-numeric:tabular-nums">2</span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:space-between;padding:0 6px 0 10px"><span>SP-0108 · Mì ly hải sản</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">arrow_drop_down</span></span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:2px solid #005cbb;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 9px;font-variant-numeric:tabular-nums">12|</span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-variant-numeric:tabular-nums">9.000</span></span>
+        <span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">108.000</span>
+        <span style="display:flex;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#ba1a1a">delete</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 96px 128px 128px 48px;align-items:center;min-height:48px;border-bottom:1px solid #eceef2;background:#fff8f7">
+        <span style="padding:0 12px;text-align:right;color:#8c1010;font-weight:500;font-variant-numeric:tabular-nums;box-shadow:inset 3px 0 0 #ba1a1a;align-self:stretch;display:flex;align-items:center;justify-content:flex-end">3</span>
+        <span style="padding:0 8px;position:relative"><span style="height:32px;border:1px solid #ba1a1a;border-radius:6px;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;background:#ffffff"><span style="flex:1;color:#8e9099">Chọn sản phẩm</span><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#ba1a1a">error</span></span><span style="position:absolute;left:8px;top:-34px;padding:6px 10px;background:#2f3036;color:#ffffff;border-radius:6px;font-size:12px;white-space:nowrap">Chọn sản phẩm cho dòng này</span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;background:#ffffff;font-variant-numeric:tabular-nums">1</span></span>
+        <span style="padding:0 8px"><span style="height:32px;border:1px solid #c4c6d0;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;background:#ffffff;color:#8e9099">0</span></span>
+        <span style="padding:0 8px;text-align:right;color:#5f6368">—</span>
+        <span style="display:flex;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#ba1a1a">delete</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 96px 128px 128px 48px;align-items:center;height:48px;font-weight:500">
+        <span></span><span style="padding:0 8px;grid-column:2 / span 3;text-align:right">Tổng tiền (₫)</span><span style="padding:0 8px;text-align:right;font-variant-numeric:tabular-nums">240.000</span><span></span>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>"Thêm dòng" thêm vào cuối bảng và focus ô Sản phẩm. Nhấn Enter ở ô cuối của dòng cuối cũng thêm dòng mới.</li>
+    <li>Xoá dòng chưa lưu thì không hỏi xác nhận vì chưa có gì bị mất trên máy chủ. Bảng còn một dòng thì nút xoá bị khoá.</li>
+    <li>Ô trong bảng dùng <code>size="sm"</code> và <code>hideInlineError</code>: lỗi là icon trong ô, kèm tooltip. Dòng có lỗi có vạch đỏ ở cột #, và header của section ghi số dòng lỗi. Lỗi API có khoá <code>lines.&lt;i&gt;.&lt;field&gt;</code>.</li>
+    <li>Thành tiền và tổng tự tính, không sửa được, căn phải, chữ số đều nhau. Dòng chưa đủ dữ liệu hiện "—" thay cho 0.</li>
+  </ol>
+</section>
+
+<section id="P8" data-screen-label="P8 overview" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P8</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">overview</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Trang đầu của một phân hệ: người dùng vào để biết hôm nay có việc gì, rồi đi thẳng tới danh sách cần xử lý. Đây không phải trang báo cáo phân tích.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Bố cục</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Header có bộ chọn kỳ. Một hàng tối đa 4 số liệu. Dưới đó là "Cần xử lý" bên trái; "Truy cập nhanh" và "Gần đây" bên phải.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mọi con số đều là link tới danh sách có bộ lọc trên URL. Số lấy từ cùng API đếm với danh sách, nên mở ra thấy đúng số dòng đó. Mỗi khối tự tải và có lỗi riêng.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Không làm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Không tự tải lại theo chu kỳ: ghi "Cập nhật lúc …" kèm nút làm mới. Không có biểu đồ nếu không có quyết định nào dựa vào nó.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-card</code> với layout <code>stat</code> và <code>shortcut</code> (xem <a href="SD Card Layouts.dc.html">SD Card Layouts</a>), thay cho hai bản <code>summary-cards</code>. <code>sd-table</code> đọc bộ lọc từ query params.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1040px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Tổng quan bán hàng</span><span style="color:#5f6368">Cập nhật lúc 09:42</span></div>
+        <span style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#44474f">refresh</span>
+        <div style="display:flex;padding:3px;background:#f2f3f6;border-radius:8px;gap:2px;font-size:13px"><span style="padding:6px 12px;border-radius:6px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:500">Hôm nay</span><span style="padding:6px 12px;color:#44474f">7 ngày</span><span style="padding:6px 12px;color:#44474f">Tháng này</span></div>
+      </div>
+      <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5f6368">Doanh thu</span><span style="font-size:24px;font-weight:500;font-variant-numeric:tabular-nums">86,4 triệu</span><span style="font-size:12px;color:#5f6368">31 đơn hoàn tất</span></div>
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5f6368">Đơn mới</span><span style="font-size:24px;font-weight:500;color:#005cbb;font-variant-numeric:tabular-nums">42</span><span style="font-size:12px;color:#5f6368">Hôm qua 37</span></div>
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5f6368">Chờ xác nhận</span><span style="font-size:24px;font-weight:500;color:#005cbb;font-variant-numeric:tabular-nums">18</span><span style="font-size:12px;color:#6b4500">12 đơn quá 24 giờ</span></div>
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5f6368">Đề nghị chờ duyệt</span><span style="font-size:24px;font-weight:500;color:#005cbb;font-variant-numeric:tabular-nums">7</span><span style="font-size:12px;color:#5f6368">Tổng 312,5 triệu</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start">
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+            <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Cần xử lý</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f1f2f5"><span style="width:32px;height:32px;border-radius:8px;background:#fbecd0;color:#6b4500;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">schedule</span><span style="flex:1;display:flex;flex-direction:column"><span>Đơn chờ xác nhận quá 24 giờ</span><span style="font-size:12px;color:#5f6368">Đơn hàng · Chờ xác nhận · tạo trước 07/11 09:42</span></span><span style="font-weight:500;font-variant-numeric:tabular-nums">12</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#8e9099">chevron_right</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f1f2f5"><span style="width:32px;height:32px;border-radius:8px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">approval</span><span style="flex:1;display:flex;flex-direction:column"><span>Đề nghị thanh toán chờ bạn duyệt</span><span style="font-size:12px;color:#5f6368">Phê duyệt · Chờ duyệt · người duyệt là bạn</span></span><span style="font-weight:500;font-variant-numeric:tabular-nums">7</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#8e9099">chevron_right</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f1f2f5"><span style="width:32px;height:32px;border-radius:8px;background:#fbe3e1;color:#8c1010;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">receipt_long</span><span style="flex:1;display:flex;flex-direction:column"><span>Khách hàng có công nợ quá hạn</span><span style="font-size:12px;color:#5f6368">Khách hàng · Công nợ quá hạn &gt; 0</span></span><span style="font-weight:500;font-variant-numeric:tabular-nums">5</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#8e9099">chevron_right</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px"><span style="width:32px;height:32px;border-radius:8px;background:#ecebe6;color:#44464c;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">inventory_2</span><span style="flex:1;display:flex;flex-direction:column"><span>Sản phẩm dưới ngưỡng tồn kho</span><span style="font-size:12px;color:#5f6368">Sản phẩm · Tồn kho &lt; 20</span></span><span style="font-weight:500;font-variant-numeric:tabular-nums">9</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#8e9099">chevron_right</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Truy cập nhanh</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px">
+                <span style="height:32px;padding:0 12px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Tạo đơn hàng</span>
+                <span style="height:32px;padding:0 12px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">person_add</span>Tạo khách hàng</span>
+                <span style="height:32px;padding:0 12px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">upload</span>Nhập sản phẩm</span>
+              </div>
+            </div>
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+              <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Bạn xem gần đây</div>
+              <div style="display:flex;flex-direction:column;padding:4px 0">
+                <span style="padding:8px 16px;display:flex;gap:8px"><span style="color:#005cbb">DH2408</span><span style="color:#5f6368">Công ty TNHH Minh Phát</span></span>
+                <span style="padding:8px 16px;display:flex;gap:8px"><span style="color:#005cbb">KH0012</span><span style="color:#5f6368">Hồ sơ khách hàng</span></span>
+                <span style="padding:8px 16px;display:flex;gap:8px"><span style="color:#005cbb">DN-0193</span><span style="color:#5f6368">Đề nghị thanh toán tháng 10</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Số có thể bấm thì màu primary; "Doanh thu" chỉ để xem nên màu chữ thường. Đây cũng là cách tách thẻ xem với thẻ lọc ở L2.</li>
+    <li>Mỗi dòng "Cần xử lý" ghi rõ bộ lọc sẽ áp dụng (dòng phụ), để khi mở danh sách người dùng hiểu vì sao có đúng 12 dòng.</li>
+    <li>Dòng có số 0 thì ẩn. Khi cả khối không còn dòng nào thì hiện "Không có việc cần xử lý".</li>
+    <li>Kỳ đang chọn được lưu theo người dùng và chỉ áp dụng cho hàng số liệu. "Cần xử lý" luôn tính tại thời điểm hiện tại.</li>
+  </ol>
+</section>
+
+<section id="P1" data-screen-label="P1 board" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P1</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">board</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Cùng danh sách đơn hàng nhưng xếp theo cột trạng thái, kéo thẻ sang cột khác để đổi trạng thái. Board là một chế độ xem của danh sách, không phải màn riêng: cùng bộ lọc, cùng drawer chi tiết.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Dùng khi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Bản ghi đi qua 3–6 trạng thái và người dùng làm việc bằng cách đẩy bản ghi sang bước sau: đơn hàng, ticket, ứng viên.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Khi kéo, cột không được phép chuyển tới bị làm mờ. Thả xong là chuyển ngay và có hoàn tác (như S1); trạng thái cần lý do (Huỷ) thì mở hộp nhập lý do. Mỗi cột tải 20 thẻ, có "Tải thêm".</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Bàn phím</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi thẻ có menu "Chuyển sang…" để đổi trạng thái không cần kéo. Kéo thả chỉ là cách nhanh hơn, không phải cách duy nhất.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-kanban</code>: hàm kiểm tra chuyển cột hợp lệ, cột thu gọn, số đếm và tổng ở header, tải thêm theo cột. Chuyển giữa Danh sách và Bảng giữ nguyên bộ lọc.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1100px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f;position:relative">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Đơn hàng</span><span style="color:#5f6368">Đơn bán lẻ từ mọi kênh.</span></div>
+        <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Tạo đơn hàng</span>
+      </div>
+      <div style="padding:12px 20px;display:flex;align-items:center;gap:8px">
+        <span style="width:300px;height:36px;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;display:flex;align-items:center;gap:8px;padding:0 10px;color:#8e9099"><span style="font-family:'Material Symbols Outlined';font-size:20px">search</span>Tìm theo mã đơn, khách hàng</span>
+        <span style="height:32px;padding:0 10px;border:1px solid #c4c6d0;border-radius:16px;background:#ffffff;display:flex;align-items:center;gap:4px;font-size:13px">Kênh: Tất cả<span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+        <span style="height:32px;padding:0 10px;border-radius:16px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500">Kho: Quận 1<span style="font-family:'Material Symbols Outlined';font-size:16px">close</span></span>
+        <span style="flex:1"></span>
+        <div style="display:flex;padding:3px;background:#f2f3f6;border-radius:8px;gap:2px;font-size:13px"><span style="padding:5px 10px;color:#44474f;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px">table_rows</span>Danh sách</span><span style="padding:5px 10px;border-radius:6px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:500;display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px">view_kanban</span>Bảng</span></div>
+      </div>
+      <div style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 56px;gap:12px;align-items:start;height:460px;box-sizing:border-box">
+        <sc-for list="{{ boardCols }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:10px;background:{{ c.bg }};outline:{{ c.outline }};opacity:{{ c.opacity }};max-height:100%;box-sizing:border-box">
+            <div style="display:flex;align-items:center;gap:8px;padding:4px 6px"><span style="width:8px;height:8px;border-radius:50%;background:{{ c.dot }}"></span><span style="font-weight:500">{{ c.title }}</span><span style="font-size:13px;color:#5f6368;font-variant-numeric:tabular-nums">{{ c.count }}</span><span style="margin-left:auto;font-size:12px;color:#5f6368;font-variant-numeric:tabular-nums">{{ c.sum }}</span></div>
+            <sc-if value="{{ c.hint }}" hint-placeholder-val="{{ false }}"><div style="padding:6px 8px;border-radius:6px;font-size:12px;color:{{ c.hintFg }};background:#ffffff">{{ c.hint }}</div></sc-if>
+            <sc-for list="{{ c.cards }}" as="k" hint-placeholder-count="2">
+              <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;box-shadow:{{ k.shadow }};transform:{{ k.transform }};opacity:{{ k.opacity }}">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#005cbb;font-weight:500;font-variant-numeric:tabular-nums">{{ k.code }}</span><span style="font-size:12px;color:#5f6368">{{ k.when }}</span><span style="margin-left:auto;width:24px;height:24px;border-radius:50%;background:#eceef2;color:#44474f;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center">{{ k.who }}</span></div>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.customer }}</span>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5f6368"><span style="font-variant-numeric:tabular-nums;color:#1a1b1f;font-weight:500">{{ k.total }} ₫</span><span>· {{ k.channel }}</span></div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><span style="padding:6px;text-align:center;font-size:13px;color:#005cbb">{{ c.more }}</span></sc-if>
+          </div>
+        </sc-for>
+        <div style="height:100%;border-radius:10px;background:#f0f1f4;opacity:.5;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0;box-sizing:border-box"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#44474f">chevron_left</span><span style="writing-mode:vertical-rl;font-weight:500;color:#44474f">Đã huỷ · 3</span></div>
+      </div>
+      <div style="position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;padding:10px 12px 10px 16px;background:#2f3036;color:#ffffff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)"><span>Đã chuyển DH2412 sang Đang giao</span><span style="color:#a8c8ff;font-weight:500">Hoàn tác</span></div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Đang kéo DH2415 từ "Chờ xác nhận": cột "Đang giao" nhận được nên có viền; "Hoàn tất" bị làm mờ vì không được nhảy cóc qua bước giao hàng.</li>
+    <li>Header cột có số thẻ và tổng tiền theo cùng bộ lọc. Cột ít dùng (Đã huỷ) được thu gọn thành một dải dọc.</li>
+    <li>Bấm thẻ mở drawer chi tiết như PR #137. Board có cùng drawer và cùng bộ lọc với danh sách, chỉ khác cách xếp.</li>
+    <li>Không dùng board khi một cột thường có trên khoảng 100 thẻ: lúc đó danh sách có tab trạng thái dễ dùng hơn.</li>
+  </ol>
+</section>
+
+<section id="P4" data-screen-label="P4 saved-views" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P4</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">saved-views</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Người dùng lưu bộ lọc, cách sắp xếp và các cột đang hiện thành một view có tên, mở lại bằng một lần bấm hoặc bằng link. Dùng cho danh sách mà ngày nào người dùng cũng lọc lại giống nhau.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">View gồm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Bộ lọc của query bar, sắp xếp, cột và thứ tự cột, số dòng mỗi trang. Không lưu trang đang xem và các dòng đang chọn.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Phạm vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">View cá nhân, hoặc chia sẻ cho một vai trò. View người khác chia sẻ thì chỉ "Lưu thành view mới" được. Mỗi người đặt được một view mặc định.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">URL</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>?view=&lt;id&gt;</code>. Thay đổi chưa lưu cũng ghi lên URL, nên gửi link vẫn mở ra đúng những gì đang thấy.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-table</code> xuất và nạp lại trạng thái (bộ lọc, sắp xếp, cột). Adapter lưu view do app cấp, Core không tự gọi API. Thanh view dùng chung.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1040px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f;position:relative;height:470px;display:flex;flex-direction:column">
+      <div style="flex:none;background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);position:relative;z-index:2">
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px">
+          <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Đơn hàng</span><span style="color:#5f6368">Đơn bán lẻ từ mọi kênh.</span></div>
+          <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Tạo đơn hàng</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;padding:0 20px;border-top:1px solid #eceef2">
+          <span style="padding:11px 12px;color:#44474f">Tất cả đơn</span>
+          <span style="padding:11px 12px;color:#44474f">Đơn của tôi</span>
+          <span style="padding:11px 12px;font-weight:500;color:#005cbb;box-shadow:inset 0 -2px 0 #005cbb;display:flex;align-items:center;gap:6px">Chờ xác nhận quá 24 giờ<span style="width:6px;height:6px;border-radius:50%;background:#b26a00"></span></span>
+          <span style="padding:11px 12px;color:#44474f;display:flex;align-items:center;gap:2px">Thêm view<span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+        </div>
+      </div>
+      <div style="flex:none;padding:12px 20px 0;display:flex;flex-direction:column;gap:10px">
+        <div style="min-height:40px;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:4px 8px">
+          <span style="font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">filter_list</span>
+          <span style="height:28px;padding:0 4px 0 10px;border-radius:14px;background:#eceef2;display:flex;align-items:center;gap:4px;font-size:13px">Trạng thái <strong style="font-weight:500">là</strong> Chờ xác nhận<span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">close</span></span>
+          <span style="height:28px;padding:0 4px 0 10px;border-radius:14px;background:#eceef2;display:flex;align-items:center;gap:4px;font-size:13px">Ngày tạo <strong style="font-weight:500">trước</strong> 24 giờ<span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">close</span></span>
+          <span style="height:28px;padding:0 4px 0 10px;border-radius:14px;background:#fbecd0;color:#6b4500;display:flex;align-items:center;gap:4px;font-size:13px">Kho <strong style="font-weight:500">là</strong> Quận 1<span style="font-family:'Material Symbols Outlined';font-size:16px">close</span></span>
+          <span style="color:#8e9099;font-size:13px;padding-left:4px">Thêm điều kiện</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:#fff6e6;color:#5b3a00;font-size:13px"><span style="font-family:'Material Symbols Outlined';font-size:18px">edit_note</span><span style="flex:1">Đã thêm 1 điều kiện so với view "Chờ xác nhận quá 24 giờ".</span><span style="font-weight:500;color:#5b3a00">Bỏ thay đổi</span><span style="font-weight:500;color:#005cbb">Lưu thành view mới</span><span style="height:28px;padding:0 12px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;font-weight:500">Lưu view</span></div>
+      </div>
+      <div style="flex:1;min-height:0;padding:12px 20px 20px">
+        <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px 150px 130px 140px;height:40px;align-items:center;background:#f2f3f4;font-size:13px;font-weight:500;color:#44474f"><span style="padding:0 12px">Mã đơn</span><span style="padding:0 12px">Khách hàng</span><span style="padding:0 12px">Kho</span><span style="padding:0 12px">Ngày tạo ↑</span><span style="padding:0 12px;text-align:right">Tổng tiền (₫)</span><span style="padding:0 12px">Trạng thái</span></div>
+          <sc-for list="{{ viewRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px 150px 130px 140px;height:44px;align-items:center;border-top:1px solid #eceef2"><span style="padding:0 12px;color:#005cbb;font-variant-numeric:tabular-nums">{{ r.code }}</span><span style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.customer }}</span><span style="padding:0 12px">Quận 1</span><span style="padding:0 12px;font-variant-numeric:tabular-nums">{{ r.date }}</span><span style="padding:0 12px;text-align:right;font-variant-numeric:tabular-nums">{{ r.total }}</span><span style="padding:0 12px"><span style="height:22px;padding:0 10px;border-radius:11px;background:#fbecd0;color:#6b4500;display:inline-flex;align-items:center;font-size:12px;font-weight:500">Chờ xác nhận</span></span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position:absolute;left:390px;top:132px;width:300px;background:#ffffff;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:3;padding:6px 0;font-size:14px">
+        <span style="display:block;padding:6px 14px;font-size:12px;color:#5f6368">Của tôi</span>
+        <span style="display:flex;align-items:center;gap:8px;padding:8px 14px">Đơn giao chậm tuần này</span>
+        <span style="display:block;padding:6px 14px;font-size:12px;color:#5f6368;border-top:1px solid #eceef2;margin-top:4px">Được chia sẻ</span>
+        <span style="display:flex;align-items:center;gap:8px;padding:8px 14px"><span style="flex:1">Đơn Shopee chưa in phiếu</span><span style="font-size:12px;color:#5f6368">Kho vận</span></span>
+        <span style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid #eceef2;margin-top:4px;color:#005cbb"><span style="font-family:'Material Symbols Outlined';font-size:18px">tune</span>Quản lý view</span>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Tối đa 4 view ghim thành tab; các view còn lại nằm trong "Thêm view", chia theo "Của tôi" và "Được chia sẻ".</li>
+    <li>View đang có thay đổi chưa lưu thì có chấm màu trên tab, và một dải thông báo ghi rõ đã đổi gì. Chip vừa thêm có màu khác các chip của view.</li>
+    <li>"Lưu view" ghi đè view hiện tại; chỉ người tạo view mới thấy nút này. "Bỏ thay đổi" đưa về đúng view đã lưu.</li>
+    <li>Dùng cùng query bar đã chốt (phương án A). Danh sách dùng tab trạng thái (L1) thì không dùng saved-views, vì hai thanh tab chồng lên nhau.</li>
+  </ol>
+</section>
+
+<section id="P5" data-screen-label="P5 mobile" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P5</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">mobile</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Mobile không phải màn riêng: cùng route và cùng code, Core tự đổi cách trình bày khi màn hẹp hơn 768px. Pattern ghi lại các quy tắc đổi đó để mọi màn mẫu chạy được ở 390px.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Danh sách</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Bảng thành thẻ, bộ lọc thành chip có bottom sheet, sắp xếp là một chip, kéo xuống để tải lại (theo handoff Table Mobile). Nút Tạo thành nút icon trên header.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Chi tiết và form</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Nút chính chuyển từ header xuống thanh dưới cùng, dính đáy. Header chỉ còn ←, tiêu đề và menu ⋯ chứa các tác vụ còn lại. Lưới <code>sd-view</code> 2 cột thành 1 cột.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Drawer</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mở toàn màn hình, bỏ qua <code>width</code>; X ở trái, footer dính đáy. Split: chi tiết thay danh sách (đã có). Flow: thanh bước thành "Bước 2/4 · tên bước".</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Đánh dấu nút chính trong <code>headerRight</code> để Core đưa xuống thanh dưới và gom các nút còn lại vào ⋯. <code>sd-side-drawer</code> toàn màn hình dưới 768px.</span></div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center;padding:24px;border:1px solid #dddcd6;border-radius:12px;background:#ecebe6">
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+      <div style="width:320px;height:620px;border-radius:28px;border:8px solid #1a1b1f;background:#f9f9f9;overflow:hidden;display:flex;flex-direction:column;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="flex:none;background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:10px 8px 10px 16px;display:flex;align-items:center;gap:4px"><span style="flex:1;font-size:18px;font-weight:500">Đơn hàng</span><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#005cbb">add</span><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">more_horiz</span></div>
+        <div style="flex:none;padding:10px 12px;display:flex;gap:6px;overflow:hidden">
+          <span style="width:36px;height:36px;flex:none;border:1px solid #c4c6d0;border-radius:18px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">search</span>
+          <span style="height:36px;flex:none;padding:0 12px;border-radius:18px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;font-size:13px;font-weight:500">Chờ xác nhận</span>
+          <span style="height:36px;flex:none;padding:0 12px;border:1px solid #c4c6d0;border-radius:18px;background:#ffffff;display:flex;align-items:center;gap:2px;font-size:13px">Mới nhất<span style="font-family:'Material Symbols Outlined';font-size:16px">arrow_downward</span></span>
+          <span style="height:36px;flex:none;padding:0 12px;border:1px solid #c4c6d0;border-radius:18px;background:#ffffff;display:flex;align-items:center;font-size:13px">Kênh</span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:0 12px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ viewRows }}" as="r" hint-placeholder-count="4">
+            <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:#005cbb;font-weight:500">{{ r.code }}</span><span style="margin-left:auto;height:22px;padding:0 8px;border-radius:11px;background:#fbecd0;color:#6b4500;display:flex;align-items:center;font-size:12px;font-weight:500">Chờ xác nhận</span></div>
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.customer }}</span>
+              <div style="display:flex;font-size:13px;color:#5f6368"><span>{{ r.date }}</span><span style="margin-left:auto;color:#1a1b1f;font-weight:500;font-variant-numeric:tabular-nums">{{ r.total }} ₫</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <span style="font-size:13px;color:#3a3c42">Danh sách</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+      <div style="width:320px;height:620px;border-radius:28px;border:8px solid #1a1b1f;background:#f9f9f9;overflow:hidden;display:flex;flex-direction:column;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="flex:none;background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:6px 4px;display:flex;align-items:center;gap:2px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">arrow_back</span><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-size:16px;font-weight:500">Chi tiết đơn hàng #DH2408</span><span style="font-size:12px;color:#5f6368">Đang giao · Đã duyệt</span></div><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">more_horiz</span></div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:12px;display:flex;flex-direction:column;gap:12px">
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px"><div style="padding:10px 14px;font-weight:500;border-bottom:1px solid #eceef2">Thông tin chung</div><div style="display:flex;flex-direction:column;gap:10px;padding:12px 14px"><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Khách hàng</span><span>Công ty TNHH Minh Phát</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Kênh bán</span><span>Đại lý</span></div><div style="display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Ngày tạo</span><span>02/11/2026 09:14</span></div></div></div>
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px"><div style="padding:10px 14px;font-weight:500;border-bottom:1px solid #eceef2">Dòng hàng · 3</div><div style="display:flex;flex-direction:column;padding:4px 14px"><div style="display:flex;padding:8px 0;border-bottom:1px solid #f1f2f5"><span style="flex:1">Nước suối 500ml × 24</span><span style="font-variant-numeric:tabular-nums">132.000</span></div><div style="display:flex;padding:8px 0"><span style="flex:1">Mì ly hải sản × 12</span><span style="font-variant-numeric:tabular-nums">108.000</span></div></div></div>
+        </div>
+        <div style="flex:none;background:#ffffff;border-top:1px solid #e3e4ea;padding:10px 12px;display:flex;gap:8px"><span style="flex:1;height:44px;border-radius:8px;background:#005cbb;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:20px">edit</span>Cập nhật đơn hàng</span></div>
+      </div>
+      <span style="font-size:13px;color:#3a3c42">Chi tiết · nút chính ở thanh dưới</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+      <div style="width:320px;height:620px;border-radius:28px;border:8px solid #1a1b1f;background:#ffffff;overflow:hidden;display:flex;flex-direction:column;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+        <div style="flex:none;padding:6px 4px;display:flex;align-items:center;gap:2px;border-bottom:1px solid #eceef2"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:24px;color:#44474f">close</span><span style="flex:1;font-size:16px;font-weight:500">Cập nhật khách hàng #KH0012</span></div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:18px">
+          <span style="font-weight:500">Thông tin chung</span>
+          <div style="position:relative;height:44px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Tên khách hàng *</span>Công ty TNHH Minh Phát</div>
+          <div style="position:relative;height:44px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 6px 0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Loại khách hàng *</span><span style="flex:1">Doanh nghiệp</span><span style="font-family:'Material Symbols Outlined';font-size:24px;color:#5f6368">arrow_drop_down</span></div>
+          <div style="position:relative;height:44px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Mã số thuế *</span>0312456789</div>
+          <span style="font-weight:500">Liên hệ</span>
+          <div style="position:relative;height:44px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Email *</span>ketoan@minhphat.vn</div>
+        </div>
+        <div style="flex:none;border-top:1px solid #e3e4ea;padding:10px 12px"><span style="height:44px;border-radius:8px;background:#005cbb;color:#ffffff;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:20px">save</span>Lưu</span></div>
+      </div>
+      <span style="font-size:13px;color:#3a3c42">Drawer · toàn màn hình</span>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Mọi vùng bấm cao ít nhất 44px. Control trong form mobile dùng chiều cao 44px thay cho 40px.</li>
+    <li>Thanh dưới chỉ có một nút chính, có thể thêm một nút phụ. Mọi tác vụ khác nằm trong ⋯ ở header.</li>
+    <li>Bảng dòng hàng (P7) trên mobile chỉ để xem dạng danh sách; muốn sửa thì bấm vào dòng để mở sheet sửa dòng đó.</li>
+  </ol>
+</section>
+
+<section id="P6" data-screen-label="P6 activity" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P6</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">activity</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Lịch sử thay đổi và bình luận của một bản ghi, đặt trong cột phụ (<code>sdAside</code>) của trang chi tiết hoặc tab Hoạt động của P13. Thay cho <code>approval-steps</code> đang tự vẽ timeline.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:32px;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Mục trong timeline</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Ba loại. <strong style="font-weight:500">Thay đổi</strong>: ai, đổi field nào, giá trị cũ → mới. <strong style="font-weight:500">Bình luận</strong>: nội dung do người dùng viết. <strong style="font-weight:500">Sự kiện hệ thống</strong>: tạo, gửi duyệt, đồng bộ. Duyệt và từ chối là thay đổi trạng thái, kèm lý do.</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mới nhất ở trên, nhóm theo ngày. Giờ hiện tương đối ("2 giờ trước"), rê chuột thấy giờ chính xác. Tải 20 mục mỗi lần. Người viết sửa hoặc xoá được bình luận của mình trong 15 phút. Ô bình luận chỉ hiện khi có quyền.</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Không làm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Không ghi lại mọi lần lưu nếu giá trị không đổi. Không hiện field kỹ thuật (id, updatedAt). Nhắc tên bằng @ để đợt sau.</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-timeline</code>: mỗi mục có avatar hoặc icon, tiêu đề, dòng phụ, slot nội dung, màu theo loại, và nhóm theo ngày. Một helper hiện "cũ → mới" theo kiểu của field (badge cho trạng thái, số tiền có định dạng).</span></div>
+    </div>
+    <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eceef2"><span style="font-weight:500;flex:1">Hoạt động</span><div style="display:flex;padding:2px;background:#f2f3f6;border-radius:6px;font-size:12px"><span style="padding:4px 8px;border-radius:4px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:500">Tất cả</span><span style="padding:4px 8px;color:#44474f">Bình luận</span><span style="padding:4px 8px;color:#44474f">Thay đổi</span></div></div>
+      <div style="padding:12px 16px;display:flex;gap:8px;border-bottom:1px solid #eceef2"><span style="width:32px;height:32px;flex:none;border-radius:50%;background:#d7e3f8;color:#00408a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">TH</span><div style="flex:1;display:flex;flex-direction:column;gap:6px"><span style="min-height:36px;border:1px solid #c4c6d0;border-radius:8px;padding:8px 10px;color:#8e9099;box-sizing:border-box">Viết bình luận…</span></div></div>
+      <div style="padding:8px 16px 4px;font-size:12px;font-weight:500;color:#5f6368">Hôm nay</div>
+      <div style="display:flex;gap:10px;padding:8px 16px">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#ecebe6;color:#44474c;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">LM</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0"><span><strong style="font-weight:500">Lê Minh</strong> <span style="color:#5f6368">bình luận · 25 phút trước</span></span><span style="padding:8px 10px;border-radius:8px;background:#f2f3f6;text-wrap:pretty">Khách hẹn nhận hàng sau 14h, đã báo kho Quận 1 giữ lại.</span></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:8px 16px">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#d7e3f8;color:#00408a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">TH</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0"><span><strong style="font-weight:500">Trần Thu Hà</strong> <span style="color:#5f6368">đổi trạng thái · 2 giờ trước</span></span><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="height:22px;padding:0 8px;border-radius:11px;background:#fbecd0;color:#6b4500;display:flex;align-items:center;font-size:12px;font-weight:500">Chờ xác nhận</span><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">arrow_forward</span><span style="height:22px;padding:0 8px;border-radius:11px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;font-size:12px;font-weight:500">Đang giao</span></span></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:8px 16px">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#d7e3f8;color:#00408a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500">TH</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span><strong style="font-weight:500">Trần Thu Hà</strong> <span style="color:#5f6368">cập nhật 2 field · 2 giờ trước</span></span><span style="display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px"><span style="color:#5f6368">Kho xuất</span><span>Quận 7 → Quận 1</span><span style="color:#5f6368">Ghi chú</span><span>— → Giao sau 14h</span></span></div>
+      </div>
+      <div style="padding:8px 16px 4px;font-size:12px;font-weight:500;color:#5f6368">02/11/2026</div>
+      <div style="display:flex;gap:10px;padding:8px 16px">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#dff3e6;color:#14532d;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">check</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span><strong style="font-weight:500">Nguyễn Văn Thành</strong> <span style="color:#5f6368">duyệt đơn · 10:02</span></span></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:8px 16px 14px">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#ecebe6;color:#44474c;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px">add</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span><strong style="font-weight:500">Hệ thống</strong> <span style="color:#5f6368">tạo đơn từ kênh Đại lý · 09:14</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="P3" data-screen-label="P3 attachments" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P3</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">attachments</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Tệp đính kèm của một bản ghi: tải lên, xem trước, tải về, xoá. Đặt như một section trong trang chi tiết, hoặc tab Tài liệu của P13.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Khi nào tải lên</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Trên bản ghi đã có: chọn tệp là tải lên ngay, không cần bấm Lưu. Trong form tạo mới: tệp chờ trong danh sách và chỉ tải lên sau khi lưu bản ghi thành công.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Lỗi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Kiểm tra định dạng và dung lượng trước khi gửi, báo lỗi trên đúng dòng của tệp đó. Lỗi mạng thì có nút thử lại trên dòng. Một tệp lỗi không chặn các tệp khác.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Quyền và xoá</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Tải lên và xoá có mã quyền riêng. Xoá thì hỏi xác nhận (E13). Không có quyền thì ẩn vùng thả, chỉ còn danh sách tệp.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-upload-file</code> có chế độ danh sách: mỗi dòng có tiến độ, lỗi, thử lại, và tác vụ theo quyền. Xem trước dùng preview đang có. Dùng <code>sd-file-explorer</code> khi tệp có thư mục.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9;padding:20px">
+    <div style="min-width:720px;max-width:820px;margin:0 auto;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eceef2"><span style="font-weight:500">Tài liệu</span><span style="font-size:13px;color:#5f6368">4 tệp · 2,2 MB</span></div>
+      <div style="margin:12px 16px;padding:14px;border:1px dashed #8e9099;border-radius:8px;display:flex;align-items:center;gap:12px;background:#fafbfc"><span style="font-family:'Material Symbols Outlined';font-size:28px;color:#5f6368">upload_file</span><span style="flex:1;display:flex;flex-direction:column"><span>Kéo tệp vào đây hoặc <span style="color:#005cbb;font-weight:500">chọn tệp</span></span><span style="font-size:12px;color:#5f6368">PDF, XLSX, DOCX, JPG, PNG · tối đa 10 MB mỗi tệp</span></span></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid #f1f2f5">
+        <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#b3261e">picture_as_pdf</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0"><span>Biên bản đối chiếu T10.pdf</span><span style="height:4px;border-radius:2px;background:#e3e4ea;overflow:hidden"><span style="display:block;width:62%;height:100%;background:#005cbb"></span></span></div>
+        <span style="font-size:12px;color:#5f6368;font-variant-numeric:tabular-nums">62% · 310 KB</span>
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#44474f">close</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid #f1f2f5;background:#fff8f7">
+        <span style="font-family:'Material Symbols Outlined';font-size:24px;color:#ba1a1a">error</span>
+        <div style="flex:1;display:flex;flex-direction:column;min-width:0"><span>Bảng kê chứng từ.zip</span><span style="font-size:12px;color:#8c1010">Định dạng .zip không được hỗ trợ.</span></div>
+        <span style="font-size:13px;font-weight:500;color:#44474f;padding:0 8px">Bỏ</span>
+      </div>
+      <sc-for list="{{ p13Docs }}" as="f" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid #f1f2f5">
+          <span style="font-family:'Material Symbols Outlined';font-size:24px;color:{{ f.color }}">{{ f.icon }}</span>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="color:#005cbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.name }}</span><span style="font-size:12px;color:#5f6368">{{ f.size }} · Trần Thu Hà · 30/10/2026</span></div>
+          <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#44474f">download</span>
+          <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:20px;color:#44474f">more_horiz</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Bấm tên tệp thì mở xem trước. Tệp không xem trước được (DOCX) thì tải về.</li>
+    <li>Tệp đang tải lên và tệp lỗi nằm trên cùng, đến khi xong hoặc bị bỏ. Huỷ khi đang tải lên thì không hỏi xác nhận.</li>
+    <li>Menu ⋯ chứa Đổi tên và Xoá, theo quyền. Xoá xong cập nhật số tệp trên header và trên nhãn tab ở P13.</li>
+  </ol>
+</section>
+
+<section id="P9" data-screen-label="P9 bulk-edit" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P9</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">bulk-edit</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Đặt cùng một giá trị cho nhiều dòng đã chọn: trạng thái, danh mục, người phụ trách. Mở từ thanh chọn nhiều của <code>sd-table</code>, sửa trong drawer, kết quả báo từng phần như <code>bulk-result</code>.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Không dùng khi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi dòng cần một giá trị khác nhau: dùng P7 hoặc <code>sd-import-excel</code>.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Field nào cũng mặc định "Giữ nguyên"; bật field nào thì mới nhập được field đó. Nút chính bị khoá cho tới khi bật ít nhất một field, và nhãn nút có số dòng. Dòng tóm tắt ở footer đã là bước xác nhận, không mở thêm hộp thoại (như W1).</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Kiểm tra trước</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Dòng nào chắc chắn không sửa được (thiếu quyền, trạng thái bị khoá) thì báo ngay đầu drawer, trước khi người dùng nhập. Lỗi chỉ biết khi lưu thì báo từng phần sau khi chạy.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Đưa <code>bulk-result</code> vào Core thành <code>sd-bulk-result</code>. Một hàng field kiểu "bật để đổi" dùng chung cho mọi loại field.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1040px;height:520px;position:relative;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f;overflow:hidden">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;flex-direction:column"><span style="font-size:20px;font-weight:500;line-height:28px">Sản phẩm</span><span style="color:#5f6368">Danh mục sản phẩm đang kinh doanh.</span></div>
+      <div style="margin:12px 20px 0;height:44px;padding:0 12px;border-radius:8px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;gap:16px;font-weight:500"><span>Đã chọn 12</span><span style="display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px">edit</span>Cập nhật hàng loạt</span><span style="display:flex;align-items:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px">download</span>Xuất</span><span style="margin-left:auto">Bỏ chọn</span></div>
+      <div style="margin:8px 20px;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;height:340px"></div>
+      <div style="position:absolute;inset:0;background:rgba(26,27,31,.32)"></div>
+      <div style="position:absolute;top:0;right:0;bottom:0;width:480px;background:#ffffff;box-shadow:-4px 0 16px rgba(0,0,0,.16);display:flex;flex-direction:column">
+        <div style="flex:none;padding:14px 12px 14px 20px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid #eceef2"><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:16px;font-weight:500">Cập nhật 12 sản phẩm</span><span style="font-size:13px;color:#5f6368">Chỉ các field được bật mới thay đổi.</span></div><span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">close</span></div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#fff6e6;color:#5b3a00;font-size:13px"><span style="font-family:'Material Symbols Outlined';font-size:18px">info</span><span>2 sản phẩm đang có đơn chờ giao sẽ không đổi được Trạng thái. Các field khác vẫn áp dụng cho cả 12.</span></div>
+          <div style="display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 8px;align-items:center">
+            <span style="width:36px;height:20px;border-radius:10px;background:#005cbb;position:relative"><span style="position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#ffffff"></span></span>
+            <div style="position:relative;height:40px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 6px 0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Trạng thái</span><span style="flex:1">Ngừng kinh doanh</span><span style="font-family:'Material Symbols Outlined';font-size:24px;color:#5f6368">arrow_drop_down</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 8px;align-items:center">
+            <span style="width:36px;height:20px;border-radius:10px;background:#005cbb;position:relative"><span style="position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#ffffff"></span></span>
+            <div style="position:relative;height:40px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 6px 0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Danh mục</span><span style="flex:1">Đồ uống › Nước suối</span><span style="font-family:'Material Symbols Outlined';font-size:24px;color:#5f6368">arrow_drop_down</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 8px;align-items:center">
+            <span style="width:36px;height:20px;border-radius:10px;background:#c4c6d0;position:relative"><span style="position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#ffffff"></span></span>
+            <div style="height:40px;border:1px solid #e3e4ea;border-radius:8px;display:flex;align-items:center;padding:0 12px;background:#f2f3f6;color:#5f6368"><span style="flex:1">Giá bán (₫)</span><span style="font-size:13px">Giữ nguyên</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 8px;align-items:center">
+            <span style="width:36px;height:20px;border-radius:10px;background:#c4c6d0;position:relative"><span style="position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#ffffff"></span></span>
+            <div style="height:40px;border:1px solid #e3e4ea;border-radius:8px;display:flex;align-items:center;padding:0 12px;background:#f2f3f6;color:#5f6368"><span style="flex:1">Đơn vị tính</span><span style="font-size:13px">Giữ nguyên</span></div>
+          </div>
+        </div>
+        <div style="flex:none;padding:12px 20px;border-top:1px solid #e3e4ea;display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:13px;color:#5f6368">Đổi 2 field cho 12 sản phẩm</span><span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;font-weight:500">Cập nhật 12 sản phẩm</span></div>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Lưu xong drawer đóng, danh sách hiện <code>sd-bulk-result</code>: "Đã cập nhật 10/12. 2 sản phẩm lỗi." Dòng lỗi vẫn được chọn, có "Thử lại phần lỗi".</li>
+    <li>Field số có thể có thêm chế độ "Tăng/giảm theo %" (giá bán). Chế độ này tuỳ từng field, không bắt buộc.</li>
+    <li>Không đưa vào drawer các field duy nhất cho từng dòng (mã, tên).</li>
+  </ol>
+</section>
+
+<section id="P2" data-screen-label="P2 schedule" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P2</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">schedule</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Bản ghi có giờ bắt đầu và giờ kết thúc, người dùng sắp xếp theo thời gian: lịch giao hàng, lịch hẹn, đặt phòng. Dựng trên <code>sd-calendar</code> đang làm theo handoff, làm sau khi component đó xong.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Tạo và mở</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Bấm hoặc kéo trên khoảng trống thì mở drawer tạo, thời gian đã điền sẵn. Bấm vào lịch thì mở drawer chi tiết. Nút "Tạo lịch giao" ở header vẫn có, cho người không dùng chuột.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Dời lịch</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Kéo lịch sang giờ khác là dời ngay, có hoàn tác. Giờ không hợp lệ (ngoài giờ làm, kho đóng cửa) thì không thả được. Hai lịch trùng giờ thì xếp cạnh nhau, không chồng lên nhau.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">URL và chế độ xem</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>?view=week&amp;date=2026-11-09</code>. Ở chế độ Tháng, mỗi ngày hiện tối đa 3 lịch rồi "+N". Mobile dùng chế độ Danh sách theo ngày.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-calendar</code>: sự kiện chọn khoảng trống, kéo dời có hàm kiểm tra, xếp lịch trùng giờ, chế độ Danh sách. Bộ lọc dùng chung với danh sách.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1100px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Lịch giao hàng</span><span style="color:#5f6368">Kho Quận 1</span></div>
+        <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Tạo lịch giao</span>
+      </div>
+      <div style="padding:12px 20px;display:flex;align-items:center;gap:8px">
+        <span style="height:36px;padding:0 14px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;font-weight:500">Hôm nay</span>
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_left</span>
+        <span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#44474f">chevron_right</span>
+        <span style="font-size:16px;font-weight:500">09 – 15/11/2026</span>
+        <span style="flex:1"></span>
+        <span style="height:32px;padding:0 10px;border-radius:16px;background:#d7e3f8;color:#00408a;display:flex;align-items:center;gap:4px;font-size:13px;font-weight:500">Kho: Quận 1<span style="font-family:'Material Symbols Outlined';font-size:16px">close</span></span>
+        <div style="display:flex;padding:3px;background:#f2f3f6;border-radius:8px;gap:2px;font-size:13px"><span style="padding:5px 12px;color:#44474f">Ngày</span><span style="padding:5px 12px;border-radius:6px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:500">Tuần</span><span style="padding:5px 12px;color:#44474f">Tháng</span><span style="padding:5px 12px;color:#44474f">Danh sách</span></div>
+      </div>
+      <div style="margin:0 20px 20px;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border-bottom:1px solid #e3e4ea">
+          <span></span>
+          <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="7"><span style="padding:8px;text-align:center;font-size:13px;color:#44474f;border-left:1px solid #eceef2;background:{{ d.headBg }}"><span style="display:block;font-size:12px;color:#5f6368">{{ d.dow }}</span><span style="font-size:16px;font-weight:500">{{ d.date }}</span></span></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));height:396px;position:relative">
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ calHours }}" as="h" hint-placeholder-count="9"><span style="height:44px;flex:none;font-size:11px;color:#5f6368;text-align:right;padding:2px 8px 0 0;box-sizing:border-box">{{ h }}</span></sc-for>
+          </div>
+          <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="7">
+            <div style="position:relative;border-left:1px solid #eceef2;background-color:{{ d.colBg }};background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 43px,#f1f2f5 43px,#f1f2f5 44px)">
+              <sc-for list="{{ d.events }}" as="e" hint-placeholder-count="1">
+                <div style="position:absolute;top:{{ e.top }};height:{{ e.height }};left:{{ e.left }};width:{{ e.width }};box-sizing:border-box;padding:4px 6px;border-radius:6px;background:{{ e.bg }};color:{{ e.fg }};border-left:3px solid {{ e.bar }};border-top:{{ e.dash }};border-right:{{ e.dash }};border-bottom:{{ e.dash }};font-size:12px;line-height:16px;overflow:hidden;display:flex;flex-direction:column"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.title }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.sub }}</span></div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Thứ Tư 13:00–14:00: khung nét đứt là khoảng đang kéo để tạo lịch mới; thả chuột là mở drawer tạo với giờ đã điền sẵn.</li>
+    <li>Thứ Ba 10:00: hai lịch trùng giờ được chia đôi bề rộng cột.</li>
+    <li>Màu lịch theo trạng thái đơn và dùng chung bảng màu với badge. Lịch đã giao có màu nhạt hơn.</li>
+  </ol>
+</section>
+
+<section id="P10" data-screen-label="P10 permission-matrix" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P10</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">permission-matrix</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Bảng vai trò × quyền: hàng là quyền nhóm theo entity, cột là vai trò. Khớp với mã quyền <code>&lt;ENTITY&gt;_&lt;R|C|U|D&gt;_&lt;ACTION&gt;</code> đang dùng. Là một trang của P11.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Dùng khi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Có tối đa khoảng 8 vai trò. Nhiều hơn thì đổi sang chọn một vai trò bên trái, danh sách quyền của vai trò đó bên phải.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Ô ở hàng nhóm bật hoặc tắt cả nhóm, và hiện trạng thái một phần. Quyền phụ thuộc tự bật theo: bật Cập nhật thì bật luôn Xem chi tiết, kèm ghi chú. Ô vừa đổi được tô màu cho tới khi lưu.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Lưu</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Một nút Lưu cho cả bảng. Nhãn nút có số thay đổi; "Xem lại" liệt kê từng thay đổi theo vai trò trước khi lưu. Vai trò hệ thống (Quản trị) bị khoá.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-checkbox</code> có trạng thái một phần (nếu chưa có). <code>sd-table</code> có hàng nhóm và cột đầu dính. Khai báo quan hệ phụ thuộc giữa các mã quyền.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1000px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Vai trò và quyền</span><span style="color:#5f6368">3 vai trò · 12 quyền</span></div>
+        <span style="font-size:13px;color:#6b4500">3 thay đổi chưa lưu</span>
+        <span style="height:36px;padding:0 14px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;font-weight:500">Xem lại</span>
+        <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">save</span>Lưu 3 thay đổi</span>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(3,150px) 140px;height:48px;align-items:center;background:#f2f3f4;font-size:13px;font-weight:500;color:#44474f">
+            <span style="padding:0 16px">Quyền</span>
+            <span style="padding:0 12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px">Quản trị<span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">lock</span></span>
+            <span style="padding:0 12px;text-align:center">Nhân viên</span>
+            <span style="padding:0 12px;text-align:center">Chỉ xem</span>
+            <span style="padding:0 12px;text-align:center;color:#005cbb;display:flex;align-items:center;justify-content:center;gap:4px"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Vai trò</span>
+          </div>
+          <sc-for list="{{ permRows }}" as="r" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) repeat(3,150px) 140px;min-height:{{ r.h }};align-items:center;border-top:1px solid #eceef2;background:{{ r.rowBg }}">
+              <span style="padding:6px 16px 6px {{ r.indent }};display:flex;flex-direction:column"><span style="font-weight:{{ r.weight }}">{{ r.name }}</span><span style="font:400 11px 'JetBrains Mono',monospace;color:#5f6368">{{ r.code }}</span></span>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3">
+                <span style="align-self:stretch;display:flex;align-items:center;justify-content:center;gap:6px;background:{{ c.cellBg }}"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:3px;border:2px solid {{ c.border }};background:{{ c.bg }};opacity:{{ c.opacity }};color:#ffffff;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:15px;font-weight:700">{{ c.icon }}</span><span style="font-size:11px;color:#6b4500">{{ c.note }}</span></span>
+              </sc-for>
+              <span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Nhân viên vừa được cấp "Xuất dữ liệu" và "Cập nhật". "Xem chi tiết" tự bật theo vì Cập nhật cần nó, ô ghi "tự bật".</li>
+    <li>Hàng nhóm "Sản phẩm" của Nhân viên ở trạng thái một phần vì chưa có Xoá.</li>
+    <li>Mã quyền hiện dưới tên, chữ nhỏ, cho đội kỹ thuật đối chiếu. Ô tìm quyền lọc theo cả tên lẫn mã.</li>
+  </ol>
+</section>
+
+<section id="P11" data-screen-label="P11 settings-hub" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P11</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">settings-hub</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Nhiều trang cài đặt có điều hướng dọc bên trái, mỗi trang lưu riêng. Thay cho trang cài đặt dài có mục lục khi có trên khoảng 5 nhóm, hoặc khi các nhóm có quyền khác nhau.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Route</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>settings/:section</code>, mỗi trang là một <code>sd-page-form</code>. Mở <code>settings</code> thì vào trang đầu tiên mà người dùng có quyền.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Trang có thay đổi chưa lưu thì có chấm trên mục nav. Sang trang khác thì guard rời trang hỏi trước. Mục không có quyền thì ẩn. Lưu xong vẫn ở lại trang, footer ghi "Đã lưu lúc …".</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Mobile</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Nav thành một trang danh sách, mỗi mục mở trang cài đặt tương ứng, có nút ← để về.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Nav dọc có nhóm, chấm báo thay đổi, ẩn mục theo quyền. Có thể là một biến thể dọc của <code>sd-tab-router</code>, hoặc slot <code>sdNav</code> của <code>sd-page</code>.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1040px;height:500px;display:grid;grid-template-columns:248px minmax(0,1fr);font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="background:#ffffff;border-right:1px solid #e3e4ea;padding:16px 8px;display:flex;flex-direction:column;gap:2px">
+        <span style="padding:0 12px 12px;font-size:20px;font-weight:500">Cài đặt</span>
+        <span style="padding:8px 12px 4px;font-size:12px;color:#5f6368">Cửa hàng</span>
+        <span style="padding:8px 12px;border-radius:6px;color:#44474f">Thông tin cửa hàng</span>
+        <span style="padding:8px 12px;border-radius:6px;background:#e7eefa;color:#00408a;font-weight:500;display:flex;align-items:center">Bán hàng<span style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#b26a00"></span></span>
+        <span style="padding:8px 12px;border-radius:6px;color:#44474f">Thông báo</span>
+        <span style="padding:12px 12px 4px;font-size:12px;color:#5f6368">Hệ thống</span>
+        <span style="padding:8px 12px;border-radius:6px;color:#44474f">Bảo mật</span>
+        <span style="padding:8px 12px;border-radius:6px;color:#44474f">Vai trò và quyền</span>
+        <span style="padding:8px 12px;border-radius:6px;color:#44474f">Tích hợp</span>
+      </div>
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <div style="flex:none;background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px">
+          <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Bán hàng</span><span style="color:#5f6368">Áp dụng cho mọi chi nhánh.</span></div>
+          <span style="height:36px;padding:0 16px;border-radius:6px;background:#005cbb;color:#ffffff;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">save</span>Lưu</span>
+        </div>
+        <div style="flex:1;min-height:0;padding:20px;display:flex;flex-direction:column;gap:16px;max-width:760px">
+          <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px">
+            <div style="padding:12px 16px;font-weight:500;border-bottom:1px solid #eceef2">Đơn hàng</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px;padding:20px 16px 16px">
+              <div style="position:relative;height:40px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 6px 0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Tiền tệ</span><span style="flex:1">Việt Nam đồng (VND)</span><span style="font-family:'Material Symbols Outlined';font-size:24px;color:#5f6368">arrow_drop_down</span></div>
+              <div style="position:relative;height:40px;border:2px solid #005cbb;border-radius:8px;display:flex;align-items:center;padding:0 11px"><span style="position:absolute;top:-8px;left:7px;padding:0 4px;background:#ffffff;font-size:12px;color:#005cbb">Tiền tố mã đơn *</span>DHQ|</div>
+              <div style="position:relative;height:40px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;padding:0 12px"><span style="position:absolute;top:-8px;left:8px;padding:0 4px;background:#ffffff;font-size:12px;color:#44474f">Ngưỡng cảnh báo tồn kho</span>20</div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:20px;border-radius:10px;background:#005cbb;position:relative"><span style="position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#ffffff"></span></span>Tự xác nhận đơn online</div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:none;background:#ffffff;border-top:1px solid #e3e4ea;padding:10px 20px;font-size:14px;color:#6b4500">Có thay đổi chưa lưu</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="P12" data-screen-label="P12 tree-detail" style="display:flex;flex-direction:column;gap:24px;padding:56px 0;border-top:1px solid #dddcd6">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font:600 13px/1 'JetBrains Mono',monospace;padding:6px 8px;border-radius:6px;background:#1a1b1f;color:#ffffff">P12</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2">tree-detail</h2></div>
+    <p style="margin:0;max-width:820px;color:#3a3c42;font-size:16px;text-wrap:pretty">Cây bên trái, danh sách thuộc nút đang chọn bên phải: danh mục và sản phẩm, phòng ban và nhân viên, thư mục và tài liệu. Là biến thể của split, dùng cây thay cho bảng.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px 32px">
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Khác bảng cây</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Màn <code>category</code> hiện tại dùng bảng cây để quản lý chính các nút. Tree-detail dùng khi người dùng làm việc với thứ nằm bên trong từng nút.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Hành vi</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>category/:id/products</code>. Cây giữ trạng thái mở và vị trí cuộn khi đổi nút. Bấm ⋯ trên nút để thêm nút con, đổi tên hoặc xoá. Có công tắc "Gồm danh mục con" cho danh sách bên phải.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Bàn phím</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">↑ ↓ để chuyển nút, ← → để đóng hoặc mở nút, Enter để chọn. Ô tìm lọc cây và giữ lại nút cha của các kết quả.</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font:600 12px 'JetBrains Mono',monospace;color:#6b6d73;text-transform:uppercase;letter-spacing:.06em">Core cần thêm</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><code>sd-tree</code> dùng để điều hướng: chọn một nút, hiện số đếm, tải nút con khi mở, đi lại bằng bàn phím, menu trên từng nút.</span></div>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:1040px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;color:#1a1b1f">
+      <div style="background:#ffffff;box-shadow:0 1px 2px rgba(47,49,54,.10);padding:14px 20px;display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:20px;font-weight:500;line-height:28px">Sản phẩm theo danh mục</span><span style="color:#5f6368">Danh mục sản phẩm ba cấp.</span></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:grid;grid-template-columns:300px 8px minmax(0,1fr);height:440px;box-sizing:border-box">
+        <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column;min-height:0">
+          <div style="padding:10px;display:flex;gap:6px;border-bottom:1px solid #eceef2"><span style="flex:1;height:36px;border:1px solid #c4c6d0;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#8e9099"><span style="font-family:'Material Symbols Outlined';font-size:20px">search</span>Tìm danh mục</span><span style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:22px;color:#005cbb">create_new_folder</span></div>
+          <div style="padding:6px;display:flex;flex-direction:column;overflow:hidden">
+            <sc-for list="{{ treeNodes }}" as="n" hint-placeholder-count="9">
+              <div style="height:34px;display:flex;align-items:center;gap:4px;padding:0 8px 0 {{ n.pad }};border-radius:6px;background:{{ n.bg }};color:{{ n.fg }};font-weight:{{ n.weight }}"><span style="width:20px;font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">{{ n.chev }}</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.name }}</span><span style="font-size:12px;color:#5f6368;font-variant-numeric:tabular-nums">{{ n.count }}</span><span style="width:24px;font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368;text-align:center">{{ n.more }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center"><span style="width:2px;height:28px;border-radius:1px;background:#c4c6d0"></span></div>
+        <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+          <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #eceef2">
+            <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Đồ uống › Nước suối</span><span style="font-size:16px;font-weight:500">Nước suối · 12 sản phẩm</span></div>
+            <span style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:32px;height:18px;border-radius:9px;background:#c4c6d0;position:relative"><span style="position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#ffffff"></span></span>Gồm danh mục con</span>
+            <span style="height:36px;padding:0 14px;border:1px solid #74777f;border-radius:6px;display:flex;align-items:center;gap:6px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:18px">add</span>Thêm sản phẩm</span>
+          </div>
+          <div style="display:grid;grid-template-columns:120px minmax(0,1fr) 110px 130px;height:40px;align-items:center;background:#f2f3f4;font-size:13px;font-weight:500;color:#44474f"><span style="padding:0 12px">Mã</span><span style="padding:0 12px">Tên sản phẩm</span><span style="padding:0 12px;text-align:right">Giá bán (₫)</span><span style="padding:0 12px">Trạng thái</span></div>
+          <sc-for list="{{ treeProducts }}" as="p" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:120px minmax(0,1fr) 110px 130px;height:44px;align-items:center;border-top:1px solid #eceef2"><span style="padding:0 12px;color:#005cbb">{{ p.code }}</span><span style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span><span style="padding:0 12px;text-align:right;font-variant-numeric:tabular-nums">{{ p.price }}</span><span style="padding:0 12px"><span style="height:22px;padding:0 10px;border-radius:11px;display:inline-flex;align-items:center;font-size:12px;font-weight:500;background:{{ p.bg }};color:{{ p.fg }}">{{ p.status }}</span></span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#3a3c42;display:flex;flex-direction:column;gap:4px;max-width:900px">
+    <li>Số cạnh mỗi nút là số sản phẩm trực tiếp của nút đó. Nút cha cộng cả nút con khi bật "Gồm danh mục con".</li>
+    <li>Nút đang chọn được tô nền và hiện ⋯. Nút khác chỉ hiện ⋯ khi rê chuột hoặc khi đang focus.</li>
+    <li>Màn hẹp: cây là màn đầu tiên, chọn nút thì danh sách thay chỗ cây, giống split.</li>
+  </ol>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  T = {
+    info: ['#d7e3f8', '#00408a'],
+    success: ['#dff3e6', '#14532d'],
+    warning: ['#fbecd0', '#6b4500'],
+    error: ['#fbe3e1', '#8c1010'],
+    neutral: ['#ecebe6', '#44464c'],
+  };
+  tone(t) { const [bg, fg] = this.T[t] || this.T.neutral; return { bg, fg }; }
+  renderVals() {
+    const tone = t => this.tone(t);
+    const card = (code, customer, total, channel, when, who, extra = {}) => ({ code, customer, total, channel, when, who, shadow: 'none', transform: 'none', opacity: 1, ...extra });
+    const H = 44;
+    const ev = (start, dur, title, sub, t, extra = {}) => {
+      const c = { info: ['#e3ecfb', '#00408a', '#005cbb'], warning: ['#fdf1dc', '#5b3a00', '#b26a00'], done: ['#eef0f3', '#5f6368', '#9a9ca3'], ghost: ['#eef3fb', '#00408a', '#005cbb'] }[t];
+      return { top: (start - 8) * H + 1 + 'px', height: dur * H - 3 + 'px', left: '3px', width: 'calc(100% - 6px)', title, sub, bg: c[0], fg: c[1], bar: c[2], dash: t === 'ghost' ? '1px dashed #005cbb' : '0', ...extra };
+    };
+    const calDays = [
+      { dow: 'T2', date: '09', events: [ev(8.5, 1, 'DH2420 · Minh Phát', '08:30–09:30', 'done'), ev(14, 1.5, 'DH2423 · An Khang', '14:00–15:30', 'info')] },
+      { dow: 'T3', date: '10', events: [ev(10, 1, 'DH2426 · Bảo Ngọc', '10:00–11:00', 'info', { width: 'calc(50% - 4px)' }), ev(10, 1.5, 'DH2427 · Gia Huy', '10:00–11:30', 'warning', { left: 'calc(50% + 1px)', width: 'calc(50% - 4px)' }), ev(15, 1, 'DH2429 · Thanh Tâm', '15:00–16:00', 'info')] },
+      { dow: 'T4', date: '11', events: [ev(9, 2, 'DH2431 · Minh Phát', '09:00–11:00 · 24 kiện', 'info'), ev(13, 1, 'Lịch mới', '13:00–14:00', 'ghost')] },
+      { dow: 'T5', date: '12', events: [ev(11, 1, 'DH2434 · Hoàng Yến', '11:00–12:00', 'warning')] },
+      { dow: 'T6', date: '13', events: [ev(8, 1, 'DH2436 · Minh Khang', '08:00–09:00', 'info'), ev(13.5, 2, 'DH2438 · An Khang', '13:30–15:30', 'info')] },
+      { dow: 'T7', date: '14', events: [ev(9.5, 1, 'DH2441 · Thị Mai', '09:30–10:30', 'info')] },
+      { dow: 'CN', date: '15', events: [] },
+    ].map((d, i) => ({ ...d, headBg: i > 5 ? '#f6f7f9' : '#ffffff', colBg: i > 5 ? '#f6f7f9' : '#ffffff' }));
+    const cb = (state, opts = {}) => {
+      const on = state === 'on' || state === 'part';
+      return { bg: on ? '#005cbb' : '#ffffff', border: on ? '#005cbb' : '#74777f', icon: state === 'on' ? 'check' : state === 'part' ? 'remove' : '', opacity: opts.locked ? 0.45 : 1, cellBg: opts.changed ? '#fff3dc' : 'transparent', note: opts.note || '' };
+    };
+    const prow = (name, code, cells, group) => ({ name, code, cells, h: group ? '44px' : '48px', rowBg: group ? '#f7f8fa' : '#ffffff', weight: group ? 500 : 400, indent: group ? '16px' : '32px' });
+    const L = { locked: true };
+    const permRows = [
+      prow('Sản phẩm', 'PATTERN_PRODUCT_*', [cb('on', L), cb('part'), cb('part')], true),
+      prow('Xem danh sách', 'R_LIST', [cb('on', L), cb('on'), cb('on')]),
+      prow('Xem chi tiết', 'R_DETAIL', [cb('on', L), cb('on', { changed: true, note: 'tự bật' }), cb('on')]),
+      prow('Tạo sản phẩm', 'C_CREATE', [cb('on', L), cb('on'), cb('off')]),
+      prow('Cập nhật sản phẩm', 'U_UPDATE', [cb('on', L), cb('on', { changed: true }), cb('off')]),
+      prow('Xoá sản phẩm', 'D_DELETE', [cb('on', L), cb('off'), cb('off')]),
+      prow('Xuất dữ liệu', 'R_EXPORT', [cb('on', L), cb('on', { changed: true }), cb('off')]),
+      prow('Đơn hàng', 'PATTERN_ORDER_*', [cb('on', L), cb('part'), cb('part')], true),
+      prow('Xác nhận đơn', 'U_CONFIRM', [cb('on', L), cb('on'), cb('off')]),
+      prow('Duyệt đơn', 'U_APPROVE', [cb('on', L), cb('off'), cb('off')]),
+    ];
+    const node = (name, count, level, o = {}) => ({ name, count, pad: 4 + level * 18 + 'px', chev: o.chev ?? '', bg: o.sel ? '#e7eefa' : 'transparent', fg: o.sel ? '#00408a' : '#1a1b1f', weight: o.sel ? 500 : 400, more: o.sel ? 'more_horiz' : '' });
+    const treeNodes = [
+      node('Đồ uống', 38, 0, { chev: 'expand_more' }),
+      node('Nước suối', 12, 1, { sel: true }),
+      node('Nước ngọt', 17, 1, { chev: 'chevron_right' }),
+      node('Trà và cà phê', 9, 1, { chev: 'chevron_right' }),
+      node('Thực phẩm khô', 54, 0, { chev: 'expand_more' }),
+      node('Mì gói', 21, 1),
+      node('Bánh kẹo', 33, 1, { chev: 'chevron_right' }),
+      node('Hoá mỹ phẩm', 26, 0, { chev: 'chevron_right' }),
+      node('Gia dụng', 14, 0, { chev: 'chevron_right' }),
+    ];
+    const prod = (code, name, price, s) => ({ code, name, price, status: s === 'on' ? 'Đang bán' : 'Ngừng bán', ...this.tone(s === 'on' ? 'success' : 'neutral') });
+    const treeProducts = [
+      prod('SP-0012', 'Nước suối Aquafina 500ml', '5.500', 'on'),
+      prod('SP-0013', 'Nước suối Aquafina 1,5L', '11.000', 'on'),
+      prod('SP-0021', 'Nước suối La Vie 350ml', '4.500', 'on'),
+      prod('SP-0022', 'Nước khoáng Vĩnh Hảo 500ml', '6.000', 'off'),
+      prod('SP-0030', 'Nước suối Dasani 500ml', '5.000', 'on'),
+    ];
+    return {
+      permRows,
+      treeNodes,
+      treeProducts,
+      calDays,
+      calHours: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+      boardCols: [
+        {
+          title: 'Chờ xác nhận', count: 6, sum: '48,2 tr', dot: '#b26a00', bg: '#eef0f3', outline: 'none', opacity: 1, hint: '', hintFg: '#5f6368', more: '',
+          cards: [
+            card('DH2415', 'Nguyễn Hoàng Yến', '1.240.000', 'Shopee', '10 phút', 'TH', { opacity: 0.35 }),
+            card('DH2414', 'Công ty TNHH Minh Phát', '18.600.000', 'Đại lý', '32 phút', 'LM'),
+            card('DH2410', 'Trần Bảo Ngọc', '640.000', 'Website', '2 giờ', 'TH'),
+          ],
+        },
+        {
+          title: 'Đang giao', count: 4, sum: '21,7 tr', dot: '#005cbb', bg: '#e7eefa', outline: '2px dashed #005cbb', opacity: 1, hint: 'Thả vào đây để chuyển sang Đang giao', hintFg: '#00408a', more: '',
+          cards: [
+            card('DH2415', 'Nguyễn Hoàng Yến', '1.240.000', 'Shopee', '10 phút', 'TH', { shadow: '0 8px 20px rgba(0,0,0,.18)', transform: 'rotate(-2deg)' }),
+            card('DH2412', 'Phạm Gia Huy', '3.150.000', 'Cửa hàng', '1 giờ', 'LM'),
+            card('DH2408', 'Công ty TNHH Minh Phát', '12.450.000', 'Đại lý', 'Hôm qua', 'TH'),
+          ],
+        },
+        {
+          title: 'Hoàn tất', count: 31, sum: '86,4 tr', dot: '#1b6b3a', bg: '#eef0f3', outline: 'none', opacity: 0.45, hint: 'Không chuyển thẳng từ Chờ xác nhận', hintFg: '#5f6368', more: 'Tải thêm 28 đơn',
+          cards: [
+            card('DH2405', 'Lê Thị Mai', '890.000', 'Website', 'Hôm qua', 'LM'),
+            card('DH2401', 'Đỗ Minh Khang', '2.300.000', 'Shopee', 'Hôm qua', 'TH'),
+            card('DH2398', 'Võ Thanh Tâm', '5.400.000', 'Cửa hàng', '05/11', 'LM'),
+          ],
+        },
+      ],
+      viewRows: [
+        { code: 'DH2381', customer: 'Nguyễn Hoàng Yến', date: '06/11/2026 08:12', total: '1.240.000' },
+        { code: 'DH2379', customer: 'Công ty CP Thực phẩm An Khang', date: '06/11/2026 07:55', total: '24.800.000' },
+        { code: 'DH2374', customer: 'Trần Bảo Ngọc', date: '05/11/2026 21:30', total: '640.000' },
+        { code: 'DH2369', customer: 'Phạm Gia Huy', date: '05/11/2026 17:04', total: '3.150.000' },
+      ],
+      p13Orders: [
+        { code: 'DH2408', date: '02/11/2026', total: '12.450.000', status: 'Đang giao', ...tone('info') },
+        { code: 'DH2391', date: '28/10/2026', total: '8.200.000', status: 'Hoàn tất', ...tone('success') },
+        { code: 'DH2377', date: '21/10/2026', total: '23.900.000', status: 'Hoàn tất', ...tone('success') },
+        { code: 'DH2350', date: '14/10/2026', total: '4.750.000', status: 'Đã huỷ', ...tone('neutral') },
+        { code: 'DH2331', date: '07/10/2026', total: '15.600.000', status: 'Hoàn tất', ...tone('success') },
+      ],
+      p13Debts: [
+        { code: 'HD-1192', due: 'Quá hạn 18 ngày', amount: '46.200.000', fg: '#8c1010' },
+        { code: 'HD-1203', due: 'Quá hạn 10 ngày', amount: '38.000.000', fg: '#8c1010' },
+        { code: 'HD-1217', due: 'Hạn 15/11/2026', amount: '44.200.000', fg: '#5f6368' },
+      ],
+      p13Docs: [
+        { name: 'Hợp đồng nguyên tắc 2026.pdf', size: '1,2 MB', icon: 'picture_as_pdf', color: '#b3261e' },
+        { name: 'Giấy phép kinh doanh.pdf', size: '640 KB', icon: 'picture_as_pdf', color: '#b3261e' },
+        { name: 'Bảng giá áp dụng Q4.xlsx', size: '88 KB', icon: 'table_view', color: '#1b6b3a' },
+      ],
+      p13Activity: [
+        { who: 'Trần Thu Hà', what: 'cập nhật số điện thoại', when: '2 giờ trước' },
+        { who: 'Hệ thống', what: 'tạo đơn DH2408', when: '02/11/2026 09:14' },
+        { who: 'Lê Minh', what: 'thêm tài liệu Bảng giá áp dụng Q4', when: '30/10/2026 16:40' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

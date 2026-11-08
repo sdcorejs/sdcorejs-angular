@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;max-width:1240px;margin:0 auto;padding:56px 32px 96px;box-sizing:border-box">
+
+<header data-screen-label="00 Header" style="display:flex;flex-direction:column;gap:16px;padding-bottom:40px;border-bottom:1px solid #dddcd6">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs/sdcorejs-angular · main @ 773d7de</span><span>versions/v19 · đề xuất mới</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em;max-width:900px;text-wrap:balance">Bộ component lịch và lịch trình: đề xuất</h1>
+  <p style="margin:0;max-width:780px;color:#3a3c42;font-size:17px;text-wrap:pretty">Đề xuất 6 component cho 6 nghiệp vụ: lịch họp, lịch hẹn khách, đặt phòng, nghỉ phép và chấm công, tiến độ dự án, dòng thời gian hoạt động. Cả bộ dùng chung một lớp nền về thời gian, dữ liệu và kéo thả, chỉ dựa trên Angular CDK. Mục 04 là bản dựng sd-calendar có thể bấm thử.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding-top:8px">
+    <a href="#boi-canh">01 Bối cảnh</a>
+    <a href="#danh-muc">02 Danh mục</a>
+    <a href="#lo-trinh">03 Lộ trình</a>
+    <a href="#demo">04 Demo sd-calendar</a>
+    <a href="#hanh-vi">05 Hành vi</a>
+    <a href="#api">06 API</a>
+  </nav>
+</header>
+
+<section id="boi-canh" data-screen-label="01 Bối cảnh" style="padding-top:56px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Bối cảnh</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Thư viện đã có đủ ô nhập ngày giờ và đã thống nhất múi giờ qua <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdDateTimeService</span>. Còn thiếu phần hiển thị nhiều sự kiện trên trục thời gian. Các component mới đặt trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">components/</span>. Option theo quy ước của sd-file-explorer và sd-table: nguồn dữ liệu và từng năng lực (tạo, dời) là một nhóm trong <span style="font-family:'JetBrains Mono',monospace;font-size:13px">option</span>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px">
+    <span style="color:#6b6d73;margin-right:4px">Đã có:</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-date</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-datetime</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-date-range</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-time</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-time-range</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-chip-calendar</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-kanban</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">sd-history</span>
+    <span style="font:500 12px/22px 'JetBrains Mono',monospace;padding:0 9px;border-radius:999px;background:#ffffff;border:1px solid #dddcd6">SdDateTimeService</span>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:10px 20px;background:#f7f7f4;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73"><span>Nghiệp vụ</span><span>Component</span><span>Cách dùng</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Lịch họp, sự kiện</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-calendar, sd-recurrence</span><span style="color:#3a3c42">Xếp lịch ở chế độ Tuần hoặc Ngày. Họp định kỳ dùng quy tắc lặp.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Lịch hẹn khách hàng</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-slot-picker, sd-calendar</span><span style="color:#3a3c42">Người đặt chọn một khung giờ còn trống. Nhân viên xem lịch hẹn ở Tuần hoặc Danh sách.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Đặt phòng, tài nguyên</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-scheduler, sd-slot-picker</span><span style="color:#3a3c42">Mỗi hàng là một phòng, nhìn ngang thấy ngay giờ nào còn trống. Form đặt phòng dùng slot-picker.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Nghỉ phép, chấm công</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-calendar, sd-scheduler</span><span style="color:#3a3c42">Một người: chế độ Tháng với template cho ô ngày. Cả phòng ban: scheduler, hàng là nhân viên, cột là ngày trong tháng.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Tiến độ dự án</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-gantt</span><span style="color:#3a3c42">Cây công việc, thanh thời gian, phụ thuộc, mốc.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(160px,1fr) minmax(180px,1.1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #ecebe6;font-size:14px"><strong style="font-weight:600">Dòng thời gian hoạt động</strong><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sd-timeline</span><span style="color:#3a3c42">Nhật ký thay đổi hồ sơ, lịch sử phê duyệt, nhóm theo ngày.</span></div>
+  </div>
+</section>
+
+<section id="danh-muc" data-screen-label="02 Danh mục" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Danh mục</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Bốn component hiển thị và hai form control. Phác thảo bên dưới chỉ để nhận dạng bố cục, chưa phải thiết kế chi tiết.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px">
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px;height:150px;box-sizing:border-box;display:grid;grid-template-columns:18px repeat(7,minmax(0,1fr));gap:3px">
+        <div style="display:flex;flex-direction:column;justify-content:space-around"><span style="height:3px;background:#dddcd6;border-radius:2px"></span><span style="height:3px;background:#dddcd6;border-radius:2px"></span><span style="height:3px;background:#dddcd6;border-radius:2px"></span><span style="height:3px;background:#dddcd6;border-radius:2px"></span></div>
+        <div style="position:relative;background:#ffffff;border:1px solid #ecebe6;border-radius:4px"><span style="position:absolute;left:3px;right:3px;top:14%;height:14%;background:#d7e3ff;border-radius:3px"></span></div>
+        <div style="position:relative;background:#ffffff;border:1px solid #ecebe6;border-radius:4px"><span style="position:absolute;left:3px;right:3px;top:52%;height:22%;background:#cdeceb;border-radius:3px"></span></div>
+        <div style="position:relative;background:#ffffff;border:1px solid #ecebe6;border-radius:4px"><span style="position:absolute;left:3px;right:3px;top:30%;height:18%;background:#ffdcbe;border-radius:3px"></span></div>
+        <div style="position:relative;background:#ffffff;border:1px solid #ecebe6;border-radius:4px"><span style="position:absolute;left:3px;width:calc(50% - 4px);top:22%;height:18%;background:#c7efd2;border-radius:3px"></span><span style="position:absolute;right:3px;width:calc(50% - 4px);top:28%;height:10%;background:#d7e3ff;border-radius:3px"></span><span style="position:absolute;left:3px;right:3px;top:58%;height:18%;background:#e1e2ec;border-radius:3px"></span></div>
+        <div style="position:relative;background:#ffffff;border:1px solid #ecebe6;border-radius:4px"><span style="position:absolute;left:3px;right:3px;top:66%;height:18%;background:#d7e3ff;border-radius:3px"></span></div>
+        <div style="background:#f1f1ee;border:1px solid #ecebe6;border-radius:4px"></div>
+        <div style="background:#f1f1ee;border:1px solid #ecebe6;border-radius:4px"></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-calendar</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#ffe3df;color:#93000a">P1 · Đợt 1</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Bốn chế độ xem: Tháng, Tuần, Ngày, Danh sách. Bấm hoặc quét khung giờ để tạo, kéo để dời, kéo mép dưới để đổi thời lượng. Ô ngày ở chế độ Tháng nhận template riêng, đủ để dựng bảng chấm công của một người.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Lịch họp</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Lịch hẹn</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Nghỉ phép</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Chấm công</span></div>
+      </div>
+    </article>
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:6px">
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center"><span style="height:5px;background:#dddcd6;border-radius:3px"></span><div style="display:grid;grid-template-columns:repeat(8,1fr);height:6px"><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span><span style="border-left:1px solid #dddcd6"></span></div></div>
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px"></span><div style="position:relative;height:18px;background:#ffffff;border:1px solid #ecebe6;border-radius:3px"><span style="position:absolute;top:2px;bottom:2px;left:8%;width:28%;background:#cdeceb;border-radius:2px"></span><span style="position:absolute;top:2px;bottom:2px;left:58%;width:18%;background:#d7e3ff;border-radius:2px"></span></div></div>
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;width:80%"></span><div style="position:relative;height:18px;background:#ffffff;border:1px solid #ecebe6;border-radius:3px"><span style="position:absolute;top:2px;bottom:2px;left:30%;width:40%;background:#ffdcbe;border-radius:2px"></span></div></div>
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px"></span><div style="position:relative;height:18px;background:#ffffff;border:1px solid #ecebe6;border-radius:3px"><span style="position:absolute;top:2px;bottom:2px;left:2%;width:20%;background:#c7efd2;border-radius:2px"></span><span style="position:absolute;top:2px;bottom:2px;left:46%;width:44%;background:#d7e3ff;border-radius:2px"></span></div></div>
+        <div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;width:70%"></span><div style="position:relative;height:18px;background:#ffffff;border:1px solid #ecebe6;border-radius:3px"><span style="position:absolute;top:2px;bottom:2px;left:64%;width:30%;background:#e1e2ec;border-radius:2px"></span></div></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-scheduler</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#fff1e0;color:#8a5200">P2 · Đợt 3</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Mỗi hàng là một tài nguyên (phòng, người, xe), trục ngang là giờ trong ngày hoặc ngày trong tháng. Hàng nhóm được theo phòng ban hoặc tầng. Kéo sự kiện sang hàng khác để đổi tài nguyên.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Đặt phòng</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Nghỉ phép theo phòng ban</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Chấm công</span></div>
+      </div>
+    </article>
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px"><span style="height:30px;border:1px solid #ecebe6;background:#ffffff;border-radius:8px"></span><span style="height:30px;background:#005cbb;border-radius:8px"></span><span style="height:30px;border:1px solid #ecebe6;background:#ffffff;border-radius:8px"></span><span style="height:30px;border:1px solid #ecebe6;background:#ffffff;border-radius:8px"></span><span style="height:30px;border:1px solid #ecebe6;background:#f1f1ee;border-radius:8px"></span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"><span style="height:22px;border:1px solid #c4c6d0;background:#ffffff;border-radius:6px"></span><span style="height:22px;border:1px solid #c4c6d0;background:#ffffff;border-radius:6px"></span><span style="height:22px;background:#f1f1ee;border-radius:6px"></span><span style="height:22px;border:1px solid #c4c6d0;background:#ffffff;border-radius:6px"></span><span style="height:22px;background:#f1f1ee;border-radius:6px"></span><span style="height:22px;background:#d7e3ff;border:1px solid #005cbb;border-radius:6px"></span><span style="height:22px;border:1px solid #c4c6d0;background:#ffffff;border-radius:6px"></span><span style="height:22px;border:1px solid #c4c6d0;background:#ffffff;border-radius:6px"></span></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-slot-picker</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#fff1e0;color:#8a5200">P2 · Đợt 2 · form</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Chọn một khung giờ còn trống. Nhận lịch bận từ server theo ngày, tự bỏ giờ ngoài giờ làm việc và ngày lễ. Model <span style="font-family:'JetBrains Mono',monospace;font-size:13px">{ start, end }</span>, đăng ký vào form như các control khác.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Lịch hẹn khách</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Đặt phòng</span></div>
+      </div>
+    </article>
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;border:1px solid #c4c6d0;border-radius:6px;overflow:hidden;height:24px;width:80%"><span style="flex:1"></span><span style="flex:1;background:#d7e3ff;border-left:1px solid #c4c6d0"></span><span style="flex:1;border-left:1px solid #c4c6d0"></span><span style="flex:1;border-left:1px solid #c4c6d0"></span></div>
+        <div style="display:flex;gap:6px"><span style="width:24px;height:24px;border-radius:99px;background:#005cbb"></span><span style="width:24px;height:24px;border-radius:99px;border:1px solid #c4c6d0;box-sizing:border-box;background:#ffffff"></span><span style="width:24px;height:24px;border-radius:99px;background:#005cbb"></span><span style="width:24px;height:24px;border-radius:99px;border:1px solid #c4c6d0;box-sizing:border-box;background:#ffffff"></span><span style="width:24px;height:24px;border-radius:99px;border:1px solid #c4c6d0;box-sizing:border-box;background:#ffffff"></span><span style="width:24px;height:24px;border-radius:99px;border:1px solid #c4c6d0;box-sizing:border-box;background:#ffffff"></span><span style="width:24px;height:24px;border-radius:99px;border:1px solid #c4c6d0;box-sizing:border-box;background:#ffffff"></span></div>
+        <span style="height:6px;width:70%;background:#dddcd6;border-radius:3px"></span>
+        <span style="height:6px;width:45%;background:#dddcd6;border-radius:3px"></span>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-recurrence</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#fff1e0;color:#8a5200">P2 · Đợt 2 · form</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Quy tắc lặp: hằng ngày, tuần, tháng, năm; chọn thứ; kết thúc sau N lần hoặc vào một ngày. Model là chuỗi RRULE (tập con RFC 5545), kèm câu mô tả “Thứ Hai và Thứ Tư hằng tuần, đến 31/12/2026”.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Lịch họp</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Ca cố định</span></div>
+      </div>
+    </article>
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px 18px 28px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;position:relative">
+        <span style="position:absolute;left:33px;top:22px;bottom:18px;width:2px;background:#dddcd6"></span>
+        <div style="display:flex;align-items:center;gap:14px;position:relative"><span style="width:12px;height:12px;border-radius:99px;background:#005cbb;flex:none"></span><span style="height:6px;width:55%;background:#dddcd6;border-radius:3px"></span></div>
+        <div style="display:flex;align-items:center;gap:14px;position:relative"><span style="width:12px;height:12px;border-radius:99px;background:#1b6d3a;flex:none"></span><span style="height:6px;width:72%;background:#dddcd6;border-radius:3px"></span></div>
+        <div style="display:flex;align-items:center;gap:14px;position:relative"><span style="width:12px;height:12px;border-radius:99px;background:#ffffff;border:2px solid #c4c6d0;box-sizing:border-box;flex:none"></span><span style="height:6px;width:40%;background:#dddcd6;border-radius:3px"></span></div>
+        <div style="display:flex;align-items:center;gap:14px;position:relative"><span style="width:12px;height:12px;border-radius:99px;background:#8a5200;flex:none"></span><span style="height:6px;width:62%;background:#dddcd6;border-radius:3px"></span></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-timeline</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#fff1e0;color:#8a5200">P2 · Đợt 3</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Dòng thời gian dọc, nhóm theo ngày, tải thêm khi cuộn tới cuối. Mỗi mục có icon trạng thái, người thực hiện (sd-avatar) và nội dung qua template. sd-history có thể chuyển sang dùng làm lớp hiển thị.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Hoạt động hồ sơ</span><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Lịch sử phê duyệt</span></div>
+      </div>
+    </article>
+
+    <article style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div aria-hidden="true" style="background:#fafaf8;border-bottom:1px solid #ecebe6;padding:18px 20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:7px">
+        <div style="display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center"><span style="height:6px;background:#c4c6d0;border-radius:3px"></span><div style="position:relative;height:14px"><span style="position:absolute;top:4px;height:6px;left:0;width:70%;background:#44474f;border-radius:2px"></span></div></div>
+        <div style="display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;margin-left:12px"></span><div style="position:relative;height:14px"><span style="position:absolute;top:0;height:14px;left:0;width:30%;background:#d7e3ff;border:1px solid #aac7ff;box-sizing:border-box;border-radius:3px"></span></div></div>
+        <div style="display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;margin-left:12px"></span><div style="position:relative;height:14px"><span style="position:absolute;top:0;height:14px;left:32%;width:24%;background:#d7e3ff;border:1px solid #aac7ff;box-sizing:border-box;border-radius:3px"></span></div></div>
+        <div style="display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;margin-left:12px"></span><div style="position:relative;height:14px"><span style="position:absolute;top:0;height:14px;left:58%;width:12%;background:#cdeceb;border:1px solid #9fd3d1;box-sizing:border-box;border-radius:3px"></span></div></div>
+        <div style="display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center"><span style="height:6px;background:#dddcd6;border-radius:3px;margin-left:12px"></span><div style="position:relative;height:14px"><span style="position:absolute;top:2px;left:calc(72% - 5px);width:10px;height:10px;background:#8a5200;transform:rotate(45deg)"></span></div></div>
+      </div>
+      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font:600 15px 'JetBrains Mono',monospace">sd-gantt</span><span style="font:600 11px/18px 'JetBrains Mono',monospace;padding:0 8px;border-radius:999px;background:#ddf0ef;color:#00504f">P3 · Đợt 4</span></div>
+        <p style="margin:0;font-size:14px;color:#3a3c42;text-wrap:pretty">Cây công việc bên trái, thanh thời gian bên phải. Có phụ thuộc kết thúc–bắt đầu, mốc, phần trăm hoàn thành. Kéo thanh để dời, kéo mép để đổi hạn. Dùng chung trục thời gian và kéo thả với sd-scheduler.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto"><span style="font-size:12px;line-height:20px;padding:0 8px;border-radius:999px;border:1px solid #dddcd6;color:#3a3c42">Tiến độ dự án</span></div>
+      </div>
+    </article>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;background:#f7f7f4">
+      <span style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px"><span style="font:600 14px 'JetBrains Mono',monospace">schedule-core</span>Nền tảng dùng chung</span>
+      <span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73">Không phải component hiển thị</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Thời gian</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mọi phép tính ngày giờ đi qua <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdDateTimeService</span>, theo múi giờ cấu hình. Một ngày có thể dài 23 hoặc 25 giờ, nên không cộng 24h.</span></div>
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Ánh xạ dữ liệu</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Consumer map DTO sang <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdCalendarEvent&lt;T&gt;</span> (id, title, start, end, allDay, color, data) trong onLoad, như <span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdFileExplorerItem&lt;T&gt;</span>.</span></div>
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Nguồn dữ liệu</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">option.dataSource.onLoad({ from, to, view, signal })</span> cho cả hai chế độ: client trả cả mảng, server gọi API theo khoảng. Request cũ bị huỷ khi đổi khoảng.</span></div>
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Lặp lại</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">Mở rộng RRULE trong khoảng hiển thị, đặt ở <span style="font-family:'JetBrains Mono',monospace;font-size:13px">@sdcorejs/utils</span> để backend Node dùng chung. Ngoại lệ ghi theo từng lần.</span></div>
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Lịch làm việc</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">SD_CALENDAR_CONFIGURATION</span> khai báo giờ làm việc theo thứ, ngày lễ (nghỉ hoặc chỉ đánh dấu), ngày đầu tuần. Input của từng component ghi đè được.</span></div>
+      <div style="padding:16px 20px;border-top:1px solid #ecebe6;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">Dời và đổi giờ</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">option.move = { movable, onMove }</span> như sd-file-explorer; onMove trả boolean hoặc Promise, kèm AbortSignal. Kéo thả bằng Angular CDK, không thêm thư viện.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="lo-trinh" data-screen-label="03 Lộ trình" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Lộ trình</h2>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px 20px"><span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#ba1a1a">Đợt 1</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">schedule-core và sd-calendar.</strong> Bốn chế độ xem, tạo bằng bấm hoặc quét, kéo thả, kéo mép, bàn phím, mobile, giờ làm việc, ngày lễ, in theo chế độ đang xem.</span></div>
+    <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">Đợt 2</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">sd-recurrence, sd-slot-picker.</strong> Bật sự kiện lặp trong sd-calendar (câu hỏi phạm vi khi dời), xuất .ics cho khoảng đang xem.</span></div>
+    <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#a66300">Đợt 3</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">sd-scheduler, sd-timeline.</strong> Trục thời gian ngang dùng lại cho đợt 4. Chuyển sd-history sang hiển thị bằng sd-timeline.</span></div>
+    <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><span style="font:600 13px/24px 'JetBrains Mono',monospace;color:#00696a">Đợt 4</span><span style="font-size:14px;color:#3a3c42;text-wrap:pretty"><strong style="font-weight:600;color:#1a1b1f">sd-gantt.</strong> Phụ thuộc, mốc, phần trăm hoàn thành, xuất Excel.</span></div>
+  </div>
+</section>
+
+<section id="demo" data-screen-label="04 Demo sd-calendar" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Demo sd-calendar</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Hôm nay trong demo là Thứ Năm 22/10/2026, 10:40. Thử quét chuột trên ô trống để tạo, kéo sự kiện sang ngày khác, kéo mép dưới để đổi giờ kết thúc. Dời “Họp giao ban tuần” để thấy câu hỏi phạm vi. Tab vào lưới rồi dùng phím mũi tên và Enter; trên sự kiện đang focus, Alt + phím mũi tên để dời. Panel bên phải do consumer dựng, ghi lại các output component phát ra.</p>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73"><span style="width:8px;height:8px;border-radius:999px;background:#005cbb"></span>Đề xuất · sd-calendar</span>
+      <div role="group" aria-label="Khung xem" style="display:flex;gap:4px">
+        <sc-for list="{{ devBtns }}" as="b" hint-placeholder-count="2"><button aria-pressed="{{ b.pressed }}" onClick="{{ b.onClick }}" style="height:28px;padding:0 10px;border:1px solid #dddcd6;border-radius:6px;background:{{ b.bg }};color:{{ b.fg }};font:500 12px 'JetBrains Mono',monospace;cursor:pointer">{{ b.label }}</button></sc-for>
+      </div>
+    </div>
+    <div style="background:#f4f4f1;padding:24px;display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start">
+
+      <div style="flex:{{ calFlex }};max-width:{{ calMax }};min-width:0">
+        <div role="region" aria-label="Lịch họp" style="position:relative;border:1px solid #c4c6d0;border-radius:12px;background:#ffffff;overflow:hidden;font-family:Roboto,'Helvetica Neue',sans-serif;color:#1a1b1f;user-select:none;-webkit-user-select:none;line-height:1.4">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px 10px 14px;border-bottom:1px solid #e3e4ea">
+            <div style="display:flex;align-items:center;gap:2px">
+              <button onClick="{{ goToday }}" style="height:{{ btnH }}px;padding:0 14px;margin-right:4px;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;font:500 14px Roboto,sans-serif;color:#1a1b1f;cursor:pointer">Hôm nay</button>
+              <button aria-label="{{ prevLabel }}" onClick="{{ prev }}" style="width:{{ btnH }}px;height:{{ btnH }}px;border:0;border-radius:999px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#44474f;padding:0" style-hover="background:#eff0f5"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1">chevron_left</span></button>
+              <button aria-label="{{ nextLabel }}" onClick="{{ next }}" style="width:{{ btnH }}px;height:{{ btnH }}px;border:0;border-radius:999px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#44474f;padding:0" style-hover="background:#eff0f5"><span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1">chevron_right</span></button>
+            </div>
+            <h3 style="margin:0;flex:1 1 150px;font:500 18px/24px Roboto,sans-serif;min-width:0">{{ title }}</h3>
+            <div role="group" aria-label="Chế độ xem" style="display:flex;border:1px solid #c4c6d0;border-radius:8px;overflow:hidden">
+              <sc-for list="{{ views }}" as="v" hint-placeholder-count="4"><button aria-pressed="{{ v.pressed }}" onClick="{{ v.onClick }}" style="height:{{ btnH }}px;padding:0 12px;border:0;border-left:{{ v.sep }};background:{{ v.bg }};color:{{ v.fg }};font:500 13px Roboto,sans-serif;cursor:pointer">{{ v.label }}</button></sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ showStrip }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat({{ stripN }},minmax(0,1fr));gap:2px;padding:6px 8px;border-bottom:1px solid #e3e4ea">
+              <sc-for list="{{ strip }}" as="d" hint-placeholder-count="7"><button aria-label="{{ d.aria }}" aria-current="{{ d.current }}" onClick="{{ d.onClick }}" style="height:56px;border:{{ d.border }};border-radius:12px;background:{{ d.bg }};color:{{ d.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-family:Roboto,sans-serif;padding:0"><span style="font-size:11px;color:{{ d.wdColor }}">{{ d.wd }}</span><span style="font-size:16px;font-weight:500;line-height:20px">{{ d.num }}</span><span style="width:4px;height:4px;border-radius:99px;background:{{ d.dot }}"></span></button></sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ true }}">
+            <div ref="{{ scrollRef }}" style="height:{{ scrollH }}px;overflow-y:auto;overflow-x:hidden;position:relative;overscroll-behavior:contain">
+              <div ref="{{ headRef }}" style="position:sticky;top:0;z-index:30;background:#ffffff;border-bottom:1px solid #c4c6d0">
+                <sc-if value="{{ showDayHeader }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex">
+                    <div style="width:56px;flex:none;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 8px 8px 0;box-sizing:border-box;font-size:11px;color:#6b6d73">GMT+7</div>
+                    <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat({{ nDays }},minmax(0,1fr))">
+                      <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;border-left:1px solid #e3e4ea;min-width:0">
+                          <span style="font-size:11px;font-weight:500;letter-spacing:.04em;color:{{ d.wdColor }}">{{ d.wd }}</span>
+                          <span style="width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;background:{{ d.numBg }};color:{{ d.numFg }}">{{ d.num }}</span>
+                          <span title="{{ d.holiday }}" style="height:14px;font-size:11px;line-height:14px;color:{{ d.holidayColor }};max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.holiday }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+                <div style="display:flex;border-top:{{ adBorder }}">
+                  <div style="width:56px;flex:none;box-sizing:border-box;padding:8px 8px 0 0;text-align:right;font-size:11px;line-height:14px;color:#6b6d73">Cả ngày</div>
+                  <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat({{ nDays }},minmax(0,1fr));grid-auto-rows:22px;row-gap:2px;padding:4px 0;min-height:30px;box-sizing:border-box;border-left:1px solid #e3e4ea">
+                    <sc-for list="{{ bars }}" as="b" hint-placeholder-count="2"><div role="button" tabindex="0" data-ev-id="{{ b.id }}" aria-label="{{ b.aria }}" onClick="{{ b.onClick }}" onKeyDown="{{ b.onKey }}" style="grid-column:{{ b.col }};grid-row:{{ b.row }};margin:0 2px;box-sizing:border-box;border:1px solid {{ b.bd }};border-radius:6px;background:{{ b.bg }};color:{{ b.fg }};font-size:12px;line-height:20px;font-weight:500;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;outline:{{ b.outline }};outline-offset:1px">{{ b.title }}</div></sc-for>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;position:relative">
+                <div aria-hidden="true" style="width:56px;flex:none;position:relative;height:1152px">
+                  <sc-for list="{{ hours }}" as="h" hint-placeholder-count="23"><span style="position:absolute;right:8px;top:{{ h.top }}px;font-size:11px;line-height:14px;color:#6b6d73">{{ h.label }}</span></sc-for>
+                </div>
+                <div ref="{{ colsRef }}" tabindex="0" aria-label="{{ gridLabel }}" onKeyDown="{{ onGridKey }}" onFocus="{{ onGridFocus }}" onBlur="{{ onGridBlur }}" style="flex:1;min-width:0;display:grid;grid-template-columns:repeat({{ nDays }},minmax(0,1fr));height:1152px;outline:none">
+                  <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+                    <div onPointerDown="{{ d.onDown }}" style="position:relative;border-left:1px solid #e3e4ea;touch-action:pan-y;cursor:cell">
+                      <sc-for list="{{ d.shade }}" as="z" hint-placeholder-count="0"><div style="position:absolute;left:0;right:0;top:{{ z.top }}px;height:{{ z.h }}px;background:#f3f3f6"></div></sc-for>
+                      <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,#e3e4ea 0,#e3e4ea 1px,transparent 1px,transparent 48px)"></div>
+                      <div style="position:absolute;top:24px;left:0;right:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(to bottom,#efeff2 0,#efeff2 1px,transparent 1px,transparent 48px)"></div>
+                      <sc-if value="{{ d.hasFocus }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:2px;right:2px;top:{{ d.focus.top }}px;height:{{ d.focus.h }}px;box-sizing:border-box;border:2px solid #005cbb;border-radius:4px;background:rgba(0,92,187,.08);z-index:3;pointer-events:none;font-size:11px;line-height:16px;color:#004a99;padding:0 4px;font-weight:500">{{ d.focus.label }}</div></sc-if>
+                      <sc-for list="{{ d.events }}" as="e" hint-placeholder-count="0">
+                        <div role="button" tabindex="0" data-ev-id="{{ e.id }}" aria-label="{{ e.aria }}" onPointerDown="{{ e.onDown }}" onKeyDown="{{ e.onKey }}" style="position:absolute;top:{{ e.top }}px;height:{{ e.height }}px;left:calc({{ e.left }}% + 2px);width:calc({{ e.width }}% - 4px);box-sizing:border-box;border:1px {{ e.bstyle }} {{ e.bd }};border-radius:6px;background:{{ e.bg }};color:{{ e.fg }};padding:2px 6px;overflow:hidden;z-index:{{ e.z }};box-shadow:{{ e.shadow }};outline:{{ e.outline }};outline-offset:1px;cursor:{{ e.cursor }};touch-action:none;font-size:12px;line-height:16px;display:flex;flex-direction:column" style-focus="outline:2px solid #005cbb">
+                          <span style="display:flex;align-items:center;gap:3px;min-width:0;font-weight:600"><sc-if value="{{ e.recurring }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:13px;line-height:16px;flex:none">repeat</span></sc-if><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ e.title }}</span></span>
+                          <sc-if value="{{ e.showTime }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.time }}</span></sc-if>
+                          <sc-if value="{{ e.showPlace }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.place }}</span></sc-if>
+                          <span aria-hidden="true" onPointerDown="{{ e.onResize }}" style="position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize"></span>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ d.hasGhost }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:2px;right:2px;top:{{ d.ghost.top }}px;height:{{ d.ghost.h }}px;box-sizing:border-box;border:1px dashed #005cbb;border-radius:6px;background:rgba(215,227,255,.9);z-index:25;pointer-events:none;padding:2px 6px;font-size:12px;line-height:16px;color:#001b3f"><strong style="font-weight:600;display:block">Sự kiện mới</strong>{{ d.ghost.label }}</div></sc-if>
+                      <sc-if value="{{ d.isToday }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position:absolute;left:-1px;right:0;top:{{ d.nowTop }}px;height:2px;background:#ba1a1a;z-index:12;pointer-events:none"><span style="position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:99px;background:#ba1a1a"></span></div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat({{ nCols }},minmax(0,1fr));border-bottom:1px solid #e3e4ea">
+              <sc-for list="{{ wdHeads }}" as="w" hint-placeholder-count="7"><span style="padding:8px 8px 6px;font-size:11px;font-weight:500;letter-spacing:.04em;color:#44474f;text-align:{{ headAlign }}">{{ w }}</span></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ weeks }}" as="wk" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:repeat({{ nCols }},minmax(0,1fr));border-bottom:1px solid #e3e4ea">
+                  <sc-for list="{{ wk.cells }}" as="c" hint-placeholder-count="7">
+                    <div role="button" tabindex="0" aria-label="{{ c.aria }}" onClick="{{ c.onClick }}" onKeyDown="{{ c.onKey }}" style="min-height:{{ cellH }}px;box-sizing:border-box;border-left:1px solid #e3e4ea;background:{{ c.bg }};padding:4px;display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer" style-focus="outline:2px solid #005cbb;outline-offset:-2px">
+                      <div style="display:flex;align-items:center;justify-content:{{ numJustify }};gap:4px;min-width:0">
+                        <span style="width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex:none;background:{{ c.numBg }};color:{{ c.numFg }}">{{ c.num }}</span>
+                        <sc-if value="{{ c.showHoliday }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:{{ c.holidayColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ c.holiday }}</span></sc-if>
+                      </div>
+                      <sc-if value="{{ showChips }}" hint-placeholder-val="{{ true }}">
+                        <sc-for list="{{ c.items }}" as="it" hint-placeholder-count="0"><span onClick="{{ it.onClick }}" style="display:flex;align-items:center;gap:4px;min-width:0;height:20px;padding:0 4px;border-radius:4px;background:{{ it.bg }};color:{{ it.fg }};font-size:12px;outline:{{ it.outline }};outline-offset:-1px"><span style="width:6px;height:6px;border-radius:99px;flex:none;background:{{ it.dot }}"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.label }}</span></span></sc-for>
+                        <sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:500;color:#004a99;padding:0 4px">{{ c.moreLabel }}</span></sc-if>
+                      </sc-if>
+                      <sc-if value="{{ showDots }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:3px;justify-content:center"><sc-for list="{{ c.dots }}" as="o" hint-placeholder-count="0"><span style="width:6px;height:6px;border-radius:99px;background:{{ o.c }}"></span></sc-for></div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isAgenda }}" hint-placeholder-val="{{ false }}">
+            <div style="max-height:{{ scrollH }}px;overflow-y:auto">
+              <sc-if value="{{ agendaEmpty }}" hint-placeholder-val="{{ false }}"><p style="margin:0;padding:32px 16px;text-align:center;color:#44474f;font-size:14px">Không có sự kiện trong 14 ngày này.</p></sc-if>
+              <sc-for list="{{ agenda }}" as="g" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:{{ agCols }};gap:4px 16px;padding:12px 16px;border-bottom:1px solid #e3e4ea">
+                  <div style="display:flex;flex-direction:column;gap:2px;padding-top:4px"><span style="font-size:13px;font-weight:500;color:{{ g.color }}">{{ g.title }}</span><sc-if value="{{ g.hasHoliday }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:{{ g.holidayColor }}">{{ g.holiday }}</span></sc-if></div>
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                    <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2"><div role="button" tabindex="0" aria-label="{{ it.aria }}" onClick="{{ it.onClick }}" onKeyDown="{{ it.onKey }}" style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center;min-height:{{ rowH }}px;padding:4px 8px;border-radius:8px;background:{{ it.bg }};cursor:pointer" style-hover="background:#f3f4f9">
+                      <span style="font-size:13px;color:#44474f;white-space:nowrap">{{ it.time }}</span>
+                      <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:8px;height:8px;border-radius:99px;flex:none;background:{{ it.dot }}"></span><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.title }}</span><sc-if value="{{ it.recurring }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:15px;color:#44474f;flex:none">repeat</span></sc-if><sc-if value="{{ it.hasPlace }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#44474f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.place }}</span></sc-if></span>
+                    </div></sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ hasPending }}" hint-placeholder-val="{{ false }}">
+            <div role="alertdialog" aria-label="Phạm vi áp dụng" onKeyDown="{{ pendKey }}" style="position:absolute;left:12px;right:12px;bottom:12px;z-index:40;background:#2f3036;color:#f1f0f4;border-radius:10px;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:14px">
+              <span style="flex:1 1 220px;min-width:0">{{ pendingText }}</span>
+              <div style="display:flex;flex-wrap:wrap;gap:2px">
+                <button data-pend-first="1" onClick="{{ applyThis }}" style="height:36px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:#aac7ff;font:500 14px Roboto,sans-serif;cursor:pointer" style-hover="background:rgba(170,199,255,.12)">Chỉ lần này</button>
+                <button onClick="{{ applyFollowing }}" style="height:36px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:#aac7ff;font:500 14px Roboto,sans-serif;cursor:pointer" style-hover="background:rgba(170,199,255,.12)">Lần này và các lần sau</button>
+                <button onClick="{{ applyAll }}" style="height:36px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:#aac7ff;font:500 14px Roboto,sans-serif;cursor:pointer" style-hover="background:rgba(170,199,255,.12)">Tất cả</button>
+                <button onClick="{{ cancelPending }}" style="height:36px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:#f1f0f4;font:500 14px Roboto,sans-serif;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Huỷ</button>
+              </div>
+            </div>
+          </sc-if>
+          <div aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">{{ announce }}</div>
+        </div>
+      </div>
+
+      <aside style="flex:1 1 260px;max-width:{{ asideMax }};min-width:0;display:flex;flex-direction:column;gap:16px">
+        <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;padding:16px;display:flex;flex-direction:column;gap:12px;font-family:Roboto,sans-serif">
+          <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73">Chi tiết · consumer dựng</span>
+          <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:99px;background:{{ sel.dot }};flex:none"></span><input data-sd-title="1" aria-label="Tên sự kiện" value="{{ sel.title }}" onChange="{{ rename }}" onKeyDown="{{ titleKey }}" style="flex:1;min-width:0;height:36px;border:1px solid #c4c6d0;border-radius:8px;padding:0 10px;font:500 15px Roboto,sans-serif;color:#1a1b1f;box-sizing:border-box;background:#ffffff"></div>
+            <div style="display:flex;gap:8px;font-size:14px;color:#3a3c42;align-items:flex-start"><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f">schedule</span><span>{{ sel.when }}</span></div>
+            <sc-if value="{{ sel.hasPlace }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;font-size:14px;color:#3a3c42;align-items:flex-start"><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f">location_on</span><span>{{ sel.place }}</span></div></sc-if>
+            <sc-if value="{{ sel.isRec }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;font-size:14px;color:#3a3c42;align-items:flex-start"><span aria-hidden="true" style="font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f">repeat</span><span>{{ sel.rule }}</span></div></sc-if>
+            <div style="display:flex;gap:8px;padding-top:4px">
+              <button onClick="{{ remove }}" style="height:32px;padding:0 12px;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;color:#ba1a1a;font:500 13px Roboto,sans-serif;cursor:pointer">{{ removeLabel }}</button>
+              <button onClick="{{ deselect }}" style="height:32px;padding:0 12px;border:1px solid #c4c6d0;border-radius:8px;background:#ffffff;color:#1a1b1f;font:500 13px Roboto,sans-serif;cursor:pointer">Đóng</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noSel }}" hint-placeholder-val="{{ true }}"><p style="margin:0;font-size:14px;color:#44474f;text-wrap:pretty">Bấm vào một sự kiện để xem. Ứng dụng tự dựng panel này khi nhận <span style="font-family:'JetBrains Mono',monospace;font-size:12px">sdSelect</span>; component không có form sửa riêng.</p></sc-if>
+        </div>
+        <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;padding:16px;display:flex;flex-direction:column;gap:8px">
+          <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b6d73">Output đã phát</span>
+          <sc-if value="{{ logEmpty }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#6b6d73">Chưa có.</span></sc-if>
+          <sc-for list="{{ log }}" as="l" hint-placeholder-count="0"><div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#3a3c42;word-break:break-word;padding-top:6px;border-top:1px solid #ecebe6"><strong style="color:#004a99;font-weight:600">{{ l.name }}</strong> {{ l.body }}</div></sc-for>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section id="hanh-vi" data-screen-label="05 Hành vi" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Hành vi</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Bàn phím trên lưới giờ</div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">↑ ↓</span><span style="color:#3a3c42">Khung giờ trước, sau (theo step)</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">← →</span><span style="color:#3a3c42">Ngày trước, sau; ở mép thì sang tuần khác</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Enter · Space</span><span style="color:#3a3c42">Tạo sự kiện ở khung đang chọn (gọi create.onCreate)</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">PageUp · PageDown</span><span style="color:#3a3c42">Tuần hoặc ngày trước, sau</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Home · End</span><span style="color:#3a3c42">Đầu, cuối giờ làm việc</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">T</span><span style="color:#3a3c42">Về hôm nay</span></div>
+    </div>
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Bàn phím trên sự kiện</div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Tab</span><span style="color:#3a3c42">Lần lượt qua các sự kiện theo ngày rồi theo giờ</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Alt + ↑ ↓</span><span style="color:#3a3c42">Dời một bước, tối đa 15 phút</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Alt + ← →</span><span style="color:#3a3c42">Dời 1 ngày, lịch đi theo nếu sang tuần khác</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Alt + Shift + ↑ ↓</span><span style="color:#3a3c42">Đổi giờ kết thúc</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Enter</span><span style="color:#3a3c42">Chọn (phát sdSelect)</span></div>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Esc</span><span style="color:#3a3c42">Bỏ chọn, focus về lưới</span></div>
+    </div>
+  </div>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div id="mobile" style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:16px 20px"><strong style="font-weight:600;font-size:15px">Mobile</strong>
+      <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+        <li>Component dưới 600px: Tuần hiển thị như Ngày, kèm dải 7 ngày phía trên. Tháng chỉ còn chấm màu, chạm vào ngày để mở Ngày.</li>
+        <li>Chạm ô trống để tạo. Sự kiện cần chạm giữ 400 ms mới kéo được, để cuộn dọc không bị chặn.</li>
+        <li>Vùng chạm tối thiểu 44px cho dải ngày, nút điều hướng và nút chuyển chế độ.</li>
+        <li>Chi tiết sự kiện do consumer mở bằng bottom sheet; component phát sdSelect như desktop.</li>
+      </ul>
+    </div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><strong style="font-weight:600;font-size:15px">Sự kiện lặp</strong>
+      <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+        <li>Chỉ hiện các lần nằm trong khoảng đang xem. Mỗi lần có id dạng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">{id}@yyyy/MM/dd</span> theo ngày gốc, nên vẫn giữ id sau khi bị dời.</li>
+        <li>Dời hoặc đổi giờ một lần thì hỏi phạm vi: chỉ lần này, lần này và các lần sau, tất cả. Request mang <span style="font-family:'JetBrains Mono',monospace;font-size:13px">scope</span>; Huỷ hoặc Esc trả sự kiện về chỗ cũ.</li>
+      </ul>
+    </div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><strong style="font-weight:600;font-size:15px">Giờ làm việc, ngày lễ</strong>
+      <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+        <li>Ngoài giờ làm việc, cuối tuần và ngày lễ nghỉ được tô nền nhạt nhưng vẫn tạo được sự kiện. Muốn chặn thì dùng <span style="font-family:'JetBrains Mono',monospace;font-size:13px">option.create.creatable</span>.</li>
+        <li>Ngày lễ có hai loại: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">off</span> (chữ đỏ, tô cả cột) và <span style="font-family:'JetBrains Mono',monospace;font-size:13px">observance</span> (chỉ ghi tên, ví dụ 20/10).</li>
+        <li>Lưới mở ở đầu giờ làm việc; dòng đỏ là giờ hiện tại theo múi giờ cấu hình.</li>
+      </ul>
+    </div>
+    <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6"><strong style="font-weight:600;font-size:15px">In, xuất</strong>
+      <ul style="margin:0;padding-left:18px;font-size:14px;color:#3a3c42;display:flex;flex-direction:column;gap:6px">
+        <li>In theo chế độ đang xem: ẩn thanh công cụ, lưới vừa khổ A4 ngang, chỉ in trong giờ làm việc, nền màu đổi thành viền để in đen trắng vẫn phân biệt được.</li>
+        <li>Đợt 2: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">exportIcs(range)</span> xuất các sự kiện trong khoảng, gồm cả quy tắc lặp.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="api" data-screen-label="06 API" style="padding-top:72px;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px">
+    <span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span>
+    <h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API sơ bộ · sd-calendar</h2>
+  </div>
+  <p style="margin:0;max-width:780px;color:#3a3c42;text-wrap:pretty">Import <span style="font-family:'JetBrains Mono',monospace;font-size:13px">@sdcorejs/angular/components/calendar</span>. Option theo quy ước của sd-file-explorer: nguồn dữ liệu và từng năng lực là một nhóm, callback đặt tên on&lt;Action&gt;, cờ năng lực là boolean hoặc predicate. Bản đầy đủ: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">design_handoff_sd_calendar/calendar.md</span>.</p>
+  <pre style="margin:0;padding:20px 24px;background:#1f2024;color:#e6e6ea;border-radius:12px;overflow-x:auto;font:400 13px/1.65 'JetBrains Mono',monospace">interface MeetingDto { id: string; subject: string; from: string; to: string; allDay: boolean; room?: string; seriesId?: string; originalStart?: string; }
+
+readonly option: SdCalendarOption&lt;MeetingDto&gt; = {
+  dataSource: {
+    onLoad: async ({ from, to, signal }) =&gt; {
+      const rows = await firstValueFrom(this.api.meetings({ from, to }, { signal }));
+      return rows.map(m =&gt; ({
+        id: m.id,
+        title: m.subject,
+        start: m.from,                       // 'yyyy/MM/dd HH:mm:ss', ISO, epoch hoặc Date
+        end: m.to,
+        allDay: m.allDay,
+        color: m.room ? 'info' : 'primary',  // Color của @sdcorejs/utils/models
+        occurrence: m.seriesId ? { seriesId: m.seriesId, originalStart: m.originalStart! } : null,
+        data: m,
+      }));
+    },
+  },
+  create: {
+    creatable: range =&gt; !range.allDay,
+    onCreate: range =&gt; this.openCreateDialog(range),   // trả SdCalendarEvent đã tạo, hoặc void khi huỷ
+  },
+  move: {
+    movable: event =&gt; this.canEdit(event.data),
+    onMove: async request =&gt; {
+      await firstValueFrom(this.api.reschedule({ id: request.event.id, ...request.to, scope: request.scope }, { signal: request.signal }));
+      return true;
+    },
+  },
+};</pre>
+  <pre style="margin:0;padding:20px 24px;background:#1f2024;color:#e6e6ea;border-radius:12px;overflow-x:auto;font:400 13px/1.65 'JetBrains Mono',monospace">&lt;sd-calendar ariaLabel="Lịch họp" [option]="option"
+  [(view)]="view" [(date)]="date" [(selectedId)]="selectedId" [step]="30" [firstDayOfWeek]="1"
+  [workingHours]="workingHours" [holidays]="holidays"
+  (sdSelect)="openDetail($event)" (sdRangeChange)="syncUrl($event)" /&gt;</pre>
+
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;background:#f7f7f4;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#6b6d73"><span>Input</span><span>Kiểu</span><span>Mặc định</span><span>Ghi chú</span></div>
+    
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">option</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">SdCalendarOption&lt;T&gt;</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">bắt buộc</span><span style="color:#3a3c42">dataSource, create, move.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">view</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">'month' | 'week' | 'day' | 'agenda'</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">'week'</span><span style="color:#3a3c42">Hai chiều. Dưới 600px, 'week' hiển thị như 'day'.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">date</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">string | Date</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">hôm nay</span><span style="color:#3a3c42">Hai chiều. Ngày neo của khoảng hiển thị.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">step</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">number (ước của 60)</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">30</span><span style="color:#3a3c42">Phút, cùng nghĩa với step của sd-time, sd-time-range. Bước tạo và di chuyển trên lưới; dời sự kiện theo min(step, 15).</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">firstDayOfWeek</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">0–6</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">1</span><span style="color:#3a3c42">0 là Chủ Nhật, cùng quy ước với DateAdapter.getFirstDayOfWeek().</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">hideWeekends</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">boolean</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">false</span><span style="color:#3a3c42"></span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">workingHours</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">SdWorkingHours</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">cấu hình</span><span style="color:#3a3c42">Theo thứ (0–6), mỗi thứ là mảng SdTimeRangeValue: <span style="font-family:'JetBrains Mono',monospace;font-size:13px">1: [{ from: '08:00', to: '12:00' }, { from: '13:00', to: '17:30' }]</span>. null tắt tô ngoài giờ.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">holidays</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">readonly SdHoliday[]</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">cấu hình</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">{ date, label, type: 'off' | 'observance' }</span></span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">scrollTime</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">string</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">đầu giờ làm</span><span style="color:#3a3c42">'HH:mm' hiển thị gần đầu lưới khi mở (lùi 30 phút).</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">selectedId</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">SdCalendarId | null</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">null</span><span style="color:#3a3c42">Hai chiều. Sự kiện đang chọn.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">views</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">readonly SdCalendarView[]</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">cả 4</span><span style="color:#3a3c42">Nút chuyển chế độ hiện những gì.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">minDate, maxDate</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">Date | string | 'TODAY'</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">—</span><span style="color:#3a3c42">Như sd-date. Chặn điều hướng, tạo và dời ra ngoài.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">agendaDays</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">number</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">14</span><span style="color:#3a3c42">Độ dài chế độ Danh sách.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">dimPast</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">boolean</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">false</span><span style="color:#3a3c42">Làm nhạt sự kiện đã qua.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">transform</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">SdTemporalValueTransform</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">—</span><span style="color:#3a3c42">Như sd-date: định dạng giá trị phát ra.</span></div><div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">readonly, disabled</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">boolean</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">false</span><span style="color:#3a3c42">readonly vẫn điều hướng và chọn; disabled chặn cả chọn.</span></div>
+    <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(180px,1.4fr) minmax(90px,.7fr) minmax(0,2fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">ariaLabel, autoId</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">string</span><span style="font:400 13px 'JetBrains Mono',monospace;color:#3a3c42">—</span><span style="color:#3a3c42"></span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Output</div>
+      
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">sdSelect</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdCalendarEvent&lt;T&gt;</span> vừa chọn.</span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">sdMove</span><span style="color:#3a3c42">Request đã được onMove chấp nhận.</span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">sdMoveError</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">{ request, reason: 'rejected' | 'error' }</span></span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">sdRangeChange</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">{ from, to, view }</span>: ngày đầu và ngày cuối đang hiển thị, yyyy/MM/dd, gồm cả hai đầu như SdDateRangeValue. Phát khi khởi tạo và khi khoảng đổi.</span></div>
+      
+    </div>
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+      <div style="padding:12px 20px;background:#f7f7f4;font-weight:600;font-size:16px">Move request và template</div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">event</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">SdCalendarEvent&lt;T&gt;</span> đang dời.</span></div><div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">from, to</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">{ start, end }</span> trước và sau khi dời.</span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">source</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">'drag' | 'resize' | 'keyboard' | 'api'</span></span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">scope</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">'this' | 'following' | 'all'</span>; null khi không phải lần lặp.</span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">signal</span><span style="color:#3a3c42">Huỷ khi khoảng xem, option đổi, reload() hoặc component bị huỷ.</span></div>
+      <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px 'JetBrains Mono',monospace">Template</span><span style="color:#3a3c42"><span style="font-family:'JetBrains Mono',monospace;font-size:13px">sdCalendarEventTemplate</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sdCalendarDayCellTemplate</span> (ô Tháng, dùng cho chấm công), <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sdCalendarAgendaItemTemplate</span>, <span style="font-family:'JetBrains Mono',monospace;font-size:13px">sdCalendarEmptyTemplate</span>.</span></div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;step&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;15&quot;,&quot;30&quot;,&quot;60&quot;],&quot;default&quot;:&quot;30&quot;,&quot;tsType&quot;:&quot;'15' | '30' | '60'&quot;,&quot;section&quot;:&quot;Demo sd-calendar&quot;},&quot;firstDayOfWeek&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;0&quot;],&quot;default&quot;:&quot;1&quot;,&quot;tsType&quot;:&quot;'1' | '0'&quot;,&quot;section&quot;:&quot;Demo sd-calendar&quot;},&quot;hideWeekends&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo sd-calendar&quot;},&quot;showWorkingHours&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo sd-calendar&quot;}}">
+const HOUR = 48;
+const pad = n => String(n).padStart(2, '0');
+const T = s => { const [d, t = '00:00'] = s.split(' '); const [y, mo, da] = d.split('/').map(Number); const [h, mi] = t.split(':').map(Number); return new Date(y, mo - 1, da, h, mi).getTime(); };
+const D0 = ms => { const d = new Date(ms); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+const addD = (ms, n) => { const d = new Date(ms); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, d.getHours(), d.getMinutes()).getTime(); };
+const keyOf = ms => { const d = new Date(ms); return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()); };
+const hm = ms => { const d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const mm = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const minOf = ms => { const d = new Date(ms); return d.getHours() * 60 + d.getMinutes(); };
+const fmt = ms => keyOf(ms) + ' ' + hm(ms);
+const ddmm = ms => { const d = new Date(ms); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1); };
+const endLabel = e => (D0(e.end) !== D0(e.start) && minOf(e.end) === 0) ? '24:00' : hm(e.end);
+const WD = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const WDF = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+const COLORS = {
+  primary: { bg: '#d7e3ff', fg: '#001b3f', bd: '#aac7ff', dot: '#005cbb' },
+  info: { bg: '#cdeceb', fg: '#00201f', bd: '#9fd3d1', dot: '#00696a' },
+  success: { bg: '#c7efd2', fg: '#002111', bd: '#97d5a9', dot: '#1b6d3a' },
+  warning: { bg: '#ffdcbe', fg: '#2c1600', bd: '#f5bb87', dot: '#8a5200' },
+  error: { bg: '#ffdad6', fg: '#410002', bd: '#ffb4ab', dot: '#ba1a1a' },
+  secondary: { bg: '#e1e2ec', fg: '#191c20', bd: '#c4c6d0', dot: '#5c6270' }
+};
+const HOL = {
+  '2026/09/02': { label: 'Quốc khánh', off: true },
+  '2027/01/01': { label: 'Tết Dương lịch', off: true },
+  '2026/10/20': { label: 'Ngày Phụ nữ VN', off: false },
+  '2026/11/20': { label: 'Ngày Nhà giáo VN', off: false }
+};
+const TODAY = T('2026/10/22');
+const NOW = T('2026/10/22 10:40');
+const ev = (id, title, a, b, color, place) => ({ id, title, start: T(a), end: T(b), color, place: place || '' });
+const ad = (id, title, a, b, color) => ({ id, title, start: T(a), end: T(b), color, allDay: true, place: '' });
+
+class Component extends DCLogic {
+  state = {
+    view: 'week', anchor: TODAY, mobile: false,
+    events: [
+      ev('e1', 'Review thiết kế sd-calendar', '2026/10/20 14:00', '2026/10/20 15:30', 'info', 'Phòng Sen'),
+      ev('e2', 'Phỏng vấn ứng viên Frontend', '2026/10/21 10:00', '2026/10/21 11:00', 'warning', 'Phòng Cúc'),
+      ev('e3', 'Hẹn khách: Công ty An Phát', '2026/10/22 09:30', '2026/10/22 10:30', 'success', 'Văn phòng khách hàng'),
+      ev('e4', '1:1 với Minh', '2026/10/22 10:00', '2026/10/22 10:30', 'primary', 'Online'),
+      ev('e5', 'Đào tạo an toàn thông tin', '2026/10/22 13:30', '2026/10/22 15:00', 'secondary', 'Hội trường'),
+      ev('e6', 'Demo sprint 42', '2026/10/23 15:00', '2026/10/23 16:30', 'primary', 'Phòng Sen'),
+      ev('e7', 'Kick-off dự án Ngân Hà', '2026/10/05 09:00', '2026/10/05 10:00', 'primary', 'Phòng Lan'),
+      ev('e8', 'Đào tạo Angular Signals', '2026/10/08 14:00', '2026/10/08 16:00', 'secondary', 'Hội trường'),
+      ev('e9', 'Phỏng vấn ứng viên BA', '2026/10/14 15:00', '2026/10/14 16:00', 'warning', 'Phòng Cúc'),
+      ev('e10', 'Họp HĐQT', '2026/10/27 14:00', '2026/10/27 16:00', 'error', 'Phòng Lan'),
+      ev('e11', 'Hẹn khách: Minh Long', '2026/10/29 10:00', '2026/10/29 11:00', 'success', 'Online'),
+      ad('a1', 'Nghỉ phép · Lan', '2026/10/21', '2026/10/23', 'secondary'),
+      ad('a2', 'Hạn chót báo cáo Q3', '2026/10/23', '2026/10/23', 'error'),
+      ad('a3', 'Sinh nhật công ty', '2026/10/30', '2026/10/30', 'info')
+    ],
+    recurring: [{ id: 'r1', title: 'Họp giao ban tuần', color: 'primary', place: 'Phòng Sen · Online', weekday: 1, startMin: 540, dur: 30, since: T('2026/09/07'), until: null }],
+    exceptions: {}, selectedId: null, drag: null, pending: null,
+    focusCell: { d: 3, m: 600 }, gridFocused: false, kbd: false, log: [], seq: 1, announce: ''
+  };
+  colsRef = React.createRef();
+  scrollRef = React.createRef();
+  headRef = React.createRef();
+  _ptr = 0;
+  _instMap = {};
+  _dayList = [];
+
+  componentDidMount() {
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+    window.addEventListener('pointerdown', this.onAnyDown, true);
+    this._lastGridKey = this._gridKey;
+    this.scrollMorning();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('pointerdown', this.onAnyDown, true);
+  }
+  componentDidUpdate(pp, ps) {
+    if (this._gridKey !== this._lastGridKey) { this._lastGridKey = this._gridKey; if (this._gridKey) this.scrollMorning(); }
+    if (this.state.pending && !(ps && ps.pending)) { const b = document.querySelector('[data-pend-first]'); if (b) b.focus(); }
+    if (this._focusId) { const el = document.querySelector('[data-ev-id="' + this._focusId + '"]'); this._focusId = null; if (el) el.focus(); }
+    if (this._focusTitle) { this._focusTitle = false; const el = document.querySelector('[data-sd-title]'); if (el) { el.focus(); el.select(); } }
+  }
+
+  cfg() {
+    const p = this.props || {};
+    return { slot: parseInt(p.step ?? 30, 10) || 30, ws: (parseInt(p.firstDayOfWeek ?? 1, 10) || 0) % 7, hideWe: !!(p.hideWeekends ?? false), wh: p.showWorkingHours ?? true };
+  }
+  effView() { return this.state.mobile && this.state.view === 'week' ? 'day' : this.state.view; }
+  sow(ms, ws) { const d = D0(ms); return addD(d, -((new Date(d).getDay() - ws + 7) % 7)); }
+  scrollMorning() { const sc = this.scrollRef.current; if (sc) sc.scrollTop = 7 * HOUR + 24; }
+  onAnyDown = () => { this._ptr = Date.now(); if (this.state.kbd) this.setState({ kbd: false }); };
+  log(name, body) { this.setState(st => ({ log: [{ name, body }, ...st.log].slice(0, 6) })); }
+
+  instances(from, to) {
+    const s = this.state, out = [];
+    s.events.forEach(e => { const eEnd = e.allDay ? addD(e.end, 1) : e.end; if (e.start < to && eEnd > from) out.push({ ...e, srcId: e.id, recurring: false }); });
+    s.recurring.forEach(r => {
+      for (let d = D0(from); d < to; d = addD(d, 1)) {
+        if (new Date(d).getDay() !== r.weekday || d < r.since || (r.until && d > r.until)) continue;
+        const id = r.id + '@' + keyOf(d), ex = s.exceptions[id];
+        if (ex === 'deleted') continue;
+        const start = ex ? ex.start : d + r.startMin * 6e4;
+        out.push({ id, srcId: r.id, title: r.title, color: r.color, place: r.place, start, end: ex ? ex.end : start + r.dur * 6e4, allDay: false, recurring: true });
+      }
+    });
+    return out;
+  }
+  layout(list) {
+    const arr = [...list].sort((a, b) => a.start - b.start || b.end - a.end), out = [];
+    let cl = [], end = -Infinity;
+    const flush = () => {
+      const cols = [];
+      const placed = cl.map(e => { let i = cols.findIndex(x => x <= e.start); if (i < 0) { i = cols.length; cols.push(e.end); } else cols[i] = e.end; return { ...e, col: i }; });
+      placed.forEach(p => out.push({ ...p, ncol: cols.length }));
+      cl = []; end = -Infinity;
+    };
+    arr.forEach(e => { if (cl.length && e.start >= end) flush(); cl.push(e); end = Math.max(end, e.end); });
+    if (cl.length) flush();
+    return out;
+  }
+  evView(e, s) {
+    const col = COLORS[e.color] || COLORS.primary;
+    const dur = (e.end - e.start) / 6e4, h = Math.max(dur / 60 * HOUR - 2, 16), compact = h < 34;
+    const sel = s.selectedId === e.id, drag = !!e._drag, pend = !!e._pend, full = drag || pend;
+    const w = new Date(e.start).getDay();
+    return {
+      id: e.id, title: compact ? e.title + ', ' + hm(e.start) : e.title, time: hm(e.start) + ' – ' + endLabel(e), showTime: !compact,
+      place: e.place || '', showPlace: !!e.place && h >= 62, recurring: !!e.recurring,
+      top: minOf(e.start) / 60 * HOUR + 1, height: h, left: full ? 0 : e.col / e.ncol * 100, width: full ? 100 : 100 / e.ncol,
+      bg: col.bg, fg: col.fg, bd: full ? col.dot : col.bd, bstyle: pend ? 'dashed' : 'solid', z: drag ? 20 : pend ? 15 : sel ? 4 : 2,
+      shadow: drag ? '0 8px 20px rgba(0,0,0,.18)' : 'none', outline: sel && !drag ? '2px solid #005cbb' : 'none',
+      cursor: s.pending ? 'default' : drag ? 'grabbing' : 'grab',
+      aria: e.title + ', ' + WDF[w] + ' ' + ddmm(e.start) + ', ' + hm(e.start) + ' đến ' + endLabel(e) + (e.recurring ? ', lặp hằng tuần' : '') + (e.place ? ', ' + e.place : ''),
+      onDown: x => this.startDrag(x, e.id, 'move'), onResize: x => this.startDrag(x, e.id, 'resize'), onKey: x => this.evKey(x, e.id)
+    };
+  }
+
+  minuteAt(y) { const el = this.colsRef.current; if (!el) return 0; const r = el.getBoundingClientRect(); return Math.max(0, Math.min(1439, (y - r.top) / HOUR * 60)); }
+  dayIndexAt(x) { const el = this.colsRef.current, n = this._dayList.length; if (!el || !n) return 0; const r = el.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor((x - r.left) / (r.width / n)))); }
+
+  startDrag(x, id, type) {
+    x.stopPropagation();
+    if (x.button !== 0 || this.state.pending) return;
+    const e = this._instMap[id]; if (!e) return;
+    if (type === 'resize') x.preventDefault();
+    this.setState({ drag: { type, id, sx: x.clientX, sy: x.clientY, os: e.start, oe: e.end, start: e.start, end: e.end, x0: this.dayIndexAt(x.clientX), di: this._dayList.indexOf(D0(e.start)), moved: false } });
+  }
+  startCreate(x, i) {
+    if (x.button !== 0 || this.state.pending) return;
+    const c = this.cfg(), m = Math.floor(this.minuteAt(x.clientY) / c.slot) * c.slot;
+    this.setState({ drag: { type: 'create', dayIdx: i, a0: m, c: m, sx: x.clientX, sy: x.clientY, moved: false }, focusCell: { d: i, m } });
+  }
+  onMove = x => {
+    const dr = this.state.drag; if (!dr) return;
+    if (!dr.moved && Math.abs(x.clientX - dr.sx) + Math.abs(x.clientY - dr.sy) < 5) return;
+    const c = this.cfg();
+    if (dr.type === 'create') { const m = Math.floor(this.minuteAt(x.clientY) / c.slot) * c.slot; if (m !== dr.c || !dr.moved) this.setState({ drag: { ...dr, c: m, moved: true } }); return; }
+    const dmin = Math.round((x.clientY - dr.sy) / HOUR * 60 / 15) * 15;
+    if (dr.type === 'resize') { const lim = addD(D0(dr.os), 1); const end = Math.min(lim, Math.max(dr.os + 15 * 6e4, dr.oe + dmin * 6e4)); this.setState({ drag: { ...dr, start: dr.os, end, moved: true } }); return; }
+    const dl = this._dayList; if (dr.di < 0) return;
+    const ti = Math.max(0, Math.min(dl.length - 1, dr.di + this.dayIndexAt(x.clientX) - dr.x0));
+    const dur = dr.oe - dr.os, sm = Math.max(0, Math.min(1440 - dur / 6e4, minOf(dr.os) + dmin)), start = dl[ti] + sm * 6e4;
+    this.setState({ drag: { ...dr, start, end: start + dur, moved: true } });
+  };
+  onUp = () => {
+    const dr = this.state.drag; if (!dr) return;
+    const c = this.cfg();
+    if (dr.type === 'create') {
+      const a = Math.min(dr.a0, dr.c), b = Math.min(1440, Math.max(dr.a0, dr.c) + c.slot), d = this._dayList[dr.dayIdx];
+      this.setState({ drag: null });
+      if (d != null) this.create(d + a * 6e4, d + b * 6e4);
+      return;
+    }
+    this.setState({ drag: null });
+    if (!dr.moved) { this.select(dr.id); return; }
+    if (dr.start === dr.os && dr.end === dr.oe) return;
+    this.commit(dr.id, dr.start, dr.end, dr.type === 'resize' ? 'resize' : 'drag');
+  };
+
+  create(start, end) {
+    const s = this.state, id = 'n' + s.seq;
+    this._focusTitle = true;
+    this.setState({ events: [...s.events, { id, title: 'Sự kiện mới', color: 'primary', start, end, place: '' }], seq: s.seq + 1, selectedId: id, announce: 'Đã tạo sự kiện từ ' + hm(start) + ' đến ' + hm(end) });
+    this.log('create.onCreate', "{ start: '" + fmt(start) + "', end: '" + fmt(end) + "', allDay: false }");
+  }
+  select(id) {
+    const e = this._instMap[id]; if (!e) return;
+    this.setState({ selectedId: id, announce: 'Đã chọn ' + e.title });
+    this.log('sdSelect', "{ id: '" + e.srcId + "'" + (e.recurring ? ", occurrence: '" + id.split('@')[1] + "'" : '') + ' }');
+  }
+  commit(id, start, end, source) {
+    const e = this._instMap[id]; if (!e) return;
+    if (e.recurring) { this.setState({ pending: { id, start, end, source, title: e.title }, announce: e.title + ' là sự kiện lặp. Chọn phạm vi áp dụng.' }); return; }
+    this.setState(st => ({ events: st.events.map(x => x.id === e.srcId ? { ...x, start, end } : x), announce: 'Đã dời ' + e.title + ' sang ' + WDF[new Date(start).getDay()] + ' ' + ddmm(start) + ', ' + hm(start) }));
+    this.log('sdMove', "{ id: '" + e.srcId + "', start: '" + fmt(start) + "', end: '" + fmt(end) + "', source: '" + source + "' }");
+    this.follow(start);
+  }
+  follow(start) { if (this._dayList.length && !this._dayList.includes(D0(start))) this.setState({ anchor: D0(start) }); }
+  applyPending(scope) {
+    const p = this.state.pending; if (!p) return;
+    const [rid, key] = p.id.split('@');
+    this.setState(st => {
+      if (scope === 'this') return { pending: null, exceptions: { ...st.exceptions, [p.id]: { start: p.start, end: p.end } } };
+      const r = st.recurring.find(x => x.id === rid);
+      const nr = { ...r, weekday: new Date(p.start).getDay(), startMin: minOf(p.start), dur: (p.end - p.start) / 6e4 };
+      if (scope === 'all') return { pending: null, selectedId: null, recurring: st.recurring.map(x => x.id === rid ? nr : x) };
+      const orig = T(key);
+      return { pending: null, selectedId: null, seq: st.seq + 1, recurring: [...st.recurring.map(x => x.id === rid ? { ...x, until: addD(orig, -1) } : x), { ...nr, id: rid + 'f' + st.seq, since: orig, until: null }] };
+    });
+    if (scope === 'this' && p.source === 'keyboard') this._focusId = p.id;
+    this.log('sdMove', "{ id: '" + rid + "', occurrence: '" + key + "', scope: '" + scope + "', start: '" + fmt(p.start) + "', end: '" + fmt(p.end) + "', source: '" + p.source + "' }");
+    this.follow(p.start);
+  }
+
+  evKey(x, id) {
+    const e = this._instMap[id]; if (!e || this.state.pending) return;
+    const k = x.key;
+    if (k === 'Enter' || k === ' ') { x.preventDefault(); x.stopPropagation(); this.select(id); return; }
+    if (k === 'Escape') { x.stopPropagation(); this.setState({ selectedId: null }); const g = this.colsRef.current; if (g) g.focus(); return; }
+    if (k.indexOf('Arrow') === 0 && !x.altKey) return;
+    let start = e.start, end = e.end;
+    if (k === 'ArrowUp' || k === 'ArrowDown') { const d = (k === 'ArrowUp' ? -15 : 15) * 6e4; if (x.shiftKey) end = Math.max(start + 15 * 6e4, end + d); else { start += d; end += d; } }
+    else if (k === 'ArrowLeft' || k === 'ArrowRight') { const d = k === 'ArrowLeft' ? -1 : 1; start = addD(start, d); end = addD(end, d); }
+    else return;
+    x.preventDefault(); x.stopPropagation();
+    if (D0(start) !== D0(end - 1) || start < D0(e.start) - 7 * 864e5) return;
+    this._focusId = id;
+    this.commit(id, start, end, 'keyboard');
+  }
+  onGridKey = x => {
+    if (x.target !== x.currentTarget) return;
+    const s = this.state, c = this.cfg(), n = this._dayList.length;
+    let d = Math.min(s.focusCell.d, n - 1), m = s.focusCell.m;
+    switch (x.key) {
+      case 'ArrowUp': m = Math.max(0, m - c.slot); break;
+      case 'ArrowDown': m = Math.min(1440 - c.slot, m + c.slot); break;
+      case 'ArrowLeft': if (d === 0) { this.nav(-1); d = n - 1; } else d -= 1; break;
+      case 'ArrowRight': if (d === n - 1) { this.nav(1); d = 0; } else d += 1; break;
+      case 'Home': m = 480; break;
+      case 'End': m = 1050 - c.slot; break;
+      case 'PageUp': x.preventDefault(); this.nav(-1); return;
+      case 'PageDown': x.preventDefault(); this.nav(1); return;
+      case 'Enter': case ' ': { x.preventDefault(); const day = this._dayList[d]; this.create(day + m * 6e4, day + Math.min(1440, m + c.slot) * 6e4); return; }
+      default: if (x.key === 't' || x.key === 'T') this.setState({ anchor: TODAY }); return;
+    }
+    x.preventDefault();
+    this.setState({ focusCell: { d, m }, kbd: true, announce: WDF[new Date(this._dayList[d] || TODAY).getDay()] + ', ' + mm(m) }, () => this.ensureVisible(m));
+  };
+  ensureVisible(m) {
+    const sc = this.scrollRef.current, hd = this.headRef.current; if (!sc) return;
+    const hh = hd ? hd.offsetHeight : 0, y = m / 60 * HOUR, sh = this.cfg().slot / 60 * HOUR;
+    if (y < sc.scrollTop) sc.scrollTop = y - 8;
+    else if (hh + y + sh > sc.scrollTop + sc.clientHeight) sc.scrollTop = hh + y + sh - sc.clientHeight + 8;
+  }
+  nav(dir) {
+    const v = this.effView(); let a = this.state.anchor;
+    if (v === 'month') { const d = new Date(a); a = new Date(d.getFullYear(), d.getMonth() + dir, 1).getTime(); }
+    else a = addD(a, (v === 'week' ? 7 : v === 'day' ? 1 : 14) * dir);
+    this.setState({ anchor: a });
+  }
+  goDay(d) { this.setState({ anchor: d, view: 'day' }); }
+
+  renderVals() {
+    const s = this.state, c = this.cfg(), view = this.effView(), mob = s.mobile;
+    const isGrid = view === 'week' || view === 'day';
+    this._gridKey = isGrid ? view + (mob ? 'm' : '') : '';
+    const anchor = D0(s.anchor);
+    const isWe = d => { const w = new Date(d).getDay(); return w === 0 || w === 6; };
+    let from, to, dayList = [];
+    if (view === 'week') { from = this.sow(anchor, c.ws); to = addD(from, 7); for (let i = 0; i < 7; i++) { const d = addD(from, i); if (!(c.hideWe && isWe(d))) dayList.push(d); } }
+    else if (view === 'day') { from = anchor; to = addD(anchor, 1); dayList = [anchor]; }
+    else if (view === 'month') { const a = new Date(anchor); const first = new Date(a.getFullYear(), a.getMonth(), 1).getTime(); from = this.sow(first, c.ws); const dim = new Date(a.getFullYear(), a.getMonth() + 1, 0).getDate(); to = addD(from, Math.ceil((Math.round((first - from) / 864e5) + dim) / 7) * 7); }
+    else { from = anchor; to = addD(anchor, 14); }
+    this._dayList = dayList;
+    const sf = this.sow(anchor, c.ws);
+    const dr = s.drag, pd = s.pending;
+    let all = this.instances(Math.min(from, sf), Math.max(to, addD(sf, 7)));
+    all = all.map(e => {
+      if (dr && dr.moved && dr.id === e.id) return { ...e, start: dr.start, end: dr.end, _drag: true };
+      if (pd && pd.id === e.id) return { ...e, start: pd.start, end: pd.end, _pend: true };
+      return e;
+    });
+    const map = {}; all.forEach(e => { map[e.id] = e; }); this._instMap = map;
+    const onDay = (e, d) => e.allDay ? (d >= D0(e.start) && d <= D0(e.end)) : D0(e.start) === d;
+    const sortItems = (a, b) => (Number(!!b.allDay) - Number(!!a.allDay)) || a.start - b.start;
+
+    const fcD = Math.min(s.focusCell.d, Math.max(0, dayList.length - 1));
+    const days = isGrid ? dayList.map((d, i) => {
+      const k = keyOf(d), w = new Date(d).getDay(), hol = HOL[k], off = w === 0 || w === 6 || (hol && hol.off), isToday = d === TODAY;
+      const shade = !c.wh ? [] : off ? [{ top: 0, h: 24 * HOUR }] : [[0, 480], [720, 780], [1050, 1440]].map(([a, b]) => ({ top: a / 60 * HOUR, h: (b - a) / 60 * HOUR }));
+      const evs = this.layout(all.filter(e => !e.allDay && D0(e.start) === d)).map(e => this.evView(e, s));
+      let ghost = null;
+      if (dr && dr.type === 'create' && dr.dayIdx === i) { const a = Math.min(dr.a0, dr.c), b = Math.min(1440, Math.max(dr.a0, dr.c) + c.slot); ghost = { top: a / 60 * HOUR + 1, h: (b - a) / 60 * HOUR - 2, label: mm(a) + ' – ' + mm(b) }; }
+      const fc = s.gridFocused && s.kbd && !dr && fcD === i ? { top: s.focusCell.m / 60 * HOUR, h: c.slot / 60 * HOUR, label: mm(s.focusCell.m) } : null;
+      return {
+        key: k, wd: WD[w], num: new Date(d).getDate(), isToday,
+        numBg: isToday ? '#005cbb' : 'transparent', numFg: isToday ? '#ffffff' : '#1a1b1f', wdColor: isToday ? '#005cbb' : '#44474f',
+        holiday: hol ? hol.label : '', holidayColor: hol && hol.off ? '#ba1a1a' : '#44474f',
+        shade, events: evs, hasGhost: !!ghost, ghost: ghost || {}, hasFocus: !!fc, focus: fc || {},
+        nowTop: minOf(NOW) / 60 * HOUR - 1, onDown: x => this.startCreate(x, i)
+      };
+    }) : [];
+
+    const bars = [];
+    if (isGrid) {
+      const lanes = [];
+      all.filter(e => e.allDay).sort((a, b) => a.start - b.start || b.end - a.end).forEach(e => {
+        const idx = dayList.map((d, i) => (d >= D0(e.start) && d <= D0(e.end)) ? i : -1).filter(i => i >= 0);
+        if (!idx.length) return;
+        const s0 = idx[0], s1 = idx[idx.length - 1];
+        let lane = lanes.findIndex(x => x < s0); if (lane < 0) { lane = lanes.length; lanes.push(s1); } else lanes[lane] = s1;
+        const col = COLORS[e.color] || COLORS.primary;
+        bars.push({ id: e.id, title: e.title, col: (s0 + 1) + ' / ' + (s1 + 2), row: String(lane + 1), bg: col.bg, fg: col.fg, bd: col.bd,
+          outline: s.selectedId === e.id ? '2px solid #005cbb' : 'none', aria: e.title + ', cả ngày, ' + ddmm(e.start) + (e.end !== e.start ? ' đến ' + ddmm(e.end) : ''),
+          onClick: () => this.select(e.id), onKey: x => { if (x.key === 'Enter' || x.key === ' ') { x.preventDefault(); this.select(e.id); } } });
+      });
+    }
+
+    let weeks = [], wdHeads = [];
+    if (view === 'month') {
+      const mo = new Date(anchor).getMonth(), nW = Math.round((to - from) / 864e5 / 7);
+      for (let i = 0; i < 7; i++) { const d = addD(from, i); if (!(c.hideWe && isWe(d))) wdHeads.push(WD[new Date(d).getDay()]); }
+      for (let wi = 0; wi < nW; wi++) {
+        const cells = [];
+        for (let ci = 0; ci < 7; ci++) {
+          const d = addD(from, wi * 7 + ci); if (c.hideWe && isWe(d)) continue;
+          const k = keyOf(d), hol = HOL[k], inMonth = new Date(d).getMonth() === mo, isToday = d === TODAY;
+          const items = all.filter(e => onDay(e, d)).sort(sortItems);
+          const max = hol ? 2 : 3, shown = items.slice(0, max);
+          cells.push({
+            key: k, num: new Date(d).getDate(),
+            numBg: isToday ? '#005cbb' : 'transparent', numFg: isToday ? '#ffffff' : inMonth ? '#1a1b1f' : '#8e9099',
+            bg: c.wh && (isWe(d) || (hol && hol.off)) ? '#f7f7fa' : '#ffffff',
+            showHoliday: !!hol && !mob, holiday: hol ? hol.label : '', holidayColor: hol && hol.off ? '#ba1a1a' : '#44474f',
+            items: shown.map(e => { const col = COLORS[e.color] || COLORS.primary; return { label: e.allDay ? e.title : hm(e.start) + ' ' + e.title, bg: e.allDay ? col.bg : 'transparent', fg: e.allDay ? col.fg : '#1a1b1f', dot: col.dot, outline: s.selectedId === e.id ? '2px solid #005cbb' : 'none', onClick: x => { x.stopPropagation(); this.select(e.id); } }; }),
+            hasMore: items.length > shown.length, moreLabel: '+' + (items.length - shown.length) + ' khác',
+            dots: items.slice(0, 3).map(e => ({ c: (COLORS[e.color] || COLORS.primary).dot })),
+            aria: WDF[new Date(d).getDay()] + ' ' + ddmm(d) + (hol ? ', ' + hol.label : '') + ', ' + items.length + ' sự kiện',
+            onClick: () => this.goDay(d), onKey: x => { if (x.key === 'Enter' || x.key === ' ') { x.preventDefault(); this.goDay(d); } }
+          });
+        }
+        weeks.push({ cells });
+      }
+    }
+
+    let agenda = [];
+    if (view === 'agenda') {
+      for (let i = 0; i < 14; i++) {
+        const d = addD(from, i), k = keyOf(d), hol = HOL[k], w = new Date(d).getDay();
+        const items = all.filter(e => onDay(e, d)).sort(sortItems);
+        if (!items.length && !hol) continue;
+        agenda.push({
+          key: k, title: WDF[w] + ', ' + ddmm(d), color: d === TODAY ? '#005cbb' : '#1a1b1f', hasHoliday: !!hol, holiday: hol ? hol.label : '', holidayColor: hol && hol.off ? '#ba1a1a' : '#44474f',
+          items: items.map(e => ({ title: e.title, time: e.allDay ? 'Cả ngày' : hm(e.start) + ' – ' + endLabel(e), place: e.place || '', hasPlace: !!e.place, recurring: !!e.recurring,
+            dot: (COLORS[e.color] || COLORS.primary).dot, bg: s.selectedId === e.id ? '#e8eefc' : 'transparent', aria: e.title + ', ' + (e.allDay ? 'cả ngày' : hm(e.start) + ' đến ' + endLabel(e)),
+            onClick: () => this.select(e.id), onKey: x => { if (x.key === 'Enter' || x.key === ' ') { x.preventDefault(); this.select(e.id); } } }))
+        });
+      }
+    }
+
+    const strip = mob && view === 'day' ? Array.from({ length: 7 }, (_, i) => addD(sf, i)).filter(d => !(c.hideWe && isWe(d))).map(d => {
+      const sel = d === anchor, isT = d === TODAY, has = all.some(e => onDay(e, d)), w = new Date(d).getDay();
+      return { wd: WD[w], num: new Date(d).getDate(), bg: sel ? '#005cbb' : 'transparent', fg: sel ? '#ffffff' : isT ? '#005cbb' : '#1a1b1f', wdColor: sel ? '#ffffff' : '#44474f',
+        dot: has ? (sel ? '#ffffff' : '#005cbb') : 'transparent', border: isT && !sel ? '1px solid #005cbb' : '1px solid transparent', current: sel ? 'date' : undefined,
+        aria: WDF[w] + ' ' + ddmm(d) + (has ? ', có sự kiện' : ''), onClick: () => this.setState({ anchor: d }) };
+    }) : [];
+
+    const a = new Date(anchor);
+    let title = '';
+    if (view === 'month' || (view === 'day' && mob)) title = 'Tháng ' + (a.getMonth() + 1) + ', ' + a.getFullYear();
+    else if (view === 'week') { const f = new Date(dayList[0]), l = new Date(dayList[dayList.length - 1]); title = f.getMonth() === l.getMonth() ? f.getDate() + ' – ' + l.getDate() + ' tháng ' + (f.getMonth() + 1) + ', ' + f.getFullYear() : ddmm(dayList[0]) + ' – ' + ddmm(dayList[dayList.length - 1]) + '/' + l.getFullYear(); }
+    else if (view === 'day') title = WDF[a.getDay()] + ', ' + a.getDate() + ' tháng ' + (a.getMonth() + 1) + ', ' + a.getFullYear();
+    else title = ddmm(from) + ' – ' + ddmm(addD(from, 13)) + '/' + new Date(addD(from, 13)).getFullYear();
+    const unit = { month: 'Tháng', week: 'Tuần', day: 'Ngày', agenda: '14 ngày' }[view];
+
+    const vdefs = mob ? [['day', 'Ngày'], ['month', 'Tháng'], ['agenda', 'Danh sách']] : [['month', 'Tháng'], ['week', 'Tuần'], ['day', 'Ngày'], ['agenda', 'Danh sách']];
+    const views = vdefs.map(([id, label], i) => ({ label, pressed: view === id, bg: view === id ? '#d7e3ff' : '#ffffff', fg: view === id ? '#001b3f' : '#1a1b1f', sep: i ? '1px solid #c4c6d0' : '0', onClick: () => this.setState({ view: id }) }));
+
+    const sel = s.selectedId ? map[s.selectedId] : null;
+    let selV = {};
+    if (sel) {
+      const col = COLORS[sel.color] || COLORS.primary, r = sel.recurring ? s.recurring.find(x => x.id === sel.srcId) : null, w = new Date(sel.start).getDay();
+      selV = { title: sel.title, dot: col.dot,
+        when: sel.allDay ? 'Cả ngày · ' + (D0(sel.start) === D0(sel.end) ? WDF[w] + ', ' + ddmm(sel.start) : ddmm(sel.start) + ' – ' + ddmm(sel.end)) : WDF[w] + ', ' + ddmm(sel.start) + '/' + new Date(sel.start).getFullYear() + ' · ' + hm(sel.start) + ' – ' + endLabel(sel),
+        place: sel.place || '', hasPlace: !!sel.place, isRec: !!r, rule: r ? WDF[r.weekday] + ' hằng tuần, ' + mm(r.startMin) + ', từ ' + ddmm(r.since) + (r.until ? ' đến ' + ddmm(r.until) : '') : '' };
+    }
+
+    return {
+      devBtns: [['Desktop', false], ['Mobile · 390px', true]].map(([label, m]) => ({ label, pressed: mob === m, bg: mob === m ? '#1a1b1f' : '#ffffff', fg: mob === m ? '#ffffff' : '#3a3c42', onClick: () => this.setState({ mobile: m, selectedId: null }) })),
+      calFlex: mob ? '0 1 390px' : '1 1 600px', calMax: mob ? '390px' : '100%', asideMax: mob ? '340px' : '300px',
+      btnH: mob ? 44 : 36, scrollH: mob ? 540 : 620, cellH: mob ? 56 : 104, rowH: mob ? 44 : 32,
+      title, prevLabel: unit + ' trước', nextLabel: unit + ' sau',
+      goToday: () => this.setState({ anchor: TODAY }), prev: () => this.nav(-1), next: () => this.nav(1),
+      views, showStrip: strip.length > 0, strip, stripN: strip.length || 7,
+      isGrid, isMonth: view === 'month', isAgenda: view === 'agenda',
+      showDayHeader: !mob, adBorder: mob ? '0' : '1px solid #e3e4ea',
+      nDays: Math.max(1, dayList.length), days, bars,
+      hours: Array.from({ length: 23 }, (_, i) => ({ top: (i + 1) * HOUR - 7, label: pad(i + 1) + ':00' })),
+      colsRef: this.colsRef, scrollRef: this.scrollRef, headRef: this.headRef,
+      gridLabel: 'Lưới giờ. Mũi tên để chọn khung giờ, Enter để tạo sự kiện, PageUp và PageDown để đổi ' + (view === 'week' ? 'tuần' : 'ngày') + '.',
+      onGridKey: this.onGridKey,
+      onGridFocus: () => this.setState({ gridFocused: true, kbd: Date.now() - this._ptr > 300 }),
+      onGridBlur: () => this.setState({ gridFocused: false }),
+      nCols: wdHeads.length || 7, wdHeads, weeks, headAlign: mob ? 'center' : 'left', numJustify: mob ? 'center' : 'flex-start', showChips: !mob, showDots: mob,
+      agenda, agendaEmpty: view === 'agenda' && agenda.length === 0, agCols: mob ? 'minmax(0,1fr)' : '150px minmax(0,1fr)',
+      hasPending: !!pd, pendingText: pd ? '“' + pd.title + '” là sự kiện lặp. Áp dụng thay đổi cho:' : '',
+      applyThis: () => this.applyPending('this'), applyFollowing: () => this.applyPending('following'), applyAll: () => this.applyPending('all'),
+      cancelPending: () => { const p = this.state.pending; if (p && p.source === 'keyboard') this._focusId = p.id; this.setState({ pending: null, announce: 'Đã huỷ thay đổi' }); },
+      pendKey: x => { if (x.key === 'Escape') { x.stopPropagation(); const p = this.state.pending; if (p && p.source === 'keyboard') this._focusId = p.id; this.setState({ pending: null, announce: 'Đã huỷ thay đổi' }); } },
+      announce: s.announce,
+      hasSel: !!sel, noSel: !sel, sel: selV, removeLabel: sel && sel.recurring ? 'Xoá lần này' : 'Xoá',
+      rename: x => { const v = x.target.value, cur = this._instMap[this.state.selectedId]; if (!cur) return; this.setState(st => cur.recurring ? { recurring: st.recurring.map(r => r.id === cur.srcId ? { ...r, title: v } : r) } : { events: st.events.map(e => e.id === cur.srcId ? { ...e, title: v } : e) }); },
+      titleKey: x => { if (x.key === 'Enter' || x.key === 'Escape') { x.preventDefault(); this._focusId = this.state.selectedId; this.forceUpdate(); } },
+      remove: () => { const cur = this._instMap[this.state.selectedId]; if (!cur) return; this.setState(st => cur.recurring ? { exceptions: { ...st.exceptions, [cur.id]: 'deleted' }, selectedId: null } : { events: st.events.filter(e => e.id !== cur.srcId), selectedId: null }); },
+      deselect: () => this.setState({ selectedId: null }),
+      log: s.log, logEmpty: s.log.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

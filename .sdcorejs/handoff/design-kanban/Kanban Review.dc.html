@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;padding-bottom:96px">
+
+<header data-screen-label="00 Header" style="max-width:1240px;margin:0 auto;padding:56px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs-angular · main · versions/v19 · components/kanban</span><span>review · 08/11/2026</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em">sd-kanban: review và API mới</h1>
+  <p style="margin:0;max-width:820px;color:#3a3c42;font-size:17px;text-wrap:pretty">Đã đọc <code>kanban.model.ts</code>, <code>kanban.utils.ts</code>, <code>kanban.templates.ts</code>, component, SCSS, <code>sd-kanban.md</code>, token trong <code>THEME.md</code> và trang showcase. Hành vi và trợ năng tốt, phần hình ảnh đã làm đúng review 19/10. API thì chưa theo quy ước đã chốt sau đó (sd-calendar, sd-file-explorer, sd-timeline, sd-scheduler) và còn thiếu những thứ <a href="Core Patterns Proposal.dc.html">P1 board</a> cần. Trên main chỉ showcase dùng sd-kanban, nên đổi API ngay trong đợt này.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding:8px 0 40px;border-bottom:1px solid #dddcd6">
+    <a href="#ket-luan">01 Kết luận</a>
+    <a href="#board">02 Board mới</a>
+    <a href="#the">03 Thẻ</a>
+    <a href="#keo">04 Kéo và sắp xếp</a>
+    <a href="#tai">05 Tải theo cột</a>
+    <a href="#api">06 API mới</a>
+    <a href="#chuyen-doi">07 Chuyển đổi</a>
+    <a href="#can-chot">08 Cần chốt</a>
+  </nav>
+</header>
+
+<section id="ket-luan" data-screen-label="01 Kết luận" style="max-width:1240px;margin:0 auto;padding:40px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Kết luận</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px">
+    <sc-for list="{{ verdict }}" as="v" hint-placeholder-count="3">
+      <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+        <span style="align-self:flex-start;font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid {{ v.c }};color:{{ v.c }}">{{ v.tag }}</span>
+        <sc-for list="{{ v.items }}" as="i" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px;font-size:14px"><span style="font:600 12px/22px 'JetBrains Mono',monospace;color:#6b6d73">{{ i.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ i.v }}</span></div></sc-for>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="board" data-screen-label="02 Board mới" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Board mới, dữ liệu của P1</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Đơn hàng theo trạng thái, tải theo từng cột từ server. Đang kéo DH2415 khỏi “Chờ xác nhận”: “Đang giao” nhận được nên có viền; “Hoàn tất” bị <code>droppable</code> từ chối nên mờ. <code>reorder</code> tắt nên không có khe thả: thả ở đâu trong làn thì thẻ cũng về đúng vị trí theo thứ tự server trả về.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #dddcd6">
+      <span style="display:flex;align-items:center;gap:8px;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase"><span style="width:8px;height:8px;border-radius:99px;background:#005cbb"></span>dataSource theo cột · reorder: false · đang kéo</span>
+      <span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">làn 280px · thu gọn 64px</span>
+    </div>
+    <div style="overflow-x:auto;background:#f9f9f9">
+      <div style="padding:24px 0;width:max-content;min-width:100%;box-sizing:border-box;display:flex;justify-content:center">
+        <div style="position:relative;width:944px;flex:none;display:flex;align-items:flex-start;gap:12px;padding:4px 2px;font-family:Roboto,'Helvetica Neue',sans-serif;font-size:14px;line-height:1.4;color:#1a1b1f">
+          <sc-for list="{{ lanes }}" as="l" hint-placeholder-count="3">
+            <div style="flex:none;width:280px;box-sizing:border-box;border:1px solid {{ l.bd }};border-radius:12px;background:{{ l.bg }};display:flex;flex-direction:column;cursor:{{ l.cur }}">
+              <div style="display:flex;align-items:center;gap:8px;min-height:48px;box-sizing:border-box;padding:8px 8px 8px 14px;opacity:{{ l.op }}">
+                <span style="width:8px;height:8px;border-radius:99px;background:{{ l.dot }};flex:none"></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-weight:600;line-height:20px">{{ l.label }}</span><span style="font-size:12px;line-height:16px;color:#44474f;font-variant-numeric:tabular-nums">{{ l.summary }}</span></span>
+                <span style="font-size:13px;color:#44474f;font-variant-numeric:tabular-nums">{{ l.count }}</span>
+                <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;color:#44474f">expand_more</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 8px 10px;opacity:{{ l.op }}">
+                <sc-for list="{{ l.cards }}" as="c" hint-placeholder-count="3">
+                  <div style="position:relative;box-sizing:border-box;padding:10px 6px 10px 12px;border:1px solid {{ c.bd }};border-radius:8px;background:{{ c.bg }};box-shadow:{{ c.shadow }};opacity:{{ c.op }};display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:4px">
+                    <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:600">{{ c.code }}</span><span style="margin-left:auto;font-size:12px;color:#44474f">{{ c.when }}</span></div>
+                      <span style="font-size:13px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.customer }}</span>
+                      <span style="font-size:12px;line-height:16px;color:#44474f;font-variant-numeric:tabular-nums">{{ c.total }}</span>
+                    </div>
+                    <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;color:#44474f;opacity:{{ c.toolsOp }}">more_horiz</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ l.hasMore }}" hint-placeholder-val="{{ true }}"><div style="height:32px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#005cbb">{{ l.more }}</div></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <div style="flex:none;width:64px;box-sizing:border-box;border:1px solid transparent;border-radius:12px;background:#f4f3f6;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;align-self:stretch;opacity:.5">
+            <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;color:#44474f">chevron_right</span>
+            <span style="width:8px;height:8px;border-radius:99px;background:#5c6270"></span>
+            <span style="font-size:13px;color:#44474f">3</span>
+            <span style="writing-mode:vertical-rl;font-weight:600;margin-top:8px">Đã huỷ</span>
+          </div>
+          <div style="position:absolute;left:318px;top:118px;width:264px;box-sizing:border-box;padding:10px 6px 10px 12px;border:1px solid #d0d1d9;border-radius:8px;background:#fdfbff;box-shadow:0 2px 8px rgba(26,27,31,.2);display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:4px;z-index:5;cursor:grabbing">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:600">DH2415</span><span style="margin-left:auto;font-size:12px;color:#44474f">08:52</span></div>
+              <span style="font-size:13px;line-height:18px">Nguyễn Thị Thu</span>
+              <span style="font-size:12px;line-height:16px;color:#44474f">640.000 ₫ · Website</span>
+            </div>
+            <span style="width:28px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:1px;background:#dddcd6;border:1px solid #dddcd6;border-radius:12px;overflow:hidden">
+    <sc-for list="{{ boardNotes }}" as="a" hint-placeholder-count="6">
+      <div style="background:#ffffff;padding:14px 18px;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:14px">{{ a.k }}</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">{{ a.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="the" data-screen-label="03 Thẻ" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Thẻ</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Bỏ tay nắm <code>drag_indicator</code>. Kéo bằng cả thẻ; bấm mà không di chuyển quá 5px là chọn. Tên thẻ là một nút phủ cả thẻ (stretched button), nên thẻ vào được bằng Tab và đọc đúng tên. Nút ⋯ (menu “Chuyển sang…”) và vùng actions nằm trên lớp đó. Khung, màu và khoảng cách giữ như main.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px">
+    <sc-for list="{{ cardStates }}" as="s" hint-placeholder-count="8">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f4f3f6;padding:16px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif;font-size:14px;line-height:1.4;color:#1a1b1f">
+          <div style="position:relative;box-sizing:border-box;padding:10px 6px 10px 12px;border:1px solid {{ s.bd }};border-radius:8px;background:{{ s.bg }};box-shadow:{{ s.shadow }};outline:{{ s.outline }};outline-offset:2px;opacity:{{ s.op }};display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:4px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div style="display:flex;align-items:baseline;gap:8px"><span style="font-weight:600">DH2412</span><span style="margin-left:auto;font-size:12px;color:#44474f">09:14</span></div>
+              <span style="font-size:13px;line-height:18px">Công ty TNHH Minh Phát</span>
+              <span style="font-size:12px;line-height:16px;color:#44474f">1.240.000 ₫ · Shopee</span>
+            </div>
+            <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;color:#44474f;opacity:{{ s.toolsOp }}">more_horiz</span>
+            <sc-if value="{{ s.pending }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1 / -1;display:flex;align-items:center;gap:6px;margin:8px 6px 0 0;padding:6px 8px;border-radius:6px;background:#dbe8f5;color:#00458f;font-size:12px;line-height:16px"><span style="font-family:'Material Symbols Outlined';font-size:16px">sync</span>Đang lưu…</div></sc-if>
+            <sc-if value="{{ s.failed }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1 / -1;display:flex;align-items:center;gap:6px;margin:8px 6px 0 0;padding:6px 8px;border-radius:6px;background:#f5dfdf;color:#410002;font-size:12px;line-height:16px"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#ba1a1a">error</span><span style="flex:1">Không chuyển được thẻ.</span><span style="padding:2px 8px;border:1px solid currentColor;border-radius:4px;font-weight:600">Bỏ qua</span></div></sc-if>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">{{ s.k }}</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ s.v }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="keo" data-screen-label="04 Kéo và sắp xếp" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Kéo và sắp xếp</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Ba trạng thái của làn trong lúc kéo. <code>droppable</code> chạy cho từng làn ngay khi bắt đầu kéo, không đợi tới lúc thả.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+    <sc-for list="{{ dropModes }}" as="m" hint-placeholder-count="3">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f9f9f9;padding:20px;border-bottom:1px solid #ecebe6;display:flex;justify-content:center;font-family:Roboto,sans-serif;font-size:14px;line-height:1.4;color:#1a1b1f">
+          <div style="width:280px;box-sizing:border-box;border:1px solid {{ m.bd }};border-radius:12px;background:{{ m.bg }};cursor:{{ m.cur }}">
+            <div style="display:flex;align-items:center;gap:8px;min-height:48px;box-sizing:border-box;padding:8px 8px 8px 14px;opacity:{{ m.op }}"><span style="width:8px;height:8px;border-radius:99px;background:{{ m.dot }}"></span><span style="flex:1;font-weight:600">{{ m.label }}</span><span style="font-size:13px;color:#44474f">{{ m.count }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:0 8px 10px;opacity:{{ m.op }}">
+              <sc-for list="{{ m.cards }}" as="c" hint-placeholder-count="3">
+                <sc-if value="{{ c.slot }}" hint-placeholder-val="{{ false }}"><div style="height:74px;box-sizing:border-box;border:2px dashed #72a4da;border-radius:8px;background:#eef2fb"></div></sc-if>
+                <sc-if value="{{ c.card }}" hint-placeholder-val="{{ true }}"><div style="box-sizing:border-box;padding:10px 12px;border:1px solid #d0d1d9;border-radius:8px;background:#fdfbff;display:flex;flex-direction:column;gap:2px"><div style="display:flex;gap:8px"><span style="font-weight:600">{{ c.code }}</span><span style="margin-left:auto;font-size:12px;color:#44474f">{{ c.when }}</span></div><span style="font-size:13px">{{ c.customer }}</span><span style="font-size:12px;color:#44474f">{{ c.total }}</span></div></sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 18px 18px;display:flex;flex-direction:column;gap:4px"><strong style="font-weight:600;font-size:15px">{{ m.title }}</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">{{ m.desc }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #ecebe6;font-weight:600">Bàn phím và cảm ứng</div>
+    <sc-for list="{{ keys }}" as="k" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:minmax(140px,220px) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px/22px 'JetBrains Mono',monospace">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="tai" data-screen-label="05 Tải theo cột" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Tải theo cột</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Có <code>option.dataSource</code> thì mỗi cột tự gọi <code>onLoad({ columnId, cursor, pageSize, keyword, signal })</code> và có trạng thái riêng: một cột lỗi thì các cột khác vẫn dùng được. Không có <code>dataSource</code> thì dùng <code>items</code>, không có các trạng thái này.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px">
+    <sc-for list="{{ loadStates }}" as="m" hint-placeholder-count="5">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f9f9f9;padding:16px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif;font-size:14px;line-height:1.4;color:#1a1b1f">
+          <div style="box-sizing:border-box;border-radius:12px;background:#f4f3f6">
+            <div style="display:flex;align-items:center;gap:8px;min-height:48px;box-sizing:border-box;padding:8px 8px 8px 14px"><span style="width:8px;height:8px;border-radius:99px;background:#a66300"></span><span style="flex:1;font-weight:600">Chờ xác nhận</span><span style="font-size:13px;color:#44474f">{{ m.count }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:0 8px 10px">
+              <sc-for list="{{ m.skel }}" as="k" hint-placeholder-count="0"><div style="height:74px;box-sizing:border-box;border-radius:8px;background:#ebeaee"></div></sc-for>
+              <sc-for list="{{ m.cards }}" as="c" hint-placeholder-count="0"><div style="box-sizing:border-box;padding:10px 12px;border:1px solid #d0d1d9;border-radius:8px;background:#fdfbff;display:flex;flex-direction:column;gap:2px"><div style="display:flex;gap:8px"><span style="font-weight:600">{{ c.code }}</span><span style="margin-left:auto;font-size:12px;color:#44474f">{{ c.when }}</span></div><span style="font-size:13px">{{ c.customer }}</span></div></sc-for>
+              <sc-if value="{{ m.more }}" hint-placeholder-val="{{ false }}"><div style="height:32px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#005cbb">Xem thêm 9 thẻ</div></sc-if>
+              <sc-if value="{{ m.loadingMore }}" hint-placeholder-val="{{ false }}"><div style="height:32px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#44474f"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:99px;border:2px solid #dbe8f5;border-top-color:#005cbb"></span>Đang tải…</div></sc-if>
+              <sc-if value="{{ m.error }}" hint-placeholder-val="{{ false }}"><div role="alert" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 8px;text-align:center;font-size:13px;color:#410002"><span style="font-family:'Material Symbols Outlined';font-size:22px;color:#ba1a1a">error</span>Không tải được cột này.<span style="height:28px;padding:0 10px;border:1px solid #ba1a1a;border-radius:6px;display:flex;align-items:center;font-weight:500;color:#93000a;background:#ffffff">Thử lại</span></div></sc-if>
+              <sc-if value="{{ m.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 8px;text-align:center;font-size:13px;color:#44474f">Không có thẻ</div></sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">{{ m.title }}</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ m.desc }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="api" data-screen-label="06 API mới" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API mới</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Thẻ theo dạng <code>{ id, …, data?: T }</code> như <code>SdCalendarEvent</code>, <code>SdTimelineItem</code>. Dữ liệu là <code>items</code> có sẵn hoặc <code>option.dataSource</code> phân trang theo cursor như sd-timeline. Năng lực dời là nhóm <code>move</code> như sd-file-explorer, sd-calendar; <code>droppable</code> cùng tên với sd-scheduler. Bản đầy đủ ở <code>kanban.md</code>.</p>
+  <pre style="margin:0;padding:20px 24px;background:#ffffff;border:1px solid #dddcd6;border-radius:12px;overflow-x:auto;font:400 13px/1.65 'JetBrains Mono',monospace;color:#1a1b1f">{{ apiCode }}</pre>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) minmax(0,2fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span>Input / output / method</span><span>Kiểu, mặc định</span><span>Ghi chú</span></div>
+    <sc-for list="{{ apiRows }}" as="a" hint-placeholder-count="12">
+      <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) minmax(0,2fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px/22px 'JetBrains Mono',monospace">{{ a.k }}</span><span style="font:400 13px/22px 'JetBrains Mono',monospace;color:#3a3c42">{{ a.t }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ a.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="chuyen-doi" data-screen-label="07 Chuyển đổi" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Bảng chuyển đổi</h2></div>
+  <p style="margin:0;max-width:820px;color:#3a3c42;text-wrap:pretty">Breaking change, không giữ alias. Ghi bảng này vào <code>CHANGELOG.md</code> mục <code>## [Unreleased]</code> (Changed) và vào <code>sd-kanban.md</code>.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span>Main hiện tại</span><span>Mới</span></div>
+    <sc-for list="{{ migration }}" as="m" hint-placeholder-count="14">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:400 13px/22px 'JetBrains Mono',monospace;color:#6b6d73;overflow-wrap:anywhere">{{ m.a }}</span><span style="color:#1a1b1f;text-wrap:pretty;overflow-wrap:anywhere">{{ m.b }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="can-chot" data-screen-label="08 Cần chốt" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">08</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đã chốt và còn mở</h2></div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="9">
+      <div style="display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,1.2fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6;font-size:14px">
+        <span style="font:600 13px/22px 'JetBrains Mono',monospace;color:#6b6d73">{{ d.n }}</span>
+        <strong style="font-weight:600;text-wrap:pretty">{{ d.q }}</strong>
+        <span style="color:#3a3c42;text-wrap:pretty"><span style="font:600 11px 'JetBrains Mono',monospace;color:{{ d.c }};text-transform:uppercase;letter-spacing:.06em;margin-right:8px">{{ d.tag }}</span>{{ d.a }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.v = this.build(); }
+  renderVals() { return this.v; }
+  build() {
+    const CARD = { bd: '#d0d1d9', bg: '#fdfbff', shadow: 'none', op: 1, toolsOp: 0, outline: 'none' };
+    const card = (code, when, customer, total, over) => ({ ...CARD, code, when, customer, total, ...(over || {}) });
+    const LANE = { bd: 'transparent', bg: '#f4f3f6', op: 1, cur: 'default' };
+
+    const verdict = [
+      { tag: 'Giữ nguyên', c: '#2e7d32', items: [
+        { k: '✓', v: 'Pipeline dời bi quan: một thao tác chờ cho cả board, AbortSignal, bỏ kết quả muộn, trả focus về thẻ. Cùng cách sd-calendar 9.5.' },
+        { k: '✓', v: 'Menu “Chuyển sang…”, Alt + mũi tên (đảo khi RTL), một live region, lỗi hiện ngay trên thẻ và chỉ lên board khi thẻ không hiện.' },
+        { k: '✓', v: 'Dữ liệu sai thì báo lỗi cấu hình và khoá dời, không âm thầm bỏ thẻ.' },
+        { k: '✓', v: 'Hình ảnh theo review 19/10: làn trung tính, chấm 8px, công cụ thẻ theo hover, khe thả nét đứt, ô tìm kiếm primitive sm, 6 token trong THEME.md.' },
+      ] },
+      { tag: 'Lệch quy ước', c: '#a66300', items: [
+        { k: 'K1', v: 'Ánh xạ bằng getId, getColumnId, getTitle, getSearchText, withColumn. Calendar đã bỏ kiểu này; consumer map DTO sang { id, …, data }.' },
+        { k: 'K2', v: 'option.move và option.canMove, không phải nhóm move: { movable, onMove }.' },
+        { k: 'K3', v: 'SdKanbanId = string | number; mọi component khác dùng id: string.' },
+        { k: 'K4', v: 'model + loading + error + sdRetry: consumer tự quản lý tải. error nhận chuỗi và hiện thẳng.' },
+        { k: 'K5', v: 'modelChange và sdChange phát cùng một mảng.' },
+        { k: 'K6', v: 'Ngưỡng hẹp theo viewport (max-width: 599px); calendar, scheduler đo bề rộng host.' },
+      ] },
+      { tag: 'Thiếu cho P1', c: '#ba1a1a', items: [
+        { k: 'P1a', v: 'canMove chỉ chạy lúc thả. enterPredicate chỉ xét cột disabled và thu gọn, nên cột không hợp lệ không mờ khi đang kéo.' },
+        { k: 'P1b', v: 'Không tải theo cột, không “Tải thêm”, số đếm là số thẻ đã có trong model chứ không phải tổng của server.' },
+        { k: 'P1c', v: 'Không chọn được thẻ: không sdSelect, không selectedId. Showcase phải thêm nút “Details”.' },
+        { k: 'P1d', v: 'Luôn sắp xếp trong cột. Đơn hàng xếp theo ngày tạo, vị trí thả không có nghĩa.' },
+        { k: 'P1e', v: 'Ô tìm kiếm bật mặc định, trùng với query bar của trang.' },
+        { k: 'P1f', v: 'Header không có chỗ cho tổng tiền của cột theo cùng bộ lọc.' },
+      ] },
+    ];
+
+    const lanes = [
+      { ...LANE, label: 'Chờ xác nhận', dot: '#a66300', summary: '18,4 triệu ₫', count: '12', hasMore: true, more: 'Xem thêm 9 thẻ', cards: [
+        card('DH2415', '08:52', 'Nguyễn Thị Thu', '640.000 ₫ · Website', { op: .4 }),
+        card('DH2416', '08:40', 'Cửa hàng Bình An', '2.380.000 ₫ · Đại lý'),
+        card('DH2418', '08:11', 'Trần Văn Hậu', '415.000 ₫ · Shopee'),
+      ] },
+      { ...LANE, bd: '#8bb3e0', bg: '#eef2fb', cur: 'grabbing', label: 'Đang giao', dot: '#006a6a', summary: '11,2 triệu ₫', count: '8', hasMore: true, more: 'Xem thêm 5 thẻ', cards: [
+        card('DH2408', 'Hôm qua', 'Công ty TNHH Minh Phát', '3.120.000 ₫ · Đại lý'),
+        card('DH2410', 'Hôm qua', 'Lê Hoàng Yến', '890.000 ₫ · Website'),
+        card('DH2412', 'Hôm qua', 'Phạm Gia Bảo', '1.240.000 ₫ · Shopee'),
+      ] },
+      { ...LANE, op: .45, cur: 'not-allowed', label: 'Hoàn tất', dot: '#2e7d32', summary: '86,4 triệu ₫', count: '31', hasMore: true, more: 'Xem thêm 20 thẻ', cards: [
+        card('DH2399', '06/11', 'Công ty CP Hải Long', '5.600.000 ₫ · Đại lý'),
+        card('DH2401', '06/11', 'Vũ Minh Châu', '320.000 ₫ · Website'),
+      ] },
+    ];
+    const boardNotes = [
+      { k: 'Header làn', v: 'Chấm 8px, nhãn 14/20 600, dòng summary 12/16 --sd-text-secondary (tổng tiền do consumer hoặc server trả về), số đếm 13px tabular. Số đếm là total của server; thiếu total thì đếm số đã tải và thêm “+” khi còn trang.' },
+      { k: 'Xem thêm', v: 'Nút chữ 13/500 --sd-primary cuối làn, cao 32px: “Xem thêm {n} thẻ”, n = min(pageSize, total − đã tải). loadMore: \'auto\' tải khi nút lọt vào khung nhìn của làn.' },
+      { k: 'Làn nhận được', v: 'Như main: --sd-kanban-lane-target-border và --sd-kanban-lane-target-bg, chỉ làn dưới con trỏ.' },
+      { k: 'Làn bị droppable từ chối', v: 'Header và thẻ opacity .45, con trỏ not-allowed, aria-disabled trên drop list. Áp dụng ngay khi bắt đầu kéo, cho mọi làn bị từ chối.' },
+      { k: 'Làn thu gọn', v: 'Giữ như main (64px, nhãn dọc). Bị từ chối thì cũng mờ.' },
+      { k: 'Bấm thẻ', v: 'Phát sdSelect và đặt selectedId. P1 mở drawer chi tiết như PR #137; drawer là việc của consumer.' },
+    ];
+
+    const cs = (k, v, over) => ({ k, v, ...CARD, pending: false, failed: false, ...(over || {}) });
+    const cardStates = [
+      cs('Mặc định', 'Viền --sd-kanban-card-border, nền --sd-surface, không bóng. Con trỏ pointer; grab khi có move và thẻ movable.'),
+      cs('Hover', 'Viền --sd-kanban-card-hover-border, hiện nút ⋯.', { bd: '#9d9fa5', toolsOp: 1 }),
+      cs('Đang chọn', 'Viền và vòng trong 1px --sd-primary, nền pha 4% primary. selectedId khớp id.', { bd: '#005cbb', shadow: 'inset 0 0 0 1px #005cbb', bg: '#f3f6fc', toolsOp: 1 }),
+      cs('Focus bàn phím', 'Vòng focus chuẩn quanh thẻ (focus-within của nút tên). Hiện nút ⋯.', { outline: '2px solid #005cbb', toolsOp: 1 }),
+      cs('Đang kéo', 'Bản xem trước của CDK: --sd-shadow-md, giữ bề rộng thẻ. Chỗ cũ mờ .4 khi reorder tắt, là khe nét đứt khi reorder bật.', { shadow: '0 2px 8px rgba(26,27,31,.2)' }),
+      cs('Đang lưu', 'Như main: viền --sd-primary, dòng trạng thái “Đang lưu…”. Thẻ vẫn ở làn cũ; dữ liệu chỉ đổi sau khi onMove chấp nhận.', { bd: '#005cbb', pending: true, toolsOp: 1 }),
+      cs('Thất bại', 'Như main: viền lỗi, dòng lỗi có Bỏ qua. onMove trả \'cancel\' thì không có trạng thái này.', { bd: '#ba1a1a', failed: true, toolsOp: 1 }),
+      cs('Không dời được', 'movable false: con trỏ pointer, CDK tắt kéo cho thẻ này, menu “Chuyển sang…” chỉ còn mục đã khoá. Vẫn chọn được.', { op: 1 }),
+    ];
+
+    const c3 = [
+      { card: true, slot: false, code: 'DH2408', when: 'Hôm qua', customer: 'Công ty TNHH Minh Phát', total: '3.120.000 ₫' },
+      { card: true, slot: false, code: 'DH2410', when: 'Hôm qua', customer: 'Lê Hoàng Yến', total: '890.000 ₫' },
+    ];
+    const dropModes = [
+      { title: 'reorder: false (mặc định)', desc: 'Cả làn sáng, không có khe. Thả xong thì thẻ vào vị trí theo thứ tự consumer hoặc server trả về; request có to.index = null, to.beforeId = null. Menu không có “Lên”, “Xuống”; Alt + ↑ ↓ không làm gì.', bd: '#8bb3e0', bg: '#eef2fb', op: 1, cur: 'grabbing', label: 'Đang giao', dot: '#006a6a', count: '8', cards: c3 },
+      { title: 'reorder: true', desc: 'Như main: khe nét đứt --sd-kanban-drop-slot-border cao bằng thẻ ở vị trí thả. Request có to.index và to.beforeId (id của thẻ ngay sau khe, null là cuối cột).', bd: '#8bb3e0', bg: '#eef2fb', op: 1, cur: 'grabbing', label: 'Đang làm', dot: '#006a6a', count: '3', cards: [c3[0], { card: false, slot: true }, c3[1]] },
+      { title: 'droppable trả false', desc: 'Làn mờ ngay khi bắt đầu kéo. Thả vào thì thẻ về chỗ cũ, không gọi onMove. Mục “Chuyển sang Hoàn tất” trong menu cũng bị khoá; Alt + ← → bỏ qua làn này.', bd: 'transparent', bg: '#f4f3f6', op: .45, cur: 'not-allowed', label: 'Hoàn tất', dot: '#2e7d32', count: '31', cards: [{ card: true, slot: false, code: 'DH2399', when: '06/11', customer: 'Công ty CP Hải Long', total: '5.600.000 ₫' }] },
+    ];
+    const keys = [
+      { k: 'Tab', v: 'Vào từng thẻ (nút tên), rồi nút ⋯ và vùng actions của thẻ đó. Board không còn tay nắm riêng.' },
+      { k: 'Enter Space', v: 'Chọn thẻ: sdSelect, selectedId.' },
+      { k: 'Alt + ← →', v: 'Chuyển sang làn trước, sau mà droppable cho phép; bỏ qua làn disabled, thu gọn, bị từ chối. Đảo khi RTL.' },
+      { k: 'Alt + ↑ ↓', v: 'Chỉ khi reorder bật: lên, xuống một vị trí.' },
+      { k: '⋯ menu', v: '“Chuyển sang {làn}” cho mọi làn khác; mục bị droppable từ chối thì disabled. “Lên”, “Xuống” chỉ khi reorder bật.' },
+      { k: 'Chuột', v: 'Nhấn và kéo quá 5px là kéo; nhả trước 5px là bấm (chọn). CDK dragStartThreshold mặc định.' },
+      { k: 'Cảm ứng', v: 'Chạm là chọn. Chạm giữ 400ms (cdkDragStartDelay touch) để nhấc lên rồi kéo; vuốt ngắn là cuộn. Nút ⋯ luôn hiện, vùng chạm 40px như main.' },
+    ];
+
+    const L = (title, desc, over) => ({ title, desc, count: '12', skel: [], cards: [], more: false, loadingMore: false, error: false, empty: false, ...over });
+    const two = [{ code: 'DH2415', when: '08:52', customer: 'Nguyễn Thị Thu' }, { code: 'DH2416', when: '08:40', customer: 'Cửa hàng Bình An' }];
+    const loadStates = [
+      L('Đang tải lần đầu', 'Ba khối xương cao 74px, nền --sd-surface-muted. Số đếm “–”. aria-busy trên drop list.', { count: '–', skel: [1, 2, 3] }),
+      L('Còn trang', 'nextCursor khác null: nút “Xem thêm”.', { cards: two, more: true }),
+      L('Đang tải thêm', 'Spinner 14px và “Đang tải…” thay nút. Thẻ đã có vẫn kéo được.', { cards: two, loadingMore: true }),
+      L('Lỗi', 'onLoad ném lỗi: thay vùng thẻ (lần đầu) hoặc thay nút Xem thêm (trang sau). Thử lại gọi lại đúng cursor đó. Phát sdLoadError.', { count: '–', error: true }),
+      L('Trống', 'total 0 hoặc trang đầu rỗng. Có keyword thì ghi “Không có thẻ khớp”.', { count: '0', empty: true }),
+    ];
+
+    const apiCode = [
+      "export interface SdKanbanColumn {",
+      "  id: string;",
+      "  label: string;",
+      "  color?: Color;",
+      "  prefixIcon?: string;",
+      "  disabled?: boolean;",
+      "  summary?: string;              // dòng phụ ở header, ví dụ '18,4 triệu ₫'",
+      "}",
+      "",
+      "export interface SdKanbanCard<T = unknown> {",
+      "  id: string;",
+      "  columnId: string;",
+      "  title: string;                 // tên đọc cho trình đọc màn hình",
+      "  searchText?: string;           // mặc định title; chỉ dùng khi searchable và không có dataSource",
+      "  data?: T;",
+      "}",
+      "",
+      "export interface SdKanbanOption<T = unknown> {",
+      "  dataSource?: {",
+      "    onLoad: (args: SdKanbanLoadArgs) => SdKanbanLoadResult<T> | Promise<SdKanbanLoadResult<T>>;",
+      "  };                             // { columnId, cursor, pageSize, keyword, signal } → { items, nextCursor, total?, summary? }",
+      "  pageSize?: number;             // 20",
+      "  loadMore?: 'button' | 'auto';  // 'button'",
+      "  move?: {",
+      "    movable?: SdKanbanState<SdKanbanCard<T>>;",
+      "    droppable?: SdKanbanState<SdKanbanDropContext<T>>;   // { card, from, to } — chạy khi bắt đầu kéo",
+      "    reorder?: boolean;           // false: chỉ đổi cột",
+      "    onMove: (request: SdKanbanMoveRequest<T>) =>",
+      "      boolean | 'cancel' | void | Promise<boolean | 'cancel' | void>;",
+      "  };",
+      "}",
+      "",
+      "export interface SdKanbanMoveRequest<T = unknown> {",
+      "  readonly card: SdKanbanCard<T>;",
+      "  readonly from: { readonly columnId: string; readonly index: number };",
+      "  readonly to: { readonly columnId: string; readonly index: number | null; readonly beforeId: string | null };",
+      "  readonly source: 'drag' | 'menu' | 'keyboard' | 'api';",
+      "  readonly signal: AbortSignal;",
+      "}",
+    ].join('\n');
+    const apiRows = [
+      { k: 'items', t: 'readonly SdKanbanCard<T>[] | undefined', v: 'Dữ liệu có sẵn. Bỏ qua khi option có dataSource (cảnh báo dev mode nếu truyền cả hai). Tham chiếu mới thay dữ liệu nội bộ.' },
+      { k: 'columns', t: 'readonly SdKanbanColumn[], bắt buộc', v: 'Thứ tự hiển thị. Đổi tham chiếu khi có dataSource thì tải lại các cột mới, giữ cột cũ.' },
+      { k: 'option', t: 'SdKanbanOption<T>, bắt buộc', v: 'Có thể là {} khi chỉ hiển thị items.' },
+      { k: 'selectedId', t: 'model<string | null>, null', v: 'Mới. id không còn trong dữ liệu thì về null.' },
+      { k: 'keyword', t: 'model<string>, \'\'', v: 'Giữ. Có dataSource thì đổi keyword (debounce 300ms) tải lại mọi cột.' },
+      { k: 'searchable', t: 'boolean, false', v: 'Chuyển từ option ra input, mặc định tắt.' },
+      { k: 'collapsible', t: 'boolean, true', v: 'Chuyển từ option ra input.' },
+      { k: 'collapsedColumns', t: 'model<readonly string[]>', v: 'Giữ, id là string.' },
+      { k: 'disabled, readonly, ariaLabel, autoId', t: 'như main', v: 'Giữ.' },
+      { k: 'sdSelect', t: 'SdKanbanCard<T>', v: 'Mới. Bấm, chạm, Enter, Space trên thẻ.' },
+      { k: 'sdMove, sdMoveError', t: 'request mới', v: 'Giữ tên. sdMove phát sau khi dữ liệu nội bộ đã đổi.' },
+      { k: 'sdLoadError', t: '{ columnId, error }', v: 'Mới, như sd-timeline. Thay sdRetry.' },
+      { k: 'reload(columnId?), loadMore(columnId)', t: 'void', v: 'Mới. reload không có tham số thì tải lại mọi cột, giữ thẻ cũ tới khi có kết quả.' },
+      { k: 'move(cardId, to, source)', t: 'Promise<boolean>', v: 'to = { columnId, beforeId? }. Dùng cho Hoàn tác (S1): move(id, { columnId: request.from.columnId }).' },
+    ];
+
+    const migration = [
+      { a: 'model: readonly T[] (two-way), modelChange, sdChange', b: 'items: readonly SdKanbanCard<T>[] (input). Sau khi dời, component tự cập nhật và phát sdMove; consumer muốn giữ state thì cập nhật items từ sdMove.' },
+      { a: 'option.getId / getColumnId / getTitle / getSearchText', b: 'Consumer map sang SdKanbanCard: id, columnId, title, searchText, data.' },
+      { a: 'option.withColumn(item, columnId)', b: 'Bỏ. Component tạo { ...card, columnId }, giữ tham chiếu data.' },
+      { a: 'SdKanbanId = string | number', b: 'string. Consumer chuyển số sang chuỗi khi map.' },
+      { a: 'option.move(request)', b: 'option.move.onMove(request). Trả thêm được \'cancel\'.' },
+      { a: 'option.canMove(request)', b: 'option.move.droppable({ card, from, to }) chạy khi bắt đầu kéo; option.move.movable(card) cho từng thẻ.' },
+      { a: 'Luôn sắp xếp trong cột', b: 'option.move.reorder, mặc định false. Muốn như cũ thì đặt true.' },
+      { a: 'option.searchable (mặc định true)', b: 'input searchable, mặc định false.' },
+      { a: 'option.collapsible', b: 'input collapsible.' },
+      { a: 'option.filter(item)', b: 'Bỏ. Lọc items trước khi truyền, hoặc lọc ở server.' },
+      { a: 'loading, error, sdRetry', b: 'option.dataSource; component tự quản lý tải và lỗi theo cột. Dùng items thì không có trạng thái tải.' },
+      { a: 'request.item, itemId, fromColumnId, toColumnId, fromIndex, toIndex, previousItems, nextItems', b: 'request.card, from: { columnId, index }, to: { columnId, index, beforeId }.' },
+      { a: 'Card template context: $implicit/item: T, column, index, pending', b: '$implicit/card: SdKanbanCard<T>, column, index, pending, selected. Đọc DTO qua card.data.' },
+      { a: 'Tay nắm drag_indicator, kéo bằng tay nắm', b: 'Kéo bằng cả thẻ; tay nắm bỏ. Alt + mũi tên đặt trên nút tên thẻ.' },
+      { a: 'move(itemId, columnId, index?, source?)', b: 'move(cardId, { columnId, beforeId? }, source?).' },
+      { a: '@media (max-width: 599px)', b: 'ResizeObserver trên host < 600px, như calendar.' },
+    ];
+
+    const decisions = [
+      { n: 'C1', tag: 'Đã chốt', c: '#2e7d32', q: 'Đổi API ngay hay giữ API cũ?', a: 'Đổi ngay, breaking, có bảng chuyển đổi. Main chỉ có showcase dùng.' },
+      { n: 'C2', tag: 'Đã chốt', c: '#2e7d32', q: 'Nguồn dữ liệu', a: 'items cho client, hoặc option.dataSource.onLoad theo từng cột, cursor và total, như sd-timeline.' },
+      { n: 'C3', tag: 'Đã chốt', c: '#2e7d32', q: 'Ô tìm kiếm', a: 'Giữ, mặc định tắt (input searchable).' },
+      { n: 'C4', tag: 'Đã chốt', c: '#2e7d32', q: 'Sắp xếp trong cột', a: 'move.reorder, mặc định false.' },
+      { n: 'C5', tag: 'Đã chốt', c: '#2e7d32', q: 'Kéo bằng gì', a: 'Cả thẻ; bấm không kéo là chọn.' },
+      { n: 'C6', tag: 'Đề xuất', c: '#a66300', q: 'onMove cần phân biệt “người dùng huỷ” (đóng hộp nhập lý do Huỷ đơn) với “từ chối”?', a: 'Thêm giá trị trả \'cancel\': thẻ về chỗ cũ, không hiện lỗi, không phát sdMoveError. Nên thêm cùng lúc vào onMove của sd-calendar và sd-scheduler (cả hai chưa code) để ba component giống nhau.' },
+      { n: 'C7', tag: 'Đề xuất', c: '#a66300', q: 'Tổng tiền ở header lấy từ đâu?', a: 'column.summary cho items; LoadResult.summary ghi đè khi có dataSource (trang đầu). Component chỉ hiện chuỗi, không tính.' },
+      { n: 'C8', tag: 'Đề xuất', c: '#a66300', q: 'Vị trí khi reorder bật', a: 'to.beforeId (id thẻ ngay sau chỗ thả) cùng to.index. beforeId vẫn đúng khi cột đang phân trang hoặc lọc; index chỉ đúng trên dữ liệu đã tải.' },
+      { n: 'C9', tag: 'Đề xuất', c: '#a66300', q: 'Sau khi dời ở chế độ dataSource, thẻ nằm đâu khi reorder tắt?', a: 'items: giữ vị trí của thẻ trong mảng items, nên thẻ hiện theo thứ tự consumer đã sắp. dataSource: chèn vào đầu làn đích cho tới lần tải lại cột đó; component không tự sắp theo field của data. Consumer gọi reload(columnId) nếu cần đúng thứ tự server.' },
+    ];
+
+    return { verdict, lanes, boardNotes, cardStates, dropModes, keys, loadStates, apiCode, apiRows, migration, decisions };
+  }
+}
+</script>
+</body>
+</html>
