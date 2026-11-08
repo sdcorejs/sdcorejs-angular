@@ -35,13 +35,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.
 
 **Highlights**
 
 - `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state
+- `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
 
 ### Changed (BREAKING for consumers)
+
+#### History
+
+- `@sdcorejs/angular/components/history` is removed: `SdHistoryItem` (`sd-history`), `ViewDateTimePipe` (`viewDateTime`), the i18n key `core.component.history.by` and the tokens `--sd-history-line`, `--sd-history-meta`, `--sd-history-meta-strong`. Use `sd-timeline` with `layout: 'event'`; `groupBy="none"` keeps the full `HH:mm dd/MM/yyyy` time of the old list.
+  - **Migration:**
+
+    | `SdHistoryItemType` | `SdTimelineItem` |
+    | --- | --- |
+    | — | `id` (new, required) |
+    | — | `content.layout: 'event'` |
+    | `title` | `content.data.title` |
+    | `status { title, color, icon }` | `content.data.badge` (`SdBadgeData`); `icon` can become the entry `icon` |
+    | `date` | `at` (required) |
+    | `actor` (username) | `actor.name` (display name; no "By @" prefix) |
+    | `source` | `source` |
+    | `description` | `content.data.note` |
+
+    ```diff
+    - <sd-history [items]="history" />
+    + <sd-timeline groupBy="none" [items]="timeline" />
+    ```
 
 #### Tab router
 
@@ -77,6 +99,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.
   - `paginate.total: 'unknown'` restores the page size only.
 
+#### Timeline
+
+- New entry point `@sdcorejs/angular/components/timeline` with `SdTimeline<T>` (`sd-timeline`).
+  - Entries (`SdTimelineItem<T>`: `id`, `at`, `actor`, `icon`, `color`, `source`, `data`) take a body from `content: { layout, data }`: `comment` (framed text clamped to three lines with show more/less, `edited`), `change` (rows "label: old → new" with struck-through old text, dashes for empty values, badges, "+N more changes", `note`) and `event` (`badge`, `note`).
+  - Marker: `sd-avatar` for an actor, otherwise the layout icon or `icon` in a neutral or `color` ring; `--sd-timeline-line` colours the connector.
+  - `groupBy: 'day' | 'none'` (day headings "Today", "Yesterday", `dd/MM/yyyy` in the zone of `SdDateTimeService`, entries never reordered), `size: 'md' | 'sm'`, `emptyText`, `ariaLabel`, `autoId`, `headingLevel`.
+  - `option.dataSource.onLoad({ cursor, pageSize, signal })` with `pageSize` (20) and `loadMore: 'button' | 'auto'`: skeleton, load-more button or `IntersectionObserver` feed, first-load and load-more errors with Retry, `sdLoadError`, `reload()` (aborts the running load) and `loadMore()`.
+  - Relative times ("just now", "N min ago") within the last hour of today; `<time datetime>` with a zone title.
+  - Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.
+
 #### General
 
 - The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.
@@ -90,6 +122,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.
   - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.
   - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.
+- The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy="none" size="sm"`: "created" with an `add` icon, submit (`send`, primary), approve (`check`, success, "Đã duyệt" badge) and reject (`close`, error, "Từ chối" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.
 - Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.
 
 #### Theme

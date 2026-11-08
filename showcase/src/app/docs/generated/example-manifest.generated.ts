@@ -108,9 +108,6 @@ export type ShowcaseExampleSourceKey =
   | "components/form-generic/example-builder-render"
   | "components/highlight/example-du-lieu-chua-markup"
   | "components/highlight/example-tim-kiem-khong-dau"
-  | "components/history/example-lich-su-cap-nhat"
-  | "components/history/example-luong-phe-duyet"
-  | "components/history/example-timeline-rong"
   | "components/icon-configuration/example-configuration"
   | "components/icon-configuration/example-core-ui-preview"
   | "components/icon/example-button-integration"
@@ -285,6 +282,13 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-tree-lazy-nap-con-khi-bung-co-loading"
   | "components/table/example-tree-rows-search-o-cap-con-go-ten-don-vi-con-de-loc"
   | "components/table/example-tree-selector-command-chinh-indent"
+  | "components/timeline/example-co-md-nhom-theo-ngay"
+  | "components/timeline/example-co-sm-trong-cot-phu"
+  | "components/timeline/example-luong-duyet"
+  | "components/timeline/example-nhat-ky-cap-nhat"
+  | "components/timeline/example-rong"
+  | "components/timeline/example-tac-vu-cua-binh-luan"
+  | "components/timeline/example-tai-theo-cursor"
   | "components/tree/example-custom-item-template"
   | "components/tree/example-filter-tieng-viet-khong-dau"
   | "components/tree/example-lazy-tree"
@@ -1254,27 +1258,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-du-lieu-chua-markup",
     title: "Dữ liệu chứa markup",
     description: "Markup trong dữ liệu hiện nguyên dạng chữ — component không dùng innerHTML.",
-  },
-  {
-    sourceKey: "components/history/example-luong-phe-duyet",
-    pageKey: "components/history",
-    sectionId: "example-luong-phe-duyet",
-    title: "Luồng phê duyệt",
-    description: "Existing “Luồng phê duyệt” scenario preserved from the showcase.",
-  },
-  {
-    sourceKey: "components/history/example-lich-su-cap-nhat",
-    pageKey: "components/history",
-    sectionId: "example-lich-su-cap-nhat",
-    title: "Lịch sử cập nhật",
-    description: "Lịch sử cập nhật ngắn",
-  },
-  {
-    sourceKey: "components/history/example-timeline-rong",
-    pageKey: "components/history",
-    sectionId: "example-timeline-rong",
-    title: "Timeline rỗng",
-    description: "Existing “Timeline rỗng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/icon/example-material-filled",
@@ -2493,6 +2476,55 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-loading-empty-error",
     title: "Loading / empty / error",
     description: "Dùng luồng tải của SdTable: khung xương khi chưa có dòng, thanh tiến trình và dòng mờ khi tải lại quá 300ms, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.",
+  },
+  {
+    sourceKey: "components/timeline/example-co-md-nhom-theo-ngay",
+    pageKey: "components/timeline",
+    sectionId: "example-co-md-nhom-theo-ngay",
+    title: "Cỡ md, nhóm theo ngày",
+    description: "Đủ ba layout; Xem thêm chỉ hiện khi chữ thật sự bị cắt, từ thay đổi thứ 4 gom vào +N.",
+  },
+  {
+    sourceKey: "components/timeline/example-luong-duyet",
+    pageKey: "components/timeline",
+    sectionId: "example-luong-duyet",
+    title: "Luồng duyệt",
+    description: "Không nhóm theo ngày: tiêu đề đứng một mình, người làm và giờ đầy đủ ở dòng thứ hai.",
+  },
+  {
+    sourceKey: "components/timeline/example-nhat-ky-cap-nhat",
+    pageKey: "components/timeline",
+    sectionId: "example-nhat-ky-cap-nhat",
+    title: "Nhật ký cập nhật",
+    description: "Giá trị cũ gạch ngang, rỗng hiện dấu gạch, trạng thái hiện bằng badge; từ hàng thứ 4 gom vào +N thay đổi khác.",
+  },
+  {
+    sourceKey: "components/timeline/example-co-sm-trong-cot-phu",
+    pageKey: "components/timeline",
+    sectionId: "example-co-sm-trong-cot-phu",
+    title: "Cỡ sm trong cột phụ",
+    description: "Cột phụ 360px: marker 24px, chữ 13px, bỏ nguồn.",
+  },
+  {
+    sourceKey: "components/timeline/example-tai-theo-cursor",
+    pageKey: "components/timeline",
+    sectionId: "example-tai-theo-cursor",
+    title: "Tải theo cursor",
+    description: "Mock trễ 800ms: đang tải, tải thêm, lỗi (bật bằng công tắc), rỗng và reload().",
+  },
+  {
+    sourceKey: "components/timeline/example-tac-vu-cua-binh-luan",
+    pageKey: "components/timeline",
+    sectionId: "example-tac-vu-cua-binh-luan",
+    title: "Tác vụ của bình luận",
+    description: "Sửa / Xoá ở cuối dòng đầu, hiện khi rê chuột hoặc focus.",
+  },
+  {
+    sourceKey: "components/timeline/example-rong",
+    pageKey: "components/timeline",
+    sectionId: "example-rong",
+    title: "Rỗng",
+    description: "Existing “Rỗng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/tree/example-static-tree",

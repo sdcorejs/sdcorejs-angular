@@ -1,0 +1,8 @@
+<div class="timeline-controls">
+  <sd-button type="outline" [title]="'size: ' + size()" (click)="size.set(size() === 'md' ? 'sm' : 'md')" />
+  <sd-button type="outline" [title]="'groupBy: ' + groupBy()" (click)="groupBy.set(groupBy() === 'day' ? 'none' : 'day')" />
+</div>
+<div class="timeline-box">
+  <!-- "Show more" appears only when the comment is really clamped; changes past the third fold into "+N". -->
+  <sd-timeline autoId="activity" [items]="items" [size]="size()" [groupBy]="groupBy()" />
+</div>

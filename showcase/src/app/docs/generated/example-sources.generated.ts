@@ -5982,131 +5982,6 @@ export class HighlightDemoComponent {
 }
 `,
   },
-  "components/history": {
-    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdHistoryItem } from '@sdcorejs/angular/components/history';
-import type { Color } from '@sdcorejs/utils/models';
-
-// SdHistoryItemType chưa được export ở barrel — khai báo lại tại đây để tránh sửa thư viện.
-interface SdHistoryItemType {
-  title: string;
-  status?: { title?: string; color?: Color; icon?: string };
-  date?: string;
-  actor?: string;
-  source?: string;
-  description?: string;
-}
-
-@Component({
-  selector: 'app-history-demo',
-  standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdHistoryItem],
-  template: \`
-    <demo-page #demoPage
-      title="History"
-      description="Dòng thời gian dọc hiển thị lịch sử thay đổi / phê duyệt của một bản ghi — kèm trạng thái, thời gian, người thao tác.">
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-luong-phe-duyet') {
-      <demo-section heading="Luồng phê duyệt" [props]="[{ name: 'items', value: '[…]' }]">
-        <div class="timeline-box">
-          <sd-history [items]="approvalFlow"></sd-history>
-        </div>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lich-su-cap-nhat') {
-      <demo-section heading="Lịch sử cập nhật" [props]="[{ name: 'items', value: '[…]' }]" note="Lịch sử cập nhật ngắn">
-        <div class="timeline-box">
-          <sd-history [items]="updateLog"></sd-history>
-        </div>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-timeline-rong') {
-      <demo-section heading="Timeline rỗng" [props]="[{ name: 'items', value: '[]' }]">
-        <div class="timeline-box">
-          <sd-history [items]="[]"></sd-history>
-          <p class="empty-note">Bản ghi chưa có lịch sử thay đổi.</p>
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  styles: [\`
-    .timeline-box {
-      width: 100%;
-      max-width: 720px;
-    }
-    .empty-note {
-      color: #6b6b6b;
-      font-size: 13px;
-      margin: 8px 0 0;
-    }
-  \`],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class HistoryDemoComponent {
-  readonly approvalFlow: SdHistoryItemType[] = [
-    {
-      title: 'Tạo phiếu yêu cầu',
-      status: { title: 'Khởi tạo', color: 'info', icon: 'add_circle' },
-      date: '2025-05-20T08:15:00Z',
-      actor: 'an.nv',
-      source: 'Web',
-      description: 'Khởi tạo phiếu yêu cầu thanh toán cho nhà cung cấp ABC.',
-    },
-    {
-      title: 'Gửi duyệt cấp 1',
-      status: { title: 'Chờ duyệt', color: 'warning', icon: 'hourglass_top' },
-      date: '2025-05-20T09:30:00Z',
-      actor: 'an.nv',
-      source: 'Web',
-    },
-    {
-      title: 'Phê duyệt cấp 1',
-      status: { title: 'Đã duyệt', color: 'success', icon: 'check_circle' },
-      date: '2025-05-21T10:05:00Z',
-      actor: 'binh.tp',
-      source: 'Mobile',
-      description: 'Đồng ý theo đề nghị, chuyển sang cấp 2.',
-    },
-    {
-      title: 'Từ chối cấp 2',
-      status: { title: 'Từ chối', color: 'error', icon: 'cancel' },
-      date: '2025-05-22T14:18:00Z',
-      actor: 'cuong.lh',
-      source: 'Web',
-      description: 'Đề nghị bổ sung hóa đơn gốc và biên bản nghiệm thu trước khi duyệt lại.',
-    },
-  ];
-
-  readonly updateLog: SdHistoryItemType[] = [
-    {
-      title: 'Cập nhật thông tin khách hàng',
-      date: '2025-05-15T11:20:00Z',
-      actor: 'hoa.lt',
-      source: 'API',
-    },
-    {
-      title: 'Đồng bộ lại từ CRM',
-      date: '2025-05-10T07:00:00Z',
-      actor: 'system',
-      source: 'Job',
-    },
-  ];
-}
-`,
-    scss: `.timeline-box {
-  width: 100%;
-  max-width: 720px;
-}
-.empty-note {
-  color: #6b6b6b;
-  font-size: 13px;
-  margin: 8px 0 0;
-}`,
-  },
   "components/icon": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -16597,6 +16472,526 @@ export class TableStandardExampleComponent {
 
 .required-mark {
   color: var(--sd-error, #d32f2f);
+}`,
+  },
+  "components/timeline/example-co-md-nhom-theo-ngay": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTimeline, type SdTimelineItem } from '@sdcorejs/angular/components/timeline';
+
+const MINUTE = 60_000;
+
+/** Activity of one order, newest first: the three layouts, with long text and more than three changes. */
+export const TIMELINE_ACTIVITY: SdTimelineItem[] = [
+  {
+    id: 'comment-1',
+    at: Date.now() - 25 * MINUTE,
+    actor: { name: 'Lê Minh' },
+    source: 'Web',
+    content: {
+      layout: 'comment',
+      data: {
+        text:
+          'Khách gọi lại lúc 10h, hẹn nhận hàng sau 14h vì buổi sáng không có người ở nhà.\\n' +
+          'Đã báo bộ phận giao vận đổi khung giờ và ghi chú lên phiếu giao.\\n' +
+          'Nếu chiều nay vẫn không liên lạc được thì chuyển sang ngày mai, ưu tiên chuyến đầu tiên.\\n' +
+          'Nhắc tài xế gọi trước 15 phút.',
+      },
+    },
+  },
+  {
+    id: 'change-1',
+    at: Date.now() - 120 * MINUTE,
+    actor: { name: 'Trần Thu Hà' },
+    source: 'Web',
+    content: {
+      layout: 'change',
+      data: {
+        title: 'cập nhật đơn hàng',
+        changes: [
+          { label: 'Trạng thái', from: { badge: { title: 'Chờ xác nhận', color: 'warning' } }, to: { badge: { title: 'Đang giao', color: 'info' } } },
+          { label: 'Kho xuất', from: 'Quận 7', to: 'Quận 1' },
+          { label: 'Ghi chú', from: null, to: 'Giao sau 14h' },
+          { label: 'Phí giao (₫)', from: 30000, to: 0 },
+          { label: 'Người giao', from: null, to: 'Phạm Văn Tú' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'event-1',
+    at: '2026-11-02T03:02:00Z',
+    icon: 'close',
+    color: 'error',
+    actor: { name: 'Nguyễn Văn Thành' },
+    content: {
+      layout: 'event',
+      data: { title: 'từ chối', badge: { title: 'Từ chối', color: 'error' }, note: 'Lý do: thiếu chứng từ giao nhận của lô 2.' },
+    },
+  },
+  {
+    id: 'event-2',
+    at: '2026-11-02T02:14:00Z',
+    icon: 'sync',
+    source: 'API',
+    content: { layout: 'event', data: { title: 'Hệ thống đồng bộ từ kênh Đại lý' } },
+  },
+];
+
+@Component({
+  selector: 'app-timeline-activity-example',
+  standalone: true,
+  imports: [SdButton, SdTimeline],
+  templateUrl: './timeline-activity.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineActivityExampleComponent {
+  readonly items = TIMELINE_ACTIVITY;
+  readonly size = signal<'md' | 'sm'>('md');
+  readonly groupBy = signal<'day' | 'none'>('day');
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-co-sm-trong-cot-phu": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTimeline } from '@sdcorejs/angular/components/timeline';
+import { TIMELINE_ACTIVITY } from './timeline-activity.example';
+
+@Component({
+  selector: 'app-timeline-aside-example',
+  standalone: true,
+  imports: [SdTimeline],
+  templateUrl: './timeline-aside.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineAsideExampleComponent {
+  readonly items = TIMELINE_ACTIVITY;
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-luong-duyet": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTimeline, type SdTimelineItem } from '@sdcorejs/angular/components/timeline';
+
+@Component({
+  selector: 'app-timeline-approval-example',
+  standalone: true,
+  imports: [SdTimeline],
+  templateUrl: './timeline-approval.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineApprovalExampleComponent {
+  // Newest first; groupBy="none" keeps the given order and shows full dates.
+  readonly items: SdTimelineItem[] = [
+    {
+      id: 'approve',
+      at: '2025-05-01T07:02:00Z',
+      actor: { name: 'Lê Văn Long' },
+      source: 'Mobile',
+      content: {
+        layout: 'event',
+        data: {
+          title: 'Phê duyệt',
+          badge: { title: 'Đã duyệt', color: 'success', icon: 'check' },
+          note: 'Đồng ý với điều khoản đã được rà soát. Bổ sung phụ lục thanh toán theo tiến độ trước khi ký, gửi lại cho phòng pháp chế kiểm tra lần cuối.',
+        },
+      },
+    },
+    {
+      id: 'submit',
+      at: '2025-05-01T03:15:00Z',
+      actor: { name: 'Trần Trọng Nghĩa' },
+      source: 'Web',
+      content: { layout: 'event', data: { title: 'Gửi duyệt', badge: { title: 'Chờ duyệt', color: 'warning', icon: 'hourglass_empty' } } },
+    },
+    {
+      id: 'create',
+      at: '2025-05-01T02:30:00Z',
+      actor: { name: 'Trần Trọng Nghĩa' },
+      source: 'Web',
+      content: { layout: 'event', data: { title: 'Tạo phiếu' } },
+    },
+  ];
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-nhat-ky-cap-nhat": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTimeline, type SdTimelineItem } from '@sdcorejs/angular/components/timeline';
+
+const HOUR = 3_600_000;
+
+@Component({
+  selector: 'app-timeline-change-log-example',
+  standalone: true,
+  imports: [SdTimeline],
+  templateUrl: './timeline-change-log.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineChangeLogExampleComponent {
+  readonly items: SdTimelineItem[] = [
+    {
+      id: 'status',
+      at: Date.now() - 2 * HOUR,
+      actor: { name: 'Trần Thu Hà' },
+      source: 'Web',
+      content: {
+        layout: 'change',
+        data: {
+          title: 'cập nhật đơn hàng',
+          changes: [
+            { label: 'Trạng thái', from: { badge: { title: 'Chờ xác nhận', color: 'warning' } }, to: { badge: { title: 'Đang giao', color: 'info' } } },
+            { label: 'Kho xuất', from: 'Quận 7', to: 'Quận 1' },
+            { label: 'Ghi chú', from: null, to: 'Giao sau 14h' },
+            { label: 'Phí giao (₫)', from: 30000, to: 0 },
+            { label: 'Người giao', from: null, to: 'Phạm Văn Tú' },
+          ],
+        },
+      },
+    },
+    {
+      id: 'sync',
+      at: '2026-11-02T02:14:00Z',
+      icon: 'sync',
+      source: 'API',
+      content: { layout: 'event', data: { title: 'Hệ thống đồng bộ từ kênh Đại lý' } },
+    },
+  ];
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-rong": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdTimeline, SdTimelineEmptyDirective } from '@sdcorejs/angular/components/timeline';
+
+@Component({
+  selector: 'app-timeline-empty-example',
+  standalone: true,
+  imports: [SdTimeline, SdTimelineEmptyDirective],
+  templateUrl: './timeline-empty.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineEmptyExampleComponent {}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-tac-vu-cua-binh-luan": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTimeline, SdTimelineItemActionsDirective, type SdTimelineItem } from '@sdcorejs/angular/components/timeline';
+
+const MINUTE = 60_000;
+
+@Component({
+  selector: 'app-timeline-actions-example',
+  standalone: true,
+  imports: [SdButton, SdTimeline, SdTimelineItemActionsDirective],
+  templateUrl: './timeline-actions.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelineActionsExampleComponent {
+  readonly items = signal<SdTimelineItem[]>([
+    { id: 'c1', at: Date.now() - 3 * MINUTE, actor: { name: 'Lê Minh' }, content: { layout: 'comment', data: { text: 'Khách hẹn nhận sau 14h.' } } },
+    {
+      id: 'c2',
+      at: Date.now() - 40 * MINUTE,
+      actor: { name: 'Trần Thu Hà' },
+      content: { layout: 'comment', data: { text: 'Đã gọi xác nhận địa chỉ, khách đổi sang Quận 1.', edited: true } },
+    },
+    { id: 'e1', at: Date.now() - 50 * MINUTE, icon: 'local_shipping', content: { layout: 'event', data: { title: 'Hệ thống tạo phiếu giao' } } },
+  ]);
+  readonly lastAction = signal('Chưa có tác vụ');
+
+  remove(item: SdTimelineItem): void {
+    this.items.update(items => items.filter(entry => entry.id !== item.id));
+    this.lastAction.set(\`Đã xoá \${item.id}\`);
+  }
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}`,
+  },
+  "components/timeline/example-tai-theo-cursor": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdTimeline, type SdTimelineItem, type SdTimelineLoadResult, type SdTimelineOption } from '@sdcorejs/angular/components/timeline';
+
+const HOUR = 3_600_000;
+const ACTIONS = ['xác nhận đơn', 'in phiếu giao', 'gán tài xế', 'cập nhật địa chỉ', 'gửi SMS cho khách'];
+const PEOPLE = ['Trần Thu Hà', 'Lê Minh', 'Nguyễn Văn Thành', 'Phạm Văn Tú'];
+/** 47 events, one every five hours, newest first. */
+const ALL: SdTimelineItem[] = Array.from({ length: 47 }, (_, index) => ({
+  id: \`event-\${index}\`,
+  at: Date.now() - (index * 5 + 1) * HOUR,
+  actor: index % 3 === 2 ? undefined : { name: PEOPLE[index % PEOPLE.length] },
+  icon: index % 3 === 2 ? 'sync' : undefined,
+  source: index % 3 === 2 ? 'API' : 'Web',
+  content: { layout: 'event', data: { title: index % 3 === 2 ? 'Hệ thống đồng bộ trạng thái' : ACTIONS[index % ACTIONS.length] } },
+}));
+
+const delay = (ms: number, signal: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener('abort', () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    });
+  });
+
+@Component({
+  selector: 'app-timeline-paged-example',
+  standalone: true,
+  imports: [SdButton, SdTimeline],
+  templateUrl: './timeline-paged.example.html',
+  styleUrl: './timeline-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimelinePagedExampleComponent {
+  readonly loadMore = signal<'button' | 'auto'>('button');
+  readonly failing = signal(false);
+  readonly empty = signal(false);
+  readonly lastError = signal('');
+  readonly timeline = viewChild.required(SdTimeline);
+
+  // A new option object restarts the timeline from the first page.
+  readonly option = computed<SdTimelineOption>(() => {
+    const empty = this.empty();
+    return {
+      pageSize: 10,
+      loadMore: this.loadMore(),
+      dataSource: {
+        onLoad: async ({ cursor, pageSize, signal }): Promise<SdTimelineLoadResult> => {
+          await delay(800, signal);
+          if (this.failing()) throw new Error('Máy chủ không phản hồi');
+          const source = empty ? [] : ALL;
+          const start = cursor ? Number(cursor) : 0;
+          const end = start + pageSize;
+          return { items: source.slice(start, end), nextCursor: end < source.length ? String(end) : null };
+        },
+      },
+    };
+  });
+}`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
 }`,
   },
   "components/tree": {
@@ -27662,31 +28057,6 @@ Bởi Nguyễn Văn A"></sd-badge>
       </div>
     </demo-section>`,
   },
-  "components/history/example-lich-su-cap-nhat": {
-    ...SHOWCASE_PAGE_SOURCES["components/history"],
-    html: `<demo-section heading="Lịch sử cập nhật" [props]="[{ name: 'items', value: '[…]' }]" note="Lịch sử cập nhật ngắn">
-    <div class="timeline-box">
-      <sd-history [items]="updateLog"></sd-history>
-    </div>
-  </demo-section>`,
-  },
-  "components/history/example-luong-phe-duyet": {
-    ...SHOWCASE_PAGE_SOURCES["components/history"],
-    html: `<demo-section heading="Luồng phê duyệt" [props]="[{ name: 'items', value: '[…]' }]">
-    <div class="timeline-box">
-      <sd-history [items]="approvalFlow"></sd-history>
-    </div>
-  </demo-section>`,
-  },
-  "components/history/example-timeline-rong": {
-    ...SHOWCASE_PAGE_SOURCES["components/history"],
-    html: `<demo-section heading="Timeline rỗng" [props]="[{ name: 'items', value: '[]' }]">
-    <div class="timeline-box">
-      <sd-history [items]="[]"></sd-history>
-      <p class="empty-note">Bản ghi chưa có lịch sử thay đổi.</p>
-    </div>
-  </demo-section>`,
-  },
   "components/icon-configuration/example-configuration": {
     ...SHOWCASE_PAGE_SOURCES["components/icon-configuration"],
     html: `<demo-section
@@ -31051,6 +31421,77 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-table [option]="treeCommandOption()"><ng-template [sdTableRowMobileDef]="treeCommandOption()" let-row="item"><strong>{{ row.name }}</strong><div>{{ row.role }}</div></ng-template></sd-table>
     </div>
   </demo-section>`,
+  },
+  "components/timeline/example-co-md-nhom-theo-ngay": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-co-md-nhom-theo-ngay"],
+    html: `<div class="timeline-controls">
+  <sd-button type="outline" [title]="'size: ' + size()" (click)="size.set(size() === 'md' ? 'sm' : 'md')" />
+  <sd-button type="outline" [title]="'groupBy: ' + groupBy()" (click)="groupBy.set(groupBy() === 'day' ? 'none' : 'day')" />
+</div>
+<div class="timeline-box">
+  <!-- "Show more" appears only when the comment is really clamped; changes past the third fold into "+N". -->
+  <sd-timeline autoId="activity" [items]="items" [size]="size()" [groupBy]="groupBy()" />
+</div>`,
+  },
+  "components/timeline/example-co-sm-trong-cot-phu": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-co-sm-trong-cot-phu"],
+    html: `<!-- A 360px side column (sdAside): 24px markers, 13px text, no source. -->
+<div class="timeline-aside">
+  <sd-timeline size="sm" autoId="aside" [items]="items" [headingLevel]="4" />
+</div>`,
+  },
+  "components/timeline/example-luong-duyet": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-luong-duyet"],
+    html: `<div class="timeline-box">
+  <sd-timeline groupBy="none" autoId="approval-flow" ariaLabel="Luồng duyệt" [items]="items" />
+</div>`,
+  },
+  "components/timeline/example-nhat-ky-cap-nhat": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-nhat-ky-cap-nhat"],
+    html: `<div class="timeline-box">
+  <!-- Three change rows show; the rest fold into "+N more changes". -->
+  <sd-timeline autoId="change-log" ariaLabel="Nhật ký cập nhật" [items]="items" />
+</div>`,
+  },
+  "components/timeline/example-rong": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-rong"],
+    html: `<div class="timeline-box">
+  <!-- Default empty state, then a custom one through sdTimelineEmpty. -->
+  <sd-timeline autoId="empty-default" [items]="[]" />
+  <sd-timeline autoId="empty-custom" [items]="[]">
+    <ng-template sdTimelineEmpty>
+      <p class="timeline-readout">Bản ghi chưa có lịch sử thay đổi.</p>
+    </ng-template>
+  </sd-timeline>
+</div>`,
+  },
+  "components/timeline/example-tac-vu-cua-binh-luan": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-tac-vu-cua-binh-luan"],
+    html: `<div class="timeline-box">
+  <!-- Edit/delete only for comments; the area shows on hover or focus, always on touch screens. -->
+  <sd-timeline autoId="comment-actions" [items]="items()">
+    <ng-template sdTimelineItemActions let-item>
+      @if (item.content.layout === 'comment') {
+        <sd-button type="text" prefixIcon="edit" tooltip="Sửa" (click)="lastAction.set('Sửa ' + item.id)" />
+        <sd-button type="text" prefixIcon="delete" tooltip="Xoá" (click)="remove(item)" />
+      }
+    </ng-template>
+  </sd-timeline>
+</div>
+<p class="timeline-readout">{{ lastAction() }}</p>`,
+  },
+  "components/timeline/example-tai-theo-cursor": {
+    ...SHOWCASE_PAGE_SOURCES["components/timeline/example-tai-theo-cursor"],
+    html: `<div class="timeline-controls">
+  <sd-button type="outline" [title]="'loadMore: ' + loadMore()" (click)="loadMore.set(loadMore() === 'button' ? 'auto' : 'button')" />
+  <sd-button type="outline" [title]="failing() ? 'Lỗi: bật' : 'Lỗi: tắt'" (click)="failing.set(!failing())" />
+  <sd-button type="outline" [title]="empty() ? 'Dữ liệu: rỗng' : 'Dữ liệu: 47 mục'" (click)="empty.set(!empty())" />
+  <sd-button type="outline" title="reload()" (click)="timeline().reload()" />
+</div>
+<div class="timeline-box">
+  <sd-timeline autoId="paged" [option]="option()" (sdLoadError)="lastError.set($any($event)?.message ?? 'error')" />
+</div>
+<p class="timeline-readout">sdLoadError: {{ lastError() || '—' }}</p>`,
   },
   "components/tree/example-custom-item-template": {
     ...SHOWCASE_PAGE_SOURCES["components/tree"],

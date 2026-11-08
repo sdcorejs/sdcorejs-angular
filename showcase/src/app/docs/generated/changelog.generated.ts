@@ -57,15 +57,209 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "anchor": "unreleased",
     "unreleased": true,
     "packageVersions": [],
-    "summaryMarkdown": "",
-    "markdown": "### Changed\n\n#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
+    "summaryMarkdown": "> [!IMPORTANT]\n> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.\n\n**Highlights**\n\n- `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state\n- `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`",
+    "markdown": "> [!IMPORTANT]\n> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.\n\n**Highlights**\n\n- `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state\n- `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`\n\n### Changed (BREAKING for consumers)\n\n#### History\n\n- `@sdcorejs/angular/components/history` is removed: `SdHistoryItem` (`sd-history`), `ViewDateTimePipe` (`viewDateTime`), the i18n key `core.component.history.by` and the tokens `--sd-history-line`, `--sd-history-meta`, `--sd-history-meta-strong`. Use `sd-timeline` with `layout: 'event'`; `groupBy=\"none\"` keeps the full `HH:mm dd/MM/yyyy` time of the old list.\n  - **Migration:**\n\n    | `SdHistoryItemType` | `SdTimelineItem` |\n    | --- | --- |\n    | — | `id` (new, required) |\n    | — | `content.layout: 'event'` |\n    | `title` | `content.data.title` |\n    | `status { title, color, icon }` | `content.data.badge` (`SdBadgeData`); `icon` can become the entry `icon` |\n    | `date` | `at` (required) |\n    | `actor` (username) | `actor.name` (display name; no \"By @\" prefix) |\n    | `source` | `source` |\n    | `description` | `content.data.note` |\n\n    ```diff\n    - <sd-history [items]=\"history\" />\n    + <sd-timeline groupBy=\"none\" [items]=\"timeline\" />\n    ```\n\n#### Tab router\n\n- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```\n\n### Added\n\n#### Anchor\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.\n\n#### Tab\n\n- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.\n\n#### Table\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.\n\n#### Timeline\n\n- New entry point `@sdcorejs/angular/components/timeline` with `SdTimeline<T>` (`sd-timeline`).\n  - Entries (`SdTimelineItem<T>`: `id`, `at`, `actor`, `icon`, `color`, `source`, `data`) take a body from `content: { layout, data }`: `comment` (framed text clamped to three lines with show more/less, `edited`), `change` (rows \"label: old → new\" with struck-through old text, dashes for empty values, badges, \"+N more changes\", `note`) and `event` (`badge`, `note`).\n  - Marker: `sd-avatar` for an actor, otherwise the layout icon or `icon` in a neutral or `color` ring; `--sd-timeline-line` colours the connector.\n  - `groupBy: 'day' | 'none'` (day headings \"Today\", \"Yesterday\", `dd/MM/yyyy` in the zone of `SdDateTimeService`, entries never reordered), `size: 'md' | 'sm'`, `emptyText`, `ariaLabel`, `autoId`, `headingLevel`.\n  - `option.dataSource.onLoad({ cursor, pageSize, signal })` with `pageSize` (20) and `loadMore: 'button' | 'auto'`: skeleton, load-more button or `IntersectionObserver` feed, first-load and load-more errors with Retry, `sdLoadError`, `reload()` (aborts the running load) and `loadMore()`.\n  - Relative times (\"just now\", \"N min ago\") within the last hour of today; `<time datetime>` with a zone title.\n  - Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.\n\n#### General\n\n- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.\n\n### Changed\n\n#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy=\"none\" size=\"sm\"`: \"created\" with an `add` icon, submit (`send`, primary), approve (`check`, success, \"Đã duyệt\" badge) and reject (`close`, error, \"Từ chối\" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
     "sections": [
+      {
+        "key": "changed",
+        "title": "Changed (BREAKING for consumers)",
+        "level": 3,
+        "anchor": "unreleased-changed-breaking-for-consumers",
+        "markdown": "#### History\n\n- `@sdcorejs/angular/components/history` is removed: `SdHistoryItem` (`sd-history`), `ViewDateTimePipe` (`viewDateTime`), the i18n key `core.component.history.by` and the tokens `--sd-history-line`, `--sd-history-meta`, `--sd-history-meta-strong`. Use `sd-timeline` with `layout: 'event'`; `groupBy=\"none\"` keeps the full `HH:mm dd/MM/yyyy` time of the old list.\n  - **Migration:**\n\n    | `SdHistoryItemType` | `SdTimelineItem` |\n    | --- | --- |\n    | — | `id` (new, required) |\n    | — | `content.layout: 'event'` |\n    | `title` | `content.data.title` |\n    | `status { title, color, icon }` | `content.data.badge` (`SdBadgeData`); `icon` can become the entry `icon` |\n    | `date` | `at` (required) |\n    | `actor` (username) | `actor.name` (display name; no \"By @\" prefix) |\n    | `source` | `source` |\n    | `description` | `content.data.note` |\n\n    ```diff\n    - <sd-history [items]=\"history\" />\n    + <sd-timeline groupBy=\"none\" [items]=\"timeline\" />\n    ```\n\n#### Tab router\n\n- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```",
+        "items": [],
+        "children": [
+          {
+            "key": "history",
+            "title": "History",
+            "level": 4,
+            "anchor": "unreleased-changed-breaking-for-consumers-history",
+            "markdown": "- `@sdcorejs/angular/components/history` is removed: `SdHistoryItem` (`sd-history`), `ViewDateTimePipe` (`viewDateTime`), the i18n key `core.component.history.by` and the tokens `--sd-history-line`, `--sd-history-meta`, `--sd-history-meta-strong`. Use `sd-timeline` with `layout: 'event'`; `groupBy=\"none\"` keeps the full `HH:mm dd/MM/yyyy` time of the old list.\n  - **Migration:**\n\n    | `SdHistoryItemType` | `SdTimelineItem` |\n    | --- | --- |\n    | — | `id` (new, required) |\n    | — | `content.layout: 'event'` |\n    | `title` | `content.data.title` |\n    | `status { title, color, icon }` | `content.data.badge` (`SdBadgeData`); `icon` can become the entry `icon` |\n    | `date` | `at` (required) |\n    | `actor` (username) | `actor.name` (display name; no \"By @\" prefix) |\n    | `source` | `source` |\n    | `description` | `content.data.note` |\n\n    ```diff\n    - <sd-history [items]=\"history\" />\n    + <sd-timeline groupBy=\"none\" [items]=\"timeline\" />\n    ```",
+            "items": [
+              {
+                "text": "`@sdcorejs/angular/components/history` is removed: `SdHistoryItem` (`sd-history`), `ViewDateTimePipe` (`viewDateTime`), the i18n key `core.component.history.by` and the tokens `--sd-history-line`, `--sd-history-meta`, `--sd-history-meta-strong`. Use `sd-timeline` with `layout: 'event'`; `groupBy=\"none\"` keeps the full `HH:mm dd/MM/yyyy` time of the old list.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "**Migration:**",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "tab-router",
+            "title": "Tab router",
+            "level": 4,
+            "anchor": "unreleased-changed-breaking-for-consumers-tab-router",
+            "markdown": "- A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.\n  - Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.\n  - `SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.\n  - The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.\n  - **Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.\n\n    ```diff\n    - readonly id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');\n    + readonly id = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map(params => params.get('id'))));\n    ```\n\n    ```diff\n    - { path: 'orders/detail', component: OrderDetailPage }   // /orders/detail?id=5 and ?id=6 now share one tab\n    + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order\n    ```",
+            "items": [
+              {
+                "text": "A tab is identified by its path only (the URL before `?` and `#`); the key was a hash of the path and the query params, and a fragment without a query also split tabs.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "Navigating to the path of an open tab — from a link, a menu, the back button or a component writing its query — activates that tab and keeps its component instance; only `state.forceReload: true` still recreates it. The tab stores the latest `queryParams` (a new `SdTabRouterTab` descriptor, so a function `name` sees them), and clicking the tab later goes back to that query.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`SdTabActivated` fires when a tab goes from the background to active; a query change on the tab that is already open does not fire it again.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "The `ActivatedRoute` injected inside a tab is now a live proxy (`instanceof ActivatedRoute` still holds): when the tab is opened again it follows the new route of the path, so `queryParamMap`, `queryParams`, `paramMap`, `fragment`, `data` and `snapshot` show the latest values. Before, a subscription made by the tab component stopped emitting after the user switched away and back.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "**Migration:** a screen that reads a query param of its own must subscribe and update; reading `route.snapshot.queryParamMap` once in the constructor or `ngOnInit` keeps the first value. When each record needs its own tab, put the identity in the path.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "key": "added",
+        "title": "Added",
+        "level": 3,
+        "anchor": "unreleased-added",
+        "markdown": "#### Anchor\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.\n\n#### Tab\n\n- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.\n\n#### Table\n\n- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.\n\n#### Timeline\n\n- New entry point `@sdcorejs/angular/components/timeline` with `SdTimeline<T>` (`sd-timeline`).\n  - Entries (`SdTimelineItem<T>`: `id`, `at`, `actor`, `icon`, `color`, `source`, `data`) take a body from `content: { layout, data }`: `comment` (framed text clamped to three lines with show more/less, `edited`), `change` (rows \"label: old → new\" with struck-through old text, dashes for empty values, badges, \"+N more changes\", `note`) and `event` (`badge`, `note`).\n  - Marker: `sd-avatar` for an actor, otherwise the layout icon or `icon` in a neutral or `color` ring; `--sd-timeline-line` colours the connector.\n  - `groupBy: 'day' | 'none'` (day headings \"Today\", \"Yesterday\", `dd/MM/yyyy` in the zone of `SdDateTimeService`, entries never reordered), `size: 'md' | 'sm'`, `emptyText`, `ariaLabel`, `autoId`, `headingLevel`.\n  - `option.dataSource.onLoad({ cursor, pageSize, signal })` with `pageSize` (20) and `loadMore: 'button' | 'auto'`: skeleton, load-more button or `IntersectionObserver` feed, first-load and load-more errors with Retry, `sdLoadError`, `reload()` (aborts the running load) and `loadMore()`.\n  - Relative times (\"just now\", \"N min ago\") within the last hour of today; `<time datetime>` with a zone title.\n  - Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.\n\n#### General\n\n- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+        "items": [],
+        "children": [
+          {
+            "key": "anchor",
+            "title": "Anchor",
+            "level": 4,
+            "anchor": "unreleased-added-anchor",
+            "markdown": "- `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.",
+            "items": [
+              {
+                "text": "`syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "tab",
+            "title": "Tab",
+            "level": 4,
+            "anchor": "unreleased-added-tab",
+            "markdown": "- `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.",
+            "items": [
+              {
+                "text": "`sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "table",
+            "title": "Table",
+            "level": 4,
+            "anchor": "unreleased-added-table",
+            "markdown": "- `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.\n  - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.\n  - `paginate.total: 'unknown'` restores the page size only.",
+            "items": [
+              {
+                "text": "`syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{\"q\",\"c\",\"o\",\"e\",\"s\",\"p\",\"z\"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`paginate.total: 'unknown'` restores the page size only.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "timeline",
+            "title": "Timeline",
+            "level": 4,
+            "anchor": "unreleased-added-timeline",
+            "markdown": "- New entry point `@sdcorejs/angular/components/timeline` with `SdTimeline<T>` (`sd-timeline`).\n  - Entries (`SdTimelineItem<T>`: `id`, `at`, `actor`, `icon`, `color`, `source`, `data`) take a body from `content: { layout, data }`: `comment` (framed text clamped to three lines with show more/less, `edited`), `change` (rows \"label: old → new\" with struck-through old text, dashes for empty values, badges, \"+N more changes\", `note`) and `event` (`badge`, `note`).\n  - Marker: `sd-avatar` for an actor, otherwise the layout icon or `icon` in a neutral or `color` ring; `--sd-timeline-line` colours the connector.\n  - `groupBy: 'day' | 'none'` (day headings \"Today\", \"Yesterday\", `dd/MM/yyyy` in the zone of `SdDateTimeService`, entries never reordered), `size: 'md' | 'sm'`, `emptyText`, `ariaLabel`, `autoId`, `headingLevel`.\n  - `option.dataSource.onLoad({ cursor, pageSize, signal })` with `pageSize` (20) and `loadMore: 'button' | 'auto'`: skeleton, load-more button or `IntersectionObserver` feed, first-load and load-more errors with Retry, `sdLoadError`, `reload()` (aborts the running load) and `loadMore()`.\n  - Relative times (\"just now\", \"N min ago\") within the last hour of today; `<time datetime>` with a zone title.\n  - Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.",
+            "items": [
+              {
+                "text": "New entry point `@sdcorejs/angular/components/timeline` with `SdTimeline<T>` (`sd-timeline`).",
+                "ordered": false,
+                "children": [
+                  {
+                    "text": "Entries (`SdTimelineItem<T>`: `id`, `at`, `actor`, `icon`, `color`, `source`, `data`) take a body from `content: { layout, data }`: `comment` (framed text clamped to three lines with show more/less, `edited`), `change` (rows \"label: old → new\" with struck-through old text, dashes for empty values, badges, \"+N more changes\", `note`) and `event` (`badge`, `note`).",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "Marker: `sd-avatar` for an actor, otherwise the layout icon or `icon` in a neutral or `color` ring; `--sd-timeline-line` colours the connector.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`groupBy: 'day' | 'none'` (day headings \"Today\", \"Yesterday\", `dd/MM/yyyy` in the zone of `SdDateTimeService`, entries never reordered), `size: 'md' | 'sm'`, `emptyText`, `ariaLabel`, `autoId`, `headingLevel`.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "`option.dataSource.onLoad({ cursor, pageSize, signal })` with `pageSize` (20) and `loadMore: 'button' | 'auto'`: skeleton, load-more button or `IntersectionObserver` feed, first-load and load-more errors with Retry, `sdLoadError`, `reload()` (aborts the running load) and `loadMore()`.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "Relative times (\"just now\", \"N min ago\") within the last hour of today; `<time datetime>` with a zone title.",
+                    "ordered": false,
+                    "children": []
+                  },
+                  {
+                    "text": "Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.",
+                    "ordered": false,
+                    "children": []
+                  }
+                ]
+              }
+            ],
+            "children": []
+          },
+          {
+            "key": "general",
+            "title": "General",
+            "level": 4,
+            "anchor": "unreleased-added-general",
+            "markdown": "- The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+            "items": [
+              {
+                "text": "The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.",
+                "ordered": false,
+                "children": []
+              }
+            ],
+            "children": []
+          }
+        ]
+      },
       {
         "key": "changed",
         "title": "Changed",
         "level": 3,
         "anchor": "unreleased-changed",
-        "markdown": "#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
+        "markdown": "#### Pattern\n\n- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy=\"none\" size=\"sm\"`: \"created\" with an `add` icon, submit (`send`, primary), approve (`check`, success, \"Đã duyệt\" badge) and reject (`close`, error, \"Từ chối\" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.\n\n#### Theme\n\n- The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).\n  - Contrast on `surface`: 2.13–2.30:1 in every light preset (default 3.14 → 2.20) and 2.87:1 in dark (was 4.33). The outline stays darker than `--sd-border`, so an empty field still differs from a disabled one. Hover, focus, ring and disabled are unchanged; hover (`--sd-border-strong`) reaches at least 4:1.\n  - To keep the 3:1 rest outline, set the previous value at the root:\n\n    ```scss\n    :root {\n      --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));\n    }\n    ```",
         "items": [],
         "children": [
           {
@@ -73,7 +267,7 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
             "title": "Pattern",
             "level": 4,
             "anchor": "unreleased-changed-pattern",
-            "markdown": "- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.",
+            "markdown": "- Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.\n  - Removed sample routes: `customer/create`, `customer/:id/detail`, `customer/:id/update`, `category/create?parent=`, `category/:id/update`. Only `customer/:id/360` stays a child route of the customer list.\n  - Detail and update drawers take the record `id` and load it with `detail(id)` inside the drawer, showing loading and error with `sd-data-state` and a retry button. Detail switches to update by replacing the drawer, never stacking two.\n  - The list routes and the profile route declare `canDeactivate: [sdPageFormLeaveGuard]`, so leaving with unsaved changes in a drawer still asks first.\n  - `docs/drawer.md` describes the new rules; `docs/list.md`, the pattern README and the `/pattern` catalog follow.\n- The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy=\"none\" size=\"sm\"`: \"created\" with an `add` icon, submit (`send`, primary), approve (`check`, success, \"Đã duyệt\" badge) and reject (`close`, error, \"Từ chối\" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.\n- Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.",
             "items": [
               {
                 "text": "Drawers of `modules/pattern` open on the current screen instead of as child routes, so opening or closing one no longer changes the URL. Customer detail, create and update and category create and update are rendered with `@if` from a signal of the list; the 360° profile opens the update drawer over itself and shows the saved record.",
@@ -100,6 +294,16 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
                     "children": []
                   }
                 ]
+              },
+              {
+                "text": "The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy=\"none\" size=\"sm\"`: \"created\" with an `add` icon, submit (`send`, primary), approve (`check`, success, \"Đã duyệt\" badge) and reject (`close`, error, \"Từ chối\" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.",
+                "ordered": false,
+                "children": []
+              },
+              {
+                "text": "Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.",
+                "ordered": false,
+                "children": []
               }
             ],
             "children": []

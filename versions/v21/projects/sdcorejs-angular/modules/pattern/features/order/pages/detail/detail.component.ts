@@ -151,7 +151,7 @@ import { canUpdateOrder, orderApprovalBadge, orderStatusBadge, type OrderAction,
             <sd-section-item label="Ghi chú">{{ order.note | sdEmpty }}</sd-section-item>
           </sd-section>
         </div>
-        <approval-steps sdAside [steps]="order.approvalHistory" />
+        <approval-steps sdAside [steps]="order.approvalHistory" [createdAt]="order.createdAt" [creator]="order.creator" />
       </sd-page-detail>
     }
   `,

@@ -434,9 +434,6 @@ export const EN_MESSAGES = {
   'core.component.code-editor.copied': 'Copied!',
   'core.component.code-editor.copy': 'Copy code',
 
-  // ---- Component: history ----
-  'core.component.history.by': 'By',
-
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'Choose an .xlsx template file with up to {limit} rows.',
   'core.component.import-excel.choose-file': 'Choose Excel file',
@@ -1631,4 +1628,22 @@ export const EN_MESSAGES = {
   'core.component.avatar.group-label': '{count} people',
   'core.component.avatar.more-label': 'Show {count} more people',
   'core.component.avatar.more-title': '{count} more people',
+  // ---- Component: timeline ----
+  'core.component.timeline.label': 'Activity',
+  'core.component.timeline.empty': 'No activity yet.',
+  'core.component.timeline.load-error': "Couldn't load activity.",
+  'core.component.timeline.load-more-error': "Couldn't load more.",
+  'core.component.timeline.retry': 'Retry',
+  'core.component.timeline.load-more': 'Show {count} more',
+  'core.component.timeline.loading': 'Loading…',
+  'core.component.timeline.show-more': 'Show more',
+  'core.component.timeline.show-less': 'Show less',
+  'core.component.timeline.more-changes': '+{count} more changes',
+  'core.component.timeline.today': 'Today',
+  'core.component.timeline.yesterday': 'Yesterday',
+  'core.component.timeline.just-now': 'just now',
+  'core.component.timeline.minutes-ago': '{count} min ago',
+  'core.component.timeline.edited': 'edited',
+  'core.component.timeline.comment-action': 'commented',
+  'core.component.timeline.comment-aria': 'Comment by {name}',
 } as const;

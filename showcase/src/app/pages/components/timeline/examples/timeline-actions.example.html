@@ -1,0 +1,12 @@
+<div class="timeline-box">
+  <!-- Edit/delete only for comments; the area shows on hover or focus, always on touch screens. -->
+  <sd-timeline autoId="comment-actions" [items]="items()">
+    <ng-template sdTimelineItemActions let-item>
+      @if (item.content.layout === 'comment') {
+        <sd-button type="text" prefixIcon="edit" tooltip="Sửa" (click)="lastAction.set('Sửa ' + item.id)" />
+        <sd-button type="text" prefixIcon="delete" tooltip="Xoá" (click)="remove(item)" />
+      }
+    </ng-template>
+  </sd-timeline>
+</div>
+<p class="timeline-readout">{{ lastAction() }}</p>

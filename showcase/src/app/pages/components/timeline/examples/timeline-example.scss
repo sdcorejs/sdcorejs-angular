@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.timeline-box {
+  width: 100%;
+  max-width: 720px;
+}
+
+// A side column the size of an sdAside slot.
+.timeline-aside {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.timeline-readout {
+  margin: 8px 0 0;
+  color: var(--sd-text-secondary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
