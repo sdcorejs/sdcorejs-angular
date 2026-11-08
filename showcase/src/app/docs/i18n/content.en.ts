@@ -826,6 +826,14 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     title: 'Tree + selector + command + indent adjustment',
     description: 'A combined demo of tree rows with a checkbox selector, bulk actions, per-row commands and direct indent changes.',
   },
+  'components/timeline/example-co-md-nhom-theo-ngay': {
+    title: 'Size md, grouped by day',
+    description: 'All three layouts; Show more appears only when the text is really clamped, and changes from the fourth on fold into +N.',
+  },
+  'components/timeline/example-co-sm-trong-cot-phu': {
+    title: 'Size sm in a side column',
+    description: 'A 360px side column: 24px markers, 13px text, no source.',
+  },
   'components/timeline/example-luong-duyet': {
     title: 'Approval flow',
     description: 'Without day groups: the title stands alone and the actor and full time go on a second line.',
@@ -835,6 +843,14 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     description: 'Old values are struck through, empty values show a dash and statuses show as badges; rows from the fourth on fold into +N more changes.',
   },
   'components/timeline/example-rong': { title: 'Empty' },
+  'components/timeline/example-tac-vu-cua-binh-luan': {
+    title: 'Comment actions',
+    description: 'Edit / Delete at the end of the first line, shown on hover or focus.',
+  },
+  'components/timeline/example-tai-theo-cursor': {
+    title: 'Cursor paging',
+    description: 'An 800ms mock: loading, load more, error (switch), empty and reload().',
+  },
   'components/tree/example-custom-item-template': {
     description: 'sdTreeItemDef receives the context item, treeItem, level, selected, isLeaf, toggle, select.',
   },

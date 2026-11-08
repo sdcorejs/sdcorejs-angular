@@ -282,9 +282,13 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-tree-lazy-nap-con-khi-bung-co-loading"
   | "components/table/example-tree-rows-search-o-cap-con-go-ten-don-vi-con-de-loc"
   | "components/table/example-tree-selector-command-chinh-indent"
+  | "components/timeline/example-co-md-nhom-theo-ngay"
+  | "components/timeline/example-co-sm-trong-cot-phu"
   | "components/timeline/example-luong-duyet"
   | "components/timeline/example-nhat-ky-cap-nhat"
   | "components/timeline/example-rong"
+  | "components/timeline/example-tac-vu-cua-binh-luan"
+  | "components/timeline/example-tai-theo-cursor"
   | "components/tree/example-custom-item-template"
   | "components/tree/example-filter-tieng-viet-khong-dau"
   | "components/tree/example-lazy-tree"
@@ -2474,6 +2478,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Dùng luồng tải của SdTable: khung xương khi chưa có dòng, thanh tiến trình và dòng mờ khi tải lại quá 300ms, empty/no-results từ kết quả trả về, lỗi có retry giữ query. Tùy chỉnh nội dung bằng sdDataStateTemplate và SdDataState.",
   },
   {
+    sourceKey: "components/timeline/example-co-md-nhom-theo-ngay",
+    pageKey: "components/timeline",
+    sectionId: "example-co-md-nhom-theo-ngay",
+    title: "Cỡ md, nhóm theo ngày",
+    description: "Đủ ba layout; Xem thêm chỉ hiện khi chữ thật sự bị cắt, từ thay đổi thứ 4 gom vào +N.",
+  },
+  {
     sourceKey: "components/timeline/example-luong-duyet",
     pageKey: "components/timeline",
     sectionId: "example-luong-duyet",
@@ -2486,6 +2497,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-nhat-ky-cap-nhat",
     title: "Nhật ký cập nhật",
     description: "Giá trị cũ gạch ngang, rỗng hiện dấu gạch, trạng thái hiện bằng badge; từ hàng thứ 4 gom vào +N thay đổi khác.",
+  },
+  {
+    sourceKey: "components/timeline/example-co-sm-trong-cot-phu",
+    pageKey: "components/timeline",
+    sectionId: "example-co-sm-trong-cot-phu",
+    title: "Cỡ sm trong cột phụ",
+    description: "Cột phụ 360px: marker 24px, chữ 13px, bỏ nguồn.",
+  },
+  {
+    sourceKey: "components/timeline/example-tai-theo-cursor",
+    pageKey: "components/timeline",
+    sectionId: "example-tai-theo-cursor",
+    title: "Tải theo cursor",
+    description: "Mock trễ 800ms: đang tải, tải thêm, lỗi (bật bằng công tắc), rỗng và reload().",
+  },
+  {
+    sourceKey: "components/timeline/example-tac-vu-cua-binh-luan",
+    pageKey: "components/timeline",
+    sectionId: "example-tac-vu-cua-binh-luan",
+    title: "Tác vụ của bình luận",
+    description: "Sửa / Xoá ở cuối dòng đầu, hiện khi rê chuột hoặc focus.",
   },
   {
     sourceKey: "components/timeline/example-rong",

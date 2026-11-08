@@ -324,7 +324,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/timeline/sd-timeline',
     keywords: ['history', 'activity', 'audit', 'approval', 'comment', 'change log'],
     status: 'stable',
-    demoSectionCount: 3,
+    demoSectionCount: 7,
     loadComponent: () => import('../../pages/components/timeline/timeline-demo.component').then(m => m.TimelineDemoComponent),
   }),
   defineDocPage({
