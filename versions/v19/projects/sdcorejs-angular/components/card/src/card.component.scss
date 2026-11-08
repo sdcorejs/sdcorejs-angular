@@ -3,6 +3,31 @@
 
 $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
 
+@function c($name) {
+  @return map.get(color.$color_map, $name);
+}
+
+// Scale tokens (themes/_scales.scss) with their literal fallback.
+@function sp($px) {
+  @return var(--sd-space-#{$px}, #{$px}px);
+}
+
+@function fs($px) {
+  @return var(--sd-font-size-#{$px}, #{$px}px);
+}
+
+@function lh($px) {
+  @return var(--sd-line-height-#{$px}, #{$px}px);
+}
+
+$weight-medium: var(--sd-font-weight-medium, 500);
+
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 :host {
   --sd-card-accent: #{map.get(color.$color_map, 'primary')};
   --sd-card-accent-light: #{map.get(color.$color_map, 'primary-light')};
@@ -55,6 +80,126 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
 
 :host(.sd-disabled) .sd-card__link {
   cursor: not-allowed;
+}
+
+// Built-in layouts own their padding; the host and the anchor keep only border and background.
+:host(.sd-card--content),
+:host(.sd-card--content) .sd-card__link {
+  padding: 0;
+}
+
+// ---- stat ----
+.sd-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: sp(2);
+  box-sizing: border-box;
+  min-height: 80px;
+  padding: 14px 16px;
+}
+
+.sd-card__stat-head,
+.sd-card__stat-row {
+  display: flex;
+  gap: sp(8);
+  min-width: 0;
+}
+
+.sd-card__stat-head {
+  align-items: center;
+}
+
+.sd-card__stat-row {
+  align-items: baseline;
+}
+
+.sd-card__stat-label {
+  @include ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: fs(13);
+  line-height: lh(18);
+  color: c('text-secondary');
+}
+
+.sd-card__stat-icon {
+  flex: none;
+  color: c('text-secondary');
+}
+
+.sd-card__stat-value {
+  @include ellipsis;
+  min-width: 0;
+  font-size: fs(24);
+  line-height: lh(32);
+  font-weight: $weight-medium;
+  font-variant-numeric: tabular-nums;
+}
+
+:host(.sd-card--link) .sd-card__stat-value,
+:host(.sd-card--select) .sd-card__stat-value {
+  color: var(--sd-card-accent);
+}
+
+.sd-card__stat-context {
+  @include ellipsis;
+  font-size: fs(12);
+  line-height: lh(16);
+  color: c('text-secondary');
+}
+
+@each $name in $card-colors {
+  .sd-card__stat-context--#{$name} {
+    color: c('#{$name}-dark');
+  }
+}
+
+.sd-card__delta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: sp(2);
+  height: 20px;
+  border-radius: var(--sd-radius-10, 10px);
+  padding: 0 6px;
+  font-size: fs(12);
+  line-height: lh(20);
+  font-weight: $weight-medium;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-card__delta--good {
+  background: c('success-light');
+  color: c('success-dark');
+}
+
+.sd-card__delta--bad {
+  background: c('error-light');
+  color: c('error-dark');
+}
+
+.sd-card__delta--flat {
+  background: c('border');
+  color: c('text-secondary');
+}
+
+// sm: one 32px row (30px inside the 1px border).
+.sd-card__stat--sm {
+  flex-direction: row;
+  align-items: baseline;
+  gap: sp(6);
+  min-height: 0;
+  height: 30px;
+  padding: 5px 10px 0;
+
+  .sd-card__stat-label {
+    flex: 0 1 auto;
+  }
+
+  .sd-card__stat-value {
+    font-size: fs(14);
+    line-height: lh(20);
+  }
 }
 
 :host(:not(.sd-card--static):not(.sd-disabled):hover) {

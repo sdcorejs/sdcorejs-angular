@@ -16,25 +16,30 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink, type Params } from '@angular/router';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import type { Color as SdColor } from '@sdcorejs/utils/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 import { SdCardGroup } from './card-group.component';
+import { SD_CARD_CONFIGURATION } from './card.configuration';
 import { SD_CARD_DEFAULT_COLOR } from './card.constants';
-import type { SdCardBehavior, SdCardContent } from './card.model';
+import { sdCardStatDelta, sdCardStatValue, type SdCardFormatContext } from './card.format';
+import type { SdCardBehavior, SdCardContent, SdCardSize } from './card.model';
 import { sdCardBehaviorAllowed } from './card.utils';
 
 @Component({
   selector: 'sd-card',
   exportAs: 'sdCard',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterLink],
+  imports: [NgTemplateOutlet, RouterLink, SdIcon, SdTranslatePipe],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.role]': 'hostRole()',
     '[attr.tabindex]': 'hostTabIndex()',
+    '[attr.aria-label]': 'mode() === "link" ? null : accessibleLabel()',
     '[attr.aria-pressed]': 'mode() === "select" ? (selected() ? "true" : "false") : null',
     '[attr.aria-disabled]': 'mode() === "select" ? (effectiveDisabled() ? "true" : "false") : null',
     '[attr.data-autoid]': 'resolvedAutoId()',
@@ -43,6 +48,8 @@ import { sdCardBehaviorAllowed } from './card.utils';
     '[class.sd-card--static]': 'mode() === "static"',
     '[class.sd-card--link]': 'mode() === "link"',
     '[class.sd-card--select]': 'mode() === "select"',
+    '[class.sd-card--content]': 'layout() !== undefined',
+    '[class.sd-card--sm]': 'layout() !== undefined && resolvedSize() === "sm"',
     '[class.sd-selected]': 'selected()',
     '[class.sd-disabled]': 'effectiveDisabled()',
     '[class.sd-c-primary]': 'effectiveColor() === "primary"',
@@ -64,6 +71,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly #clickSubject = new Subject<Event>();
   readonly #subscription = new Subscription();
   readonly #reported = new Set<string>();
+  readonly #i18n = inject(I18nService);
+  readonly #configuration = inject(SD_CARD_CONFIGURATION, { optional: true });
 
   /** Value used by the nearest group selection model. Required for `select` inside a group. */
   readonly value = input<NonNullable<T> | undefined>(undefined);
@@ -71,6 +80,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly behavior = input<SdCardBehavior | undefined>(undefined);
   /** Built-in layout and its data; without it the card projects `ng-content`. */
   readonly content = input<SdCardContent | undefined>(undefined);
+  /** Density; layouts without an `sm` variant (`option`, `file`) always render `md`. */
+  readonly size = input<SdCardSize | undefined>(undefined);
   /** Router commands for `behavior="link"` (rendered through `RouterLink`). */
   readonly link = input<string | readonly unknown[] | undefined>(undefined);
   /** Query params that go with `link`. */
@@ -94,7 +105,44 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   readonly #requestedBehavior = computed<SdCardBehavior>(() => this.behavior() ?? (this.#group ? 'select' : 'static'));
   readonly #behaviorAllowed = computed(() => sdCardBehaviorAllowed(this.content()?.layout, this.#requestedBehavior()));
   /** Behavior after layout validation; an invalid combination falls back to `static`. */
-  protected readonly mode = computed<SdCardBehavior>(() => (this.#behaviorAllowed() ? this.#requestedBehavior() : 'static'));
+  readonly #validBehavior = computed<SdCardBehavior>(() => (this.#behaviorAllowed() ? this.#requestedBehavior() : 'static'));
+  protected readonly layout = computed(() => this.content()?.layout);
+  /** Rendered behavior. A stat link whose value is 0 renders static so it never opens an empty list. */
+  protected readonly mode = computed<SdCardBehavior>(() => {
+    const behavior = this.#validBehavior();
+    const content = this.content();
+    if (behavior === 'link' && content?.layout === 'stat' && content.data.value === 0) return 'static';
+    return behavior;
+  });
+  protected readonly resolvedSize = computed<SdCardSize>(() => {
+    const layout = this.layout();
+    if (layout === 'option' || layout === 'file') return 'md';
+    return this.size() ?? 'md';
+  });
+  readonly #formatContext = computed<SdCardFormatContext>(() => ({
+    locale: this.#i18n.locale(),
+    compactDisplay: this.#configuration?.compactDisplay,
+  }));
+  protected readonly stat = computed(() => {
+    const content = this.content();
+    if (content?.layout !== 'stat') return null;
+    const context = this.#formatContext();
+    return { data: content.data, value: sdCardStatValue(content.data, context), delta: sdCardStatDelta(content.data, context) };
+  });
+  /** Accessible name of the focusable element (host for select/static, anchor for link) for built-in layouts. */
+  protected readonly accessibleLabel = computed(() => {
+    const stat = this.stat();
+    if (!stat) return null;
+    const delta = stat.delta;
+    let deltaText = '';
+    if (delta) {
+      deltaText =
+        delta.direction === 'flat'
+          ? this.#i18n.t('core.component.card.delta-unchanged')
+          : this.#i18n.t(`core.component.card.delta-${delta.direction}`, { value: delta.display });
+    }
+    return sdCardJoinLabel(stat.data.label, stat.value.full, deltaText, stat.data.context);
+  });
   /** Read-only selection state; always `false` unless the card behaves as `select`. */
   readonly selected: Signal<boolean> = computed(() => {
     if (this.mode() !== 'select') return false;
@@ -105,7 +153,11 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly effectiveDisabled = computed(() => this.disabled() || (this.#group?.disabled() ?? false));
   protected readonly effectiveColor = computed(() => this.color() ?? this.#group?.color() ?? SD_CARD_DEFAULT_COLOR);
   protected readonly resolvedAutoId = computed(() => (this.autoId() ? `components-card-${this.autoId()}` : undefined));
-  protected readonly hostRole = computed(() => (this.mode() === 'select' ? 'button' : null));
+  protected readonly hostRole = computed(() => {
+    if (this.mode() === 'select') return 'button';
+    // why: a static layout card is one labelled region; screen readers announce its summary once.
+    return this.mode() === 'static' && this.accessibleLabel() ? 'group' : null;
+  });
   protected readonly hostTabIndex = computed(() => {
     if (this.mode() !== 'select') return null;
     return this.effectiveDisabled() ? -1 : 0;
@@ -152,7 +204,7 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
       if (!this.#behaviorAllowed()) {
         this.#report('error', 'behavior', `behavior "${requested}" is not valid for layout "${layout}"; rendering as "static".`);
       }
-      if ((hasLink || hasHref) && this.mode() !== 'link') {
+      if ((hasLink || hasHref) && this.#validBehavior() !== 'link') {
         this.#report('warn', 'link-ignored', '`link`/`href` is set but the resolved behavior is not "link"; the card renders no anchor.');
       }
       if (hasLink && hasHref) {
@@ -160,6 +212,10 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
       }
       if (this.mode() === 'select' && this.#group && this.value() === undefined) {
         this.#report('error', 'value', 'a selectable card inside `sd-card-group` needs `value`; clicks are ignored.');
+      }
+      const stat = this.stat();
+      if (stat?.value.mismatch) {
+        this.#report('warn', 'format', `stat value "${stat.value.display}" is a string but \`format\` is not "text"; it is shown as is.`);
       }
     });
   }
@@ -210,4 +266,9 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
     this.#reported.add(key);
     console[level](`[sd-card] ${message}`);
   }
+}
+
+/** Joins the non-empty parts of an accessible name with commas. */
+function sdCardJoinLabel(...parts: (string | null | undefined)[]): string {
+  return parts.filter(part => !!part?.trim()).join(', ');
 }

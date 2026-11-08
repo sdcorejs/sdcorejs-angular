@@ -1,4 +1,50 @@
-<ng-template #body><ng-content /></ng-template>
+<ng-template #body>
+  @switch (layout()) {
+    @case ('stat') {
+      @if (stat(); as _stat) {
+        @if (resolvedSize() === 'sm') {
+          <div class="sd-card__stat sd-card__stat--sm">
+            <span class="sd-card__stat-label" [title]="_stat.data.label">{{ _stat.data.label }}</span>
+            <span class="sd-card__stat-value" [title]="_stat.value.full">{{ _stat.value.display }}</span>
+          </div>
+        } @else {
+          <div class="sd-card__stat">
+            <div class="sd-card__stat-head">
+              <span class="sd-card__stat-label" [title]="_stat.data.label">{{ _stat.data.label }}</span>
+              @if (_stat.data.icon) {
+                <sd-icon class="sd-card__stat-icon" size="20px" [name]="_stat.data.icon" />
+              }
+            </div>
+            <div class="sd-card__stat-row">
+              <span class="sd-card__stat-value" [title]="_stat.value.full">{{ _stat.value.display }}</span>
+              @if (_stat.delta; as _delta) {
+                <span class="sd-card__delta" [class]="'sd-card__delta--' + _delta.tone">
+                  @if (_delta.direction === 'flat') {
+                    {{ 'core.component.card.delta-unchanged' | sdTranslate }}
+                  } @else {
+                    <sd-icon size="14px" [name]="_delta.direction === 'up' ? 'arrow_upward' : 'arrow_downward'" />
+                    {{ _delta.display }}
+                  }
+                </span>
+              }
+            </div>
+            @if (_stat.data.context) {
+              <span
+                class="sd-card__stat-context"
+                [class]="_stat.data.contextColor ? 'sd-card__stat-context--' + _stat.data.contextColor : ''"
+                [title]="_stat.data.context"
+                >{{ _stat.data.context }}</span
+              >
+            }
+          </div>
+        }
+      }
+    }
+    @default {
+      <ng-content />
+    }
+  }
+</ng-template>
 
 @if (mode() === 'link') {
   @let _disabled = effectiveDisabled();
@@ -7,6 +53,7 @@
       class="sd-card__link"
       [routerLink]="_disabled ? null : _commands"
       [queryParams]="queryParams()"
+      [attr.aria-label]="accessibleLabel()"
       [attr.aria-disabled]="_disabled ? 'true' : null"
       [attr.tabindex]="_disabled ? -1 : null">
       <ng-container [ngTemplateOutlet]="body" />
@@ -17,6 +64,7 @@
       [attr.href]="_disabled ? null : href()"
       [attr.target]="target() ?? null"
       [attr.rel]="target() === '_blank' ? 'noopener noreferrer' : null"
+      [attr.aria-label]="accessibleLabel()"
       [attr.aria-disabled]="_disabled ? 'true' : null"
       [attr.tabindex]="_disabled ? -1 : null">
       <ng-container [ngTemplateOutlet]="body" />

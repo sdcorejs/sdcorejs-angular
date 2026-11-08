@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, model } from '@angular/core';
-import { SdCard, SdCardGroup } from '@sdcorejs/angular/components/card';
+import { SdCard, SdCardGroup, type SdCardContent } from '@sdcorejs/angular/components/card';
 import { SD_PAGE_LIST } from '@sdcorejs/angular/modules/layout';
 import type { CustomerCounts, CustomerSegment } from '../../services/customer.model';
 
@@ -12,7 +12,7 @@ const CARDS: readonly { readonly key: 'all' | CustomerSegment; readonly label: s
 
 /**
  * Score card của danh sách khách hàng: mỗi thẻ là một nhóm khách và là bộ lọc của danh sách.
- * Khi `sd-page-list` thu gọn (màn thấp), các thẻ thành một dòng 36px.
+ * Khi `sd-page-list` thu gọn (màn thấp), các thẻ thành một dòng 32px.
  */
 @Component({
   selector: 'summary-cards',
@@ -21,63 +21,16 @@ const CARDS: readonly { readonly key: 'all' | CustomerSegment; readonly label: s
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <sd-card-group
-      class="summary"
+      class="sd-card-grid"
       autoId="customer-segments"
       aria-label="Nhóm khách hàng"
-      [class.summary--compact]="compact()"
+      [class.sd-card-grid--sm]="compact()"
       [(model)]="selected"
       (sdChange)="choose($event)">
       @for (card of cards(); track card.key) {
-        <sd-card class="summary__card" [value]="card.key" [autoId]="'customer-segment-' + card.key">
-          <span class="summary__label">{{ card.label }}</span>
-          <strong class="summary__value">{{ card.value }}</strong>
-        </sd-card>
+        <sd-card [value]="card.key" [autoId]="'customer-segment-' + card.key" [content]="card.content" [size]="compact() ? 'sm' : 'md'" />
       }
     </sd-card-group>
-  `,
-  styles: `
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .summary__card {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 12px 16px;
-    }
-    .summary__label {
-      color: var(--sd-text-secondary);
-      font-size: 13px;
-    }
-    .summary__value {
-      font-size: 22px;
-      line-height: 28px;
-      font-weight: 500;
-      font-variant-numeric: tabular-nums;
-    }
-    .summary--compact {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      height: 36px;
-    }
-    .summary--compact .summary__card {
-      flex-direction: row;
-      align-items: baseline;
-      gap: 6px;
-      padding: 4px 10px;
-    }
-    .summary--compact .summary__value {
-      font-size: 14px;
-      line-height: 20px;
-    }
-    @media (max-width: 767px) {
-      .summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
   `,
 })
 export class SummaryCardsComponent {
@@ -89,7 +42,10 @@ export class SummaryCardsComponent {
   protected readonly selected = linkedSignal<'all' | CustomerSegment | null>(() => this.segment() ?? 'all');
   protected readonly cards = computed(() => {
     const counts = this.counts();
-    return CARDS.map(card => ({ ...card, value: counts ? counts[card.key].toLocaleString('vi-VN') : '…' }));
+    return CARDS.map(card => {
+      const content: SdCardContent = { layout: 'stat', data: { label: card.label, value: counts ? counts[card.key] : null } };
+      return { key: card.key, content };
+    });
   });
 
   protected choose(key: unknown): void {
