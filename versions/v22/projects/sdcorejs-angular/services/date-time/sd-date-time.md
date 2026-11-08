@@ -72,7 +72,7 @@ Outside Angular, `DateUtilities` of `@sdcorejs/utils` takes the same zone: `Date
 - Pipes: `sdFormatDate`, `sdFormatDatetime`, `sdTimeDifferent` (pipes created with `new` outside an injection context keep the browser zone).
 - Forms: `sd-date`, `sd-datetime`, `sd-date-range`. The calendar day, the `TODAY` limits, the picker's today and Now, and the `transform` outputs (`ISOString`, `UTCString`). `sd-time` and `sd-chip-calendar` have no zone and never shift.
 - `sd-table`: cells, server filter payloads (`SdConvertToPagingReq`), client filter, local sort, aggregate MIN/MAX and Excel export.
-- `sd-import-excel`, `sd-form-generic` (rules, validations, read-only display, `'today'` limits), `sd-history`, `sd-file-explorer` (`modifiedAt`, today/yesterday).
+- `sd-import-excel`, `sd-form-generic` (rules, validations, read-only display, `'today'` limits), `sd-timeline`, `sd-file-explorer` (`modifiedAt`, today/yesterday).
 
 ### `form.value` when a zone is set
 

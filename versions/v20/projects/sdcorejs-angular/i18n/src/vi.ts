@@ -435,8 +435,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': 'Đã copy!',
   'core.component.code-editor.copy': 'Copy code',
 
-  // ---- Component: history ----
-  'core.component.history.by': 'Bởi',
 
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'Chọn tệp .xlsx theo mẫu, tối đa {limit} dòng.',
@@ -1635,4 +1633,22 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count} người',
   'core.component.avatar.more-label': 'Xem thêm {count} người',
   'core.component.avatar.more-title': '{count} người khác',
+  // ---- Component: timeline ----
+  'core.component.timeline.label': 'Hoạt động',
+  'core.component.timeline.empty': 'Chưa có hoạt động.',
+  'core.component.timeline.load-error': 'Không tải được lịch sử.',
+  'core.component.timeline.load-more-error': 'Không tải thêm được.',
+  'core.component.timeline.retry': 'Thử lại',
+  'core.component.timeline.load-more': 'Xem thêm {count} mục',
+  'core.component.timeline.loading': 'Đang tải…',
+  'core.component.timeline.show-more': 'Xem thêm',
+  'core.component.timeline.show-less': 'Thu gọn',
+  'core.component.timeline.more-changes': '+{count} thay đổi khác',
+  'core.component.timeline.today': 'Hôm nay',
+  'core.component.timeline.yesterday': 'Hôm qua',
+  'core.component.timeline.just-now': 'vừa xong',
+  'core.component.timeline.minutes-ago': '{count} phút trước',
+  'core.component.timeline.edited': 'đã sửa',
+  'core.component.timeline.comment-action': 'bình luận',
+  'core.component.timeline.comment-aria': 'Bình luận của {name}',
 };

@@ -436,8 +436,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': 'コピーしました！',
   'core.component.code-editor.copy': 'コードをコピー',
 
-  // ---- Component: history ----
-  'core.component.history.by': '実行者',
 
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': 'テンプレートに沿った .xlsx ファイルを選択してください（最大 {limit} 行）。',
@@ -1636,4 +1634,22 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.avatar.group-label': '{count} 人',
   'core.component.avatar.more-label': 'ほか {count} 人を表示',
   'core.component.avatar.more-title': 'ほか {count} 人',
+  // ---- Component: timeline ----
+  'core.component.timeline.label': 'アクティビティ',
+  'core.component.timeline.empty': 'アクティビティはまだありません。',
+  'core.component.timeline.load-error': 'アクティビティを読み込めませんでした。',
+  'core.component.timeline.load-more-error': 'これ以上読み込めませんでした。',
+  'core.component.timeline.retry': '再試行',
+  'core.component.timeline.load-more': 'さらに {count} 件を表示',
+  'core.component.timeline.loading': '読み込み中…',
+  'core.component.timeline.show-more': 'もっと見る',
+  'core.component.timeline.show-less': '折りたたむ',
+  'core.component.timeline.more-changes': 'ほか {count} 件の変更',
+  'core.component.timeline.today': '今日',
+  'core.component.timeline.yesterday': '昨日',
+  'core.component.timeline.just-now': 'たった今',
+  'core.component.timeline.minutes-ago': '{count} 分前',
+  'core.component.timeline.edited': '編集済み',
+  'core.component.timeline.comment-action': 'がコメント',
+  'core.component.timeline.comment-aria': '{name} さんのコメント',
 };
