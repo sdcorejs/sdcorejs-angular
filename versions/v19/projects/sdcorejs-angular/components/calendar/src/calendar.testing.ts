@@ -55,13 +55,14 @@ export interface CalendarSetup {
   readonly zone?: string;
   readonly now?: string;
   readonly configuration?: ISdCalendarConfiguration;
+  readonly language?: 'vi' | 'en';
 }
 
 /** Configures TestBed with the zone, a pinned "now" and an optional calendar configuration. */
 export function configureCalendar(setup: CalendarSetup = {}): { clock: SdDateTimeService; setNow: (next: string) => void } {
   TestBed.configureTestingModule({
     providers: [
-      { provide: SD_CORE_CONFIGURATION, useValue: { timeZone: setup.zone ?? SCHEDULE_TEST_ZONE } },
+      { provide: SD_CORE_CONFIGURATION, useValue: { timeZone: setup.zone ?? SCHEDULE_TEST_ZONE, language: setup.language ?? 'vi' } },
       ...(setup.configuration ? [{ provide: SD_CALENDAR_CONFIGURATION, useValue: setup.configuration }] : []),
     ],
   });

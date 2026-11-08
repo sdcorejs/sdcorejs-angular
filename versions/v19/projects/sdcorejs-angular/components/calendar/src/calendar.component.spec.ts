@@ -284,6 +284,20 @@ describe('SdCalendar · rendering and data source', () => {
       expect(block(host, 'standup')).not.toBeNull();
     }));
 
+    it('[CAL-SC-22] aborts a running load when the option changes and when the calendar is destroyed', fakeAsync(() => {
+      const { option, calls, pending } = deferredOption();
+      const { host, fixture, settle } = render({ option });
+      fixture.componentRef.setInput('option', { ...option });
+      settle();
+      expect(calls.length).toBe(2);
+      expect(calls[0].signal.aborted).toBeTrue();
+      pending[0].resolve(weekEvents());
+      settle();
+      expect(block(host, 'client')).toBeNull();
+      fixture.destroy();
+      expect(calls[1].signal.aborted).toBeTrue();
+    }));
+
     it('[CAL-SC-24] shows the load error with a retry button and emits sdLoadError once', fakeAsync(() => {
       const { option, calls, pending } = deferredOption();
       const { host, loadErrors, settle } = render({ option });
@@ -440,6 +454,14 @@ describe('SdCalendar · rendering and data source', () => {
       expect(scroller(custom.host).scrollTop).toBe(600);
     }));
 
+    it('[CAL-C-20] falls back to a 30-minute step and warns once for a step that does not divide an hour', fakeAsync(() => {
+      const warn = spyOn(console, 'warn');
+      const { fixture, settle } = render({ step: 7 });
+      fixture.componentRef.setInput('date', '2026/10/29');
+      settle();
+      expect(warn.calls.allArgs().filter(args => String(args[0]).includes('step 7')).length).toBe(1);
+    }));
+
     it('[CAL-C-20] uses the calendar configuration under the inputs', fakeAsync(() => {
       const { option, onLoad } = spyOption();
       const { host, fixture, settle } = render({ option }, { configuration: { firstDayOfWeek: 0, workingHours: null } });
@@ -472,7 +494,125 @@ describe('SdCalendar · rendering and data source', () => {
     }));
   });
 
+  describe('titles and navigation', () => {
+    const title = (host: HTMLElement): string => text(q(host, '[data-title]'));
+
+    it('[CAL-C-01] titles every view in Vietnamese', fakeAsync(() => {
+      const { host, fixture, settle } = render();
+      expect(title(host)).toBe('19 – 25 tháng 10, 2026');
+      fixture.componentRef.setInput('date', '2026/09/30');
+      settle();
+      expect(title(host)).toBe('28/09 – 04/10/2026');
+      fixture.componentRef.setInput('date', '2026/12/30');
+      settle();
+      expect(title(host)).toBe('28/12/2026 – 03/01/2027');
+      fixture.componentRef.setInput('date', '2026/10/22');
+      fixture.componentRef.setInput('view', 'day');
+      settle();
+      expect(title(host)).toBe('Thứ Năm, 22 tháng 10, 2026');
+      fixture.componentRef.setInput('view', 'month');
+      settle();
+      expect(title(host)).toBe('Tháng 10, 2026');
+      fixture.componentRef.setInput('view', 'agenda');
+      settle();
+      expect(title(host)).toBe('22/10 – 04/11/2026');
+      expect(action(host, 'prev').getAttribute('aria-label')).toBe('14 ngày trước');
+    }));
+
+    it('[CAL-C-01] titles and labels in English', fakeAsync(() => {
+      const { host, fixture, settle } = render({}, { language: 'en' });
+      expect(title(host)).toBe('Oct 19 – 25, 2026');
+      expect(block(host, 'client')?.getAttribute('aria-label')).toBe('Hẹn khách: Công ty An Phát, Thursday Oct 22, 09:30 to 10:30');
+      expect(action(host, 'next').getAttribute('aria-label')).toBe('Next week');
+      fixture.componentRef.setInput('date', '2026/09/30');
+      settle();
+      expect(title(host)).toBe('Sep 28 – Oct 4, 2026');
+      fixture.componentRef.setInput('date', '2026/10/22');
+      fixture.componentRef.setInput('view', 'day');
+      settle();
+      expect(title(host)).toBe('Thursday, October 22, 2026');
+      expect(action(host, 'next').getAttribute('aria-label')).toBe('Next day');
+      fixture.componentRef.setInput('view', 'month');
+      settle();
+      expect(title(host)).toBe('October 2026');
+      fixture.componentRef.setInput('view', 'agenda');
+      settle();
+      expect(title(host)).toBe('Oct 22 – Nov 4, 2026');
+    }));
+
+    it('[CAL-C-01] opens the day view from a day number and from +N of the all-day row', fakeAsync(() => {
+      const crowded = [
+        ...weekEvents(),
+        ...[1, 2, 3, 4].map(index => ({ id: `extra-${index}`, title: `Cả ngày ${index}`, start: '2026/10/20', allDay: true })),
+      ];
+      const { host, calendar, settle } = render({ option: clientOption(() => crowded) });
+      const more = q<HTMLButtonElement>(host, '[data-more][data-date="2026/10/20"]');
+      expect(text(more)).toBe('+1');
+      more?.click();
+      settle();
+      expect([calendar.view(), calendar.date()]).toEqual(['day', '2026/10/20']);
+      calendar.view.set('week');
+      settle();
+      q<HTMLButtonElement>(host, '[data-day-header][data-date="2026/10/21"] button')?.click();
+      settle();
+      expect([calendar.view(), calendar.date()]).toEqual(['day', '2026/10/21']);
+    }));
+  });
+
+  describe('month lines', () => {
+    const cell = (host: HTMLElement, day: string): HTMLElement => q(host, `[role="gridcell"][data-date="${day}"]`)!;
+    const timed = (id: string, day: string, hour: number): SdCalendarEvent<CalendarDto> => ({
+      id,
+      title: id,
+      start: `${day} ${String(hour).padStart(2, '0')}:00:00`,
+      end: `${day} ${String(hour).padStart(2, '0')}:45:00`,
+    });
+
+    it('[CAL-C-14] shows three lines, or two and "+N khác", or one and "+N khác" under a holiday', fakeAsync(() => {
+      const events = [
+        ...[8, 9, 10, 11].map(hour => timed(`a${hour}`, '2026/10/14', hour)),
+        ...[8, 9, 10].map(hour => timed(`b${hour}`, '2026/10/15', hour)),
+        ...[8, 9, 10].map(hour => timed(`c${hour}`, '2026/10/16', hour)),
+      ];
+      const holidays = [{ date: '2026/10/15', label: 'Lễ', type: 'observance' as const }];
+      const { host, calendar, settle } = render({ view: 'month', holidays, option: clientOption(() => events) });
+      expect(qa(cell(host, '2026/10/14'), '[data-event-id]').length).toBe(2);
+      expect(text(q(cell(host, '2026/10/14'), '[data-more]'))).toBe('+2 khác');
+      expect(qa(cell(host, '2026/10/15'), '[data-event-id]').length).toBe(1);
+      expect(text(q(cell(host, '2026/10/15'), '[data-more]'))).toBe('+2 khác');
+      expect(text(q(cell(host, '2026/10/15'), '[data-holiday]'))).toBe('Lễ');
+      expect(cell(host, '2026/10/15').getAttribute('aria-label')).toBe('Thứ Năm 15/10, Lễ, 3 sự kiện');
+      expect(qa(cell(host, '2026/10/16'), '[data-event-id]').length).toBe(3);
+      expect(q(cell(host, '2026/10/16'), '[data-more]')).toBeNull();
+      q<HTMLButtonElement>(cell(host, '2026/10/14'), '[data-more]')?.click();
+      settle();
+      expect([calendar.view(), calendar.date()]).toEqual(['day', '2026/10/14']);
+    }));
+
+    it('[CAL-C-14] joins an all-day bar across days and titles only its first segment of the week', fakeAsync(() => {
+      const { host } = render({ view: 'month' });
+      const first = q(cell(host, '2026/10/22'), '[data-event-id="leave"]');
+      const second = q(cell(host, '2026/10/23'), '[data-event-id="leave"]');
+      expect(first?.hasAttribute('data-join-end')).toBeTrue();
+      expect(first?.hasAttribute('data-join-start')).toBeFalse();
+      expect(second?.hasAttribute('data-join-start')).toBeTrue();
+      expect(text(first)).toBe('Nghỉ phép · Lan');
+      expect(text(second)).toBe('');
+      expect(qa(cell(host, '2026/10/22'), '[data-event-id]').map(chip => chip.dataset['eventId'])).toEqual(['leave', 'night']);
+      expect(text(q(cell(host, '2026/10/22'), '[data-more]'))).toBe('+2 khác');
+      expect(qa(cell(host, '2026/10/23'), '[data-event-id]').length).toBe(3);
+      expect(cell(host, '2026/10/22').getAttribute('aria-label')).toBe('Thứ Năm 22/10, 4 sự kiện');
+    }));
+  });
+
   describe('agenda', () => {
+    it('[CAL-C-15] keeps a day that only has a holiday', fakeAsync(() => {
+      const holidays = [{ date: '2026/10/30', label: 'Nghỉ bù', type: 'off' as const }];
+      const { host } = render({ view: 'agenda', holidays });
+      expect(qa(host, '[data-agenda-day]').map(day => day.dataset['date'])).toEqual(['2026/10/22', '2026/10/23', '2026/10/30']);
+      expect(text(q(host, '[data-agenda-day][data-date="2026/10/30"] [data-holiday]'))).toBe('Nghỉ bù');
+    }));
+
     it('[CAL-C-15] lists only days with events and shows the empty state', fakeAsync(() => {
       const { host } = render({ view: 'agenda' });
       expect(qa(host, '[data-agenda-day]').map(day => day.dataset['date'])).toEqual(['2026/10/22', '2026/10/23']);
