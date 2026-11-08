@@ -1,0 +1,9 @@
+<div class="timeline-box">
+  <!-- Default empty state, then a custom one through sdTimelineEmpty. -->
+  <sd-timeline autoId="empty-default" [items]="[]" />
+  <sd-timeline autoId="empty-custom" [items]="[]">
+    <ng-template sdTimelineEmpty>
+      <p class="timeline-readout">Bản ghi chưa có lịch sử thay đổi.</p>
+    </ng-template>
+  </sd-timeline>
+</div>

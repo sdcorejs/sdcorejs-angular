@@ -435,8 +435,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.code-editor.copied': '복사되었습니다!',
   'core.component.code-editor.copy': '코드 복사',
 
-  // ---- Component: history ----
-  'core.component.history.by': '작성자',
 
   // ---- Component: import-excel ----
   'core.component.import-excel.choose-hint': '양식에 맞는 .xlsx 파일을 선택하세요. 최대 {limit}행까지 가능합니다.',

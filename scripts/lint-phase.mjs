@@ -48,7 +48,7 @@ const phasePaths = {
   ],
   'components-layout': [
     'projects/sdcorejs-angular/components/form-generic',
-    'projects/sdcorejs-angular/components/history',
+    'projects/sdcorejs-angular/components/timeline',
     'projects/sdcorejs-angular/components/inform',
     'projects/sdcorejs-angular/components/modal',
     'projects/sdcorejs-angular/components/modal-resizable',

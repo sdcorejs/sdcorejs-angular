@@ -115,10 +115,6 @@ $component-tokens: (
   'form-builder-outline-mix': (#d6d2da, #49454f),
   'form-builder-mix-tint': (#ffffff, #1d1f23),
   'form-builder-expression-bg': (#e6e6e6, #34373d),
-  // history
-  'history-line': (#94b0ff, #5d78c9),
-  'history-meta': (#757575, #a4a6b0),
-  'history-meta-strong': (#000000, #e3e2e6),
   // kanban — neutral lanes, drop target and card outline derived from the palette, one expression for light
   // and dark (design handoff wave 1).
   'kanban-lane-bg': (color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface)), color-mix(in srgb, var(--sd-text) 4%, var(--sd-surface))),
