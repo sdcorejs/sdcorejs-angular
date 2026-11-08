@@ -92,3 +92,73 @@ export function sdCardStatDelta(data: SdCardStatData, context: SdCardFormatConte
   const format = data.format === 'compact' || data.format === 'percent' ? data.format : 'number';
   return { tone: good ? 'good' : 'bad', direction, display: sdCardFormatNumber(Math.abs(delta.value), format, data.precision, context) };
 }
+
+/** File family of the `file` layout (`card.md` §4.4). */
+export type SdCardFileKind = 'pdf' | 'sheet' | 'doc' | 'image' | 'other';
+
+const FILE_EXTENSION_KINDS: Readonly<Record<string, SdCardFileKind>> = {
+  pdf: 'pdf',
+  xls: 'sheet',
+  xlsx: 'sheet',
+  csv: 'sheet',
+  doc: 'doc',
+  docx: 'doc',
+  txt: 'doc',
+  rtf: 'doc',
+  png: 'image',
+  jpg: 'image',
+  jpeg: 'image',
+  gif: 'image',
+  webp: 'image',
+  svg: 'image',
+};
+
+const FILE_MIME_KINDS: Readonly<Record<string, SdCardFileKind>> = {
+  'application/pdf': 'pdf',
+  'text/csv': 'sheet',
+  'application/vnd.ms-excel': 'sheet',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'sheet',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'doc',
+  'text/plain': 'doc',
+  'application/rtf': 'doc',
+  'text/rtf': 'doc',
+};
+
+const FILE_KIND_ICONS: Readonly<Record<SdCardFileKind, string>> = {
+  pdf: 'picture_as_pdf',
+  sheet: 'table_view',
+  doc: 'description',
+  image: 'image',
+  other: 'draft',
+};
+
+/** Resolved presentation of a file card. */
+export interface SdCardFileInfo {
+  readonly kind: SdCardFileKind;
+  readonly icon: string;
+  /** Upper-case extension shown in the meta line, or empty. */
+  readonly extension: string;
+  /** Formatted size, or empty. */
+  readonly size: string;
+}
+
+/** Extension of a file name without the dot, lower case; empty when there is none. */
+function extensionOf(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : '';
+}
+
+/** Kind, icon, extension and size label of a file; `type` (MIME or extension) wins over the name's extension. */
+export function sdCardFileInfo(name: string, type: string | undefined, size: string): SdCardFileInfo {
+  const declared = type?.trim().toLowerCase().replace(/^\./, '') ?? '';
+  const isMime = declared.includes('/');
+  const extension = (!isMime && declared) || extensionOf(name);
+  let kind: SdCardFileKind = 'other';
+  if (isMime) {
+    kind = FILE_MIME_KINDS[declared] ?? (declared.startsWith('image/') ? 'image' : (FILE_EXTENSION_KINDS[extension] ?? 'other'));
+  } else {
+    kind = FILE_EXTENSION_KINDS[extension] ?? 'other';
+  }
+  return { kind, icon: FILE_KIND_ICONS[kind], extension: extension.toUpperCase(), size };
+}

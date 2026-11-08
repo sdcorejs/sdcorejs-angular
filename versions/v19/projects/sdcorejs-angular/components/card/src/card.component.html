@@ -131,6 +131,46 @@
         }
       }
     }
+    @case ('file') {
+      @if (file(); as _file) {
+        <div class="sd-card__file">
+          <div class="sd-card__file-media" [class]="'sd-card__file-media--' + _file.info.kind">
+            @if (_file.data.thumbnail) {
+              <img class="sd-card__file-thumb" alt="" loading="lazy" [src]="_file.data.thumbnail" />
+            } @else {
+              <sd-icon size="36px" [name]="_file.info.icon" />
+            }
+            @if (selected()) {
+              <sd-icon class="sd-card__file-check" size="22px" name="check_circle" />
+            }
+          </div>
+          <div class="sd-card__file-body">
+            <span class="sd-card__file-name" [title]="_file.data.name">{{ _file.data.name }}</span>
+            @if (_file.meta) {
+              <span class="sd-card__file-meta">{{ _file.meta }}</span>
+            }
+          </div>
+        </div>
+      }
+    }
+    @case ('shortcut') {
+      @if (shortcut(); as _shortcut) {
+        @if (resolvedSize() === 'sm') {
+          <div class="sd-card__shortcut sd-card__shortcut--sm">
+            <sd-icon class="sd-card__shortcut-icon" size="20px" [name]="_shortcut.icon" />
+            <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
+          </div>
+        } @else {
+          <div class="sd-card__shortcut">
+            <sd-icon class="sd-card__shortcut-icon" size="24px" [name]="_shortcut.icon" />
+            <span class="sd-card__shortcut-label" [title]="_shortcut.label">{{ _shortcut.label }}</span>
+            @if (_shortcut.description) {
+              <span class="sd-card__shortcut-description">{{ _shortcut.description }}</span>
+            }
+          </div>
+        }
+      }
+    }
     @default {
       <ng-content />
     }
@@ -163,4 +203,11 @@
   }
 } @else {
   <ng-container [ngTemplateOutlet]="body" />
+}
+
+<!-- why: interactive content cannot sit inside the anchor, so the action area is a sibling placed over the card. -->
+@if (actions(); as _actions) {
+  <div class="sd-card__actions" [class.sd-card__actions--file]="layout() === 'file'">
+    <ng-container [ngTemplateOutlet]="_actions.templateRef" />
+  </div>
 }

@@ -8,6 +8,7 @@ import {
   Signal,
   booleanAttribute,
   computed,
+  contentChild,
   effect,
   inject,
   input,
@@ -20,13 +21,15 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { ɵsdFormatBytes } from '@sdcorejs/angular/utilities/extensions';
 import type { Color as SdColor } from '@sdcorejs/utils/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
+import { SdCardActionsDirective } from './card-actions.directive';
 import { SdCardGroup, type ɵSdCardGroupMember } from './card-group.component';
 import { SD_CARD_CONFIGURATION } from './card.configuration';
 import { SD_CARD_DEFAULT_COLOR } from './card.constants';
-import { sdCardStatDelta, sdCardStatValue, type SdCardFormatContext } from './card.format';
+import { sdCardFileInfo, sdCardStatDelta, sdCardStatValue, type SdCardFormatContext } from './card.format';
 import type { SdCardBehavior, SdCardContent, SdCardSize } from './card.model';
 import { sdCardBehaviorAllowed } from './card.utils';
 
@@ -136,6 +139,8 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly accessibleLabel = computed(() => {
     const entity = this.entity();
     if (entity) return sdCardJoinLabel(entity.data.title, entity.data.subtitle, sdCardBadgeText(entity.data.badge));
+    const file = this.file();
+    if (file) return sdCardJoinLabel(file.data.name, file.info.extension, file.info.size);
     const stat = this.stat();
     if (!stat) return null;
     const delta = stat.delta;
@@ -170,6 +175,24 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   protected readonly option = computed(() => {
     const content = this.content();
     return content?.layout === 'option' ? content.data : null;
+  });
+  protected readonly file = computed(() => {
+    const content = this.content();
+    if (content?.layout !== 'file') return null;
+    const { name, type, size } = content.data;
+    const info = sdCardFileInfo(name, type, ɵsdFormatBytes(size, this.#i18n.locale()));
+    return { data: content.data, info, meta: [info.extension, info.size].filter(Boolean).join(' · ') };
+  });
+  protected readonly shortcut = computed(() => {
+    const content = this.content();
+    return content?.layout === 'shortcut' ? content.data : null;
+  });
+  protected readonly actionsTemplate = contentChild(SdCardActionsDirective);
+  /** Action template, rendered only for `entity` at md and for `file`. */
+  protected readonly actions = computed(() => {
+    const layout = this.layout();
+    const supported = layout === 'file' || (layout === 'entity' && this.resolvedSize() === 'md');
+    return supported ? (this.actionsTemplate() ?? null) : null;
   });
   protected readonly entity = computed(() => {
     const content = this.content();
@@ -209,6 +232,12 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
   };
 
   readonly #bubbleClickListener = (event: Event): void => {
+    // why: the action area belongs to the consumer; its clicks never select, navigate or reach the card's listeners.
+    if ((event.target as Element | null)?.closest?.('.sd-card__actions')) {
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      return;
+    }
     const mode = this.mode();
     // why: a static card is a plain surface; its native click must reach ancestors untouched.
     if (mode === 'static') return;
@@ -248,6 +277,9 @@ export class SdCard<T = unknown> implements OnInit, OnDestroy {
       }
       if (this.mode() === 'select' && this.#group && this.value() === undefined) {
         this.#report('error', 'value', 'a selectable card inside `sd-card-group` needs `value`; clicks are ignored.');
+      }
+      if (this.actionsTemplate() && layout !== 'entity' && layout !== 'file') {
+        this.#report('warn', 'actions', '`sdCardActions` only renders for the "entity" and "file" layouts.');
       }
       const stat = this.stat();
       if (stat?.value.mismatch) {

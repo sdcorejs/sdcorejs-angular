@@ -1,0 +1,30 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+// Shared helpers of the card stylesheets (card.component.scss, _card-layouts.scss).
+$card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
+
+@function c($name) {
+  @return map.get(color.$color_map, $name);
+}
+
+// Scale tokens (themes/_scales.scss) with their literal fallback.
+@function sp($px) {
+  @return var(--sd-space-#{$px}, #{$px}px);
+}
+
+@function fs($px) {
+  @return var(--sd-font-size-#{$px}, #{$px}px);
+}
+
+@function lh($px) {
+  @return var(--sd-line-height-#{$px}, #{$px}px);
+}
+
+$weight-medium: var(--sd-font-weight-medium, 500);
+
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

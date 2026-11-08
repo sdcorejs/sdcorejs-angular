@@ -1,45 +1,19 @@
-@use '../../../assets/scss/core/color.scss' as color;
-@use 'sass:map';
-
-$card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
-
-@function c($name) {
-  @return map.get(color.$color_map, $name);
-}
-
-// Scale tokens (themes/_scales.scss) with their literal fallback.
-@function sp($px) {
-  @return var(--sd-space-#{$px}, #{$px}px);
-}
-
-@function fs($px) {
-  @return var(--sd-font-size-#{$px}, #{$px}px);
-}
-
-@function lh($px) {
-  @return var(--sd-line-height-#{$px}, #{$px}px);
-}
-
-$weight-medium: var(--sd-font-weight-medium, 500);
-
-@mixin ellipsis {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+@use 'card-shared' as *;
+@use 'card-layouts';
 
 :host {
-  --sd-card-accent: #{map.get(color.$color_map, 'primary')};
-  --sd-card-accent-light: #{map.get(color.$color_map, 'primary-light')};
-  --sd-card-accent-dark: #{map.get(color.$color_map, 'primary-dark')};
+  --sd-card-accent: #{c('primary')};
+  --sd-card-accent-light: #{c('primary-light')};
+  --sd-card-accent-dark: #{c('primary-dark')};
 
+  position: relative;
   display: block;
   box-sizing: border-box;
-  border: 1px solid #{map.get(color.$color_map, 'border')};
+  border: 1px solid #{c('border')};
   border-radius: var(--sd-radius-8, 8px);
   padding: 16px;
-  background: #{map.get(color.$color_map, 'surface')};
-  color: #{map.get(color.$color_map, 'text')};
+  background: #{c('surface')};
+  color: #{c('text')};
   cursor: pointer;
   outline: none;
   transition:
@@ -52,9 +26,9 @@ $weight-medium: var(--sd-font-weight-medium, 500);
 
 @each $name in $card-colors {
   :host(.sd-c-#{$name}) {
-    --sd-card-accent: #{map.get(color.$color_map, $name)};
-    --sd-card-accent-light: #{map.get(color.$color_map, '#{$name}-light')};
-    --sd-card-accent-dark: #{map.get(color.$color_map, '#{$name}-dark')};
+    --sd-card-accent: #{c($name)};
+    --sd-card-accent-light: #{c('#{$name}-light')};
+    --sd-card-accent-dark: #{c('#{$name}-dark')};
   }
 }
 
@@ -88,299 +62,14 @@ $weight-medium: var(--sd-font-weight-medium, 500);
   padding: 0;
 }
 
-// ---- stat ----
-.sd-card__stat {
-  display: flex;
-  flex-direction: column;
-  gap: sp(2);
-  box-sizing: border-box;
-  min-height: 80px;
-  padding: 14px 16px;
-}
-
-.sd-card__stat-head,
-.sd-card__stat-row {
-  display: flex;
-  gap: sp(8);
-  min-width: 0;
-}
-
-.sd-card__stat-head {
-  align-items: center;
-}
-
-.sd-card__stat-row {
-  align-items: baseline;
-}
-
-.sd-card__stat-label {
-  @include ellipsis;
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: fs(13);
-  line-height: lh(18);
-  color: c('text-secondary');
-}
-
-.sd-card__stat-icon {
-  flex: none;
-  color: c('text-secondary');
-}
-
-.sd-card__stat-value {
-  @include ellipsis;
-  min-width: 0;
-  font-size: fs(24);
-  line-height: lh(32);
-  font-weight: $weight-medium;
-  font-variant-numeric: tabular-nums;
-}
-
-:host(.sd-card--link) .sd-card__stat-value,
-:host(.sd-card--select) .sd-card__stat-value {
-  color: var(--sd-card-accent);
-}
-
-.sd-card__stat-context {
-  @include ellipsis;
-  font-size: fs(12);
-  line-height: lh(16);
-  color: c('text-secondary');
-}
-
-@each $name in $card-colors {
-  .sd-card__stat-context--#{$name} {
-    color: c('#{$name}-dark');
-  }
-}
-
-.sd-card__delta {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: sp(2);
-  height: 20px;
-  border-radius: var(--sd-radius-10, 10px);
-  padding: 0 6px;
-  font-size: fs(12);
-  line-height: lh(20);
-  font-weight: $weight-medium;
-  font-variant-numeric: tabular-nums;
-}
-
-.sd-card__delta--good {
-  background: c('success-light');
-  color: c('success-dark');
-}
-
-.sd-card__delta--bad {
-  background: c('error-light');
-  color: c('error-dark');
-}
-
-.sd-card__delta--flat {
-  background: c('border');
-  color: c('text-secondary');
-}
-
-// sm: one 32px row (30px inside the 1px border).
-.sd-card__stat--sm {
-  flex-direction: row;
-  align-items: baseline;
-  gap: sp(6);
-  min-height: 0;
-  height: 30px;
-  padding: 5px 10px 0;
-
-  .sd-card__stat-label {
-    flex: 0 1 auto;
-  }
-
-  .sd-card__stat-value {
-    font-size: fs(14);
-    line-height: lh(20);
-  }
-}
-
-// ---- option ----
-.sd-card__option {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: sp(12);
-  padding: 14px;
-}
-
-.sd-card__option-icon {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--sd-radius-8, 8px);
-  background: c('surface-muted');
-  color: c('text');
-}
-
-:host(.sd-selected) .sd-card__option-icon {
-  background: var(--sd-card-accent-light);
-  color: var(--sd-card-accent-dark);
-}
-
-.sd-card__option-text {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-width: 0;
-  // why: room for the check mark in the top-right corner.
-  padding-right: sp(20);
-}
-
-.sd-card__option-title-row {
-  display: flex;
-  align-items: center;
-  gap: sp(6);
-  min-width: 0;
-}
-
-.sd-card__option-title {
-  @include ellipsis;
-  min-width: 0;
-  font-size: fs(15);
-  line-height: lh(22);
-  font-weight: $weight-medium;
-}
-
-.sd-card__option-description {
-  font-size: fs(13);
-  line-height: lh(18);
-  color: c('text-secondary');
-  text-wrap: pretty;
-}
-
-.sd-card__check {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: c('border-strong');
-}
-
-:host(.sd-selected) .sd-card__check,
-.sd-card__entity-check {
-  color: var(--sd-card-accent);
-}
-
-.sd-card__badge {
-  flex: none;
-}
-
-// ---- entity ----
-.sd-card__entity {
-  display: flex;
-  flex-direction: column;
-  gap: sp(10);
-  padding: 12px 14px;
-}
-
-.sd-card__entity-head {
-  display: flex;
-  align-items: center;
-  gap: sp(10);
-  min-width: 0;
-}
-
-.sd-card__entity-text {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.sd-card__entity-title {
-  @include ellipsis;
-  min-width: 0;
-  font-size: fs(14);
-  line-height: lh(20);
-  font-weight: $weight-medium;
-}
-
-:host(.sd-card--link) .sd-card__entity-title {
-  color: var(--sd-card-accent);
-}
-
-.sd-card__entity-subtitle {
-  @include ellipsis;
-  min-width: 0;
-  font-size: fs(13);
-  line-height: lh(18);
-  color: c('text-secondary');
-}
-
-.sd-card__entity-meta {
-  display: grid;
-  gap: sp(8);
-  margin: 0;
-
-  dt {
-    @include ellipsis;
-    font-size: fs(12);
-    line-height: lh(16);
-    color: c('text-secondary');
-  }
-
-  dd {
-    @include ellipsis;
-    margin: 0;
-    font-size: fs(13);
-    line-height: lh(18);
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-// sm: one 44px row (42px inside the 1px border).
-.sd-card__entity--sm {
-  flex-direction: row;
-  align-items: center;
-  height: 42px;
-  padding: 0 12px;
-
-  .sd-card__entity-title {
-    flex: 0 1 auto;
-  }
-
-  .sd-card__entity-subtitle {
-    flex: 1 1 0;
-  }
-}
-
-.sd-card__entity-check {
-  flex: none;
-  margin-left: auto;
-}
-
-.sd-card__avatar {
-  display: inline-flex;
-  flex: none;
-}
-
-.sd-card__avatar-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: c('surface-muted');
-  color: c('text-secondary');
-}
-
 :host(:not(.sd-card--static):not(.sd-disabled):hover) {
-  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
-  background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{map.get(color.$color_map, 'surface')});
+  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{c('border')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{c('surface')});
 }
 
 :host(:not(.sd-card--static):not(.sd-disabled):active) {
   border-color: var(--sd-card-accent-dark);
-  background: color-mix(in srgb, var(--sd-card-accent-light) 55%, #{map.get(color.$color_map, 'surface')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 55%, #{c('surface')});
   transform: translateY(1px);
 }
 
@@ -399,20 +88,20 @@ $weight-medium: var(--sd-font-weight-medium, 500);
 :host(:has(.sd-card__link:focus-visible)) {
   border-color: var(--sd-card-accent);
   box-shadow:
-    0 0 0 2px #{map.get(color.$color_map, 'surface')},
+    0 0 0 2px #{c('surface')},
     0 0 0 4px var(--sd-card-accent);
 }
 
 :host(.sd-disabled) {
-  border-color: #{map.get(color.$color_map, 'border')};
-  background: #{map.get(color.$color_map, 'disabled-bg')};
-  color: #{map.get(color.$color_map, 'disabled-text')};
+  border-color: #{c('border')};
+  background: #{c('disabled-bg')};
+  color: #{c('disabled-text')};
   cursor: not-allowed;
 }
 
 :host(.sd-selected.sd-disabled) {
-  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
-  background: color-mix(in srgb, var(--sd-card-accent-light) 45%, #{map.get(color.$color_map, 'disabled-bg')});
+  border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{c('border')});
+  background: color-mix(in srgb, var(--sd-card-accent-light) 45%, #{c('disabled-bg')});
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-card-accent) 35%, transparent);
 }
 

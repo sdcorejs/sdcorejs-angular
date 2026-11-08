@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import type { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdCardActionsDirective } from './card-actions.directive';
 import { SdCardGroup } from './card-group.component';
 import { SdCard } from './card.component';
 import type { SdCardBehavior, SdCardContent, SdCardEntityData, SdCardOptionData, SdCardSize, SdCardStatData } from './card.model';
@@ -331,5 +332,144 @@ describe('SdCard option', () => {
     expect(text(plan.querySelector('.sd-card__option-title')?.textContent)).toBe('Nhóm');
     expect(text(plan.querySelector('.sd-card__option-description')?.textContent)).toBe('20 người dùng');
     expect(plan.querySelector('sd-badge')).not.toBeNull();
+  });
+});
+
+@Component({
+  standalone: true,
+  imports: [SdCard, SdCardGroup, SdCardActionsDirective],
+  template: `
+    <sd-card-group data-testid="files" [(model)]="selectedFile">
+      <sd-card data-testid="file-card" value="report" [content]="fileContent">
+        <ng-template sdCardActions>
+          <button type="button" data-testid="file-menu" aria-label="Tác vụ">⋯</button>
+        </ng-template>
+      </sd-card>
+    </sd-card-group>
+    <sd-card
+      data-testid="entity-link"
+      behavior="link"
+      link="/customers/1"
+      [size]="entitySize()"
+      [content]="entityContent"
+      (click)="linkClicks = linkClicks + 1">
+      <ng-template sdCardActions>
+        <button type="button" data-testid="entity-menu" aria-label="Tác vụ">⋯</button>
+      </ng-template>
+    </sd-card>
+    <sd-card data-testid="stat-actions" [content]="{ layout: 'stat', data: { label: 'Đơn', value: 1 } }">
+      <ng-template sdCardActions><button type="button">⋯</button></ng-template>
+    </sd-card>
+  `,
+})
+class CardActionsHost {
+  readonly selectedFile = signal<string | string[] | null>(null);
+  readonly entitySize = signal<SdCardSize | undefined>(undefined);
+  readonly fileContent: SdCardContent = { layout: 'file', data: { name: 'Bao-cao-Q3.xlsx', size: 2_516_582 } };
+  readonly entityContent: SdCardContent = { layout: 'entity', data: { title: 'Nguyễn Văn An', subtitle: 'Khách VIP' } };
+  linkClicks = 0;
+}
+
+describe('SdCard file, shortcut and actions', () => {
+  describe('file and shortcut', () => {
+    let fixture: ComponentFixture<CardLayoutHost>;
+    let host: CardLayoutHost;
+    const query = (selector: string): HTMLElement | null =>
+      fixture.nativeElement.querySelector(`[data-testid="card"] ${selector}`) as HTMLElement | null;
+    const show = (content: SdCardContent): void => {
+      host.content.set(content);
+      fixture.detectChanges();
+    };
+
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({ imports: [CardLayoutHost], providers: [provideRouter([])] }).compileComponents();
+      TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+      fixture = TestBed.createComponent(CardLayoutHost);
+      host = fixture.componentInstance;
+      fixture.detectChanges();
+    });
+
+    it('infers the file type from the extension of the name', () => {
+      show({ layout: 'file', data: { name: 'Bao-cao-Q3.xlsx', size: 2_516_582 } });
+      expect(query('.sd-card__file-media')?.classList.contains('sd-card__file-media--sheet')).toBeTrue();
+      const icon = fixture.debugElement.query(By.css('.sd-card__file-media sd-icon')).componentInstance as SdIcon;
+      expect(icon.name()).toBe('table_view');
+      expect(text(query('.sd-card__file-meta')?.textContent)).toBe('XLSX · 2,4 MB');
+      const card = fixture.nativeElement.querySelector('[data-testid="card"]') as HTMLElement;
+      expect(text(card.getAttribute('aria-label'))).toBe('Bao-cao-Q3.xlsx, XLSX, 2,4 MB');
+    });
+
+    it('uses a MIME type when given', () => {
+      show({ layout: 'file', data: { name: 'scan', type: 'application/pdf' } });
+      expect(query('.sd-card__file-media')?.classList.contains('sd-card__file-media--pdf')).toBeTrue();
+    });
+
+    it('renders a lazy thumbnail with an empty alt', () => {
+      show({ layout: 'file', data: { name: 'anh.png', thumbnail: 'data:image/png;base64,iVBORw0KGgo=' } });
+      const image = query('img.sd-card__file-thumb') as HTMLImageElement | null;
+      expect(image?.getAttribute('loading')).toBe('lazy');
+      expect(image?.getAttribute('alt')).toBe('');
+    });
+
+    it('keeps file at md even when size is sm', () => {
+      host.size.set('sm');
+      show({ layout: 'file', data: { name: 'a.pdf' } });
+      expect(fixture.nativeElement.querySelector('[data-testid="card"]').classList.contains('sd-card--sm')).toBeFalse();
+    });
+
+    it('renders shortcut icon, label and description, and drops the description at sm', () => {
+      host.behavior.set('link');
+      host.link.set('/orders/new');
+      show({ layout: 'shortcut', data: { label: 'Tạo đơn', icon: 'add_shopping_cart', description: 'Đơn bán lẻ' } });
+      expect(query('a.sd-card__link .sd-card__shortcut sd-icon')).not.toBeNull();
+      expect(text(query('.sd-card__shortcut-label')?.textContent)).toBe('Tạo đơn');
+      expect(text(query('.sd-card__shortcut-description')?.textContent)).toBe('Đơn bán lẻ');
+      host.size.set('sm');
+      fixture.detectChanges();
+      expect(query('.sd-card__shortcut--sm')).not.toBeNull();
+      expect(query('.sd-card__shortcut-description')).toBeNull();
+    });
+  });
+
+  describe('sdCardActions', () => {
+    let fixture: ComponentFixture<CardActionsHost>;
+    let host: CardActionsHost;
+    let warnSpy: jasmine.Spy;
+    let navigateSpy: jasmine.Spy;
+    const element = (testId: string): HTMLElement => fixture.nativeElement.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+
+    beforeEach(async () => {
+      warnSpy = spyOn(console, 'warn');
+      await TestBed.configureTestingModule({ imports: [CardActionsHost], providers: [provideRouter([])] }).compileComponents();
+      navigateSpy = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      fixture = TestBed.createComponent(CardActionsHost);
+      host = fixture.componentInstance;
+      fixture.detectChanges();
+    });
+
+    it('renders the template outside the anchor and keeps clicks from selecting the card', () => {
+      element('file-menu').click();
+      expect(host.selectedFile()).toBeNull();
+      element('file-card').click();
+      expect(host.selectedFile()).toBe('report');
+    });
+
+    it('keeps clicks from navigating a link card', () => {
+      expect(element('entity-link').querySelector('a.sd-card__link [data-testid="entity-menu"]')).toBeNull();
+      element('entity-menu').click();
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(host.linkClicks).toBe(0);
+    });
+
+    it('drops the actions of an entity at size sm', () => {
+      host.entitySize.set('sm');
+      fixture.detectChanges();
+      expect(element('entity-link').querySelector('[data-testid="entity-menu"]')).toBeNull();
+    });
+
+    it('warns and renders nothing for a layout without actions', () => {
+      expect(element('stat-actions').querySelector('button')).toBeNull();
+      expect(warnSpy).toHaveBeenCalledWith(jasmine.stringMatching(/\[sd-card\].*sdCardActions/));
+    });
   });
 });
