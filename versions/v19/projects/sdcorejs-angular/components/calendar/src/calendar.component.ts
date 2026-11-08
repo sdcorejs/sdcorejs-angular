@@ -120,6 +120,8 @@ interface SdCalendarPlaced<T> {
   readonly placement: SdCalendarPlacement;
   /** Drawn at a proposed position while `onMove` (or the scope bar) waits. */
   readonly pending: boolean;
+  /** `onMove` runs (not only the scope bar): the block shows the sync icon. */
+  readonly saving: boolean;
 }
 
 /** @internal View model of one day column / header. */
@@ -148,6 +150,7 @@ interface SdCalendarItemView<T> {
   readonly recurring: boolean;
   readonly past: boolean;
   readonly pending: boolean;
+  readonly saving: boolean;
   readonly movable: boolean;
   readonly timeText: string;
 }
@@ -294,7 +297,9 @@ export class SdCalendar<T = unknown> {
   readonly #width = signal<number | null>(null);
   readonly #announcement = signal('');
   /** Move waiting for `onMove`: the event is drawn at `target` (§8.3, saving). */
-  readonly #moving = signal<{ readonly id: string; readonly target: SdCalendarTarget } | null>(null);
+  readonly #moving = signal<{ readonly id: string; readonly target: SdCalendarTarget; readonly saving: boolean } | null>(null);
+  /** Scope bar of a recurring event (§9.6); it holds the one waiting operation until answered. */
+  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
   readonly #ghost = signal<SdCalendarGhost | null>(null);
   readonly #failure = signal<{ readonly id: string | null; readonly message: string } | null>(null);
   readonly #drag = signal<SdCalendarDragProposal | null>(null);
@@ -343,6 +348,8 @@ export class SdCalendar<T = unknown> {
   protected readonly ghost = this.#ghost.asReadonly();
   protected readonly dragProposal = this.#drag.asReadonly();
   protected readonly cursor = this.#cursor.asReadonly();
+  protected readonly asking = this.#asking.asReadonly();
+  protected readonly scopeMessageId = `${this.baseId}-scope`;
   protected readonly busy = computed(() => this.#loader.phase() === 'loading' || this.#loader.phase() === 'reloading');
   protected readonly skeleton = computed(() => this.#loader.phase() === 'loading' && !this.#loader.everLoaded());
   protected readonly rootAutoId = computed(() => (this.autoId() ? `components-calendar-${this.autoId()}` : null));
@@ -499,11 +506,11 @@ export class SdCalendar<T = unknown> {
         const range = sdCalendarRangeOf(moving.target, this.#clock, null);
         const proposed = sdCalendarPlace({ ...event, start: range.start, end: range.end, allDay: range.allDay }, this.#clock);
         if (proposed) {
-          placed.push({ event, placement: proposed, pending: true });
+          placed.push({ event, placement: proposed, pending: true, saving: moving.saving });
           continue;
         }
       }
-      placed.push({ event, placement, pending: false });
+      placed.push({ event, placement, pending: false, saving: false });
     }
     return { placed, unreadable };
   });
@@ -671,6 +678,16 @@ export class SdCalendar<T = unknown> {
           );
         }
       }
+    });
+
+    // §9.6: the scope bar takes the focus on its first answer when it opens.
+    effect(() => {
+      if (!this.#asking()) return;
+      untracked(() =>
+        afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), {
+          injector: this.#injector,
+        })
+      );
     });
 
     // SC-15: turning disabled or readonly on aborts a waiting move.
@@ -1119,8 +1136,39 @@ export class SdCalendar<T = unknown> {
       this.#announce(this.#i18n.t('core.component.calendar.out-of-range'));
       return false;
     }
-    const scope: SdCalendarMoveScope | null = placed.event.occurrence ? 'this' : null;
-    return this.#commitMove(placed, target, from, to, source, scope, keyboard);
+    const signal = this.#operation.begin('move');
+    if (!signal) return false;
+    const origin = keyboard ? document.activeElement : null;
+    let scope: SdCalendarMoveScope | null = placed.event.occurrence ? 'this' : null;
+    if (placed.event.occurrence && source !== 'api') {
+      // §9.6: an occurrence waits at the proposal (dashed, no sync icon) until the user picks a scope.
+      this.#moving.set({ id, target, saving: false });
+      scope = await new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title: placed.event.title, answer }));
+      if (signal.aborted) return false;
+      if (scope === null) {
+        this.#operation.end(signal);
+        this.#moving.set(null);
+        this.#announce(this.#i18n.t('core.component.calendar.cancelled'));
+        if (keyboard) this.#restoreFocus(id, origin);
+        return false;
+      }
+    }
+    return this.#commitMove(placed, target, from, to, source, scope, signal, keyboard ? origin : null, keyboard);
+  }
+
+  /** Answer of the scope bar; `null` is Cancel (Esc too). */
+  protected answerScope(scope: SdCalendarMoveScope | null): void {
+    const asking = this.#asking();
+    if (!asking) return;
+    this.#asking.set(null);
+    asking.answer(scope);
+  }
+
+  protected onScopeKeydown(domEvent: KeyboardEvent): void {
+    if (domEvent.key !== 'Escape') return;
+    domEvent.preventDefault();
+    domEvent.stopPropagation();
+    this.answerScope(null);
   }
 
   async #commitMove(
@@ -1130,21 +1178,21 @@ export class SdCalendar<T = unknown> {
     to: SdCalendarRange,
     source: SdCalendarMoveSource,
     scope: SdCalendarMoveScope | null,
+    signal: AbortSignal,
+    origin: Element | null,
     keyboard: boolean
   ): Promise<boolean> {
     const move = untracked(this.option).move!;
-    const signal = this.#operation.begin('move');
-    if (!signal) return false;
     // SC-06: the flag is evaluated once more right before the callback.
     if (!sdCalendarAllows(move.movable, placed.event)) {
       this.#operation.end(signal);
+      this.#moving.set(null);
       return false;
     }
-    const origin = keyboard ? document.activeElement : null;
     const { event } = placed;
     const request: SdCalendarMoveRequest<T> = Object.freeze({ event, from, to, source, scope, signal });
     this.#failure.set(null);
-    this.#moving.set({ id: event.id, target });
+    this.#moving.set({ id: event.id, target, saving: true });
     this.#announce(this.#i18n.t('core.component.calendar.pending', { title: event.title }));
     const outcome = await sdCalendarCallMove(move.onMove, request);
     if (outcome.kind === 'aborted') return false;
@@ -1250,7 +1298,11 @@ export class SdCalendar<T = unknown> {
   }
 
   #abortMove(): void {
-    if (this.#operation.abort(['move'])) this.#moving.set(null);
+    if (!this.#operation.abort(['move'])) return;
+    this.#moving.set(null);
+    const asking = this.#asking();
+    this.#asking.set(null);
+    asking?.answer(null);
   }
 
   #abortCreate(): void {
@@ -1558,6 +1610,7 @@ export class SdCalendar<T = unknown> {
       recurring,
       past: this.dimPast() && placement.endInstant <= this.#nowInstant(),
       pending: placed.pending,
+      saving: placed.saving,
       movable: !!move && !this.locked() && sdCalendarAllows(move.movable, event),
       timeText: placement.allDay ? this.#i18n.t('core.component.calendar.all-day') : `${start} – ${end}`,
     };

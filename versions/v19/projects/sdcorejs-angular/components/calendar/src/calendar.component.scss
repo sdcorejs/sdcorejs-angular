@@ -1080,3 +1080,49 @@ $hour: var(--sd-calendar-hour-height);
     animation: none;
   }
 }
+
+// ---- scope bar (§9.6) ----
+.sd-calendar__scope {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 10;
+  padding: 12px 14px;
+  border-radius: radius(10);
+  background: tok(surface-inverse);
+  box-shadow: var(--sd-shadow-lg);
+  color: tok(surface);
+  font-size: fs(14);
+}
+
+.sd-calendar__scope-message {
+  margin: 0 0 10px;
+}
+
+.sd-calendar__scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sd-calendar__scope-button {
+  @include bare-button;
+
+  height: 36px;
+  padding: 0 10px;
+  border-radius: radius(6);
+  color: tok(primary-light);
+  font-size: fs(14);
+  font-weight: $medium;
+
+  &--cancel {
+    color: tok(surface);
+  }
+}
+
+@media (hover: hover) {
+  .sd-calendar__scope-button:hover {
+    background: color-mix(in srgb, #{tok(surface)} 12%, transparent);
+  }
+}
