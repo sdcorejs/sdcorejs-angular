@@ -1,0 +1,67 @@
+<div class="calendar-controls">
+  <sd-button type="outline" [title]="'step: ' + step()" (click)="cycleStep()" />
+  <sd-button type="outline" [title]="'firstDayOfWeek: ' + firstDayOfWeek()" (click)="firstDayOfWeek.set(firstDayOfWeek() ? 0 : 1)" />
+  <sd-button type="outline" [title]="'hideWeekends: ' + hideWeekends()" (click)="toggle(hideWeekends)" />
+  <sd-button type="outline" [title]="'workingHours: ' + hours()" (click)="cycleHours()" />
+  <sd-button type="outline" [title]="'holidays: ' + showHolidays()" (click)="toggle(showHolidays)" />
+  <sd-button type="outline" [title]="'minDate: ' + (minToday() ? 'TODAY' : '—')" (click)="toggle(minToday)" />
+  <sd-button type="outline" [title]="'dimPast: ' + dimPast()" (click)="toggle(dimPast)" />
+  <sd-button type="outline" [title]="'readonly: ' + readonly()" (click)="toggle(readonly)" />
+  <sd-button type="outline" [title]="'disabled: ' + disabled()" (click)="toggle(disabled)" />
+  <sd-button type="outline" [title]="'transform: ' + (transform() ?? '—')" (click)="transform.set(transform() ? undefined : 'ISOString')" />
+  <sd-button type="outline" [title]="'option.create: ' + withCreate()" (click)="toggle(withCreate)" />
+  <sd-button type="outline" [title]="'option.move: ' + withMove()" (click)="toggle(withMove)" />
+  <sd-button type="outline" [title]="'movable khoá sự kiện đã qua: ' + lockPast()" (click)="toggle(lockPast)" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" (click)="cycleMode()" />
+</div>
+<div class="calendar-layout">
+  <div class="calendar-box">
+    <sd-calendar
+      #calendar
+      autoId="playground"
+      [option]="option()"
+      [(view)]="view"
+      [(date)]="date"
+      [step]="step()"
+      [firstDayOfWeek]="firstDayOfWeek()"
+      [hideWeekends]="hideWeekends()"
+      [workingHours]="workingHours()"
+      [holidays]="holidays()"
+      [minDate]="minToday() ? 'TODAY' : undefined"
+      [dimPast]="dimPast()"
+      [readonly]="readonly()"
+      [disabled]="disabled()"
+      [transform]="transform()"
+      (sdSelect)="selected.set($event); record('sdSelect', $event.id)"
+      (sdRangeChange)="record('sdRangeChange', $event)"
+      (sdMove)="record('sdMove', { id: $event.event.id, to: $event.to, scope: $event.scope, source: $event.source })"
+      (sdMoveError)="record('sdMoveError', { id: $event.request.event.id, reason: $event.reason })"
+      (sdLoadError)="record('sdLoadError', 'error')" />
+    @if (dialog(); as _dialog) {
+      <div class="calendar-dialog" role="dialog" aria-modal="false" [attr.aria-label]="_dialog.kind === 'create' ? 'Tạo sự kiện' : 'Lý do dời'">
+        @if (_dialog.kind === 'create') {
+          <p>Tạo “{{ _dialog.title }}” · {{ _dialog.args.start }} → {{ _dialog.args.end }}</p>
+          <sd-button type="fill" color="primary" title="Lưu" autoId="dialog-save" (click)="answer(_dialog.title)" />
+        } @else {
+          <p>Nhập lý do dời “{{ _dialog.title }}”</p>
+          <sd-button type="fill" color="primary" title="Xác nhận" autoId="dialog-confirm" (click)="answer('Khách đổi lịch')" />
+        }
+        <sd-button type="outline" title="Đóng" autoId="dialog-close" (click)="answer(null)" />
+      </div>
+    }
+  </div>
+  <aside class="calendar-side">
+    <h4>Chi tiết</h4>
+    @if (selected(); as _event) {
+      <p class="calendar-detail">{{ _event.title }}<br />{{ _event.data?.room }} · {{ _event.data?.owner }}</p>
+    } @else {
+      <p class="calendar-detail">Chọn một sự kiện.</p>
+    }
+    <h4>Output đã phát</h4>
+    <ol class="calendar-log" data-testid="calendar-log">
+      @for (line of log(); track $index) {
+        <li>{{ line }}</li>
+      }
+    </ol>
+  </aside>
+</div>

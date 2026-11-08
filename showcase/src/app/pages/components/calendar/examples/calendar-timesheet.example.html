@@ -1,0 +1,11 @@
+<div class="calendar-box">
+  <sd-calendar autoId="timesheet" view="month" date="2026/10/01" [views]="['month']" [option]="option">
+    <ng-template sdCalendarDayCellTemplate let-events="events" let-off="off">
+      @if (codeOf(events); as code) {
+        <span class="calendar-code" [attr.data-code]="code">{{ code }}</span>
+      } @else if (!off) {
+        <span class="calendar-code calendar-code--missing">—</span>
+      }
+    </ng-template>
+  </sd-calendar>
+</div>
