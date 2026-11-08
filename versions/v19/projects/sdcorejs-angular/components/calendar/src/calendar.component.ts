@@ -590,6 +590,15 @@ export class SdCalendar<T = unknown> {
     });
   }
 
+  /** RED stub of checkpoint 3. */
+  move(
+    _eventId: string,
+    _to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean },
+    _source = 'api'
+  ): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
   /** Aborts a running load and calls `onLoad` again for the range on screen; the events stay until the result arrives. */
   reload(): void {
     void this.#load(untracked(this.option), untracked(this.visible));

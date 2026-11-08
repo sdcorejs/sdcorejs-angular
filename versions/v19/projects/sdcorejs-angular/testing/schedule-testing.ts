@@ -168,6 +168,134 @@ export function stubNow(service: SdDateTimeService, wallClock = SCHEDULE_TEST_NO
   return next => (current = next);
 }
 
+/** A point in client coordinates. */
+export interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** Centre of an element in client coordinates. */
+export function centerOf(element: Element): Point {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
+
+/** Dispatches a mouse event the way a real button press does (`buttons`/`detail` set, so CDK does not see a fake press). */
+export function mouse(target: EventTarget, type: 'mousedown' | 'mousemove' | 'mouseup' | 'click', at: Point): MouseEvent {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: at.x,
+    clientY: at.y,
+    button: 0,
+    buttons: type === 'mouseup' || type === 'click' ? 0 : 1,
+    detail: 1,
+    view: window,
+  });
+  target.dispatchEvent(event);
+  return event;
+}
+
+/** Dispatches a primary pointer event (mouse unless `pointerType` says otherwise). */
+export function pointer(
+  target: EventTarget,
+  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
+  at: Point,
+  pointerType: 'mouse' | 'touch' | 'pen' = 'mouse'
+): PointerEvent {
+  const event = new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    clientX: at.x,
+    clientY: at.y,
+    pointerId: 1,
+    isPrimary: true,
+    pointerType,
+    button: type === 'pointermove' ? -1 : 0,
+    buttons: type === 'pointerup' || type === 'pointercancel' ? 0 : 1,
+  });
+  target.dispatchEvent(event);
+  return event;
+}
+
+export interface DragOptions {
+  /** Runs after the last move, before the release (for example to press Escape). */
+  readonly beforeRelease?: () => void;
+  /** `false` keeps the button down. */
+  readonly release?: boolean;
+  /** Runs between steps; pass `() => fixture.detectChanges()` inside `fakeAsync`. */
+  readonly step?: () => void;
+}
+
+/**
+ * Mouse drag as `@angular/cdk/drag-drop` sees it: press on `element`, move 3px (under the 5px threshold), then move to
+ * `to`, then release on the document. `from` defaults to the centre of `element`.
+ */
+export function mouseDrag(element: Element, to: Point, options: DragOptions & { from?: Point } = {}): void {
+  const from = options.from ?? centerOf(element);
+  mouse(element, 'mousedown', from);
+  options.step?.();
+  mouse(document, 'mousemove', { x: from.x, y: from.y + 3 });
+  options.step?.();
+  mouse(document, 'mousemove', to);
+  options.step?.();
+  options.beforeRelease?.();
+  if (options.release === false) return;
+  mouse(document, 'mouseup', to);
+  options.step?.();
+}
+
+/** A press without a real drag: down, a 3px move, up and click on the element. */
+export function clickWithJitter(element: Element): void {
+  const from = centerOf(element);
+  mouse(element, 'mousedown', from);
+  mouse(document, 'mousemove', { x: from.x + 3, y: from.y });
+  mouse(document, 'mouseup', { x: from.x + 3, y: from.y });
+  mouse(element, 'click', { x: from.x + 3, y: from.y });
+}
+
+function touchList(target: EventTarget, at: Point): Touch[] {
+  return [new Touch({ identifier: 1, target, clientX: at.x, clientY: at.y })];
+}
+
+/** Dispatches a touch event with one finger at `at`. */
+export function touch(
+  target: EventTarget,
+  type: 'touchstart' | 'touchmove' | 'touchend',
+  at: Point,
+  finger: EventTarget = target
+): TouchEvent {
+  const touches = type === 'touchend' ? [] : touchList(finger, at);
+  const event = new TouchEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    touches,
+    targetTouches: touches,
+    changedTouches: touchList(finger, at),
+  });
+  target.dispatchEvent(event);
+  return event;
+}
+
+/**
+ * Touch drag with a long press: `touchstart`, `hold(ms)` (call `tick` inside `fakeAsync`), then moves and `touchend`
+ * on the document, like CDK's own specs.
+ */
+export function touchDrag(element: Element, to: Point, hold: (ms: number) => void, holdMs = 400, options: DragOptions = {}): void {
+  const from = centerOf(element);
+  touch(element, 'touchstart', from);
+  hold(holdMs);
+  options.step?.();
+  touch(document, 'touchmove', { x: from.x, y: from.y + 3 }, element);
+  options.step?.();
+  touch(document, 'touchmove', to, element);
+  options.step?.();
+  options.beforeRelease?.();
+  if (options.release === false) return;
+  touch(document, 'touchend', to, element);
+  options.step?.();
+}
+
 const KEY_CODES: Record<string, string> = { ' ': 'Space', Enter: 'Enter', Escape: 'Escape', Tab: 'Tab' };
 
 /** Dispatches a `keydown` with matching `key` and `code` on `element`; returns the event. */

@@ -12,7 +12,7 @@ interface Booking {
 
 // Type contract (TESTING.md §3.7): this file only has to compile; each `@ts-expect-error` proves a rejection.
 describe('sd-calendar types', () => {
-  it('[CAL-C-23] accepts the four onMove results and rejects any other value', () => {
+  it('[CAL-SC-09] types onMove: true, nothing, false and "cancel" compile; any other value does not (TESTING §3.7)', () => {
     const accept: SdCalendarOption<Booking>['move'] = { onMove: () => true };
     const nothing: SdCalendarOption<Booking>['move'] = { onMove: () => undefined };
     const cancel: SdCalendarOption<Booking>['move'] = { onMove: async () => 'cancel' as const };
@@ -24,7 +24,7 @@ describe('sd-calendar types', () => {
     expect([accept, nothing, cancel, rejected, typo].length).toBe(5);
   });
 
-  it('[CAL-C-23] types onLoad results and flags by their context', () => {
+  it('[CAL-SC-22] types onLoad results and the capability flags by their context (TESTING §3.7)', () => {
     const option: SdCalendarOption<Booking> = {
       dataSource: {
         onLoad: () => [{ id: 'a', title: 'A', start: '2026/10/22 09:00:00', end: '2026/10/22 10:00:00', data: { room: 'Huế' } }],
