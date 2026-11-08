@@ -68,6 +68,7 @@ describe('sd-calendar utils', () => {
       expect(sdCalendarIsWeekend('2026/10/24')).toBeTrue();
       expect(sdCalendarIsWeekend('2026/10/25')).toBeTrue();
       expect(sdCalendarIsWeekend('2026/10/23')).toBeFalse();
+      expect(() => sdCalendarAddDays('2026-10-22', 1)).toThrowError(/invalid day/);
     });
   });
 
@@ -346,6 +347,7 @@ describe('sd-calendar utils', () => {
       );
       expect(spanning.rows).toBe(2);
       expect(spanning.more).toEqual([0, 0, 1, 1, 1, 0, 0]);
+      expect(sdCalendarAllDayLayout([{ firstDay: day, lastDay: day }], [])).toEqual({ bars: [], rows: 0, more: [] });
     });
   });
 
@@ -455,6 +457,10 @@ describe('sd-calendar utils', () => {
       expect(sdCalendarPlace(event({ start: '2026/10/22', end: '2026/10/21', allDay: true }), hcm)).toBeNull();
       expect(sdCalendarPlace(event({ start: 'x', allDay: true }), hcm)).toBeNull();
       expect(sdCalendarReadDay('TODAY', hcm)).toBeNull();
+      // 'local' reads in the browser zone; a zone-less value keeps its digits wherever the test runs.
+      expect(sdCalendarPlace(event({ start: '2026/10/22 09:00:00', end: '2026/10/22 10:30:00' }), clockFor('local'))).toEqual(
+        jasmine.objectContaining({ startDay: '2026/10/22', startMinutes: 540, endMinutes: 630 })
+      );
       expect(sdCalendarReadDay(new Date(Date.UTC(1960, 4, 19, 16)), hcm)).toBe('1960/05/20');
     });
 
@@ -522,6 +528,7 @@ describe('sd-calendar utils', () => {
       expect(sdCalendarSerialize('2026/10/22', 840, hcm, 'UTCString')).toBe('Thu, 22 Oct 2026 07:00:00 GMT');
       expect(sdCalendarSerialize('2026/10/22', null, hcm, 'ISOString')).toBe('2026-10-21T17:00:00.000Z');
       expect(sdCalendarSerialize('1960/05/20', 0, hcm, 'ISOString')).toBe('1960-05-19T16:00:00.000Z');
+      expect(sdCalendarSerialize('2026/10/22', 1440, hcm, 'ISOString')).toBe('2026-10-22T17:00:00.000Z');
       expect(sdCalendarSerialize('2026/10/22', 840, clockFor('local'), 'ISOString')).toBe(new Date(2026, 9, 22, 14, 0, 0, 0).toISOString());
     });
 
