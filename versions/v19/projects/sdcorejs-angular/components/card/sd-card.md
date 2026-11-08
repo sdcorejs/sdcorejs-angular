@@ -60,7 +60,7 @@ readonly handleStandaloneClick = (selected: boolean): void => {
 ```
 
 ```html
-<sd-card #card="sdCard" value="participating" autoId="participating" (click)="handleStandaloneClick(card.selected())">
+<sd-card #card="sdCard" behavior="select" value="participating" autoId="participating" (click)="handleStandaloneClick(card.selected())">
   <div class="card-content">Consumer-defined icon and content</div>
 </sd-card>
 ```

@@ -1,1 +1,27 @@
-<ng-content />
+<ng-template #body><ng-content /></ng-template>
+
+@if (mode() === 'link') {
+  @let _disabled = effectiveDisabled();
+  @if (routerCommands(); as _commands) {
+    <a
+      class="sd-card__link"
+      [routerLink]="_disabled ? null : _commands"
+      [queryParams]="queryParams()"
+      [attr.aria-disabled]="_disabled ? 'true' : null"
+      [attr.tabindex]="_disabled ? -1 : null">
+      <ng-container [ngTemplateOutlet]="body" />
+    </a>
+  } @else {
+    <a
+      class="sd-card__link"
+      [attr.href]="_disabled ? null : href()"
+      [attr.target]="target() ?? null"
+      [attr.rel]="target() === '_blank' ? 'noopener noreferrer' : null"
+      [attr.aria-disabled]="_disabled ? 'true' : null"
+      [attr.tabindex]="_disabled ? -1 : null">
+      <ng-container [ngTemplateOutlet]="body" />
+    </a>
+  }
+} @else {
+  <ng-container [ngTemplateOutlet]="body" />
+}

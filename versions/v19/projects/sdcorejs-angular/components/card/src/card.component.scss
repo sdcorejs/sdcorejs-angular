@@ -33,12 +33,36 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
   }
 }
 
-:host(:not(.sd-disabled):hover) {
+:host(.sd-card--static) {
+  cursor: default;
+  user-select: auto;
+}
+
+:host(.sd-card--link) {
+  padding: 0;
+}
+
+.sd-card__link {
+  display: block;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 16px;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+:host(.sd-disabled) .sd-card__link {
+  cursor: not-allowed;
+}
+
+:host(:not(.sd-card--static):not(.sd-disabled):hover) {
   border-color: color-mix(in srgb, var(--sd-card-accent) 45%, #{map.get(color.$color_map, 'border')});
   background: color-mix(in srgb, var(--sd-card-accent-light) 35%, #{map.get(color.$color_map, 'surface')});
 }
 
-:host(:not(.sd-disabled):active) {
+:host(:not(.sd-card--static):not(.sd-disabled):active) {
   border-color: var(--sd-card-accent-dark);
   background: color-mix(in srgb, var(--sd-card-accent-light) 55%, #{map.get(color.$color_map, 'surface')});
   transform: translateY(1px);
@@ -55,7 +79,8 @@ $card-colors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
   background: color-mix(in srgb, var(--sd-card-accent) 14%, var(--sd-card-accent-light));
 }
 
-:host(:focus-visible) {
+:host(:focus-visible),
+:host(:has(.sd-card__link:focus-visible)) {
   border-color: var(--sd-card-accent);
   box-shadow:
     0 0 0 2px #{map.get(color.$color_map, 'surface')},
