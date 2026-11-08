@@ -314,6 +314,21 @@ describe('SdCalendar · rendering and data source', () => {
       expect(q(host, '[data-band="load-error"]')).toBeNull();
     }));
 
+    it('[CAL-B-01] clears the events when a reload fails (calendar.md §13, R1-G1)', fakeAsync(() => {
+      const { option, pending } = deferredOption();
+      const { host, calendar, settle } = render({ option });
+      pending[0].resolve(weekEvents());
+      settle();
+      expect(block(host, 'client')).not.toBeNull();
+      calendar.reload();
+      settle();
+      expect(block(host, 'client')).not.toBeNull();
+      pending[1].reject(new Error('down'));
+      settle();
+      expect(q(host, '[data-band="load-error"]')).not.toBeNull();
+      expect(qa(host, '[data-event-id]').length).toBe(0);
+    }));
+
     it('[CAL-SC-24] does not emit sdLoadError for an aborted load', fakeAsync(() => {
       const { option, pending } = deferredOption();
       const { host, loadErrors, settle } = render({ option });
@@ -644,6 +659,20 @@ describe('SdCalendar · rendering and data source', () => {
       expect(live[0].getAttribute('role')).toBe('status');
       expect(live[0].getAttribute('aria-live')).toBe('polite');
       expect(live[0].getAttribute('aria-atomic')).toBe('true');
+    }));
+
+    it('[CAL-B-02] puts data-autoid only on the first segment of a multi-day event (R1-G5)', fakeAsync(() => {
+      const { host, fixture, settle } = render({ view: 'month', autoId: 'team' });
+      const id = 'components-calendar-team-event-leave';
+      const segments = qa(host, '[data-event-id="leave"]');
+      expect(segments.length).toBe(2);
+      expect(qa(host, `[data-autoid="${id}"]`).length).toBe(1);
+      expect(segments[0].dataset['autoid']).toBe(id);
+      fixture.componentRef.setInput('view', 'agenda');
+      settle();
+      expect(qa(host, '[data-event-id="leave"]').length).toBe(2);
+      expect(qa(host, `[data-autoid="${id}"]`).length).toBe(1);
+      expect(q(host, '[data-agenda-day][data-date="2026/10/22"] [data-event-id="leave"]')?.dataset['autoid']).toBe(id);
     }));
 
     it('[CAL-SC-38] emits data-autoid only with autoId, with the event id URI-encoded', fakeAsync(() => {

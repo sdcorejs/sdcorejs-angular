@@ -476,13 +476,15 @@ export class SdCalendar<T = unknown> {
     if (this.displayView() !== 'month') return [];
     const input = this.#rangeInput();
     const anchor = sdCalendarDayParts(input.date)!;
-    return sdCalendarMonthWeeks(input).map(week => this.#monthWeek(week, anchor.month));
+    const seen = new Set<string>();
+    return sdCalendarMonthWeeks(input).map(week => this.#monthWeek(week, anchor.month, seen));
   });
   protected readonly monthHeaders = computed(() => (this.monthWeeks()[0] ?? []).map(cell => cell.day.weekdayShort));
 
   protected readonly agenda = computed<readonly SdCalendarAgendaDay<T>[]>(() => {
     if (this.displayView() !== 'agenda') return [];
     const groups: SdCalendarAgendaDay<T>[] = [];
+    const seen = new Set<string>();
     for (const day of this.days()) {
       const placed = this.#inRange()
         .filter(({ placement }) => placement.firstDay <= day && placement.lastDay >= day)
@@ -493,7 +495,7 @@ export class SdCalendar<T = unknown> {
         day: view,
         heading: `${this.#weekdayLong(day)}, ${this.#dateText(day, false)}`,
         rows: placed.map(item => {
-          const row = this.#itemView(item);
+          const row = firstSegment(this.#itemView(item), seen);
           return { ...row, context: { $implicit: item.event, event: item.event, range: row.range, view: 'agenda', pending: false } };
         }),
       });
@@ -658,6 +660,8 @@ export class SdCalendar<T = unknown> {
     } catch (error) {
       if (this.#controller !== controller || controller.signal.aborted) return;
       this.#controller = null;
+      // §13: after a failed load the grid shows no events, also when a reload kept the previous ones until now.
+      this.#loaded.set([]);
       this.#phase.set('error');
       this.#announce(this.#i18n.t('core.component.calendar.load-error'));
       this.sdLoadError.emit(error);
@@ -813,7 +817,8 @@ export class SdCalendar<T = unknown> {
     };
   }
 
-  #monthWeek(week: readonly string[], month: number): readonly SdCalendarMonthCell<T>[] {
+  /** Cells of one month row; `seen` carries the events that already have their `data-autoid` (first segment only). */
+  #monthWeek(week: readonly string[], month: number, seen: Set<string>): readonly SdCalendarMonthCell<T>[] {
     const placed = this.#inRange().filter(({ placement }) => placement.lastDay >= week[0] && placement.firstDay <= week[week.length - 1]);
     const spanning = placed.filter(({ placement }) => !placement.inGrid);
     const layout = sdCalendarAllDayLayout(
@@ -826,7 +831,7 @@ export class SdCalendar<T = unknown> {
       const slots: (SdCalendarMonthLine<T> | null)[] = [];
       for (const bar of layout.bars) {
         if (bar.from > column || bar.to < column) continue;
-        const item = this.#itemView(spanning[bar.index]);
+        const item = firstSegment(this.#itemView(spanning[bar.index]), seen);
         const { placement, event } = spanning[bar.index];
         slots[bar.row] = {
           key: `${event.id}`,
@@ -848,7 +853,7 @@ export class SdCalendar<T = unknown> {
       for (const entry of timed) {
         lines.push({
           key: entry.event.id,
-          item: this.#itemView(entry),
+          item: firstSegment(this.#itemView(entry), seen),
           bar: false,
           showTitle: true,
           joinStart: false,
@@ -892,6 +897,17 @@ export class SdCalendar<T = unknown> {
     this.#reported.add(key);
     console[level](`[sd-calendar] ${message}`);
   }
+}
+
+/**
+ * Keeps `data-autoid` on the first segment of an event only: a multi-day event repeats in month cells and agenda days,
+ * and an E2E selector must stay unique (R1-G5).
+ */
+function firstSegment<V extends { readonly key: string; readonly autoId: string | null }>(item: V, seen: Set<string>): V {
+  if (!item.autoId) return item;
+  if (seen.has(item.key)) return { ...item, autoId: null };
+  seen.add(item.key);
+  return item;
 }
 
 function rangeKey(range: SdCalendarVisibleRange): string {
