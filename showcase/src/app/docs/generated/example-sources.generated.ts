@@ -10516,6 +10516,7 @@ interface Employee {
   email: string;
   department: string;
   status: string;
+  region: string;
   salary: number;
   joinDate: Date;
   active: boolean;
