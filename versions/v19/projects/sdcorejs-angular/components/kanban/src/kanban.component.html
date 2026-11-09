@@ -121,9 +121,10 @@
                   class="sd-kanban__card"
                   cdkDrag
                   [cdkDragData]="card"
-                  [cdkDragDisabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
+                  [cdkDragDisabled]="_blocked || !!view.column.disabled || !isMovable(card.card)"
                   (cdkDragStarted)="dragStarted(card, view, cardElement)"
                   (cdkDragEnded)="dragEnded()"
+                  (pointerdown)="notePress(cardElement)"
                   [class.sd-kanban__card--pending]="_cardPending"
                   [class.sd-kanban__card--failed]="_cardFailed"
                   [attr.aria-label]="card.card.title"
@@ -147,7 +148,7 @@
                       cdkDragHandle
                       class="sd-kanban__icon-button sd-kanban__handle"
                       [attr.data-kanban-handle]="_cardToken"
-                      [disabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
+                      [disabled]="_blocked || !!view.column.disabled || !isMovable(card.card)"
                       [attr.aria-label]="'core.component.kanban.move-card' | sdTranslate: { title: card.card.title }"
                       [attr.aria-describedby]="_cardFailed ? id + '-instructions ' + _failureId : id + '-instructions'"
                       (keydown)="keydown($event, card, view)">
@@ -158,7 +159,7 @@
                       type="button"
                       class="sd-kanban__icon-button"
                       [matMenuTriggerFor]="moveMenu"
-                      [disabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
+                      [disabled]="_blocked || !!view.column.disabled || !isMovable(card.card)"
                       [attr.data-kanban-menu]="_cardToken"
                       [attr.aria-label]="'core.component.kanban.move-menu' | sdTranslate: { title: card.card.title }">
                       <sd-icon name="more_horiz" size="sm" />

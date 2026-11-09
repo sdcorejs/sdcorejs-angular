@@ -12,6 +12,7 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -131,7 +132,9 @@ export class SdKanban<T = unknown> {
   readonly autoId = input<string | null | undefined>();
   readonly sdMove = output<SdKanbanMoveRequest<T>>();
   readonly sdMoveError = output<SdKanbanMoveError<T>>();
-  readonly pendingId = signal<string | null>(null);
+  readonly #pending = signal<string | null>(null);
+  /** Id of the card whose move waits for `onMove`; read-only. */
+  readonly pendingId = this.#pending.asReadonly();
   protected readonly cardTemplate = contentChild(SdKanbanCardTemplateDirective<T>);
   protected readonly cardActionsTemplate = contentChild(SdKanbanCardActionsTemplateDirective<T>);
   protected readonly columnTemplate = contentChild(SdKanbanColumnTemplateDirective);
@@ -141,6 +144,8 @@ export class SdKanban<T = unknown> {
   protected readonly draggingId = signal<string | null>(null);
   /** Height of the dragged card, for the mark of its old place while `reorder` is off. */
   protected readonly originHeight = signal(0);
+  /** Height of the card under the last press; the CDK takes the card out of the lane before `cdkDragStarted`. */
+  #pressHeight = 0;
   /** Columns `droppable` refuses for the card being dragged, worked out once when the drag starts (kanban.md §7.2). */
   readonly #blocked = signal<ReadonlySet<string>>(new Set());
   protected readonly reorder = computed(() => !!this.option().move?.reorder);
@@ -148,15 +153,8 @@ export class SdKanban<T = unknown> {
   protected readonly moveFailure = signal<string | undefined>(undefined);
   /** Card the current failure belongs to; `null` for failures without a card (invalid configuration). */
   protected readonly failedId = signal<string | null>(null);
-  /** The board's copy of `items` after accepted moves; a new `items` reference replaces it. */
-  readonly #local = signal<{ readonly source: readonly SdKanbanCard<T>[] | undefined; readonly cards: readonly SdKanbanCard<T>[] } | null>(
-    null
-  );
-  protected readonly cards = computed<readonly SdKanbanCard<T>[]>(() => {
-    const items = this.items();
-    const local = this.#local();
-    return local && local.source === items ? local.cards : (items ?? []);
-  });
+  /** The board's copy of `items`, changed by accepted moves; every new `items` reference replaces it (R1-B-01). */
+  protected readonly cards = linkedSignal<readonly SdKanbanCard<T>[]>(() => this.items() ?? []);
   protected readonly dataInvalid = computed(() => kanbanDataInvalid(this.cards(), this.columns()));
   protected readonly locked = computed(() => this.disabled() || this.readonly() || this.dataInvalid());
   protected readonly moveBlocked = computed(() => this.locked() || this.pendingId() !== null || !this.option().move);
@@ -225,7 +223,9 @@ export class SdKanban<T = unknown> {
     const origin = card && columns.find(column => column.id === card.columnId);
     if (!card || !target || target.disabled || !origin || origin.disabled) return false;
     // SC-06, SC-08: both flags are evaluated again right before onMove, whatever the render showed.
-    if (!allows(move.movable, card) || !allows(move.droppable, { card, from: origin, to: target })) return false;
+    // droppable is about changing column; a move inside one column only needs movable (PD, R1).
+    if (!allows(move.movable, card)) return false;
+    if (target.id !== origin.id && !allows(move.droppable, { card, from: origin, to: target })) return false;
     const reorder = !!move.reorder;
     const placement = kanbanResolveMove(cards, cardId, to, reorder);
     if (!placement) return false;
@@ -246,7 +246,7 @@ export class SdKanban<T = unknown> {
       focus: this.#trackFocus(cardId, menuTrigger),
     };
     this.#operation = operation;
-    this.pendingId.set(cardId);
+    this.#pending.set(cardId);
     this.moveFailure.set(undefined);
     this.failedId.set(null);
     this.announcement.set(this.#i18n.t('core.component.kanban.pending', { title: card.title }));
@@ -256,7 +256,7 @@ export class SdKanban<T = unknown> {
       if (accepted === 'cancel') {
         // SC-12: the user cancelled in the consumer's flow; back in place without a failure, focus like a rejection.
         this.#operation = undefined;
-        this.pendingId.set(null);
+        this.#pending.set(null);
         this.announcement.set(this.#i18n.t('core.component.kanban.cancelled', { title: card.title }));
         this.#focusCard(cardId, operation.focus);
         return false;
@@ -267,10 +267,10 @@ export class SdKanban<T = unknown> {
         return false;
       }
       this.#operation = undefined;
-      this.pendingId.set(null);
+      this.#pending.set(null);
       if (this.collapsed(target.id)) this.collapsedColumns.update(ids => ids.filter(id => id !== target.id));
       const next = kanbanApplyMove(cards, cardId, { columnId: target.id, beforeId: placement.beforeId }, reorder);
-      this.#local.set({ source: operation.items, cards: next });
+      this.cards.set(next);
       this.sdMove.emit(request);
       this.announcement.set(
         this.#i18n.t('core.component.kanban.moved', {
@@ -290,7 +290,7 @@ export class SdKanban<T = unknown> {
     } finally {
       if (this.#operation === operation) {
         this.#operation = undefined;
-        this.pendingId.set(null);
+        this.#pending.set(null);
       }
       if (operation.focus && !operation.focus.scheduled) this.#releaseFocus(operation.focus);
     }
@@ -321,8 +321,13 @@ export class SdKanban<T = unknown> {
       if (target.id !== column.column.id && !this.canDrop(view, column, target)) blocked.add(target.id);
     }
     this.#blocked.set(blocked);
-    this.originHeight.set(element.getBoundingClientRect().height);
+    this.originHeight.set(this.#pressHeight || element.getBoundingClientRect().height);
     this.draggingId.set(view.card.id);
+  }
+
+  /** Records the card's height while it is still in its lane (R1-B-03). */
+  protected notePress(element: HTMLElement): void {
+    this.#pressHeight = element.getBoundingClientRect().height;
   }
 
   protected dragEnded(): void {
@@ -335,7 +340,7 @@ export class SdKanban<T = unknown> {
   }
 
   /** `option.move.movable` at every render (SC-06); `#move` evaluates it again right before `onMove`. */
-  protected canMove(card: SdKanbanCard<T>): boolean {
+  protected isMovable(card: SdKanbanCard<T>): boolean {
     const move = this.option().move;
     return !!move && allows(move.movable, card);
   }
@@ -351,14 +356,15 @@ export class SdKanban<T = unknown> {
   }
 
   protected keydown(event: KeyboardEvent, view: CardView<T>, column: ColumnView<T>): void {
-    if (this.moveBlocked() || column.column.disabled || !this.canMove(view.card) || !event.altKey || event.ctrlKey || event.metaKey) return;
+    if (this.moveBlocked() || column.column.disabled || !this.isMovable(view.card) || !event.altKey || event.ctrlKey || event.metaKey)
+      return;
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    // §7.4: Alt + Up / Down only reorders; with reorder off the keys are left to the page.
+    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !this.reorder()) return;
     event.preventDefault();
     event.stopPropagation();
     const cardId = view.card.id;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      // §7.4: Alt + Up / Down only reorders.
-      if (!this.reorder()) return;
       const beforeId = kanbanStepTarget(this.cards(), cardId, event.key === 'ArrowUp' ? -1 : 1);
       if (beforeId !== undefined) void this.move(cardId, { columnId: column.column.id, beforeId }, 'keyboard');
       return;
@@ -446,7 +452,7 @@ export class SdKanban<T = unknown> {
     this.#operation?.controller.abort();
     if (this.#operation?.focus) this.#releaseFocus(this.#operation.focus);
     this.#operation = undefined;
-    this.pendingId.set(null);
+    this.#pending.set(null);
     this.announcement.set('');
   }
   #fail(request: SdKanbanMoveRequest<T>, reason: 'error' | 'rejected', error?: unknown): void {

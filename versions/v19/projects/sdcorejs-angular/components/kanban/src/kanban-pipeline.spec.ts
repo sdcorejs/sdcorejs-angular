@@ -260,10 +260,16 @@ describe('SdKanban · move pipeline', () => {
       if (kind === 'throw') throw new Error('nope');
       return { true: true, void: undefined, false: false, cancel: 'cancel' }[kind];
     };
-    const codes: Record<Answer, string> = { true: '09', void: '10', false: '11', cancel: '12', throw: '13' };
+    const codes: Record<Answer, string> = {
+      true: 'KAN-SC-09',
+      void: 'KAN-SC-10',
+      false: 'KAN-SC-11',
+      cancel: 'KAN-SC-12',
+      throw: 'KAN-SC-13',
+    };
     for (const kind of ['true', 'void', 'false', 'cancel', 'throw'] as const) {
       for (const async of [false, true]) {
-        it(`[KAN-SC-${codes[kind]}] answer ${kind}${async ? ' through a promise' : ''}: data, card, outputs and announcement`, async () => {
+        it(`[${codes[kind]}] answer ${kind}${async ? ' through a promise' : ''}: data, card, outputs and announcement`, async () => {
           const onMove = (): ReturnType<Move['onMove']> =>
             (async ? Promise.resolve().then(() => answer(kind)) : answer(kind)) as ReturnType<Move['onMove']>;
           mount({ onMove });
@@ -446,7 +452,9 @@ describe('SdKanban · move pipeline', () => {
     });
 
     it('[KAN-B-02] does not ask droppable about a move inside the same column', async () => {
-      const droppable = jasmine.createSpy('droppable').and.callFake((context: SdKanbanDropContext<Dto>) => context.from.id !== context.to.id);
+      const droppable = jasmine
+        .createSpy('droppable')
+        .and.callFake((context: SdKanbanDropContext<Dto>) => context.from.id !== context.to.id);
       const onMove = jasmine.createSpy('onMove').and.returnValue(true);
       mount({ reorder: true, droppable, onMove });
       press('x', 'ArrowDown');

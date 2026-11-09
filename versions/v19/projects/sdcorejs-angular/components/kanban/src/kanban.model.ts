@@ -61,7 +61,8 @@ export interface SdKanbanMoveRequest<T = unknown> {
   readonly from: { readonly columnId: string; readonly index: number };
   /**
    * `reorder` off: `index` and `beforeId` are `null`. `reorder` on: `index` in the loaded cards of the target column
-   * without the moved card; `beforeId` is the card right after the drop point, `null` for the end of the column.
+   * without the moved card; `beforeId` is the card right after the drop point, `null` after the last loaded card (the
+   * end of the column; when pages are not loaded yet, the server decides where the card goes).
    */
   readonly to: { readonly columnId: string; readonly index: number | null; readonly beforeId: string | null };
   readonly source: SdKanbanMoveSource;

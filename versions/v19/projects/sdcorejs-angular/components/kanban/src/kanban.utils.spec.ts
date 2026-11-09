@@ -51,6 +51,9 @@ describe('sd-kanban utils', () => {
         expect(next).not.toBe(cards);
       }
       expect(cards[0].columnId).toBe('a');
+      expect(kanbanApplyMove(cards, 'missing', { columnId: 'b', beforeId: null }, true))
+        .withContext('unknown card')
+        .toBe(cards);
       expect(ids(cards)).toEqual(['x', 'hidden', 'y', 'z']);
     });
   });
@@ -92,6 +95,9 @@ describe('sd-kanban utils', () => {
         .toBeUndefined();
       const three: readonly SdKanbanCard<Dto>[] = [card('p', 'a'), card('q', 'a'), card('r', 'a')];
       expect(kanbanStepTarget(three, 'p', 1)).toBe('r');
+      expect(kanbanStepTarget(cards, 'missing', 1))
+        .withContext('unknown card')
+        .toBeUndefined();
     });
 
     it('[KAN-U-03] ignores an unknown card, an unknown beforeId or a beforeId of another column', () => {
@@ -139,6 +145,8 @@ describe('sd-kanban utils', () => {
       expect(kanbanDataInvalid([], [{ id: '', label: 'A' }]))
         .withContext('empty column id')
         .toBeTrue();
+      const loose: SdKanbanCard<Dto>[] = JSON.parse('[{"id":"x","columnId":"a","title":"X","searchText":5}]');
+      expect(kanbanDataInvalid(loose, columns)).withContext('searchText that is not a string').toBeTrue();
     });
   });
 
