@@ -22,6 +22,7 @@ import {
   sdQueryFieldIcon,
   sdQueryShowOperatorSelector,
 } from '../../query-bar.model';
+import { ɵsdQueryFilterActive } from '../../query-bar-filter';
 import { ɵSdQueryPanelCloseReason, ɵSdQueryPanelDirective } from '../panel/query-panel';
 
 let nextLabelId = 0;
@@ -73,6 +74,7 @@ export class SdQueryChipPopover {
   readonly selectValuePlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.select-value'));
   readonly enterValuePlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.enter-value'));
   readonly loadingValuesLabel = computed(() => this.#i18n.t('core.component.query-bar.loading-values'));
+  readonly minOneLabel = computed(() => this.#i18n.t('core.component.query-bar.required-min-one'));
 
   // ---------------------------------------------------------------------------
   // Inputs
@@ -118,6 +120,12 @@ export class SdQueryChipPopover {
 
   /** Field being edited: the one seeded last, else the `[field]` input. */
   readonly currentField = computed(() => this.#seededField() ?? this.field());
+
+  /** The field is required: no empty selection, no clear button (handoff B3). */
+  readonly required = computed(() => !!this.currentField()?.required);
+  /** "Choose at least one value." after a required multi-value chip was refused an empty selection. */
+  readonly minOneHint = signal(false);
+  readonly hintId = `sd-query-chip-popover-hint-${nextLabelId}`;
 
   // ---------------------------------------------------------------------------
   // Derived state
@@ -171,6 +179,7 @@ export class SdQueryChipPopover {
     this.#seededField.set(filter && field ? field : undefined);
     this.#seededFilter.set(filter && field ? filter : undefined);
     this.#seededIndex.set(filter && field ? index : null);
+    this.minOneHint.set(false);
     if (!filter || !field) {
       this.editingOperator.set('EQUAL');
       this.editingValue.set(null);
@@ -221,8 +230,16 @@ export class SdQueryChipPopover {
     }
   }
 
-  /** Single-value input change. */
+  /** Value control change. A required multi-value chip keeps its values when the change would empty it (B3). */
   onEditingValueInput(value: unknown): void {
+    if (this.required() && Array.isArray(value) && value.length === 0) {
+      // why: bản sao mới (không phải cùng mảng) để sd-select nhận lại model và bỏ phần bỏ chọn nó đang hiện.
+      const previous = this.editingValue();
+      this.editingValue.set(Array.isArray(previous) ? [...previous] : previous);
+      this.minOneHint.set(true);
+      return;
+    }
+    this.minOneHint.set(false);
     this.editingValue.set(value);
   }
 
@@ -262,15 +279,21 @@ export class SdQueryChipPopover {
    */
   onMenuClosed(_reason?: ɵSdQueryPanelCloseReason): void {
     const f = this.#seededFilter() ?? this.filter();
+    const field = this.#seededField() ?? this.field();
     this.#seededField.set(undefined);
     this.#seededFilter.set(undefined);
     this.#seededIndex.set(null);
+    this.minOneHint.set(false);
     if (!f) return;
-    const next: Filter = {
+    let next: Filter = {
       field: (f as any).field,
       operator: this.editingOperator(),
       data: this.editingValue(),
     } as Filter;
+    // B3: a required chip that had a value and was emptied gets that value (and operator) back.
+    if (field?.required && ɵsdQueryFilterActive(f) && !ɵsdQueryFilterActive(next)) {
+      next = { field: (f as any).field, operator: (f as any).operator, data: (f as any).data } as Filter;
+    }
     this.commit.emit(next);
   }
 

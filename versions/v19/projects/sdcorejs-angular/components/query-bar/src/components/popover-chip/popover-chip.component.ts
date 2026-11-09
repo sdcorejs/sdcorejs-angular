@@ -46,6 +46,9 @@ export class SdQueryPopoverChip {
   /** Read-only chip — does not open its popover. */
   readonly disabled = input(false);
 
+  /** Chip of a required field — `aria-required`. */
+  readonly required = input(false);
+
   /** Required chip without a value — error look, `aria-invalid`. */
   readonly invalid = input(false);
 

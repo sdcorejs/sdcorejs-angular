@@ -91,6 +91,13 @@ $qb-border-soft: var(--sd-query-bar-border-soft, #e2e4e7);
   }
 }
 
+// B3: dòng nhắc dưới control giá trị của chip bắt buộc nhiều giá trị.
+.c-pop-required-hint {
+  margin-top: -8px;
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text-secondary, #555);
+}
+
 .c-pop-values-loading {
   padding: 10px 8px;
   font-size: var(--sd-font-size-12, 12px);

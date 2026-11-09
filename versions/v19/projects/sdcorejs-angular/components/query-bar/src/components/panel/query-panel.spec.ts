@@ -157,12 +157,28 @@ describe('ɵSdQueryPanelDirective', () => {
       expect(host.closed).toEqual(['list:escape']);
     });
 
-    it('QB-P-04 leaves an Escape that a child control already handled to that control', () => {
-      openList();
-      const option = panel()!.querySelector('[role="option"]')!;
-      option.addEventListener('keydown', event => event.preventDefault(), { once: true });
-      key(option, 'Escape');
+    // why: sd-input-number gọi preventDefault cho mọi phím ngoài danh sách cho phép, kể cả Esc — panel vẫn phải đóng.
+    it('QB-P-04 closes on Escape even when a control inside called preventDefault on it', () => {
+      el('#form-trigger').click();
+      fixture.detectChanges();
+      const value = panel()!.querySelector('.probe-value')!;
+      value.addEventListener('keydown', event => event.preventDefault(), { once: true });
+      key(value, 'Escape');
+      expect(panel()).toBeNull();
+      expect(host.closed).toEqual(['form:escape']);
+    });
+
+    it('QB-P-04 leaves an Escape typed inside the popup of a control to that popup', () => {
+      el('#form-trigger').click();
+      fixture.detectChanges();
+      const childRef = TestBed.inject(Overlay).create();
+      childRef.attach(new TemplatePortal(host.child(), host.views));
+      fixture.detectChanges();
+      const childButton = overlay().querySelector<HTMLElement>('.probe-child-button')!;
+      childButton.focus();
+      key(childButton, 'Escape');
       expect(panel()).not.toBeNull();
+      childRef.dispose();
     });
 
     it('QB-P-04 closes on a click outside, once', () => {

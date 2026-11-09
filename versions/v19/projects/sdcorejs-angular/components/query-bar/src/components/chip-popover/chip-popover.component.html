@@ -35,7 +35,7 @@
           (modelChange)="onEditingOperatorChange($any($event))" />
       </div>
 
-      <div class="c-pop-body" role="group" data-sd-query-panel-initial>
+      <div class="c-pop-body" role="group" data-sd-query-panel-initial [attr.aria-describedby]="minOneHint() ? hintId : null">
         @if (!isNoDataOperator(_editingOperator)) {
           @if (_editingOperator === 'BETWEEN') {
             @if (_field.type === 'date') {
@@ -110,9 +110,14 @@
               [valueField]="_opt.valueField"
               [displayField]="_opt.displayField"
               [multiple]="multiple()"
+              [required]="required()"
+              [clearable]="!required()"
               [model]="$any(_editingValue)"
               (sdChange)="onEditingValueInput($event)">
             </sd-select>
+            @if (minOneHint()) {
+              <div class="c-pop-required-hint" aria-live="polite" [id]="hintId">{{ minOneLabel() }}</div>
+            }
             @if (_editingOptionsLoading) {
               <div class="c-pop-values-loading">{{ loadingValuesLabel() }}</div>
             }

@@ -29,6 +29,7 @@
     [class.c-chip-inactive]="!_active"
     [class.c-chip-pinned]="pinned()"
     [class.c-chip-invalid]="_invalid"
+    [attr.aria-required]="required() ? 'true' : null"
     [attr.aria-invalid]="_invalid ? 'true' : null"
     [attr.aria-describedby]="describedBy() ?? null"
     [attr.data-field]="_filterField"

@@ -760,6 +760,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.range.from': '{value}부터',
   'core.component.query-bar.range.to': '{value}까지',
   'core.component.query-bar.clear': '전체 지우기',
+  'core.component.query-bar.required-min-one': '값을 하나 이상 선택하세요.',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '특정 날짜',

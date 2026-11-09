@@ -763,6 +763,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.range.from': '{value} 以降',
   'core.component.query-bar.range.to': '{value} まで',
   'core.component.query-bar.clear': 'すべてクリア',
+  'core.component.query-bar.required-min-one': '値を 1 つ以上選択してください。',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '指定した日付',

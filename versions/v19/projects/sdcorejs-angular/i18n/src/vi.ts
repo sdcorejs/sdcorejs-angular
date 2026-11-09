@@ -760,6 +760,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.range.from': 'Từ {value}',
   'core.component.query-bar.range.to': 'Đến {value}',
   'core.component.query-bar.clear': 'Xóa tất cả',
+  'core.component.query-bar.required-min-one': 'Chọn ít nhất một giá trị.',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Ngày cụ thể',

@@ -759,6 +759,7 @@ export const EN_MESSAGES = {
   'core.component.query-bar.range.from': 'From {value}',
   'core.component.query-bar.range.to': 'To {value}',
   'core.component.query-bar.clear': 'Clear all',
+  'core.component.query-bar.required-min-one': 'Choose at least one value.',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Specific date',

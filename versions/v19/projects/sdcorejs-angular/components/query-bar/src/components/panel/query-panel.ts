@@ -255,11 +255,16 @@ export class ɵSdQueryPanelDirective {
       if (target && (origin.contains(target) || this.#returnFocusTo?.contains(target) || this.#inStackedLayer(target))) return;
       this.close('outside');
     });
-    // why: Esc bắt ở hai nơi. Focus luôn ở trong panel nên keydown của pane nhận trước — tooltip của một nút khác (gắn sau
-    // panel, nằm trên cùng) không nuốt được Esc qua OverlayKeyboardDispatcher (R1 · N-1). keydownEvents() giữ cho trường
-    // hợp focus đã ra khỏi pane.
-    const keys = ref.keydownEvents().subscribe(event => this.#escape(event));
     const pane = ref.overlayElement;
+    // why: Esc bắt ở hai nơi. Focus luôn ở trong panel nên keydown của pane nhận trước — tooltip của một nút khác (gắn sau
+    // panel, nằm trên cùng) không nuốt được Esc qua OverlayKeyboardDispatcher (R1 · N-1). keydownEvents() chỉ còn cho
+    // trường hợp focus ở ngoài pane (bấm vào chỗ trống); phím gõ trong popup của một control (menu của sd-operator, lịch
+    // của sd-date) là của popup đó.
+    const keys = ref.keydownEvents().subscribe(event => {
+      const target = _getEventTarget<Element>(event);
+      if (target && (pane.contains(target) || this.#inStackedLayer(target))) return;
+      this.#escape(event);
+    });
     const onKeydown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') this.#escape(event);
       // why: nội dung đã dùng Tab (bộ lọc đã lưu: nút áp → nút xoá của cùng hàng) thì không đóng.
@@ -283,11 +288,12 @@ export class ɵSdQueryPanelDirective {
   }
 
   /**
-   * Escape closes the panel unless a control already used it (`defaultPrevented`: the menu of sd-operator closing
-   * itself) or the popup of a control is open above the panel (an sd-select panel closes first).
+   * Escape closes the panel unless the popup of a control is open above it (an sd-select panel closes first).
+   * why: không dựa vào `defaultPrevented` — sd-input-number chặn mọi phím ngoài danh sách cho phép (cả Esc) bằng
+   * preventDefault, nên cờ đó không nói control đã dùng Esc; popup tương tác chồng lên trên mới nói được.
    */
   #escape(event: KeyboardEvent): void {
-    if (event.key !== 'Escape' || !this.#ref || event.defaultPrevented || hasModifierKey(event) || this.#interactiveLayerAbove()) return;
+    if (event.key !== 'Escape' || !this.#ref || hasModifierKey(event) || this.#interactiveLayerAbove()) return;
     event.preventDefault();
     this.close('escape');
   }

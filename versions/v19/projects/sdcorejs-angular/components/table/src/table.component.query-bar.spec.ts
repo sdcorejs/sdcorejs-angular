@@ -580,6 +580,36 @@ describe('SdTable filter.mode query-bar', () => {
       ).toEqual(['quick:warehouseId', 'external:status']);
       expect(clearButton().disabled).toBeTrue();
     }));
+
+    // Handoff section 6.2 (M3): the table's own Clear (onClearAll) gives the same result as SdQueryBar.clearAll().
+    it('QB-T-03 keeps required quick and external values, resets the rest, and does not count required values as dirty', fakeAsync(() => {
+      const option = buildOption();
+      (option.filter!.quickSearch!.filters![0] as { required?: boolean }).required = true;
+      (option.filter!.externalFilters![0] as { required?: boolean }).required = true;
+      mount(option);
+      const clearButton = () => el().querySelector('sd-query-bar .c-clear-all') as HTMLButtonElement;
+      commit('quick:warehouseId', { data: 'hn' });
+      commit('external:status', { data: ['new'] });
+      expect(table.queryBarOption()!.clearDisabled).withContext('only required values differ from the defaults').toBeTrue();
+      expect(clearButton().disabled).toBeTrue();
+
+      commit('column:total', { data: 5 });
+      expect(clearButton().disabled).toBeFalse();
+      loader.calls.reset();
+      clearButton().click();
+      settle();
+
+      expect(spies.clear).toHaveBeenCalledTimes(1);
+      expect(loader).toHaveBeenCalledTimes(1);
+      const request = table.getFilterRequest();
+      expect(request.rawColumnFilter['total' as never]).toBeUndefined();
+      expect(request.rawExternalFilter['status' as never]).toEqual(['new'] as never);
+      expect(table.quickSearchValue().filters['warehouseId']).toBe('hn');
+      expect((chipOf('quick:warehouseId') as { data?: unknown }).data).toBe('hn');
+      expect((chipOf('external:status') as { data?: unknown }).data).toEqual(['new']);
+      expect(bar().invalidFields()).toEqual([]);
+      expect(clearButton().disabled).toBeTrue();
+    }));
   });
 
   describe('cache', () => {
