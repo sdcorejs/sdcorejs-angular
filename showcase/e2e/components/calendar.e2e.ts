@@ -94,12 +94,29 @@ async function axe(page: Page, root: Locator): Promise<void> {
   const handle = await root.elementHandle();
   const violations = await page.evaluate(async element => {
     const result = await window.axe.run(element!);
-    return result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical').map(item => `${item.id} (${item.impact})`);
+    return result.violations
+      .filter(item => item.impact === 'serious' || item.impact === 'critical')
+      .map(item => `${item.id} (${item.impact})`);
   }, handle);
   expect(violations).toEqual([]);
 }
 
+/**
+ * Right-to-left on the calendar host only: `dir` on <html> also flips the docs page, whose sidebar then covers the
+ * example.
+ */
+async function rtl(root: Locator, on: boolean): Promise<void> {
+  await root.evaluate((element, value) => {
+    const host = element.parentElement!;
+    if (value) host.setAttribute('dir', 'rtl');
+    else host.removeAttribute('dir');
+  }, on);
+}
+
 async function shot(root: Locator, name: string): Promise<void> {
+  // why: every test runs in both zone projects; only the Bangkok run writes, so a UTC run does not replace the
+  // pictures with GMT+0 labels (R2 A-21).
+  if (test.info().project.name !== 'asia-bangkok') return;
   mkdirSync(SHOTS, { recursive: true });
   await root.screenshot({ path: resolve(SHOTS, `${name}.png`), animations: 'disabled' });
 }
@@ -119,7 +136,6 @@ test.describe('sd-calendar', () => {
     await expect(created).toHaveAttribute('data-end', '2026/10/20 15:30:00');
     await expect(created).toHaveAttribute('data-selected', 'true');
     await axe(page, root);
-    await shot(root, 'week-1280-light');
   });
 
   test('[CAL-E-02] closes the dialog: no new block, no band', async ({ page }) => {
@@ -253,7 +269,6 @@ test.describe('sd-calendar', () => {
     await root.locator('button[data-view-option="month"]').click();
     await root.locator('[role="gridcell"][data-date="2026/10/22"] [data-more]').click();
     await expect(root).toHaveAttribute('data-from', '2026/10/22');
-    await shot(root, 'day-1280-light');
   });
 
   test('[CAL-E-12] keeps view and date in the URL and restores them', async ({ page }) => {
@@ -298,16 +313,9 @@ test.describe('sd-calendar', () => {
     await shot(root, 'compact-400');
   });
 
-  test('[CAL-E-01] stays readable in dark, RTL, forced colors and reduced motion', async ({ page }) => {
+  // Dark and RTL pictures come from the 960px set below.
+  test('[CAL-E-01] stays readable in forced colors and reduced motion', async ({ page }) => {
     const root = await open(page, 'playground');
-    await page.evaluate(() => document.documentElement.setAttribute('data-sd-theme', 'dark'));
-    await shot(root, 'week-1280-dark');
-    await page.evaluate(() => {
-      document.documentElement.removeAttribute('data-sd-theme');
-      document.documentElement.setAttribute('dir', 'rtl');
-    });
-    await shot(root, 'week-1280-rtl');
-    await page.evaluate(() => document.documentElement.removeAttribute('dir'));
     await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' });
     await block(root, 'client').click();
     await shot(root, 'week-forced-colors');
@@ -323,19 +331,25 @@ test.describe('sd-calendar', () => {
       });
       await button(page, 'playground-many').click();
       await expect(root.locator('[data-event-id^="bulk-"]').first()).toBeVisible();
-      samples.push(await page.evaluate(() => new Promise<number>(done => requestAnimationFrame(() => done(performance.now() - window.__t0)))));
+      samples.push(
+        await page.evaluate(() => new Promise<number>(done => requestAnimationFrame(() => done(performance.now() - window.__t0))))
+      );
     }
     samples.sort((a, b) => a - b);
     test.info().annotations.push({ type: 'render-500-median-ms', description: samples[2].toFixed(1) });
     await page.evaluate(() => {
       window.__long = [];
-      new PerformanceObserver(list => list.getEntries().forEach(entry => window.__long.push(entry.duration))).observe({ entryTypes: ['longtask'] });
+      new PerformanceObserver(list => list.getEntries().forEach(entry => window.__long.push(entry.duration))).observe({
+        entryTypes: ['longtask'],
+      });
     });
     await drag(page, root.locator('[data-event-id^="bulk-"]').first(), await at(root, '2026/10/24', 600));
     const longTasks = await page.evaluate(() => window.__long);
     test.info().annotations.push({ type: 'drag-long-tasks-ms', description: JSON.stringify(longTasks) });
     // §10: the numbers go to the report; a budget overrun is reported at review, not failed here.
-    console.log(`[calendar perf] render 500 median ${samples[2].toFixed(1)}ms (budget 150), long tasks while dragging ${JSON.stringify(longTasks)} (budget 50)`);
+    console.log(
+      `[calendar perf] render 500 median ${samples[2].toFixed(1)}ms (budget 150), long tasks while dragging ${JSON.stringify(longTasks)} (budget 50)`
+    );
   });
 });
 
@@ -345,7 +359,6 @@ test.describe('sd-calendar · mobile', () => {
   test('[CAL-E-13] taps to create, swipes the day and shows the strip', async ({ page }) => {
     const root = await open(page, 'playground');
     await expect(root).toHaveAttribute('data-compact', 'true');
-    await shot(root, 'mobile-390');
     const point = await at(root, '2026/10/22', 16 * 60 + 10);
     await page.touchscreen.tap(point.x, point.y);
     await expect(root.locator('[data-create-ghost][data-pending]')).toBeVisible();
@@ -374,5 +387,151 @@ test.describe('sd-calendar · Kolkata', () => {
     await page.setViewportSize({ width: 1920, height: 1000 });
     const root = await open(page, 'playground');
     await expect(block(root, 'client')).toHaveAttribute('data-start', '2026/10/22 09:30:00');
+  });
+});
+
+/**
+ * Gives the calendar box of an example a fixed size, like the frames of the design HTML. The docs column is narrower
+ * than 960px and clips its preview, so the box is pinned to the top left of the viewport above the page.
+ */
+async function frame(root: Locator, width: number, height = 640): Promise<void> {
+  await root.evaluate(
+    (element, size) => {
+      const box = element.closest<HTMLElement>('.calendar-box');
+      if (!box) return;
+      Object.assign(box.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        zIndex: '1000',
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+      });
+    },
+    { width, height }
+  );
+}
+
+// TESTING §9: the items of SD Calendar Design.dc.html at the same widths, for the side-by-side table of the report.
+test.describe('sd-calendar · screenshots (TESTING §9)', () => {
+  test.beforeEach(async ({ page }, info) => {
+    test.skip(info.project.name !== 'asia-bangkok', 'the screenshots come from the Bangkok project');
+    await page.setViewportSize({ width: 1920, height: 1000 });
+  });
+
+  test('[CAL-E-01] the four views at 960px, the week in dark and RTL', async ({ page }) => {
+    const root = await open(page, 'playground');
+    await frame(root, 960);
+    await expect(root).not.toHaveAttribute('data-compact', 'true');
+    await shot(root, 'week-960-light');
+    await page.evaluate(() => document.documentElement.setAttribute('data-sd-theme', 'dark'));
+    await shot(root, 'week-960-dark');
+    await page.evaluate(() => document.documentElement.removeAttribute('data-sd-theme'));
+    await rtl(root, true);
+    await shot(root, 'week-960-rtl');
+    await rtl(root, false);
+    for (const view of ['day', 'month', 'agenda']) {
+      await root.locator(`button[data-view-option="${view}"]`).click();
+      await expect(root).toHaveAttribute('data-view', view);
+      await shot(root, `${view}-960-light`);
+    }
+  });
+
+  test('[CAL-E-03] block states and interactions at 960px', async ({ page }) => {
+    const root = await open(page, 'playground');
+    await frame(root, 960);
+    await expect(root).not.toHaveAttribute('data-compact', 'true');
+    await block(root, 'client').click();
+    await expect(block(root, 'client')).toHaveAttribute('data-selected', 'true');
+    await shot(root, 'block-selected');
+
+    // Sweep, drag and resize are pictured mid-gesture, then cancelled with Esc.
+    const start = await at(root, '2026/10/20', 840);
+    const end = await at(root, '2026/10/20', 930);
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(end.x, end.y, { steps: 6 });
+    await expect(root.locator('[data-create-ghost]')).toBeVisible();
+    await shot(root, 'interaction-sweep');
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+
+    await drag(page, block(root, 'budget'), await at(root, '2026/10/23', 14 * 60 + 5), async () => {
+      await expect(root.locator('[data-drag-proposal]')).toBeVisible();
+      await shot(root, 'interaction-drag');
+      await page.keyboard.press('Escape');
+    });
+
+    await block(root, 'budget').hover();
+    const handle = (await block(root, 'budget').locator('[data-resize-handle]').boundingBox())!;
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2 + 48, { steps: 6 });
+    await shot(root, 'interaction-resize');
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+
+    await root.locator('[data-region="time-grid"]').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(root.locator('[data-cursor]')).toBeVisible();
+    await shot(root, 'interaction-cursor');
+
+    await block(root, 'standup-20261019').focus();
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect(root.locator('[role="alertdialog"]')).toBeVisible();
+    await shot(root, 'interaction-scope');
+    await page.keyboard.press('Escape');
+
+    await setMoveMode(page, 'slow');
+    await block(root, 'client').focus();
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect(block(root, 'client')).toHaveAttribute('data-pending', 'true');
+    await shot(root, 'block-pending');
+    await expect(block(root, 'client')).not.toHaveAttribute('data-pending', 'true', { timeout: 5000 });
+
+    await setMoveMode(page, 'reject');
+    await block(root, 'client').focus();
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect(block(root, 'client')).toHaveAttribute('data-failed', 'true');
+    await shot(root, 'block-failed');
+    await root.locator('button[data-action="dismiss"]').click();
+
+    await page.getByRole('button', { name: 'dimPast: false' }).click();
+    await expect(root.locator('[data-past]').first()).toBeVisible();
+    await shot(root, 'block-past');
+  });
+
+  test('[CAL-E-14] loading and empty states', async ({ page }) => {
+    const server = await open(page, 'server');
+    await button(page, 'server-reload').click();
+    await expect(server.locator('[role="progressbar"]')).toBeVisible();
+    await shot(server, 'state-loading');
+    await expect(server.locator('[role="progressbar"]')).toHaveCount(0, { timeout: 5000 });
+
+    const root = await open(page, 'playground');
+    await frame(root, 960);
+    // Without the demo holidays, the agenda after the last November stand-up has nothing to list.
+    await page.getByRole('button', { name: 'holidays: true' }).click();
+    await root.locator('button[data-view-option="agenda"]').click();
+    await expect(root.locator('[role="progressbar"]')).toHaveCount(0);
+    for (let index = 0; index < 8 && (await root.locator('[data-agenda-day]').count()) > 0; index++) {
+      const from = await root.getAttribute('data-from');
+      await root.locator('button[data-action="next"]').click();
+      await expect(root).not.toHaveAttribute('data-from', from!);
+      // why: a new range clears the list until its events arrive; count only after the load.
+      await expect(root.locator('[role="progressbar"]')).toHaveCount(0);
+    }
+    await expect(root.locator('[data-agenda-day]')).toHaveCount(0);
+    await shot(root, 'state-empty');
+  });
+
+  test('[CAL-E-17] the narrow layout at 390px of host width, light and dark', async ({ page }) => {
+    const root = await open(page, 'playground');
+    await frame(root, 390, 760);
+    await expect(root).toHaveAttribute('data-compact', 'true');
+    await shot(root, 'mobile-390-light');
+    await page.evaluate(() => document.documentElement.setAttribute('data-sd-theme', 'dark'));
+    await shot(root, 'mobile-390-dark');
+    await page.evaluate(() => document.documentElement.removeAttribute('data-sd-theme'));
   });
 });
