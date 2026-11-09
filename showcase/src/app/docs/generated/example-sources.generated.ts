@@ -8724,6 +8724,9 @@ const CONTENT: readonly Content[] = [
                 Lỗi cột Đang giao: {{ failShipping() ? 'bật' : 'tắt' }}
               </button>
               <button type="button" data-testid="reload-shipping" (click)="orders.reload('shipping')">Tải lại Đang giao</button>
+              <button type="button" data-testid="orders-slow" (click)="slowNetwork.set(!slowNetwork())">
+                Mạng chậm (3 giây): {{ slowNetwork() ? 'bật' : 'tắt' }}
+              </button>
             </div>
             <div class="orders-layout">
               <sd-kanban
@@ -8738,7 +8741,7 @@ const CONTENT: readonly Content[] = [
                 <ng-template [sdKanbanCardTemplate]="orderOption" let-card>
                   <strong class="order-code">{{ card.title }}</strong>
                   <span class="order-customer">{{ card.data?.customer }}</span>
-                  <span class="order-amount">{{ money(card.data?.amount ?? 0) }}</span>
+                  <span class="order-amount"><bdi>{{ money(card.data?.amount ?? 0) }}</bdi></span>
                 </ng-template>
               </sd-kanban>
               @if (selectedOrder(); as order) {
@@ -8962,6 +8965,8 @@ export class KanbanDemoComponent {
     { id: 'cancelled', label: 'Đã huỷ', color: 'error' },
   ];
   readonly failShipping = signal(false);
+  /** Keeps the skeleton and the "loading more" row on screen long enough to look at them. */
+  readonly slowNetwork = signal(false);
   readonly selectedOrder = signal<Order | null>(null);
   readonly reason = signal<{ readonly title: string } | null>(null);
   #answerReason?: (reason: string | null) => void;
@@ -8970,7 +8975,7 @@ export class KanbanDemoComponent {
     pageSize: 5,
     dataSource: {
       onLoad: async ({ columnId, cursor, pageSize, keyword, signal }) => {
-        await delay(400, signal);
+        await delay(this.slowNetwork() ? 3000 : 400, signal);
         if (columnId === 'shipping' && this.failShipping()) throw new Error('Máy chủ không phản hồi');
         const term = keyword.toLowerCase();
         const matching = this.#store.filter(
@@ -29721,6 +29726,9 @@ Bởi Nguyễn Văn A"></sd-badge>
             Lỗi cột Đang giao: {{ failShipping() ? 'bật' : 'tắt' }}
           </button>
           <button type="button" data-testid="reload-shipping" (click)="orders.reload('shipping')">Tải lại Đang giao</button>
+          <button type="button" data-testid="orders-slow" (click)="slowNetwork.set(!slowNetwork())">
+            Mạng chậm (3 giây): {{ slowNetwork() ? 'bật' : 'tắt' }}
+          </button>
         </div>
         <div class="orders-layout">
           <sd-kanban
@@ -29735,7 +29743,7 @@ Bởi Nguyễn Văn A"></sd-badge>
             <ng-template [sdKanbanCardTemplate]="orderOption" let-card>
               <strong class="order-code">{{ card.title }}</strong>
               <span class="order-customer">{{ card.data?.customer }}</span>
-              <span class="order-amount">{{ money(card.data?.amount ?? 0) }}</span>
+              <span class="order-amount"><bdi>{{ money(card.data?.amount ?? 0) }}</bdi></span>
             </ng-template>
           </sd-kanban>
           @if (selectedOrder(); as order) {

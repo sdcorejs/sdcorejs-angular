@@ -67,10 +67,22 @@ async function drag(page: Page, source: Locator, target: Locator, beforeDrop?: (
  * four-lane board sit outside the board's scroll view, and a page scroll would shift the drop points.
  */
 async function frame(root: Locator, width = 1500): Promise<void> {
-  await root.evaluate((element, size) => {
+  await root.evaluate(async (element, size) => {
     const host = element.parentElement as HTMLElement;
     Object.assign(host.style, { position: 'fixed', top: '0', left: '0', zIndex: '1000', width: `${size}px`, flex: 'none' });
     host.style.background = 'var(--sd-surface, #fff)';
+    // why: the CDK moves its cached rects when the page scrolls during a drag, but this board is fixed and does not
+    // move: the drop then counts as outside the list. The docs page scrolls by itself (smooth scrolling, and scroll
+    // anchoring while @defer sections render), so turn both off and wait until the page stands still.
+    document.documentElement.style.scrollBehavior = 'auto';
+    document.documentElement.style.overflowAnchor = 'none';
+    document.body.style.overflowAnchor = 'none';
+    let last = Number.NaN;
+    for (let still = 0; still < 3; ) {
+      await new Promise(requestAnimationFrame);
+      still = window.scrollY === last ? still + 1 : 0;
+      last = window.scrollY;
+    }
   }, width);
 }
 
@@ -228,6 +240,67 @@ test.describe('sd-kanban', () => {
     await name(root, 'DH-1001').click();
     await shot(root, 'orders-forced-colors');
     await axe(page, root);
+  });
+
+  test('[KAN-E-01] pictures the card states, the lane kinds and the load states (TESTING §9)', async ({ page }) => {
+    test.skip(test.info().project.name !== 'asia-bangkok', 'pictures are written from the Bangkok run only');
+    // why: the framed board covers the demo buttons, so they are clicked from the page script.
+    const press = (testId: string): Promise<void> => page.getByTestId(testId).evaluate(button => (button as HTMLButtonElement).click());
+
+    // Lanes and load states (Kanban Review §04, §05): the whole board, then one lane per state.
+    let root = await open(page, 'orders', 'orders');
+    await frame(root, 1200);
+    await shot(root, 'board-light');
+    await press('orders-slow');
+    await lane(root, 'cancelled').locator('button[aria-expanded="false"]').click();
+    await expect(lane(root, 'cancelled').locator('[data-skeleton]').first()).toBeVisible();
+    await shot(lane(root, 'cancelled'), 'load-first-page');
+    await lane(root, 'pending').locator('[data-load-more]').click();
+    await expect(lane(root, 'pending')).toHaveAttribute('data-status', 'loading-more');
+    await shot(lane(root, 'pending'), 'load-more-loading');
+    await press('orders-slow');
+    await expect(lane(root, 'pending')).toHaveAttribute('data-status', 'idle', { timeout: 10_000 });
+    await press('fail-shipping');
+    await lane(root, 'shipping').locator('[data-load-more]').click();
+    await expect(lane(root, 'shipping').locator('[data-load-error]')).toBeVisible();
+    await shot(lane(root, 'shipping'), 'load-error-next-page');
+    await press('fail-shipping');
+    await root.locator('input[type="search"]').fill('DH-1002');
+    await expect(lane(root, 'done').locator('.sd-kanban__empty')).toBeVisible({ timeout: 10_000 });
+    await shot(lane(root, 'done'), 'load-empty');
+
+    // Card states (Kanban Review §03) on the async confirmation board.
+    root = await open(page, 'async', 'async');
+    await frame(root, 1200);
+    const first = card(root, 'WEB-001');
+    await page.mouse.move(0, 0);
+    await shot(first, 'card-default');
+    await first.hover();
+    await shot(first, 'card-hover');
+    await name(root, 'WEB-001').click();
+    await page.mouse.move(0, 0);
+    await expect(first).toHaveAttribute('data-selected', 'true');
+    await shot(first, 'card-selected');
+    // why: a key press first, so the programmatic focus counts as keyboard focus (:focus-visible).
+    await page.keyboard.press('Shift');
+    await name(root, 'BE-023').focus();
+    await shot(card(root, 'BE-023'), 'card-focus');
+    await root.locator('[data-kanban-menu="DOC-004"]').click();
+    await page.getByRole('menuitem', { name: 'Chuyển đến In progress' }).click();
+    await expect(card(root, 'DOC-004')).toHaveAttribute('data-pending', 'true');
+    await page.mouse.move(0, 0);
+    await shot(card(root, 'DOC-004'), 'card-saving');
+    await page.getByRole('button', { name: 'Reject' }).evaluate(button => (button as HTMLButtonElement).click());
+    await expect(card(root, 'DOC-004').locator('.sd-kanban__card-status--error')).toBeVisible();
+    await shot(card(root, 'DOC-004'), 'card-failed');
+
+    // Dragging with reorder on: the dashed slot where the card lands.
+    root = await open(page, 'tasks', 'tasks');
+    await frame(root, 1200);
+    await drag(page, name(root, 'WEB-001'), card(root, 'DOC-004'), async () => {
+      await expect(root.locator('.cdk-drag-placeholder')).toHaveCount(1);
+      await shot(root, 'tasks-dragging-slot');
+    });
   });
 
   test('[KAN-E-09] renders 4 × 200 cards within budget and drags without long tasks (TESTING §10)', async ({ page }) => {

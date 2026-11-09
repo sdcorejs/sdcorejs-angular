@@ -47,7 +47,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(512);
+    expect(exampleIds).toHaveSize(513);
     expect(exampleIds).toContain('forms-segmented-example-types');
     const switchSections = findDocPage('forms', 'switch')?.examples.map(example => example.sectionId);
     expect(switchSections).toContain('example-kich-thuoc');
@@ -89,7 +89,7 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'breadcrumb')?.demoSectionCount).toBe(3);
     expect(findDocPage('components', 'data-state')?.demoSectionCount).toBe(8);
     expect(findDocPage('components', 'kanban')?.selector).toBe('sd-kanban');
-    expect(findDocPage('components', 'kanban')?.demoSectionCount).toBe(3);
+    expect(findDocPage('components', 'kanban')?.demoSectionCount).toBe(4);
     expect(findDocPage('forms', 'segmented')?.selector).toBe('sd-segmented');
     expect(findDocPage('forms', 'segmented')?.title).toBe('Segmented control');
     expect(findDocPage('forms', 'segmented')?.demoSectionCount).toBe(4);
