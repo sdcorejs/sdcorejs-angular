@@ -52,7 +52,9 @@ describe('SdKanban · compact layout, live region and themes', () => {
     FakeResizeObserver.trigger(600);
     settle();
     expect(root()?.hasAttribute('data-compact')).toBeFalse();
-    expect(findCssRule(/sd-kanban__column/, /max-width:\s*599px/)).withContext('no viewport media query').toBeUndefined();
+    expect(findCssRule(/sd-kanban__column/, /max-width:\s*599px/))
+      .withContext('no viewport media query')
+      .toBeUndefined();
   }));
 
   it('[KAN-SC-32] runs without ResizeObserver and never turns compact', fakeAsync(() => {
@@ -105,7 +107,9 @@ describe('SdKanban · compact layout, live region and themes', () => {
   it('[KAN-SC-36] gives every control a 40px target on a coarse pointer', () => {
     TestBed.createComponent(SdKanban<never>);
     for (const selector of [/sd-kanban__icon-button/, /sd-kanban__load-more/, /sd-kanban__retry/]) {
-      expect(findCssRule(selector, /pointer:\s*coarse/)?.getPropertyValue('min-height')).withContext(String(selector)).toBe('40px');
+      expect(findCssRule(selector, /pointer:\s*coarse/)?.getPropertyValue('min-height'))
+        .withContext(String(selector))
+        .toBe('40px');
     }
   });
 

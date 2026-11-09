@@ -486,7 +486,8 @@
     visibility: hidden;
   }
 }
-@media (max-width: 599px) {
+// SC-32: narrow by the host width (ResizeObserver), not by a viewport media query.
+.sd-kanban--compact {
   .sd-kanban__column {
     flex-basis: 260px;
     width: 260px;

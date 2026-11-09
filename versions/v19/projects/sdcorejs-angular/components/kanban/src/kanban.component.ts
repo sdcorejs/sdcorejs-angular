@@ -5,6 +5,7 @@ import {
   DestroyRef,
   ElementRef,
   Injector,
+  NgZone,
   afterNextRender,
   booleanAttribute,
   computed,
@@ -130,6 +131,14 @@ export class SdKanban<T = unknown> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
   readonly #i18n = inject(I18nService);
+  readonly #zone = inject(NgZone);
+  /** Host width from ResizeObserver; `null` without it (SSR, tests), so never compact. */
+  readonly #width = signal<number | null>(null);
+  /** SC-32: under 600px of host width, not of the viewport. */
+  protected readonly compact = computed(() => {
+    const width = this.#width();
+    return width !== null && width < 600;
+  });
   readonly id = `sd-kanban-${Utilities.generateUuid()}`;
   #operation?: MoveOperation<T>;
   readonly #moveFocus = new Set<MoveFocus>();
@@ -306,8 +315,17 @@ export class SdKanban<T = unknown> {
       if (!this.cardTemplate() || this.#warnedTemplate || !isDevMode()) return;
       afterNextRender(() => this.#checkCardTemplate(), { injector: this.#injector });
     });
+    const resize =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(entries => {
+            const width = entries[entries.length - 1]?.contentRect.width;
+            if (width !== undefined && width !== untracked(this.#width)) this.#zone.run(() => this.#width.set(width));
+          });
+    resize?.observe(this.#host.nativeElement);
     inject(DestroyRef).onDestroy(() => {
       this.#destroyed = true;
+      resize?.disconnect();
       clearTimeout(this.#keywordTimer);
       this.#observer?.disconnect();
       this.#loader.abort();
