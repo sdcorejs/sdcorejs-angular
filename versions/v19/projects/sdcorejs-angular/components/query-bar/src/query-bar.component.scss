@@ -72,42 +72,10 @@ $qb-radius-input:   6px;
 // ---------------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------------
+// sd-search-field (handoff mục 7): khung, viền, focus, cỡ do primitive lo; thanh chỉ giữ bề rộng tối thiểu.
 .c-search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  flex: 0 0 auto;
   min-width: 220px;
-  padding: 0 10px;
-  background: $qb-bg;
-  // Control dạng ô: vòng focus nằm trên khung, nên ô input bên trong không cần outline riêng.
-  @include control.box;
-
-  .c-density-compact & { height: 28px; }
-  .c-density-comfortable & { height: 32px; }
-
-  .c-search-icon {
-    font-size: var(--sd-font-size-16, 16px);
-    width: 16px;
-    height: 16px;
-    color: $qb-text-muted;
-  }
-  .c-search-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: var(--sd-font-size-13, 13px);
-    color: $qb-text;
-    &::placeholder { color: $qb-text-muted; }
-  }
-  .c-search-kbd {
-    font-family: 'Roboto Mono', monospace;
-    font-size: var(--sd-font-size-10, 10px);
-    padding: 1px 4px;
-    border: 1px solid $qb-border-soft;
-    border-radius: 3px;
-    color: $qb-text-muted;
-  }
 }
 
 .c-divider {
@@ -295,6 +263,73 @@ $qb-radius-input:   6px;
   &[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+// Ô "Thêm điều kiện" của mode inline (handoff mục 8): không viền, cao theo density, giãn hết phần còn lại của hàng chip.
+.c-add-condition {
+  display: flex;
+  flex: 1 1 150px;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 150px;
+  padding: 0 8px;
+  border-radius: var(--sd-radius-6, 6px);
+  color: $qb-text-muted;
+
+  .c-density-compact & { height: 28px; }
+  .c-density-comfortable & { height: 32px; }
+
+  // Vòng trong 1px primary thay cho viền (ô không có viền ở trạng thái nghỉ).
+  &:focus-within {
+    box-shadow: inset 0 0 0 1px var(--sd-primary);
+  }
+
+  &.c-add-condition--disabled {
+    opacity: 0.5;
+  }
+}
+
+.c-add-condition-icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  font-size: var(--sd-font-size-16, 16px);
+  color: $qb-text-muted;
+}
+
+.c-add-condition-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $qb-text;
+  font: inherit;
+  font-size: var(--sd-font-size-13, 13px);
+
+  // Vòng focus nằm trên khung (.c-add-condition:focus-within).
+  &:focus {
+    outline: none;
+  }
+  &::placeholder {
+    color: $qb-text-muted;
+    opacity: 1;
+  }
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Forced colors: box-shadow không hiện — vòng là outline Highlight, như mixin control.box.
+@media (forced-colors: active) {
+  .c-add-condition:focus-within {
+    --sd-control-focus-ring: Highlight;
+    outline: 2px solid var(--sd-control-focus-ring);
+    outline-offset: -2px;
   }
 }
 

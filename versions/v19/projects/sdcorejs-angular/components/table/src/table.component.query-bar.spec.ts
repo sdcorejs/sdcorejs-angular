@@ -187,7 +187,7 @@ describe('SdTable filter.mode query-bar', () => {
       expect(queryBar.getAttribute('data-autoid')).toBe('components-table-orders-query-bar');
       expect(queryBar.querySelector('.c-query-bar.c-appearance-flush')).not.toBeNull();
       expect(queryBar.querySelector('.consumer-action')).not.toBeNull();
-      expect((queryBar.querySelector('.c-search-input') as HTMLInputElement).placeholder).toBe('Mã đơn…');
+      expect((queryBar.querySelector('sd-search-field input') as HTMLInputElement).placeholder).toBe('Mã đơn…');
     }));
 
     it('pins quick filters and inline external filters, and offers the rest through "+"', fakeAsync(() => {
@@ -388,7 +388,7 @@ describe('SdTable filter.mode query-bar', () => {
 
     it('does not send the text still being typed when a chip applies', fakeAsync(() => {
       mount(buildOption());
-      const input = el().querySelector('.c-search-input') as HTMLInputElement;
+      const input = el().querySelector('sd-search-field input') as HTMLInputElement;
       input.value = 'DH';
       input.dispatchEvent(new Event('input'));
       fixture.detectChanges();
@@ -403,7 +403,7 @@ describe('SdTable filter.mode query-bar', () => {
     it('reads once on Enter in the search box', fakeAsync(() => {
       mount(buildOption());
       loader.calls.reset();
-      const input = el().querySelector('.c-search-input') as HTMLInputElement;
+      const input = el().querySelector('sd-search-field input') as HTMLInputElement;
       input.value = '  DH-9 ';
       input.dispatchEvent(new Event('input'));
       fixture.detectChanges();

@@ -365,7 +365,7 @@ describe('SdQueryBar', () => {
       const apply = jasmine.createSpy('apply');
       component.apply.subscribe(apply);
 
-      const input = fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
+      const input = fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement;
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
       expect(apply).toHaveBeenCalledTimes(1);
@@ -976,7 +976,7 @@ describe('SdQueryBar (extras)', () => {
       fixture.componentRef.setInput('showSearch', true);
       fixture.detectChanges();
 
-      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('.c-search-input');
+      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('sd-search-field input');
       expect(input().placeholder).toBe('Tìm kiếm...');
 
       i18n.setLanguage('en', { reload: false });
@@ -1166,7 +1166,7 @@ describe('SdQueryBar (host options)', () => {
       const apply = jasmine.createSpy('apply');
       component.apply.subscribe(apply);
       const enter = () =>
-        (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+        (fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).dispatchEvent(
           new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
         );
       component.setSearch('abc');
@@ -1259,7 +1259,7 @@ describe('SdQueryBar (host options)', () => {
 
       it('keeps the applied search text when a chip change applies; Enter applies the typed text', () => {
         const enter = () =>
-          (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+          (fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).dispatchEvent(
             new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
           );
         component.setSearch('abc');
@@ -1280,7 +1280,7 @@ describe('SdQueryBar (host options)', () => {
       });
 
       it('applies on Enter in the search box', () => {
-        const input = fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
+        const input = fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement;
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         expect(apply).toHaveBeenCalledTimes(1);
       });
@@ -1512,7 +1512,7 @@ describe('SdQueryBar (host options)', () => {
   describe('Q8 search placeholder and end slot', () => {
     it('overrides the i18n placeholder', () => {
       setOption({ showSearch: true, searchPlaceholder: 'Mã đơn, khách hàng…' });
-      expect((fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).placeholder).toBe('Mã đơn, khách hàng…');
+      expect((fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).placeholder).toBe('Mã đơn, khách hàng…');
     });
 
     it('projects [sdQueryBarEnd] after the action toolbar', () => {
@@ -2026,6 +2026,262 @@ describe('SdQueryBar (host options)', () => {
       const host = fixture.nativeElement as HTMLElement;
       expect(host.querySelector('sd-query-inline-chip .c-token')!.getAttribute('aria-required')).toBe('true');
       expect(host.querySelector('sd-query-inline-value-chip .c-seamless')!.getAttribute('aria-required')).toBe('true');
+    });
+  });
+
+  // Handoff section 7: the search box of the bar is the shared sd-search-field.
+  describe('QB-F search box', () => {
+    const searchField = (): HTMLElement => (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('sd-search-field')!;
+    const searchInput = (): HTMLInputElement => searchField().querySelector<HTMLInputElement>('input')!;
+    const keydown = (target: Element, key: string): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    let apply: jasmine.Spy;
+
+    beforeEach(() => {
+      apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      setOption({ fields: [name], showSearch: true, autoId: 'qb1' });
+    });
+
+    it('QB-F-02 is xs at compact density and sm at comfortable, at least 220px wide', () => {
+      expect(searchField().classList).toContain('sd-xs');
+      expect(searchField().getBoundingClientRect().height).toBe(28);
+      expect(searchField().getBoundingClientRect().width).toBeGreaterThanOrEqual(220);
+      setOption({ fields: [name], showSearch: true, density: 'comfortable' });
+      expect(searchField().classList).toContain('sd-sm');
+      expect(searchField().getBoundingClientRect().height).toBe(32);
+      expect((fixture.nativeElement as HTMLElement).querySelector('.c-search-icon, .c-search-kbd')).toBeNull();
+    });
+
+    it('QB-F-03 names the input with searchPlaceholder, else the search key; search-friendly attributes and autoIds', () => {
+      const input = searchInput();
+      expect(input.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.search'));
+      expect(input.placeholder).toBe(i18n.t('core.component.query-bar.search-placeholder'));
+      expect(input.getAttribute('enterkeyhint')).toBe('search');
+      expect(input.getAttribute('autocomplete')).toBe('off');
+      expect(input.getAttribute('data-autoid')).toBe('qb1-search');
+      component.setSearch('abc');
+      fixture.detectChanges();
+      const clear = searchField().querySelector<HTMLButtonElement>('button.sd-search-field__clear')!;
+      expect(clear.getAttribute('data-autoid')).toBe('qb1-search-clear');
+      expect(clear.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.search-clear'));
+
+      setOption({ fields: [name], showSearch: true, searchPlaceholder: 'Mã đơn…' });
+      expect(searchInput().getAttribute('aria-label')).toBe('Mã đơn…');
+      expect(searchInput().placeholder).toBe('Mã đơn…');
+    });
+
+    it('QB-F-04 the clear button empties the text and applies once', () => {
+      component.setSearch('abc');
+      fixture.detectChanges();
+      searchField().querySelector<HTMLButtonElement>('button.sd-search-field__clear')!.click();
+      fixture.detectChanges();
+      expect(component.search()).toBe('');
+      expect(searchInput().value).toBe('');
+      expect(apply).toHaveBeenCalledTimes(1);
+      expect(apply.calls.mostRecent().args[0].search).toBe('');
+    });
+
+    it('QB-F-04 Escape with text empties it and applies once; Escape on an empty box does nothing', () => {
+      const input = searchInput();
+      input.value = 'abc';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.search()).toBe('abc');
+      keydown(input, 'Escape');
+      expect(component.search()).toBe('');
+      expect(apply).toHaveBeenCalledTimes(1);
+      keydown(input, 'Escape');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+
+    it('QB-F-05 Enter applies the text; a required field still empty blocks it', () => {
+      const input = searchInput();
+      input.value = 'abc';
+      input.dispatchEvent(new Event('input'));
+      keydown(input, 'Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+      expect(apply.calls.mostRecent().args[0].search).toBe('abc');
+
+      setOption({ fields: [{ ...status, required: true } as SdQueryField, name], showSearch: true });
+      keydown(searchInput(), 'Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Handoff section 8: inline mode adds conditions from a combobox at the end of the chips.
+  describe('QB-I add condition (inline)', () => {
+    const code = { key: 'code', label: 'Mã đơn', type: 'string' } as SdQueryField;
+    const customer = { key: 'customer', label: 'Khách hàng', type: 'string' } as SdQueryField;
+    const region = { key: 'region', label: 'Khu vực', type: 'string' } as SdQueryField;
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+    const addInput = (): HTMLInputElement => host().querySelector<HTMLInputElement>('.c-add-condition input')!;
+    const listbox = (): HTMLElement | null => overlay().querySelector<HTMLElement>('.c-field-picker-menu [role="listbox"]');
+    const optionLabels = (): string[] =>
+      Array.from(overlay().querySelectorAll('.c-field-picker-menu [role="option"] .c-field-item-label')).map(el => el.textContent!.trim());
+    const keydown = (key: string, init: KeyboardEventInit = {}): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
+      addInput().dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    // A real user types into a focused box.
+    const type = (text: string): void => {
+      addInput().focus();
+      addInput().value = text;
+      addInput().dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    };
+    let apply: jasmine.Spy;
+
+    beforeEach(() => {
+      apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      setOption({ fields: [code, customer, region], mode: 'inline', autoId: 'qb1' });
+    });
+
+    it('QB-I-01 replaces the + button with a combobox carrying the ARIA of a list popup', () => {
+      expect(host().querySelector('.c-add-filter')).toBeNull();
+      const input = addInput();
+      expect(input.getAttribute('role')).toBe('combobox');
+      expect(input.getAttribute('aria-autocomplete')).toBe('list');
+      expect(input.getAttribute('aria-expanded')).toBe('false');
+      expect(input.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.add-condition'));
+      expect(input.placeholder).toBe(i18n.t('core.component.query-bar.add-condition'));
+      expect(input.getAttribute('data-autoid')).toBe('qb1-add-condition');
+      // A real click focuses the box first.
+      input.focus();
+      input.click();
+      fixture.detectChanges();
+      expect(input.getAttribute('aria-expanded')).toBe('true');
+      expect(input.getAttribute('aria-controls')).toBe(listbox()!.id);
+      expect(document.activeElement).toBe(input);
+      expect(overlay().querySelector('.c-field-picker-menu sd-search-field')).withContext('no find box inside the panel').toBeNull();
+    });
+
+    it('QB-I-02 opens on click, on a click on the empty bar, on typing, on ArrowDown and Alt+ArrowDown — not on Tab focus', () => {
+      addInput().focus();
+      fixture.detectChanges();
+      expect(listbox()).withContext('focus alone').toBeNull();
+
+      addInput().click();
+      fixture.detectChanges();
+      expect(listbox()).withContext('click').not.toBeNull();
+      keydown('Escape');
+
+      (host().querySelector('.c-query-bar__main') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(listbox()).withContext('empty bar').not.toBeNull();
+      expect(document.activeElement).toBe(addInput());
+      keydown('Escape');
+
+      type('k');
+      expect(listbox()).withContext('typing').not.toBeNull();
+      keydown('Escape');
+
+      keydown('ArrowDown');
+      expect(listbox()).withContext('ArrowDown').not.toBeNull();
+      keydown('Escape');
+
+      keydown('ArrowDown', { altKey: true });
+      expect(listbox()).withContext('Alt+ArrowDown').not.toBeNull();
+    });
+
+    it('QB-I-03 typing filters without accents, points at the first match; Enter builds it and empties the box', () => {
+      type('kh');
+      expect(optionLabels()).toEqual(['Khách hàng', 'Khu vực']);
+      const first = Array.from(overlay().querySelectorAll<HTMLElement>('[role="option"]'))[0];
+      expect(addInput().getAttribute('aria-activedescendant')).toBe(first.id);
+      expect(document.activeElement).toBe(addInput());
+      keydown('ArrowDown');
+      keydown('ArrowUp');
+      keydown('Enter');
+      expect(component.building()?.field.key).toBe('customer');
+      expect(addInput().value).toBe('');
+      expect(listbox()).toBeNull();
+    });
+
+    it('QB-I-04 Enter on an empty box with the list closed applies; a required field still empty blocks it', () => {
+      keydown('Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+      setOption({ fields: [{ ...code, required: true } as SdQueryField, customer], mode: 'inline' });
+      keydown('Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+
+    it('QB-I-05 Backspace on an empty box focuses the last chip, then removes it; never a required or pinned chip', () => {
+      component.filters.set([
+        { field: 'code', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'customer', operator: 'CONTAIN', data: 'b' } as any,
+      ]);
+      fixture.detectChanges();
+      keydown('Backspace');
+      const last = host().querySelectorAll<HTMLElement>('sd-query-inline-value-chip .c-seamless')[1];
+      expect(document.activeElement).toBe(last);
+      last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(component.filters().map(f => (f as any).field)).toEqual(['code']);
+      expect(document.activeElement).toBe(addInput());
+      expect(apply).not.toHaveBeenCalled();
+
+      setOption({ fields: [{ ...code, pinned: true } as SdQueryField, customer], mode: 'inline' });
+      component.filters.set([{ field: 'code', operator: 'CONTAIN', data: 'a' } as any]);
+      fixture.detectChanges();
+      keydown('Backspace');
+      const pinned = host().querySelector<HTMLElement>('sd-query-inline-value-chip .c-seamless')!;
+      expect(document.activeElement).toBe(pinned);
+      pinned.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(component.filters().length).toBe(1);
+    });
+
+    it('QB-I-06 Escape closes the list and empties the box, keeping focus', () => {
+      type('kh');
+      const escape = keydown('Escape');
+      expect(escape.defaultPrevented).toBeTrue();
+      expect(listbox()).toBeNull();
+      expect(addInput().value).toBe('');
+      expect(document.activeElement).toBe(addInput());
+    });
+
+    it('QB-I-06 a finished chip sends focus back to the box without opening the list', async () => {
+      addInput().focus();
+      keydown('ArrowDown');
+      keydown('Enter');
+      expect(component.building()?.field.key).toBe('code');
+      component.onBuildSeamlessCommit('DH-1');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.filters().map(f => (f as any).data)).toEqual(['DH-1']);
+      expect(document.activeElement).toBe(addInput());
+      expect(listbox()).toBeNull();
+
+      keydown('ArrowDown');
+      keydown('Enter');
+      component.cancelBuild();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(addInput());
+      expect(listbox()).toBeNull();
+    });
+
+    it('QB-I-07 disables the box when every field is used; popover mode keeps the + button', () => {
+      component.filters.set([
+        { field: 'code', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'customer', operator: 'CONTAIN', data: 'b' } as any,
+        { field: 'region', operator: 'CONTAIN', data: 'c' } as any,
+      ]);
+      fixture.detectChanges();
+      expect(addInput().disabled).toBeTrue();
+
+      setOption({ fields: [code, customer, region], mode: 'popover' });
+      expect(host().querySelector('.c-add-condition')).toBeNull();
+      expect(host().querySelector('.c-add-filter')).not.toBeNull();
     });
   });
 

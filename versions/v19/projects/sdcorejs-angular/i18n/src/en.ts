@@ -760,6 +760,8 @@ export const EN_MESSAGES = {
   'core.component.query-bar.range.to': 'To {value}',
   'core.component.query-bar.clear': 'Clear all',
   'core.component.query-bar.required-min-one': 'Choose at least one value.',
+  'core.component.query-bar.search-clear': 'Clear search',
+  'core.component.query-bar.add-condition': 'Add condition',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Specific date',

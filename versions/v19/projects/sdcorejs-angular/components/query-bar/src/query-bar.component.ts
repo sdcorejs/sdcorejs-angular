@@ -17,7 +17,7 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
@@ -68,12 +68,19 @@ const EMPTY_ARRAY: any[] = [];
   // why: ba panel của thanh (field picker, chip popover, bộ lọc đã lưu) dùng chung một nhóm — mở panel này thì panel kia
   // đóng (handoff mục 2.2).
   providers: [ɵSdQueryPanelGroup],
+  // why: bấm vào chỗ trống của vùng chip (mode inline) mở danh sách field của ô Thêm điều kiện (handoff mục 8); Backspace /
+  // Delete trên chip đang được trỏ từ ô đó thì xoá chip. Nghe trên host — vùng chip chỉ là khung, không nhận focus.
+  host: {
+    '(click)': 'onMainClick($event)',
+    '(keydown)': 'onMainKeydown($event)',
+  },
   imports: [
     SdIcon,
     CommonModule,
-    FormsModule,
     MatTooltipModule,
     ɵSdQueryPanelTriggerDirective,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
     SdQueryActionsBar,
     SdQueryBuildChip,
     SdQueryChipPopover,
@@ -253,6 +260,12 @@ export class SdQueryBar {
   readonly searchPlaceholder = computed(
     () => this.option()?.searchPlaceholder ?? this.#i18n.t('core.component.query-bar.search-placeholder')
   );
+  /** Tên của ô tìm cho trình đọc màn hình: `option.searchPlaceholder` nếu host đặt, không thì key `search`. */
+  readonly searchLabel = computed(() => this.option()?.searchPlaceholder ?? this.#i18n.t('core.component.query-bar.search'));
+  /** Nhãn nút xoá của ô tìm. */
+  readonly searchClearLabel = computed(() => this.#i18n.t('core.component.query-bar.search-clear'));
+  /** Nhãn và placeholder của ô Thêm điều kiện (mode inline). */
+  readonly addConditionLabel = computed(() => this.#i18n.t('core.component.query-bar.add-condition'));
   /** Chữ trên chip ghim đang rỗng. */
   readonly allLabel = computed(() => this.#i18n.t('core.component.query-bar.all'));
   /** Chữ trên chip bắt buộc đang rỗng — "Tất cả" sai nghĩa khi field không cho phép bỏ trống. */
@@ -617,6 +630,7 @@ export class SdQueryBar {
     if (SD_QUERY_NO_DATA_OPERATORS.includes(operator)) {
       this.#pushComplete(field, operator, null);
       this.#building.set(null);
+      this.#returnToAddInput();
       return;
     }
     this.#building.set({ field, operator, step: 'value' });
@@ -630,6 +644,7 @@ export class SdQueryBar {
     if (SD_QUERY_NO_DATA_OPERATORS.includes(op)) {
       this.#pushComplete(b.field, op, null);
       this.#building.set(null);
+      this.#returnToAddInput();
       return;
     }
     this.#building.set({ ...b, operator: op, step: 'value' });
@@ -647,6 +662,7 @@ export class SdQueryBar {
     }
     this.#pushComplete(b.field, b.operator, value);
     this.#building.set(null);
+    this.#returnToAddInput();
   }
 
   /**
@@ -666,6 +682,153 @@ export class SdQueryBar {
   /** Abandon the in-progress chip. */
   cancelBuild(): void {
     this.#building.set(null);
+    this.#returnToAddInput();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inline mode — "Add condition" combobox (handoff section 8)
+  // ---------------------------------------------------------------------------
+
+  /** The "Add condition" input (inline mode). */
+  private readonly addInput = viewChild<ElementRef<HTMLInputElement>>('addInput');
+  /** The field picker the box drives. */
+  private readonly addPicker = viewChild(SdQueryFieldPicker);
+  /** Text typed in the box — filters the field list. */
+  readonly addQuery = signal('');
+  /** The chip the first Backspace on an empty box moved focus to; a second Backspace removes it. */
+  #pendingRemove: { element: HTMLElement; index: number } | null = null;
+
+  /** A field was picked in the field picker: inline builds a chip from it, popover adds a chip and opens it. */
+  onPick(field: SdQueryField): void {
+    if (this.resolvedMode() !== 'inline') {
+      this.addFilter(field);
+      return;
+    }
+    this.addQuery.set('');
+    this.beginBuild(field);
+  }
+
+  /** Opens the field list under the box, keeping focus in the box (combobox). */
+  openAddList(): void {
+    const input = this.addInput()?.nativeElement;
+    const picker = this.addPicker();
+    if (!input || !picker || input.disabled || picker.panel().isOpen()) return;
+    picker.setQuery(this.addQuery());
+    picker.panel().open(input, { focus: false });
+  }
+
+  /** Typing filters the list and opens it; the first enabled match is pointed at. */
+  onAddInput(text: string): void {
+    this.addQuery.set(text);
+    this.addPicker()?.setQuery(text);
+    this.openAddList();
+  }
+
+  onAddKeydown(event: KeyboardEvent): void {
+    const picker = this.addPicker();
+    if (!picker) return;
+    const open = picker.panel().isOpen();
+    switch (event.key) {
+      case 'ArrowDown':
+        if (!open) {
+          this.openAddList();
+          // Alt+ArrowDown only opens; ArrowDown also points at the first option.
+          if (!event.altKey) picker.move(1);
+        } else picker.move(1);
+        break;
+      case 'ArrowUp':
+        if (!open) return;
+        picker.move(-1);
+        break;
+      case 'Enter':
+        if (open) {
+          if (!picker.pickActive()) return;
+        } else if (!this.addQuery()) {
+          // why: ô rỗng, danh sách đóng — Enter là "Tìm kiếm" của thanh, bị chặn khi còn field bắt buộc rỗng.
+          this.applySearch();
+        } else return;
+        break;
+      case 'Escape':
+        if (!open && !this.addQuery()) return;
+        if (open) picker.panel().close('escape');
+        this.addQuery.set('');
+        event.stopPropagation();
+        break;
+      case 'Backspace':
+        if (this.addQuery()) return;
+        this.#focusLastChip();
+        break;
+      case 'Tab':
+        if (open) picker.panel().close('tab');
+        return;
+      default:
+        return;
+    }
+    event.preventDefault();
+  }
+
+  /** A click on the empty part of the chip area (inline mode) focuses the box and opens the list. */
+  onMainClick(event: MouseEvent): void {
+    const target = event.target as Element | null;
+    if (this.resolvedMode() !== 'inline' || !target?.classList.contains('c-query-bar__main')) return;
+    this.addInput()?.nativeElement.focus();
+    this.openAddList();
+  }
+
+  /** Backspace / Delete on the chip the box pointed at removes it — never a required or pinned chip. */
+  onMainKeydown(event: KeyboardEvent): void {
+    const pending = this.#pendingRemove;
+    if (!pending || event.target !== pending.element) return;
+    if (event.key !== 'Backspace' && event.key !== 'Delete') {
+      this.#pendingRemove = null;
+      return;
+    }
+    event.preventDefault();
+    const filter = this.filters()[pending.index];
+    if (!filter || this.isPinned(filter) || this.fieldOf(filter)?.disabled) return;
+    this.#pendingRemove = null;
+    this.removeFilter(pending.index);
+    afterNextRender(() => this.addInput()?.nativeElement.focus(), { injector: this.#injector });
+  }
+
+  /** First Backspace on an empty box: focus the last chip so a second Backspace removes it. */
+  #focusLastChip(): void {
+    const rendered = this.#chipElements();
+    const last = rendered[rendered.length - 1];
+    if (!last) return;
+    if (!last.element.hasAttribute('tabindex')) last.element.tabIndex = -1;
+    last.element.focus();
+    this.#pendingRemove = last;
+  }
+
+  /** The focusable wrapper of each rendered inline chip, with the index of its filter. */
+  #chipElements(): { element: HTMLElement; index: number }[] {
+    const elements = Array.from(
+      this.#host.nativeElement.querySelectorAll<HTMLElement>(
+        '.c-query-bar__main > sd-query-inline-value-chip .c-seamless, .c-query-bar__main > sd-query-inline-chip .c-token, .c-query-bar__main > sd-query-popover-chip .c-chip'
+      )
+    );
+    // why: @for chỉ vẽ chip của field thanh biết — ghép phần tử thứ n với filter thứ n có field.
+    const indexes = this.filters()
+      .map((filter, index) => (this.fieldOf(filter) ? index : -1))
+      .filter(index => index >= 0);
+    return elements.map((element, position) => ({ element, index: indexes[position] })).filter(entry => entry.index !== undefined);
+  }
+
+  /**
+   * After a chip is finished (value committed, build cancelled) focus goes back to the box, without opening the list —
+   * unless the user has moved focus somewhere else meanwhile.
+   */
+  #returnToAddInput(): void {
+    if (this.resolvedMode() !== 'inline') return;
+    afterNextRender(
+      () => {
+        const active = document.activeElement;
+        if (active && active !== document.body && !this.#host.nativeElement.contains(active)) return;
+        this.addInput()?.nativeElement.focus();
+      },
+      { injector: this.#injector }
+    );
   }
 
   /**
@@ -837,6 +1000,19 @@ export class SdQueryBar {
     if (this.search() === value) return;
     if (this.#searchBase === null) this.#searchBase = this.search();
     this.search.set(value);
+  }
+
+  /** Clear button of the search box: empties the text and applies once (handoff 7.2). */
+  clearSearch(): void {
+    this.setSearch('');
+    this.applySearch();
+  }
+
+  /** Escape in the search box: like the clear button when there is text; nothing on an empty box. */
+  onSearchEscape(event: Event): void {
+    if (!this.search()) return;
+    event.preventDefault();
+    this.clearSearch();
   }
 
   /** Enter in the search box: applies the typed text too, unless a required field is still empty. */

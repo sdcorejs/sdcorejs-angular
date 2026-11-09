@@ -37,6 +37,11 @@ export interface ɵSdQueryPanelOpenOptions {
   returnFocusTo?: HTMLElement | null;
   /** Opened from the keyboard: a list without a find box focuses its first option instead of the panel. */
   keyboard?: boolean;
+  /**
+   * `false`: focus stays on the trigger — a combobox input that keeps typing and drives the list through
+   * `aria-activedescendant` (the "Add condition" box of the inline bar).
+   */
+  focus?: boolean;
 }
 
 // why: thứ tự vị trí như Action Popover của sd-button (`components/button/src/action-popover.ts`) — dưới trước, thiếu
@@ -205,7 +210,7 @@ export class ɵSdQueryPanelDirective {
 
     const keyboard = !!options.keyboard;
     // why: nội dung chưa vẽ xong (binding của cha chưa chạy) thì thử lại sau lượt render kế tiếp.
-    if (!this.#focusInitial(keyboard)) {
+    if (options.focus !== false && !this.#focusInitial(keyboard)) {
       afterNextRender(
         () => {
           if (this.#ref === ref) this.#focusInitial(keyboard, true);

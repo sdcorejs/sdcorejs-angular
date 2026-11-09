@@ -7,7 +7,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
-import { ɵSdQueryPanelDirective } from '../panel/query-panel';
+import { ɵSdQueryPanelCloseReason, ɵSdQueryPanelDirective } from '../panel/query-panel';
 
 /** More fields than this get a find box at the top of the picker. */
 const FIND_THRESHOLD = 8;
@@ -50,8 +50,16 @@ export class SdQueryFieldPicker {
   /** Prefix of `data-autoid` (handoff section 12). */
   readonly autoId = input<string | undefined>(undefined);
 
+  /**
+   * `false`: no find box in the panel — an input outside (the inline "Add condition" combobox) types the filter through
+   * `setQuery()` and moves the active option.
+   */
+  readonly findBox = input(true);
+
   /** Emits when the user picks an enabled field. */
   readonly pick = output<SdQueryField>();
+  /** The panel closed. */
+  readonly closed = output<ɵSdQueryPanelCloseReason>();
 
   /** The panel — the trigger binds `[sdQueryPanelTrigger]="picker.panel()"`. */
   readonly panel = viewChild.required<ɵSdQueryPanelDirective>('panel');
@@ -64,12 +72,14 @@ export class SdQueryFieldPicker {
   /** Key of the option the arrows point at (`aria-activedescendant` / roving focus). */
   readonly activeKey = signal<string | null>(null);
 
-  /** Find box above more than eight fields. */
-  readonly searchable = computed(() => this.fields().length > FIND_THRESHOLD);
+  /** Find box above more than eight fields (not when an outside input types the filter). */
+  readonly searchable = computed(() => this.findBox() && this.fields().length > FIND_THRESHOLD);
+  /** The list follows the typed text: with the find box, or with the outside combobox. */
+  readonly #filterable = computed(() => this.searchable() || !this.findBox());
 
   /** Fields grouped by `field.group` in order of first appearance, filtered by the find box. */
   readonly groups = computed<FieldGroup[]>(() => {
-    const term = this.searchable() ? sdNormalizeSearchText(this.query().trim()) : '';
+    const term = this.#filterable() ? sdNormalizeSearchText(this.query().trim()) : '';
     const groups: FieldGroup[] = [];
     const byLabel = new Map<string, FieldGroup>();
     for (const field of this.fields()) {

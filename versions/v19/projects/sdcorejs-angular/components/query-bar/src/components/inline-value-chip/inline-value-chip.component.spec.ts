@@ -16,6 +16,9 @@ describe('SdQueryInlineValueChip', () => {
     await TestBed.configureTestingModule({
       imports: [SdQueryInlineValueChip, NoopAnimationsModule],
     }).compileComponents();
+    // why: I18nService lưu ngôn ngữ vào localStorage; spec khác chuyển sang 'en' trước đó (thứ tự ngẫu nhiên) làm các ca
+    // vi-VN (dấu chấm phân nhóm) đỏ — ghim 'vi' như các spec query bar khác.
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
     fixture = TestBed.createComponent(SdQueryInlineValueChip);
     component = fixture.componentInstance;
   });
