@@ -117,6 +117,39 @@ describe('SdCalendar · compact, touch and print', () => {
     settle();
   }));
 
+  it('[CAL-B-06] removes the document Esc listener after a swipe, a cancelled press and on destroy (R2 A-05, A-17)', fakeAsync(() => {
+    const added = spyOn(document, 'addEventListener').and.callThrough();
+    const removed = spyOn(document, 'removeEventListener').and.callThrough();
+    const escListeners = (spy: jasmine.Spy): unknown[] =>
+      spy.calls
+        .allArgs()
+        .filter(([type, , capture]) => type === 'keydown' && capture === true)
+        .map(([, listener]) => listener as unknown);
+    const leaked = (): unknown[] => {
+      const gone = escListeners(removed);
+      return escListeners(added).filter(listener => !gone.includes(listener));
+    };
+    const { fixture, host, settle } = mount({}, '390px');
+    const grid = q(host, '[data-day-column]') ?? host;
+    const from = centerOf(grid);
+    pointer(grid, 'pointerdown', from, 'touch');
+    pointer(grid, 'pointermove', { x: from.x - 80, y: from.y + 5 }, 'touch');
+    pointer(grid, 'pointerup', { x: from.x - 80, y: from.y + 5 }, 'touch');
+    settle();
+    expect(escListeners(added).length).withContext('swipe adds the listener').toBeGreaterThan(0);
+    expect(leaked()).withContext('swipe').toEqual([]);
+    const column = q(host, '[data-day-column]') ?? host;
+    pointer(column, 'pointerdown', centerOf(column), 'mouse');
+    pointer(column, 'pointercancel', centerOf(column), 'mouse');
+    settle();
+    expect(leaked()).withContext('pointercancel').toEqual([]);
+    pointer(column, 'pointerdown', centerOf(column), 'mouse');
+    fixture.destroy();
+    expect(leaked()).withContext('destroy').toEqual([]);
+    expect(FakeResizeObserver.instances.length).toBeGreaterThan(0);
+    expect(FakeResizeObserver.instances.every(observer => observer.disconnected)).withContext('ResizeObserver').toBeTrue();
+  }));
+
   it('[CAL-C-18] swipes the day grid and the strip by at least 60px to change day and week', fakeAsync(() => {
     const { host, calendar, settle } = mount({}, '390px');
     // The day column covers the whole grid; a finger always lands on it (or on a block inside it).

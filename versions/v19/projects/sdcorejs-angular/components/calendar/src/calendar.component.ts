@@ -917,9 +917,9 @@ export class SdCalendar<T = unknown> {
     const press = this.#press;
     if (!press) return;
     this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     // §12: a horizontal touch swipe of at least 60px on the day grid moves one day.
     if (press.touch && domEvent && this.displayView() === 'day' && this.#swipe(press, domEvent)) return;
-    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     const ghost = this.#ghost();
     if (!this.#operation.busy()) this.#ghost.set(null);
     // §9.1: a press on an empty slot clears the selection; with option.create it also creates there.
@@ -954,6 +954,7 @@ export class SdCalendar<T = unknown> {
 
   protected onGridPointerCancel(): void {
     this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     if (!this.#operation.busy()) this.#ghost.set(null);
   }
 
