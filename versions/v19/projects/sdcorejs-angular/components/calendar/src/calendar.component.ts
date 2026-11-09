@@ -215,6 +215,8 @@ interface SdCalendarDragProposal {
   readonly end: number;
   readonly title: string;
   readonly outside: boolean;
+  readonly color: string;
+  readonly customColor: string | null;
 }
 
 @Component({
@@ -328,6 +330,8 @@ export class SdCalendar<T = unknown> {
     readonly id: string;
     readonly placement: SdCalendarPlacement;
     readonly title: string;
+    readonly color: string;
+    readonly customColor: string | null;
     readonly start: Point;
     readonly scrollTop: number;
     readonly columns: readonly { readonly day: string; readonly left: number; readonly right: number }[];
@@ -1066,6 +1070,8 @@ export class SdCalendar<T = unknown> {
       id: item.event.id,
       placement: item.placement,
       title: item.event.title,
+      color: item.color,
+      customColor: item.customColor,
       start: this.#pickup ?? pointOf(start.event) ?? { x: 0, y: 0 },
       scrollTop: this.scroller()?.nativeElement.scrollTop ?? 0,
       columns,
@@ -1435,7 +1441,8 @@ export class SdCalendar<T = unknown> {
     const duration = placement.endMinutes - placement.startMinutes;
     const start = sdCalendarSnapMove(placement.startMinutes, delta, duration, sdCalendarMoveStep(this.stepValue()));
     const day = columns[column]?.day ?? placement.startDay;
-    this.#drag.set({ id: session.id, day, start, end: start + duration, title: session.title, outside });
+    const { title, color, customColor } = session;
+    this.#drag.set({ id: session.id, day, start, end: start + duration, title, outside, color, customColor });
   }
 
   /** Scrolls while the pointer is within 40px of the top or bottom of the scroll area, faster closer to it (§9.3). */

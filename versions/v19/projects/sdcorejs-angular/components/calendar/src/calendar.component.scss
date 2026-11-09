@@ -545,7 +545,8 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__bar,
 .sd-calendar__chip,
 .sd-calendar__agenda-row,
-.sd-calendar__cell-dot {
+.sd-calendar__cell-dot,
+.sd-calendar__proposal {
   --sd-calendar-event-bg: color-mix(in srgb, var(--sd-calendar-event-color) 14%, #{tok(surface)});
   --sd-calendar-event-border: color-mix(in srgb, var(--sd-calendar-event-color) 28%, #{tok(surface)});
   --sd-calendar-event-dot: var(--sd-calendar-event-color);
@@ -1050,9 +1051,10 @@ $hour: var(--sd-calendar-hour-height);
   }
 }
 
+// §8.3 "Đang kéo": border in the event colour, large shadow.
 .sd-calendar__proposal {
-  border: 1px solid tok(primary);
-  background: tok(primary-light);
+  border: 1px solid var(--sd-calendar-event-color);
+  background: var(--sd-calendar-event-bg);
   box-shadow: var(--sd-shadow-lg);
 }
 

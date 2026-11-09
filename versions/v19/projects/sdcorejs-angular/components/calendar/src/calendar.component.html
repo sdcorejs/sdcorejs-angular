@@ -382,7 +382,14 @@
                 </div>
               }
               @if (_proposal && !_proposal.outside && _proposal.day === day.day) {
-                <div class="sd-calendar__proposal" data-drag-proposal aria-hidden="true" [style.top]="spanTop(_proposal.start)" [style.height]="spanHeight(_proposal.end - _proposal.start)">
+                <div
+                  class="sd-calendar__proposal"
+                  data-drag-proposal
+                  aria-hidden="true"
+                  [attr.data-color]="_proposal.color"
+                  [style.--sd-calendar-event-color]="_proposal.customColor"
+                  [style.top]="spanTop(_proposal.start)"
+                  [style.height]="spanHeight(_proposal.end - _proposal.start)">
                   <span class="sd-calendar__event-title">{{ _proposal.title }}</span>
                   <span class="sd-calendar__event-time">{{ clockText(_proposal.start) }} – {{ clockText(_proposal.end) }}</span>
                 </div>
