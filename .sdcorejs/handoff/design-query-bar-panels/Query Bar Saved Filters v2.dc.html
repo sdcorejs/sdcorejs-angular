@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;padding-bottom:96px">
+
+<header data-screen-label="00 Header" style="max-width:1240px;margin:0 auto;padding:56px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs-angular · main @ e501644 · versions/v19 · components/query-bar</span><span>09/11/2026 · bản 2</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em">sd-query-bar: bộ lọc đã lưu, bộ lọc bắt buộc, ô tìm</h1>
+  <p style="margin:0;max-width:840px;color:#3a3c42;font-size:17px;text-wrap:pretty">Giữ nguyên cơ chế bộ lọc đã lưu hiện tại (localStorage theo <code>savedFiltersKey</code>, lưu, chọn để áp, xoá). Chỉ đổi giao diện popover cho giống panel của <code>sd-button</code> có <code>sd-button-item</code>, sửa các lỗi nhỏ, thêm trạng thái trống, lỗi và xoá có hoàn tác. Thêm hai việc: bộ lọc bắt buộc luôn hiện và không xoá được giá trị, ô tìm dùng <code>sd-search-field</code>. Bản trước (trạng thái đang dùng, adapter, chia sẻ) bỏ, xem bản 1.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding:8px 0 40px;border-bottom:1px solid #dddcd6">
+    <a href="#popover">01 Popover</a>
+    <a href="#panel">02 Một khung cho mọi panel</a>
+    <a href="#trang-thai">03 Trống, lỗi, xoá</a>
+    <a href="#bat-buoc">04 Bộ lọc bắt buộc</a>
+    <a href="#tim">05 Ô tìm</a>
+    <a href="#inline">06 Inline: thêm điều kiện</a>
+    <a href="#bang">07 Trong sd-table</a>
+    <a href="#thong-so">08 Thông số</a>
+    <a href="#chot">09 Đã chốt, còn mở</a>
+  </nav>
+</header>
+
+<section id="popover" data-screen-label="01 Popover" style="max-width:1240px;margin:0 auto;padding:40px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Popover theo panel của sd-button</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Bên trái là Action Popover của <code>sd-button</code> có <code>sd-button-item</code> (dựng từ <code>action-popover.scss</code>). Bên phải là popover bộ lọc đã lưu dùng đúng khung, hàng, đường kẻ và tiêu đề nhóm đó. Bản <code>mat-menu</code> hiện tại (giữa) có khung, bo góc, bóng và khoảng cách khác.</p>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="padding:28px;box-sizing:border-box;display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:24px;font-family:Roboto,system-ui,sans-serif">
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#3a3c42">Tham chiếu · sd-button + item</span>
+        <span style="height:32px;padding:0 12px;border:1px solid #c9ccd1;border-radius:8px;background:#ffffff;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:#1a1b1f">Thao tác<span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+        <div style="width:240px;box-sizing:border-box;padding:4px;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px">
+          <div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;color:#1e7a3c"><span style="font-family:'Material Symbols Outlined';font-size:18px">check</span><span style="flex:1;color:#1a1b1f">Duyệt</span></div>
+          <div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;background:rgba(26,27,31,.08)"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#d92d20">close</span><span style="flex:1">Từ chối</span></div>
+          <div style="border-top:1px solid #dde0e5;margin:4px 8px"></div>
+          <div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px">open_in_new</span><span style="flex:1">Chi tiết</span><span style="font-family:'Material Symbols Outlined';font-size:18px">chevron_right</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#3a3c42">Hiện tại · mat-menu</span>
+        <span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #005cbb;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#005cbb;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span>
+        <div style="width:240px;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);padding:8px 0;font-size:14px;color:#212121">
+          <sc-for list="{{ savedNames }}" as="r" hint-placeholder-count="3">
+            <div style="min-height:40px;padding:0 4px 0 16px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r }}</span><span style="width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#7a7a7a;font-family:'Material Symbols Outlined';font-size:16px">close</span></div>
+          </sc-for>
+          <div style="border-top:1px solid #e2e4e7;margin:4px 0"></div>
+          <div style="min-height:40px;padding:0 16px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">bookmark_add</span>Lưu bộ lọc hiện tại</div>
+        </div>
+      </div>
+      <div style="order:-1;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb">Đề xuất · cùng panel</span>
+        <span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #005cbb;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#005cbb;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span>
+        <div style="width:260px;box-sizing:border-box;padding:4px;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px">
+          <div style="padding:4px 12px;font-size:12px;color:#555555">Bộ lọc đã lưu</div>
+          <sc-for list="{{ newRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:2px;border-radius:4px;background:{{ r.bg }}">
+              <div style="flex:1;min-width:0;min-height:40px;padding:8px 4px 8px 12px;box-sizing:border-box;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></div>
+              <span style="flex:none;width:32px;height:32px;margin-right:4px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;color:{{ r.delC }};background:{{ r.delBg }};opacity:{{ r.delOp }}">delete</span>
+            </div>
+          </sc-for>
+          <div style="border-top:1px solid #dde0e5;margin:4px 8px"></div>
+          <div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#005cbb">bookmark_add</span><span style="flex:1">Lưu bộ lọc hiện tại</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px">
+    <sc-for list="{{ popNotes }}" as="it" hint-placeholder-count="4">
+      <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:6px"><strong style="font-weight:600;font-size:15px">{{ it.t }}</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">{{ it.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="panel" data-screen-label="02 Một khung cho mọi panel" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Một khung cho mọi panel của query bar</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Query bar có ba panel đang dùng <code>mat-menu</code>. Đổi cả ba sang CDK Overlay với cùng khung của Action Popover, như bộ lọc đã lưu ở mục 01. Có hai kiểu nội dung: <strong style="font-weight:600">danh sách</strong> (padding 4px, hàng 40px bo 4px) và <strong style="font-weight:600">biểu mẫu</strong> (không padding ngoài, header và thân giữ như chip popover hiện tại). Panel của control bên trong (<code>sd-select</code>, <code>sd-date</code>, <code>sd-operator</code>) thuộc component khác nên giữ nguyên.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.4fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span>Panel</span><span>Mở từ</span><span>Hiện tại</span><span>Sau khi đổi</span></div>
+    <sc-for list="{{ panels }}" as="p" hint-placeholder-count="4">
+      <div style="display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.4fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="display:flex;flex-direction:column"><span style="font-weight:500">{{ p.k }}</span><span style="font:400 11px/16px 'JetBrains Mono',monospace;color:#6b6d73;overflow-wrap:anywhere">{{ p.file }}</span></span><span style="color:#3a3c42;text-wrap:pretty">{{ p.from }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ p.now }}</span><span style="color:#1a1b1f;text-wrap:pretty">{{ p.next }}</span></div>
+    </sc-for>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9;padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb">Field picker · danh sách</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Mở từ nút + ở mode popover: ô tìm sd-search-field sm ở đầu panel. Mode inline dùng ô Thêm điều kiện bên ngoài (mục 06), panel không có ô tìm.</span></div><div style="width:260px;padding:4px;box-sizing:border-box;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px;font-family:Roboto,system-ui,sans-serif">
+  <div style="margin:4px 4px 6px;display:flex;align-items:center;gap:6px;height:32px;box-sizing:border-box;padding:0 8px;border:1px solid #005cbb;border-radius:8px;box-shadow:0 0 0 3px rgba(0,92,187,.18);font-size:14px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">search</span><span style="color:#5f6368">Tìm trường</span></div>
+  <div style="padding:4px 12px;font-size:12px;color:#555555">Đơn hàng</div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;background:transparent;opacity:0.45"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">checklist</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Trạng thái</span><span style="font:11px 'Roboto Mono',monospace;color:#7a7a7a">values</span><span style="font-family:'Material Symbols Outlined';font-size:14px;color:#005cbb">check</span></div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;background:rgba(26,27,31,.08);opacity:1"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">event</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ngày tạo</span><span style="font:11px 'Roboto Mono',monospace;color:#7a7a7a">date</span></div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;background:transparent;opacity:1"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">payments</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tổng tiền</span><span style="font:11px 'Roboto Mono',monospace;color:#7a7a7a">number</span></div>
+  <div style="border-top:1px solid #dde0e5;margin:4px 8px"></div>
+  <div style="padding:4px 12px;font-size:12px;color:#555555">Khách hàng</div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;background:transparent;opacity:1"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">person</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Khách hàng</span><span style="font:11px 'Roboto Mono',monospace;color:#7a7a7a">lazy-values</span></div>
+</div></div>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb">Chip popover · biểu mẫu</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Header và thân giữ nguyên bố cục, chỉ đổi khung. Khung nét đứt là sd-operator, không đổi.</span></div><div style="width:300px;overflow:hidden;box-sizing:border-box;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px;font-family:Roboto,system-ui,sans-serif">
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e2e4e7;font-size:13px;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#005cbb">checklist</span><span>Trạng thái</span><span style="margin-left:auto;height:28px;box-sizing:border-box;padding:0 4px 0 8px;border:1px dashed #c9ccd1;border-radius:6px;display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:400;color:#5f6368;white-space:nowrap;flex:none">thuộc<span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span></div>
+  <div style="padding:10px 12px;display:flex;flex-direction:column;gap:12px"><div style="height:32px;box-sizing:border-box;padding:0 6px 0 12px;border:1px solid #c9ccd1;border-radius:8px;display:flex;align-items:center;font-size:14px"><span style="flex:1;color:#005cbb">Chờ xác nhận, Đang giao</span><span style="font-family:'Material Symbols Outlined';font-size:20px;color:#5f6368">arrow_drop_down</span></div></div>
+</div></div>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#005cbb">Bộ lọc đã lưu · danh sách</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Như mục 01.</span></div><div style="width:240px;padding:4px;box-sizing:border-box;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px;font-family:Roboto,system-ui,sans-serif"><div style="padding:4px 12px;font-size:12px;color:#555555">Bộ lọc đã lưu</div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1">Đơn của tôi</span></div><div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1">Đơn giao chậm tuần này</span></div><div style="border-top:1px solid #dde0e5;margin:4px 8px"></div><div style="min-height:40px;padding:8px 12px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#005cbb">bookmark_add</span><span>Lưu bộ lọc hiện tại</span></div></div></div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #ecebe6;font-weight:600">Hành vi phải giữ khi bỏ mat-menu</div>
+    <sc-for list="{{ panelRules }}" as="k" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:minmax(140px,220px) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font-weight:500">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="trang-thai" data-screen-label="03 Trống, lỗi, xoá" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Trống, đang tải, lỗi, xoá</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Dòng trạng thái dùng kiểu tiêu đề nhóm của Action Popover nhưng chữ 13px, padding 12px. Bản hiện tại im lặng khi đọc hoặc ghi localStorage lỗi; các trạng thái dưới đây thay cho việc im lặng đó.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px">
+    <sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f9f9f9;padding:20px 16px;display:flex;justify-content:center;font-family:Roboto,system-ui,sans-serif">
+          <div style="width:240px;box-sizing:border-box;padding:4px;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px">
+            <div style="padding:4px 12px;font-size:12px;color:#555555">Bộ lọc đã lưu</div>
+            <div style="padding:12px;font-size:13px;line-height:18px;color:{{ s.fg }};display:flex;align-items:flex-start;gap:8px"><span style="display:{{ s.spinD }};flex:none;margin-top:2px;width:14px;height:14px;box-sizing:border-box;border-radius:99px;border:2px solid #dbe8f6;border-top-color:#005cbb"></span><span style="display:{{ s.iconD }};flex:none;font-family:'Material Symbols Outlined';font-size:16px;color:#d92d20">error</span><span style="flex:1;text-wrap:pretty">{{ s.text }}</span></div>
+            <div style="border-top:1px solid #dde0e5;margin:4px 8px"></div>
+            <div style="min-height:40px;padding:8px 12px;border-radius:4px;display:flex;align-items:center;gap:8px;opacity:{{ s.saveOp }}"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#005cbb">bookmark_add</span><span style="flex:1">Lưu bộ lọc hiện tại</span></div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">{{ s.k }}</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ s.v }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:720px;padding:24px 28px;box-sizing:border-box;display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start;font-family:Roboto,system-ui,sans-serif">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#3a3c42">Xoá</span>
+        <div style="width:260px;box-sizing:border-box;padding:4px;border:1px solid #dde0e5;border-radius:8px;background:#ffffff;color:#1a1b1f;box-shadow:0 4px 12px rgba(15,23,42,.14),0 1px 3px rgba(15,23,42,.10);font-size:14px;line-height:20px">
+          <div style="padding:4px 12px;font-size:12px;color:#555555">Bộ lọc đã lưu</div>
+          <div style="display:flex;align-items:center;gap:2px;border-radius:4px"><div style="flex:1;min-height:40px;padding:8px 4px 8px 12px;box-sizing:border-box;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1">Đơn của tôi</span></div><span style="width:32px;height:32px;margin-right:4px"></span></div>
+          <div style="display:flex;align-items:center;gap:2px;border-radius:4px"><div style="flex:1;min-height:40px;padding:8px 4px 8px 12px;box-sizing:border-box;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">filter_alt</span><span style="flex:1">Đơn giao chậm tuần này</span></div><span style="width:32px;height:32px;margin-right:4px"></span></div>
+          <div style="border-top:1px solid #dde0e5;margin:4px 8px"></div>
+          <div style="min-height:40px;padding:8px 12px;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#005cbb">bookmark_add</span>Lưu bộ lọc hiện tại</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#3a3c42">Toast sau khi xoá</span>
+        <div style="align-self:flex-start;display:flex;width:350px;max-width:100%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);overflow:hidden;background:#ffffff;color:#1a1b1f;font-family:Roboto,sans-serif">
+          <div style="width:6px;flex-shrink:0;background:#005cbb"></div>
+          <div style="width:32px;height:32px;margin:12px 0 0 12px;border-radius:8px;flex-shrink:0;display:grid;place-items:center;background:#dbe8f6;color:#004a96"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></div>
+          <div style="min-width:0;flex-grow:1;padding:12px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><strong style="font-size:16px;font-weight:600">Đã xoá bộ lọc</strong><span style="font-size:16px;line-height:1;opacity:.5">×</span></div>
+            <div style="font-size:14px;line-height:1.4">“Chờ xác nhận quá 24 giờ”</div>
+            <div style="display:flex;justify-content:flex-end;margin-top:8px"><span style="padding:6px 12px;border-radius:4px;font-weight:600;font-size:13px;background:#dbe8f6;color:#005cbb">Hoàn tác</span></div>
+          </div>
+        </div>
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73">Dựng từ services/notify/src/components/toast (type: 'info', title, message, actionLabel). Màu info lấy gần đúng theo theme default.</span>
+        <sc-for list="{{ deleteNotes }}" as="x" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:14px minmax(0,1fr);gap:6px;font-size:14px;color:#3a3c42;font-family:'Be Vietnam Pro',sans-serif"><span style="color:#6b6d73">·</span><span style="text-wrap:pretty">{{ x }}</span></div></sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="bat-buoc" data-screen-label="04 Bộ lọc bắt buộc" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Bộ lọc bắt buộc: luôn hiện, không xoá được giá trị</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Trên main, <code>field.required</code> mới chỉ làm chip rỗng hiện màu lỗi và chặn Tìm kiếm (<code>invalidFields</code>, <code>canSearch</code>). Chip chỉ luôn hiện và không có × khi field còn <code>pinned</code>, và vẫn có bốn đường làm mất giá trị.</p>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span></span><span>Hiện tại (main)</span><span>Đề xuất</span></div>
+    <sc-for list="{{ required }}" as="r" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:600 12px/22px 'JetBrains Mono',monospace;color:#6b6d73">{{ r.n }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ r.a }}</span><span style="color:#1a1b1f;text-wrap:pretty">{{ r.b }}</span></div>
+    </sc-for>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:720px;padding:24px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;font-family:Roboto,system-ui,sans-serif">
+      <sc-for list="{{ reqStates }}" as="q" hint-placeholder-count="3">
+        <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center">
+          <span style="font-size:13px;color:#3a3c42;font-family:'Be Vietnam Pro',sans-serif;text-wrap:pretty">{{ q.k }}</span>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+            <span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 4px 0 10px;border-radius:999px;border:1px solid {{ q.bd }};background:{{ q.bg }};font-size:13px;font-weight:500;color:{{ q.fg }};white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px">store</span><span>Chi nhánh</span><span style="color:{{ q.sepC }}">:</span><span style="color:{{ q.valC }};font-weight:{{ q.valW }}">{{ q.val }}</span><span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 4px 0 10px;border-radius:999px;border:1px solid {{ q.c2bd }};background:{{ q.c2bg }};font-size:13px;font-weight:500;color:#5f6368;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px">checklist</span><span>Trạng thái</span><span style="color:#7a7a7a">:</span><span style="color:{{ q.c2valC }};font-weight:{{ q.c2valW }}">{{ q.c2val }}</span><span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span><span style="display:{{ q.c2xD }};width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;color:#7a7a7a;font-family:'Material Symbols Outlined';font-size:14px">close</span></span>
+            <span style="width:28px;height:28px;box-sizing:border-box;border-radius:999px;border:1px dashed #d6d8db;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">add</span>
+            <span style="font-size:12px;color:{{ q.hintC }};font-family:'Be Vietnam Pro',sans-serif">{{ q.hint }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div style="background:#f9f9f9;padding:20px 16px;display:flex;justify-content:center;font-family:Roboto,system-ui,sans-serif">
+        <div style="width:280px;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);font-size:13px;color:#212121">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e2e4e7;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#005cbb">store</span>Chi nhánh</div>
+          <div style="padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;background:#dbe8f6;color:#005cbb"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:3px;background:#005cbb;opacity:.5;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:12px;font-weight:700">check</span>Quận 1</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span>Quận 3</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span>Thủ Đức</div>
+            <div style="padding:6px 8px 0;font-size:12px;color:#5f6368">Chọn ít nhất một chi nhánh.</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">Popover của chip bắt buộc, nhiều giá trị</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">Còn một giá trị thì ô của giá trị đó bị khoá (mờ 50%) và có dòng nhắc. Chọn thêm giá trị khác thì bỏ được giá trị cũ.</span></div>
+    </div>
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+      <div style="background:#f9f9f9;padding:20px 16px;display:flex;justify-content:center;font-family:Roboto,system-ui,sans-serif">
+        <div style="width:280px;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);font-size:13px;color:#212121">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e2e4e7;font-weight:500"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#005cbb">store</span>Chi nhánh</div>
+          <div style="padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;background:#dbe8f6;color:#005cbb"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:4px solid #005cbb"></span>Quận 1</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid #5f6368"></span>Quận 3</div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px"><span style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid #5f6368"></span>Thủ Đức</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">Popover của chip bắt buộc, một giá trị</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">Không có lựa chọn “Tất cả” hay bỏ chọn; bấm lại giá trị đang chọn không bỏ chọn. Toán tử không có NULL, NOT_NULL.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="tim" data-screen-label="05 Ô tìm" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Ô tìm dùng sd-search-field</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Thay <code>.c-search</code> tự vẽ bằng primitive <code>sd-search-field</code> (<code>forms/directives</code>), như quick search của bảng đã làm. Primitive lo khung, viền và focus theo token control, icon, nút xoá, slot cuối; query bar giữ logic (gõ, Enter để áp dụng, <code>#searchBase</code>).</p>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:760px;padding:24px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;font-family:Roboto,system-ui,sans-serif">
+      <sc-for list="{{ searchRows }}" as="s" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font-size:13px;font-weight:600;color:#1a1b1f">{{ s.k }}</span><span style="font-size:12px;color:#6b6d73">{{ s.meta }}</span></div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px;width:280px;height:{{ s.h }};box-sizing:border-box;padding:0 {{ s.padR }} 0 {{ s.padL }};border:{{ s.bd }};border-radius:8px;background:#ffffff;box-shadow:{{ s.ring }};font-size:{{ s.fs }}">
+              <span style="font-family:'Material Symbols Outlined';font-size:{{ s.iconS }};color:{{ s.iconC }}">search</span>
+              <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ s.textC }}">{{ s.text }}</span>
+              <span style="display:{{ s.clearD }};width:{{ s.clearS }};height:{{ s.clearS }};border-radius:50%;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:16px">close</span>
+            </div>
+            <span style="width:1px;height:16px;background:#e2e4e7;margin:0 2px"></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;height:{{ s.chipH }};box-sizing:border-box;padding:0 4px 0 10px;border-radius:999px;border:1px solid #dbe8f6;background:#dbe8f6;font-size:13px;font-weight:500;color:#5f6368;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px">checklist</span>Trạng thái<span style="color:#7a7a7a">:</span><span style="color:#005cbb">Chờ xác nhận</span><span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px">
+    <sc-for list="{{ searchNotes }}" as="it" hint-placeholder-count="4">
+      <div style="background:#ffffff;border:1px solid #dddcd6;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:6px"><strong style="font-weight:600;font-size:15px">{{ it.t }}</strong><span style="font-size:14px;color:#3a3c42;text-wrap:pretty">{{ it.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="inline" data-screen-label="06 Inline: thêm điều kiện" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Inline: thêm điều kiện không cần bấm +</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Ở <code>mode: 'inline'</code>, cách duy nhất để thêm điều kiện là nút + nét đứt 28px. Đề xuất thay nút đó bằng ô “Thêm điều kiện” ở cuối hàng chip. Bấm hoặc chạm vào ô (hoặc vào chỗ trống của vùng chip) là danh sách field mở ngay; gõ thì lọc danh sách, nên ô này thay luôn ô tìm bên trong field picker. Được, với một ngoại lệ: chỉ Tab tới thì <strong style="font-weight:600">không</strong> tự mở, chờ gõ hoặc ↓, để người dùng bàn phím đi qua thanh tới bảng mà không bị bật danh sách.</p>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:760px;padding:24px 28px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px;font-family:Roboto,system-ui,sans-serif">
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font-size:13px;font-weight:600;color:#1a1b1f">Hiện tại</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Nút + 28px nét đứt; bấm mới mở danh sách, ô lọc nằm trong danh sách.</span></div><div style="display:flex;align-items:flex-start;gap:8px;background:#ffffff;border:1px solid #e2e4e7;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.04);padding:8px">
+            <div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">checklist</span><span style="font-weight:500">Trạng thái</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">Chờ xác nhận</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">event</span><span style="font-weight:500">Ngày tạo</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">01/11 – 08/11</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="width:28px;height:28px;box-sizing:border-box;border-radius:999px;border:1px dashed #d6d8db;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">add</span></div>
+            <span style="align-self:stretch;width:1px;min-height:28px;background:#e2e4e7"></span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">delete_sweep</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">search</span></div>
+          </div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font-size:13px;font-weight:600;color:#1a1b1f">Nghỉ</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Ô không viền, chữ 13px --sd-query-bar-text-muted, rộng tối thiểu 150px, chiếm phần còn lại của hàng.</span></div><div style="display:flex;align-items:flex-start;gap:8px;background:#ffffff;border:1px solid #e2e4e7;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.04);padding:8px">
+            <div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">checklist</span><span style="font-weight:500">Trạng thái</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">Chờ xác nhận</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">event</span><span style="font-weight:500">Ngày tạo</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">01/11 – 08/11</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:6px;height:28px;min-width:150px;box-sizing:border-box;padding:0 8px;border-radius:6px;font-size:13px;color:#7a7a7a;box-shadow:none"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#7a7a7a">add</span><span>Thêm điều kiện</span></span></div>
+            <span style="align-self:stretch;width:1px;min-height:28px;background:#e2e4e7"></span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">delete_sweep</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">search</span></div>
+          </div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:start"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font-size:13px;font-weight:600;color:#1a1b1f">Bấm vào, gõ “kh”</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Danh sách mở dưới ô, lọc theo chữ đã gõ, mục đầu được chọn sẵn; Enter là chọn.</span></div><div style="position:relative;padding-bottom:150px"><div style="display:flex;align-items:flex-start;gap:8px;background:#ffffff;border:1px solid #e2e4e7;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.04);padding:8px">
+            <div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">checklist</span><span style="font-weight:500">Trạng thái</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">Chờ xác nhận</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">event</span><span style="font-weight:500">Ngày tạo</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">01/11 – 08/11</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="position:relative;display:inline-flex"><span style="display:inline-flex;align-items:center;gap:6px;height:28px;min-width:150px;box-sizing:border-box;padding:0 8px;border-radius:6px;font-size:13px;color:#212121;box-shadow:inset 0 0 0 1px #005cbb"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#7a7a7a">add</span><span>kh</span><span style="width:1px;height:16px;background:#1a1b1f;margin-left:-4px"></span></span><div style="position:absolute;left:0;top:calc(100% + 4px);width:240px;z-index:3;background:#ffffff;border-radius:4px;box-shadow:0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);padding:8px 0">
+          <div style="min-height:36px;padding:0 16px;display:flex;align-items:center;background:rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368;margin-right:8px">store</span><span style="flex:1;min-width:0;font-size:13px;color:#212121;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Kho</span><span style="padding-left:12px;font:11px 'Roboto Mono',monospace;color:#7a7a7a">values</span></div><div style="min-height:36px;padding:0 16px;display:flex;align-items:center;background:transparent"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368;margin-right:8px">person</span><span style="flex:1;min-width:0;font-size:13px;color:#212121;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Khách hàng</span><span style="padding-left:12px;font:11px 'Roboto Mono',monospace;color:#7a7a7a">lazy-values</span></div><div style="min-height:36px;padding:0 16px;display:flex;align-items:center;background:transparent"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368;margin-right:8px">local_shipping</span><span style="flex:1;min-width:0;font-size:13px;color:#212121;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Kho xuất</span><span style="padding-left:12px;font:11px 'Roboto Mono',monospace;color:#7a7a7a">values</span></div>
+        </div></span></div>
+            <span style="align-self:stretch;width:1px;min-height:28px;background:#e2e4e7"></span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">delete_sweep</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">search</span></div>
+          </div>
+        </div></div>
+      <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:center"><div style="display:flex;flex-direction:column;gap:2px;font-family:'Be Vietnam Pro',sans-serif"><span style="font-size:13px;font-weight:600;color:#1a1b1f">Chọn “Kho”</span><span style="font-size:12px;color:#6b6d73;text-wrap:pretty">Chip đang dựng như hiện tại (.c-token-building: viền nét đứt, có × để huỷ), mở luôn ô chọn giá trị. Xong thì focus về ô Thêm điều kiện, danh sách không tự mở lại.</span></div><div style="display:flex;align-items:flex-start;gap:8px;background:#ffffff;border:1px solid #e2e4e7;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.04);padding:8px">
+            <div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">checklist</span><span style="font-weight:500">Trạng thái</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">Chờ xác nhận</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px solid #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden"><span style="font-family:'Material Symbols Outlined';font-size:14px">event</span><span style="font-weight:500">Ngày tạo</span><span style="color:#7a7a7a">:</span><span style="font-weight:500;color:#005cbb">01/11 – 08/11</span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 0 0 12px;border:1px dashed #dbe8f6;border-radius:999px;background:#dbe8f6;font-size:13px;color:#5f6368;white-space:nowrap;overflow:hidden;box-shadow:0 0 0 1px #ffffff"><span style="font-family:'Material Symbols Outlined';font-size:14px">store</span><span style="font-weight:500">Kho</span><span style="color:#7a7a7a">:</span><span style="display:inline-flex;align-items:center;gap:2px;color:#005cbb;font-weight:500">Chọn giá trị<span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span><span style="align-self:stretch;width:26px;display:inline-flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)"><span style="font-family:'Material Symbols Outlined';font-size:14px">close</span></span></span><span style="display:inline-flex;align-items:center;gap:6px;height:28px;min-width:150px;box-sizing:border-box;padding:0 8px;border-radius:6px;font-size:13px;color:#7a7a7a;box-shadow:none"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#7a7a7a">add</span><span>Thêm điều kiện</span></span></div>
+            <span style="align-self:stretch;width:1px;min-height:28px;background:#e2e4e7"></span>
+            <div style="display:flex;align-items:center;gap:6px"><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">delete_sweep</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span><span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">search</span></div>
+          </div></div>
+    </div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #ecebe6;font-weight:600">Hành vi</div>
+    <sc-for list="{{ inlineRules }}" as="k" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font-weight:500">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="bang" data-screen-label="07 Trong sd-table" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Trong sd-table: appearance flush</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty"><code>appearance: 'flush'</code> đã có trên main (<code>SdQueryBarOption.appearance</code>, lớp <code>.c-appearance-flush</code>): bỏ nền, viền, bo góc và bóng của thanh, padding 8px 12px. <code>sd-table</code> đã truyền sẵn giá trị này ở chế độ query bar (<code>table.component.ts</code>), nên thanh dùng khung của card bảng và ngăn với bảng bằng viền trên của <code>.c-table</code>. Mục này không cần làm thêm; chỉ dựng lại để thấy ba thay đổi ở trên khi nằm trong bảng.</p>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:760px;padding:24px 28px;box-sizing:border-box;font-family:Roboto,system-ui,sans-serif;font-size:14px;color:#212121">
+      <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden">
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px">
+          <div style="flex:1 1 auto;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px;width:240px;height:28px;box-sizing:border-box;padding:0 4px 0 8px;border:1px solid #c9ccd1;border-radius:8px;font-size:13px"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:#5f6368">search</span><span style="flex:1;color:#1a1b1f">DH24</span><span style="width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:16px">close</span></div>
+            <span style="width:1px;height:16px;background:#e2e4e7;margin:0 2px"></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 4px 0 10px;border-radius:999px;border:1px solid #dbe8f6;background:#dbe8f6;font-size:13px;font-weight:500;color:#5f6368;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px">store</span>Chi nhánh<span style="color:#7a7a7a">:</span><span style="color:#005cbb">Quận 1</span><span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 4px 0 10px;border-radius:999px;border:1px solid #dbe8f6;background:#dbe8f6;font-size:13px;font-weight:500;color:#5f6368;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:16px">checklist</span>Trạng thái<span style="color:#7a7a7a">:</span><span style="color:#005cbb">Chờ xác nhận</span><span style="font-family:'Material Symbols Outlined';font-size:18px">arrow_drop_down</span><span style="width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#7a7a7a;font-family:'Material Symbols Outlined';font-size:14px">close</span></span>
+            <span style="width:28px;height:28px;box-sizing:border-box;border-radius:999px;border:1px dashed #d6d8db;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">add</span>
+          </div>
+          <span style="align-self:stretch;width:1px;min-height:28px;background:#e2e4e7"></span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">delete_sweep</span>
+            <span style="width:28px;height:28px;box-sizing:border-box;border:1px solid #d6d8db;border-radius:6px;background:#ffffff;display:inline-flex;align-items:center;justify-content:center;color:#5f6368;font-family:'Material Symbols Outlined';font-size:18px">bookmark</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px minmax(0,1fr) 90px 150px 120px 120px;height:40px;align-items:center;background:#f2f3f4;border-top:1px solid #e3e4ea;font-size:13px;font-weight:500;color:#44474f"><span style="padding:0 12px">Mã đơn</span><span style="padding:0 12px">Khách hàng</span><span style="padding:0 12px">Kho</span><span style="padding:0 12px">Ngày tạo</span><span style="padding:0 12px;text-align:right">Tổng tiền (₫)</span><span style="padding:0 12px">Trạng thái</span></div>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:90px minmax(0,1fr) 90px 150px 120px 120px;height:44px;align-items:center;border-top:1px solid #eceef2"><span style="padding:0 12px;color:#005cbb">{{ r.code }}</span><span style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.customer }}</span><span style="padding:0 12px">Quận 1</span><span style="padding:0 12px;font-variant-numeric:tabular-nums">{{ r.date }}</span><span style="padding:0 12px;text-align:right;font-variant-numeric:tabular-nums">{{ r.total }}</span><span style="padding:0 12px">Chờ xác nhận</span></div>
+        </sc-for>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:#44474f;font-family:'Be Vietnam Pro',sans-serif;text-wrap:pretty">Chi nhánh là quick filter bắt buộc: luôn có chip, không có ×, Xoá lọc không xoá giá trị. Nút Tìm kiếm không có vì bảng không bật <code>manualFilter</code>.</div>
+    </div>
+  </div>
+</section>
+
+<section id="thong-so" data-screen-label="08 Thông số" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">08</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Thông số</h2></div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr) minmax(150px,1fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span>Phần</span><span>Thông số</span><span>Lấy theo</span></div>
+    <sc-for list="{{ specs }}" as="s" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr) minmax(150px,1fr);gap:16px;padding:12px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font-weight:500">{{ s.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ s.v }}</span><span style="font:400 12px/20px 'JetBrains Mono',monospace;color:#6b6d73;overflow-wrap:anywhere">{{ s.src }}</span></div>
+    </sc-for>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #ecebe6;font-weight:600">Bàn phím và trình đọc màn hình</div>
+    <sc-for list="{{ a11y }}" as="k" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:minmax(140px,220px) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px/22px 'JetBrains Mono',monospace">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.v }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="chot" data-screen-label="09 Đã chốt, còn mở" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">09</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đã chốt và còn mở</h2></div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="9">
+      <div style="display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,1.2fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6;font-size:14px">
+        <span style="font:600 13px/22px 'JetBrains Mono',monospace;color:#6b6d73">{{ d.n }}</span>
+        <strong style="font-weight:600;text-wrap:pretty">{{ d.q }}</strong>
+        <span style="color:#3a3c42;text-wrap:pretty"><span style="font:600 11px 'JetBrains Mono',monospace;color:{{ d.c }};text-transform:uppercase;letter-spacing:.06em;margin-right:8px">{{ d.tag }}</span>{{ d.a }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.v = this.build(); }
+  renderVals() { return this.v; }
+  build() {
+    const savedNames = ['Chờ xác nhận quá 24 giờ', 'Đơn của tôi', 'Đơn giao chậm tuần này'];
+    const R = (name, o) => ({ name, bg: 'transparent', delC: '#5f6368', delBg: 'transparent', delOp: 0, ...o });
+    const newRows = [
+      R('Chờ xác nhận quá 24 giờ'),
+      R('Đơn của tôi', { bg: 'rgba(26,27,31,.08)', delOp: 1 }),
+      R('Đơn giao chậm tuần này', { delOp: 1, delC: '#d92d20', delBg: 'rgba(217,45,32,.08)' }),
+    ];
+    const popNotes = [
+      { t: 'Khung và hàng', v: 'Panel padding 4px, viền 1px --sd-border, bo 8px, bóng của Action Popover. Hàng cao 40px (44px khi pointer: coarse), padding 8px 12px, bo 4px, hover và focus nền 8% màu chữ, vòng focus bên trong.' },
+      { t: 'Tiêu đề và đường kẻ', v: '“Bộ lọc đã lưu” là tiêu đề nhóm .sd-action-heading (12px, --sd-text-secondary). Đường kẻ trước “Lưu bộ lọc hiện tại” là .sd-action-divider (margin 4px 8px).' },
+      { t: 'Nút xoá tách khỏi hàng', v: 'Hàng là một khối flex gồm hai nút ngang hàng: nút áp bộ lọc (cả phần tên) và nút xoá 32px. Không còn nút lồng trong nút. Nút xoá hiện khi rê chuột hoặc focus vào hàng, luôn hiện khi pointer: coarse; hover màu lỗi như item color="error".' },
+      { t: 'Không đổi', v: 'Vị trí và nút kích hoạt 28px, lưu bằng localStorage theo savedFiltersKey, hộp nhập tên SdConfirmService.withInput, chọn một bộ lọc là áp ngay (onApplyFilter).' },
+    ];
+    const states = [
+      { k: 'Trống', v: 'Như hiện tại: core.component.query-bar.saved-filters.empty, đổi sang kiểu dòng trạng thái của panel.', text: 'Chưa có bộ lọc nào được lưu.', fg: '#555555', spinD: 'none', iconD: 'none', saveOp: 1 },
+      { k: 'Thanh chưa có điều kiện', v: 'Không có chip có giá trị và ô tìm trống: “Lưu bộ lọc hiện tại” bị khoá (opacity .45 như item disabled). Hiện tại vẫn lưu được một bộ lọc rỗng.', text: 'Chưa có bộ lọc nào được lưu.', fg: '#555555', spinD: 'none', iconD: 'none', saveOp: 0.45 },
+      { k: 'Đọc lỗi', v: 'Dữ liệu trong localStorage không đọc được (JSON hỏng, sai dạng). Hiện tại im lặng thành danh sách rỗng. Lưu mới vẫn được và thay danh sách hỏng.', text: 'Không đọc được bộ lọc đã lưu trên trình duyệt này.', fg: '#1a1b1f', spinD: 'none', iconD: 'inline-block', saveOp: 1 },
+      { k: 'Đang tải', v: 'Không hiện với localStorage (đọc đồng bộ). Giữ sẵn quy cách để dùng nếu sau này nguồn lưu là bất đồng bộ; bản này không cần làm.', text: 'Đang tải…', fg: '#555555', spinD: 'inline-block', iconD: 'none', saveOp: 1 },
+    ];
+    const deleteNotes = [
+      'Bấm xoá: hàng mất ngay, panel vẫn mở, focus sang hàng kế (hoặc “Lưu bộ lọc hiện tại” nếu hết).',
+      'Toast type info, tiêu đề “Đã xoá bộ lọc”, nội dung là tên bộ lọc, actionLabel “Hoàn tác”. Toast trên main đã có nút hành động (data.actionLabel, onActionClick). Hoàn tác đặt lại đúng vị trí cũ trong danh sách.',
+      'Ghi localStorage lỗi (đầy, bị chặn) khi lưu hoặc xoá: danh sách giữ nguyên, toast lỗi “Không lưu được bộ lọc”. Hiện tại lỗi bị nuốt.',
+    ];
+
+    const required = [
+      { n: 'B1', a: 'Field required mà không pinned: không tự có chip, nằm trong danh sách “+”, chip có × nên xoá được cả chip.', b: 'required kéo theo pinned: query bar tự thêm chip rỗng nếu thiếu, không có ×, không nằm trong danh sách “+”. Host không phải tự thêm chip.' },
+      { n: 'B2', a: 'Xoá lọc (clearAll có sẵn): giữ chip pinned nhưng đặt về rỗng, nên giá trị bắt buộc bị xoá và thanh chuyển sang lỗi.', b: 'Xoá lọc giữ nguyên giá trị của field required. Field pinned không required vẫn về rỗng như cũ. Số trong nhãn “Xoá tất cả (n)” không đếm field required.' },
+      { n: 'B3', a: 'Popover và chip inline: bỏ chọn hết giá trị rồi đóng là chip rỗng. Với applyOn: \'commit\', chip không pinned rỗng còn bị bỏ khỏi thanh.', b: 'Không cho bỏ trống: một giá trị thì không có lựa chọn rỗng và bấm lại không bỏ chọn; nhiều giá trị thì khoá ô của giá trị cuối; chữ hoặc số xoá hết rồi rời ô thì trả lại giá trị trước đó. Toán tử không có NULL, NOT_NULL.' },
+      { n: 'B4', a: 'Áp bộ lọc đã lưu: filters.set(saved.query.filters) thay toàn bộ, nên field bắt buộc hay ghim không có trong bộ lọc đã lưu biến mất khỏi thanh.', b: 'Field required hoặc pinned không có trong bộ lọc đã lưu: giữ chip và giá trị đang có. Có trong bộ lọc nhưng giá trị rỗng: cũng giữ giá trị đang có.' },
+      { n: 'B5', a: 'Chưa có giá trị ngay từ đầu (không có default): chip lỗi, dòng nhắc của host, chặn Tìm kiếm.', b: 'Giữ như hiện tại. Đây là trạng thái duy nhất mà chip bắt buộc được rỗng.' },
+    ];
+    const RQ = { bd: '#dbe8f6', bg: '#dbe8f6', fg: '#5f6368', sepC: '#7a7a7a', valC: '#005cbb', valW: '500', val: 'Quận 1', c2bd: '#dbe8f6', c2bg: '#dbe8f6', c2valC: '#005cbb', c2valW: '500', c2val: 'Chờ xác nhận', c2xD: 'inline-flex', hint: '', hintC: '#6b6d73' };
+    const reqStates = [
+      { ...RQ, k: 'Có giá trị: chip bắt buộc không có ×, chip thường có ×.' },
+      { ...RQ, k: 'Sau khi bấm Xoá lọc: bắt buộc giữ giá trị, chip thường về rỗng hoặc bị bỏ.', c2bd: '#d6d8db', c2bg: '#ffffff', c2valC: '#7a7a7a', c2valW: '400', c2val: 'Tất cả', c2xD: 'none', hint: '' },
+      { ...RQ, k: 'Lần đầu, chưa có giá trị (B5): như main.', bd: '#d23535', bg: '#fff5f5', fg: '#d23535', sepC: '#d23535', valC: '#d23535', valW: '500', val: 'Chọn giá trị', hint: 'Chọn Chi nhánh để tìm.', hintC: '#d23535' },
+    ];
+
+    const S = (k, meta, o) => ({ k, meta, h: '28px', padL: '10px', padR: '10px', bd: '1px solid #c9ccd1', ring: 'none', fs: '13px', iconS: '16px', iconC: '#7a7a7a', textC: '#7a7a7a', text: 'Tìm theo mã đơn, khách hàng', clearD: 'none', clearS: '20px', chipH: '28px', ...o });
+    const searchRows = [
+      S('Hiện tại · .c-search', 'compact, 28px, không nút xoá', { text: 'DH24', textC: '#212121' }),
+      S('sd-search-field · xs (mới)', 'compact, 28px', { padL: '8px', padR: '4px', iconC: '#5f6368', text: 'DH24', textC: '#1a1b1f', clearD: 'inline-flex' }),
+      S('sd-search-field · sm', 'comfortable, 32px', { h: '32px', padL: '8px', padR: '4px', fs: '14px', iconS: '18px', iconC: '#5f6368', text: 'DH24', textC: '#1a1b1f', clearD: 'inline-flex', clearS: '24px', chipH: '32px' }),
+      S('Focus', 'viền --sd-control-border-focus, vòng ngoài', { padL: '8px', padR: '4px', bd: '1px solid #005cbb', ring: '0 0 0 3px rgba(0,92,187,.18)', iconC: '#5f6368', text: '', textC: '#5f6368' }),
+    ];
+    searchRows[3].text = 'Tìm theo mã đơn, khách hàng';
+    const searchNotes = [
+      { t: 'Cỡ theo density', v: 'density compact cần ô 28px cho khớp chip; primitive hiện chỉ có sm (32) và md (40). Đề xuất thêm cỡ xs: cao 28px, padding 0 8px, gap 6px, chữ 13px, icon 16px, nút xoá 20px. comfortable dùng sm.' },
+      { t: 'Nút xoá', v: 'clearable: hiện khi có chữ. Xoá rồi áp ngay như Enter với chuỗi rỗng (cùng hành vi nút xoá của quick search). Esc trong ô cũng xoá.' },
+      { t: 'Tên cho trình đọc màn hình', v: 'input có aria-label (key core.component.query-bar.search, hoặc searchPlaceholder nếu host đặt). Hiện tại input chỉ có placeholder.' },
+      { t: 'Giữ', v: 'min-width 220px, divider 16px sau ô, Enter gọi applySearch(), bị chặn khi còn field bắt buộc rỗng. Không thêm ký hiệu ↵ để giữ ô gọn; Enter đã ghi trong tooltip của nút Tìm kiếm.' },
+    ];
+    const panels = [
+      { k: 'Field picker', file: 'field-picker/*', from: 'Nút + (popover và inline), ô Thêm điều kiện (inline, mục 06), openField() từ icon lọc ở header cột của sd-table.', now: 'mat-menu c-field-picker-menu, rộng 200–260px, hàng 36px chữ 13px, ô tìm 32px viền --sd-query-bar-border bo 6px, tiêu đề nhóm 11px in hoa.', next: 'Kiểu danh sách, role="listbox", hàng 40px chữ 14px, tiêu đề nhóm theo .sd-action-heading. Ô tìm là sd-search-field sm (popover) hoặc ô bên ngoài (inline, combobox M5).' },
+      { k: 'Chip popover', file: 'chip-popover/*', from: 'Bấm chip ở mode popover, openField() khi chip đã có.', now: 'mat-menu c-chip-popover, rộng 280–320px, header 10px 12px có viền dưới, thân 10px 12px, ghi giá trị khi menu đóng.', next: 'Kiểu biểu mẫu, role="dialog" với aria-label là tên field. Giữ header, thân, độ rộng và ghi giá trị khi đóng.' },
+      { k: 'Bộ lọc đã lưu', file: 'saved-filters-menu/*', from: 'Nút bookmark.', now: 'mat-menu c-saved-filters-menu, rộng 220–320px, hàng 40px, nút × lồng trong hàng.', next: 'Kiểu danh sách, mục 01.' },
+      { k: 'Đổi field trong chip', file: 'chip-popover (switchPickerMenu)', from: 'Header chip popover khi host truyền switchPickerMenu. Query bar hiện không truyền (đổi field = xoá chip rồi thêm lại).', now: 'mat-menu lồng nhau, dùng lại field picker.', next: 'Bỏ input switchPickerMenu và nhánh này khi đổi sang overlay, vì không còn nơi nào dùng.' },
+    ];
+    const panelRules = [
+      { k: 'Vị trí', v: 'Gắn vào trigger, mở xuống, canh mép trái (field picker, chip) hoặc mép phải (bộ lọc đã lưu, như xPosition="before" hiện tại); thiếu chỗ thì lật lên; cách trigger 4px; cuộn trang thì đi theo.' },
+      { k: 'Đóng', v: 'Esc, bấm ra ngoài, chọn một mục (danh sách). Chip popover: Tab ra khỏi panel cũng đóng và ghi giá trị, như onMenuClosed hiện tại.' },
+      { k: 'Focus', v: 'Mở bằng bàn phím: danh sách focus ô tìm hoặc mục đầu; biểu mẫu focus control giá trị. Đóng: trả focus về trigger, hoặc về returnFocusTo khi mở qua openField() từ header cột.' },
+      { k: 'Bàn phím trong danh sách', v: '↑ ↓ Home End, Enter chọn, mục disabled bị bỏ qua. Có ô tìm thì không typeahead theo chữ cái.' },
+      { k: 'API giữ nguyên', v: 'openMenu(returnFocusTo), closeMenu(), sự kiện mở và đóng mà query-bar.component đang dùng; đổi tên nội bộ được nhưng openField() của sd-table phải chạy như cũ.' },
+      { k: 'Dùng chung', v: 'Một directive nội bộ (ví dụ ɵsdQueryPanel) lo overlay, focus, đóng; khung lấy từ mixin của action-popover.scss (M1). Bỏ các ::ng-deep .mat-mdc-menu-panel.* và phần vá margin icon của mat-menu-item.' },
+      { k: 'Test', v: 'Spec đang tìm button[mat-menu-item] và .mat-mdc-menu-panel (query-bar, chip-popover, popover-chip, field-picker, saved-filters-menu) đổi sang role và class mới. Thêm test: lật lên khi thiếu chỗ, trả focus, ghi giá trị khi Tab ra.' },
+    ];
+    const inlineRules = [
+      { k: 'Mở danh sách', v: 'Bấm hoặc chạm vào ô Thêm điều kiện hay chỗ trống của vùng chip; gõ một ký tự; ↓ hoặc Alt + ↓ khi ô đang focus.' },
+      { k: 'Không mở', v: 'Khi chỉ Tab tới ô, và khi focus quay về ô sau khi xong một chip. Placeholder vẫn nhắc “Thêm điều kiện”.' },
+      { k: 'Gõ', v: 'Lọc theo nhãn field, không dấu, như ô lọc hiện có của field picker. Không có kết quả: dòng trống c-field-empty.' },
+      { k: '↑ ↓, Enter', v: 'Đi trong danh sách khi đang mở; Enter chọn mục đang trỏ. Danh sách đóng mà ô rỗng thì Enter là Tìm kiếm (như nút Tìm kiếm, bị chặn khi còn field bắt buộc rỗng).' },
+      { k: 'Backspace khi ô rỗng', v: 'Lần đầu: focus chip cuối. Lần nữa: xoá chip đó, trừ chip ghim hoặc bắt buộc.' },
+      { k: 'Esc', v: 'Đóng danh sách, xoá chữ đang gõ, giữ focus ở ô.' },
+      { k: 'Hết field để thêm', v: 'Như addDisabled hiện tại: ô bị khoá, tooltip giữ nhãn hiện có.' },
+      { k: 'Mode popover', v: 'Giữ nút + như hiện tại. Thay đổi này chỉ cho mode inline.' },
+    ];
+    const rows = [
+      { code: 'DH2402', customer: 'Trần Văn Hậu', date: '07/11/2026 09:31', total: '415.000' },
+      { code: 'DH2415', customer: 'Nguyễn Thị Thu', date: '08/11/2026 08:52', total: '640.000' },
+      { code: 'DH2418', customer: 'Cửa hàng Bình An', date: '08/11/2026 08:11', total: '2.380.000' },
+    ];
+    const specs = [
+      { k: 'Panel', v: 'min-width min(160px, 100vw − 16px), max-width 320px, max-height 360px, padding 4px, viền 1px, bo 8px, nền surface, bóng 0 4px 12px rgb(15 23 42 / 14%), 0 1px 3px rgb(15 23 42 / 10%).', src: 'action-popover.scss · .sd-action-popover' },
+      { k: 'Tiêu đề nhóm', v: 'padding 4px 12px, 12px, --sd-text-secondary.', src: '.sd-action-heading' },
+      { k: 'Hàng bộ lọc', v: 'Khối flex, bo 4px. Nút áp: min-height 40px, padding 8px 4px 8px 12px, gap 8px, icon filter_alt 18px, tên 14/20 cắt bằng …. Nút xoá: 32×32, bo 4px, icon delete 18px, margin phải 4px.', src: '.sd-action-item' },
+      { k: 'Hover, focus', v: 'Nền color-mix(--sd-text 8%, transparent) cho cả hàng; nút xoá hover nền và icon --sd-error. Vòng focus 2px bên trong (offset −2px).', src: '.sd-action-item:hover, :focus-visible' },
+      { k: 'Đường kẻ', v: 'Viền trên 1px --sd-border, margin 4px 8px.', src: '.sd-action-divider' },
+      { k: 'Lưu bộ lọc hiện tại', v: 'Item thường, icon bookmark_add màu --sd-primary (như sd-button-item color="primary"). Khoá: opacity .45.', src: '.sd-action-item:disabled' },
+      { k: 'Dòng trạng thái', v: 'padding 12px, 13/18, --sd-text-secondary; lỗi có icon error 16px --sd-error và chữ --sd-text.', src: 'mới, theo .sd-action-heading' },
+      { k: 'Cảm ứng', v: 'Hàng 44px; nút xoá luôn hiện, 40×40.', src: '@media (pointer: coarse)' },
+      { k: 'Ô tìm xs', v: 'Cao 28px, padding 0 8px, gap 6px, 13px, icon 16px, nút xoá 20px. Khung, viền, focus như sm.', src: 'search-field.component.scss · mới' },
+      { k: 'Chip bắt buộc', v: 'Dùng lại .c-chip-pinned (không ×, padding phải 4px) và .c-chip-invalid. Không thêm kiểu mới.', src: 'popover-chip.component.scss' },
+    ];
+    const a11y = [
+      { k: 'Nút bookmark', v: 'aria-haspopup="menu", aria-expanded, tooltip như hiện tại. Esc đóng panel, focus về nút.' },
+      { k: '↑ ↓ trong panel', v: 'Đi qua các nút áp bộ lọc và “Lưu bộ lọc hiện tại”. Nút xoá không nằm trong vòng mũi tên.' },
+      { k: '→ hoặc Tab trên một hàng', v: 'Sang nút xoá của hàng đó. ← quay về nút áp. Delete trên nút áp cũng xoá bộ lọc.' },
+      { k: 'Nút xoá', v: 'aria-label “Xoá {name}” (key core.component.query-bar.saved-filters.delete có tham số name).' },
+      { k: 'Chip bắt buộc', v: 'aria-required="true" trên chip; ô giá trị cuối bị khoá có aria-disabled và aria-describedby trỏ tới dòng nhắc.' },
+      { k: 'Ô tìm', v: 'aria-label, nút xoá có tên (clearLabel), Enter áp, Esc xoá.' },
+    ];
+    const decisions = [
+      { n: 'C1', tag: 'Đã chốt', c: '#2e7d32', q: 'Cơ chế bộ lọc đã lưu', a: 'Giữ nguyên: localStorage theo savedFiltersKey, lưu, chọn để áp, xoá. Bỏ trạng thái đang dùng, ghi đè, đổi tên, mặc định, chia sẻ, adapter của bản 1.' },
+      { n: 'C2', tag: 'Đã chốt', c: '#2e7d32', q: 'Giao diện popover', a: 'Theo Action Popover của sd-button có sd-button-item.' },
+      { n: 'C3', tag: 'Đã chốt', c: '#2e7d32', q: 'Ô tìm', a: 'Dùng sd-search-field.' },
+      { n: 'C4', tag: 'Đã chốt', c: '#2e7d32', q: 'Trống, lỗi, xoá', a: 'Thêm như mục 03. Đang tải chỉ ghi quy cách, chưa làm.' },
+      { n: 'C5', tag: 'Đã chốt', c: '#2e7d32', q: 'Bộ lọc bắt buộc', a: 'B1–B5 ở mục 04.' },
+      { n: 'C6', tag: 'Đã chốt', c: '#2e7d32', q: 'Từ khoá ô tìm có lưu vào bộ lọc không?', a: 'Có, như hiện tại (SdQuery.search khi showSearch).' },
+      { n: 'C7', tag: 'Đã chốt', c: '#2e7d32', q: 'Xoá có hỏi xác nhận không?', a: 'Không hỏi, có Hoàn tác trên toast. Toast trên main đã hỗ trợ actionLabel, không phải chờ PR pattern-review.' },
+      { n: 'M1', tag: 'Đã chốt', c: '#2e7d32', q: 'Dựng popover bằng gì?', a: 'Đề xuất: giữ component saved-filters-menu, thay mat-menu bằng CDK Overlay và dùng chung stylesheet của Action Popover (tách action-popover.scss thành mixin nội bộ). sd-button-item không có nút phụ trên từng hàng nên không dùng thẳng sd-button được. Opus kiểm tra ở Bước 0.' },
+      { n: 'M2', tag: 'Đã chốt', c: '#2e7d32', q: 'Cỡ ô tìm khi density compact', a: 'Đề xuất thêm cỡ xs 28px cho sd-search-field. Cách khác: sd-table dùng query bar density comfortable (32px, khớp quick search cũ) và không cần xs.' },
+      { n: 'M3', tag: 'Đã chốt', c: '#2e7d32', q: 'sd-table tự xoá lọc qua onClearAll (#clearQueryBar)', a: 'Kiểm tra hàm này đã giữ giá trị bắt buộc chưa; chưa thì sửa cùng B2 để hai đường Xoá lọc giống nhau.' },
+      { n: 'M4', tag: 'Đã chốt', c: '#2e7d32', q: 'Đọc lại ngày trong bộ lọc đã lưu', a: 'Dùng cùng cách đọc ISO thành Date của table-query-params.util khi parse localStorage, để giá trị ngày không thành chuỗi sau khi tải lại trang.' },
+      { n: 'C8', tag: 'Đã chốt', c: '#2e7d32', q: 'Inline: mở danh sách field khi focus vào thanh', a: 'Có, khi bấm, chạm hoặc gõ. Không tự mở khi chỉ Tab tới (mục 06).' },
+      { n: 'M5', tag: 'Đã chốt', c: '#2e7d32', q: 'Danh sách field khi gõ ở ô ngoài menu', a: 'mat-menu tự đưa focus vào mục đầu khi mở, nên không gõ tiếp được ở ô. Đề xuất: field picker có thêm dạng combobox (ô role="combobox", danh sách role="listbox" trong CDK Overlay, aria-activedescendant), như panel autocomplete của sd-select. Opus kiểm tra ở Bước 0.' },
+      { n: 'C9', tag: 'Đã chốt', c: '#2e7d32', q: 'Panel của query bar', a: 'Bỏ mat-menu ở cả ba panel (field picker, chip popover, bộ lọc đã lưu), dùng một khung theo Action Popover (mục 02).' },
+      { n: 'M6', tag: 'Đã chốt', c: '#2e7d32', q: 'Hàng của field picker 36px chữ 13px, khác Action Popover 40px chữ 14px', a: 'Theo Action Popover (40px, 14px) để ba panel giống nhau. Danh sách dài hơn một chút, đã có max-height 360px và cuộn.' },
+      { n: 'M7', tag: 'Đã chốt', c: '#2e7d32', q: 'Đổi field trong chip popover (switchPickerMenu)', a: 'Bỏ, vì query bar không dùng và overlay mới không cần menu lồng nhau.' },
+    ];
+    return { panels, panelRules, savedNames, newRows, popNotes, states, deleteNotes, required, reqStates, searchRows, searchNotes, inlineRules, rows, specs, a11y, decisions };
+  }
+}
+</script>
+</body>
+</html>
