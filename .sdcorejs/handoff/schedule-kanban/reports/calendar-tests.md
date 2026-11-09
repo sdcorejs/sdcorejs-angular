@@ -1,11 +1,11 @@
 # sd-calendar · test
-Commit: ffec20f1 (nhánh `feat/calendar`, sau các sửa của R2) · Node local v26.12.0 (PD chốt Q1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
+Commit: e77967c2 (nhánh `feat/calendar`, sau các sửa của R2 và R2') · Node local v26.12.0 (PD chốt Q1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
 
 ## Lệnh (TESTING.md §1)
 | Lệnh | Kết quả |
 | --- | --- |
-| `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage` | 9304/9304 SUCCESS (6m53s), seed 724441. Tổng: statements 88.16%, branches 79.45%, functions 87.3%, lines 90.53% (ngưỡng 78/67/75/78) |
-| Lệnh nhanh calendar (`--include='**/components/calendar/**/*.spec.ts'`) | 169/169 SUCCESS |
+| `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage` | 9308/9308 SUCCESS (6m33s), seed 535832. Tổng: statements 88.16%, branches 79.46%, functions 87.3%, lines 90.53% (ngưỡng 78/67/75/78) |
+| Lệnh nhanh calendar (`--include='**/components/calendar/**/*.spec.ts'`) | 173/173 SUCCESS |
 | `npm run lint` (v19) | All files pass linting |
 | `npx ng build sdcorejs-angular` | Thành công (chỉ cảnh báo cũ của `modules/icon`) |
 | `npm run test:theme` | 65/65 |
@@ -13,7 +13,7 @@ Commit: ffec20f1 (nhánh `feat/calendar`, sau các sửa của R2) · Node local
 | `npm run sync` + `npm run check:sync` | Passed: v20, v21, v22 match v19 (đã khôi phục 1575 file v22 đổi CRLF giả, diff rỗng) |
 | `npm run test:scripts` | exit 0, 0 lỗi |
 | Showcase `documentation.registry.spec.ts` | 10/10 (ở `676e8380`; registry không đổi sau đó) |
-| `npm --prefix showcase run link:library` + Playwright `e2e/components/calendar.e2e.ts` (cấu hình của repo, cổng 4321) | 44 passed, 4 skipped (2m06s): 20 kịch bản × 2 project zone `asia-bangkok`, `utc`, cộng 4 test chụp ảnh chỉ chạy ở `asia-bangkok` · Chromium |
+| `npm --prefix showcase run link:library` + Playwright `e2e/components/calendar.e2e.ts` (cấu hình của repo, cổng 4321) | 44 passed, 4 skipped (2m05s): 20 kịch bản × 2 project zone `asia-bangkok`, `utc`, cộng 4 test chụp ảnh chỉ chạy ở `asia-bangkok` · Chromium |
 
 ## Coverage từng file (TESTING.md §2)
 Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lcov.info` (R2 B-7: bản trước ghi nhầm số Lines vào cột Statements).
@@ -23,7 +23,7 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | `calendar.utils.ts` | 100% (208/208) | 100% (91/91) | 100% | 100/100 ✓ |
 | `calendar-move.ts` | 100% (31/31) | 100% (16/16) | 100% | — (hàm thuần, đạt 100) |
 | `calendar-loader.ts` | 100% (30/30) | 100% (13/13) | 100% | — (hàm thuần, đạt 100) |
-| `calendar.component.ts` | 97.76% (1008/1031) | 89.48% (536/599) | 99.88% (863/864) | ≥90/≥85 ✓ |
+| `calendar.component.ts` | 97.78% (1016/1039) | 89.59% (542/605) | 99.89% (871/872) | ≥90/≥85 ✓ |
 | `calendar.templates.ts`, `calendar.configuration.ts` | 100% | — | 100% | type test `calendar.types.spec.ts` |
 
 ## Mã test
@@ -60,16 +60,16 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | CAL-C-08 | calendar.edges.spec.ts:51, calendar.edges.spec.ts:71, calendar.interaction.spec.ts:174, calendar.interaction.spec.ts:188 | ✓ |
 | CAL-C-09 | calendar.interaction.spec.ts:200 | ✓ |
 | CAL-C-10 | calendar.edges.spec.ts:96, calendar.interaction.spec.ts:590 | ✓ |
-| CAL-C-11 | calendar.edges.spec.ts:82, calendar.interaction.spec.ts:641 | ✓ |
-| CAL-C-12 | calendar.edges.spec.ts:119, calendar.interaction.spec.ts:663, calendar.interaction.spec.ts:691 | ✓ |
+| CAL-C-11 | calendar.edges.spec.ts:82, calendar.interaction.spec.ts:654 | ✓ |
+| CAL-C-12 | calendar.edges.spec.ts:119, calendar.interaction.spec.ts:676, calendar.interaction.spec.ts:704 | ✓ |
 | CAL-C-13 | calendar.recurring.spec.ts:54, calendar.recurring.spec.ts:60, calendar.recurring.spec.ts:77, calendar.recurring.spec.ts:149, calendar.recurring.spec.ts:165 | ✓ |
-| CAL-C-14 | calendar.component.spec.ts:586, calendar.component.spec.ts:607, calendar.interaction.spec.ts:779 | ✓ |
+| CAL-C-14 | calendar.component.spec.ts:586, calendar.component.spec.ts:607, calendar.interaction.spec.ts:792 | ✓ |
 | CAL-C-15 | calendar.component.spec.ts:624, calendar.component.spec.ts:631, calendar.component.spec.ts:772, calendar.component.spec.ts:787 | ✓ |
 | CAL-C-16 | calendar.component.spec.ts:391, calendar.utils.spec.ts:471 | ✓ |
 | CAL-C-17 | calendar.component.spec.ts:408, calendar.interaction.spec.ts:571 | ✓ |
 | CAL-C-18 | calendar.compact.spec.ts:78, calendar.compact.spec.ts:109, calendar.compact.spec.ts:170, calendar.compact.spec.ts:191, calendar.compact.spec.ts:230 | ✓ |
-| CAL-C-19 | calendar.component.spec.ts:361, calendar.component.spec.ts:642, calendar.edges.spec.ts:171, calendar.interaction.spec.ts:749 | ✓ |
-| CAL-C-20 | calendar.component.spec.ts:425, calendar.component.spec.ts:435, calendar.component.spec.ts:463, calendar.component.spec.ts:472, calendar.component.spec.ts:480, calendar.edges.spec.ts:250, calendar.utils.spec.ts:577, calendar.utils.spec.ts:618 | ✓ |
+| CAL-C-19 | calendar.component.spec.ts:361, calendar.component.spec.ts:642, calendar.edges.spec.ts:171, calendar.interaction.spec.ts:762 | ✓ |
+| CAL-C-20 | calendar.component.spec.ts:425, calendar.component.spec.ts:435, calendar.component.spec.ts:463, calendar.component.spec.ts:472, calendar.component.spec.ts:480, calendar.edges.spec.ts:330, calendar.utils.spec.ts:577, calendar.utils.spec.ts:618 | ✓ |
 | CAL-C-21 | calendar.component.spec.ts:490 | ✓ |
 | CAL-C-22 | calendar.component.spec.ts:752, calendar.component.spec.ts:764, calendar.types.spec.ts:45 | ✓ |
 | CAL-C-23 | calendar.exports.spec.ts:15 | ✓ |
@@ -97,9 +97,9 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | CAL-SC-26 | calendar.interaction.spec.ts:93, calendar.interaction.spec.ts:119 | ✓ |
 | CAL-SC-27 | calendar.interaction.spec.ts:138 | ✓ |
 | CAL-SC-28 | calendar.interaction.spec.ts:148 | ✓ |
-| CAL-SC-29 | calendar.interaction.spec.ts:711 | ✓ |
-| CAL-SC-30 | calendar.interaction.spec.ts:725 | ✓ |
-| CAL-SC-31 | calendar.interaction.spec.ts:739 | ✓ |
+| CAL-SC-29 | calendar.interaction.spec.ts:724 | ✓ |
+| CAL-SC-30 | calendar.interaction.spec.ts:738 | ✓ |
+| CAL-SC-31 | calendar.interaction.spec.ts:752 | ✓ |
 | CAL-SC-32 | calendar.compact.spec.ts:53, calendar.compact.spec.ts:63 | ✓ |
 | CAL-SC-33 | calendar.component.spec.ts:655 | ✓ |
 | CAL-SC-34 | calendar.compact.spec.ts:199 | ✓ |
@@ -139,6 +139,10 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | CAL-B-14 | calendar.edges.spec.ts:215 | ✓ |
 | CAL-B-15 | calendar.edges.spec.ts:231 | ✓ |
 | CAL-B-16 | calendar.edges.spec.ts:243 | ✓ |
+| CAL-B-17 | calendar.edges.spec.ts:250 | ✓ |
+| CAL-B-18 | calendar.edges.spec.ts:264 | ✓ |
+| CAL-B-19 | calendar.edges.spec.ts:305 | ✓ |
+| CAL-B-20 | calendar.interaction.spec.ts:641 | ✓ |
 
 Missing: CAL-SC-08, CAL-SC-25
 
@@ -158,7 +162,7 @@ Bỏ qua có lý do:
 ## Hiệu năng (TESTING.md §10, showcase dev build, máy local, 5 lần, trung vị)
 | Kịch bản | Đo | Ngân sách |
 | --- | --- | --- |
-| Tuần, 500 sự kiện, render đầu (bấm "500 sự kiện" → khung hình kế) | Sau R2: 176 ms và 185 ms (hai project chạy song song). Trước R2: 157–224 ms qua các lần chạy | ≤ 150 ms — **vượt** |
+| Tuần, 500 sự kiện, render đầu (bấm "500 sự kiện" → khung hình kế) | Sau R2': 177 ms và 187 ms (hai project chạy song song). Trước R2: 157–224 ms qua các lần chạy | ≤ 150 ms — **vượt** |
 | Kéo trong lúc 500 sự kiện | 0 long task | không task > 50 ms ✓ |
 
 Vượt ngân sách render khi đo trên dev build (không tối ưu, JIT CSS) và máy dùng chung với dev server. Đề xuất: đo lại trên production build ở CI; nếu vẫn vượt, nhớ placement theo sự kiện (bỏ `Intl` khi chỉ đổi lựa chọn, ghi chú R1-G6) trước khi nghĩ tới virtual scroll. Không tự thêm virtual scroll.

@@ -61,3 +61,19 @@ Kiểm lại ba test mới bằng đột biến trên chính worktree (rồi ho�
 | A-23 | Nhãn giờ đầu bị cắt nửa khi in; để đợt sau. |
 | B-5 | `CAL-E-04` chờ 2.5s thật vì `onMove` chậm của demo là 2s; đường "kết quả muộn" được kiểm ở Karma (`CAL-SC-15` cho `onMove`, `CAL-SC-22`/`-23` cho `onLoad`, `CAL-B-08` cho `onCreate`). |
 | B-6 | `test.skip` của axe chỉ khi thiếu `node_modules` của v19; CI luôn có. |
+
+## R2' (`calendar-R2-recheck.md`): Chặn 0 · Nên sửa 2 · Ghi chú 6 → "Được mở PR"
+Sửa ở `8684685e` (test RED) và `eb20d9dd` (code), rollout `e77967c2`. Kiểm lại hẹp các sửa này: `calendar-R2-recheck-2.md`.
+
+| # | Mức | Sửa | Test |
+| --- | --- | --- | --- |
+| N-1 (A-16 chưa đủ) | Nên sửa | `:host { text-align: start }` (reboot của thư viện đặt `body { text-align: left }`); bốn padding không đối xứng (thanh công cụ, góc múi giờ, nhãn "Cả ngày", dòng Danh sách) thành `padding-block`/`padding-inline`; thanh tiến trình lật ở RTL. Ảnh `week-960-rtl.png` chụp lại. | `[CAL-B-17]` |
+| N-2 | Nên sửa | Esc huỷ quét hoặc kéo mép gỡ luôn listener `document` khi không còn phiên nào (kéo vẫn gỡ khi thả); tay nắm có `pointercancel` bỏ kéo mép đang dở. | `[CAL-B-18]` |
+| N-3 | Ghi chú | Khối đề xuất có chấm màu và cùng bố cục với khối (§8.3). | `[CAL-B-20]` |
+| N-4 | Ghi chú | Tên nút "+N" bắt đầu bằng chữ đang hiện ở mọi locale: vi/en giữ "+2 khác, …"; ja/ko/zh thành "+2, 他 2 件, …" (WCAG 2.5.3). | `[CAL-B-19]` (5 locale) |
+| N-5 | Ghi chú: cần PD chốt | Giữ: bấm "Ngày" ở tuần hẹp đổi model `week` → `day`. | — |
+| N-6 | Ghi chú | Giữ: test chụp ảnh chỉ chạy ở project Bangkok để không ghi đè ảnh bằng nhãn `GMT+0`; mã `CAL-E-*` của chúng là kịch bản mà ảnh minh hoạ. | — |
+| N-7 | Ghi chú | Giữ: cắt chữ đầu dòng ở RTL với nội dung tiếng Việt là bidi bình thường; `dir="auto"` cho tiêu đề để đợt sau. | — |
+| N-8 | Ghi chú | Giữ: bảng hook E2E liệt kê hook dùng để kiểm; các hook phụ khác vẫn ổn định nhưng không hứa trong tài liệu. | — |
+
+E2E sau các sửa: 44 passed, 4 skipped; CAL-E-06 (focus sau Esc) xanh ở cả hai zone.
