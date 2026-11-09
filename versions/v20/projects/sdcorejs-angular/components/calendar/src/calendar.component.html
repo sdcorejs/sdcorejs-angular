@@ -227,7 +227,7 @@
                   [attr.data-date]="_days[$index].day"
                   [style.grid-column]="$index + 1"
                   [style.grid-row]="_allDay.rows + 1"
-                  [attr.aria-label]="('core.component.calendar.more' | sdTranslate: { count }) + ', ' + _days[$index].label"
+                  [attr.aria-label]="allDayMoreLabel(count, _days[$index])"
                   (click)="openDay(_days[$index].day)">
                   {{ 'core.component.calendar.more-short' | sdTranslate: { count } }}
                 </button>
@@ -363,7 +363,8 @@
                       (touchstart)="$event.stopPropagation()"
                       (pointerdown)="onResizeDown($event, block)"
                       (pointermove)="onResizeMove($event)"
-                      (pointerup)="onResizeUp($event)"></div>
+                      (pointerup)="onResizeUp($event)"
+                      (pointercancel)="onResizeCancel()"></div>
                   }
                 </div>
               }
@@ -392,8 +393,11 @@
                   [style.--sd-calendar-event-color]="_proposal.customColor"
                   [style.top]="spanTop(_proposal.start)"
                   [style.height]="spanHeight(_proposal.end - _proposal.start)">
-                  <span class="sd-calendar__event-title">{{ _proposal.title }}</span>
-                  <span class="sd-calendar__event-time">{{ clockText(_proposal.start) }} – {{ clockText(_proposal.end) }}</span>
+                  <span class="sd-calendar__dot" aria-hidden="true"></span>
+                  <div class="sd-calendar__event-content">
+                    <span class="sd-calendar__event-title">{{ _proposal.title }}</span>
+                    <span class="sd-calendar__event-time">{{ clockText(_proposal.start) }} – {{ clockText(_proposal.end) }}</span>
+                  </div>
                 </div>
               }
               @if (day.today) {

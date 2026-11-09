@@ -2,6 +2,7 @@ import type { Type } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import type { Language } from '@sdcorejs/utils/models';
 import { SCHEDULE_TEST_NOW, SCHEDULE_TEST_ZONE, stubNow } from '../../../testing/schedule-testing';
 import { SD_CALENDAR_CONFIGURATION, type ISdCalendarConfiguration } from './calendar.configuration';
 import type { SdCalendarEvent, SdCalendarOption } from './calendar.model';
@@ -55,7 +56,7 @@ export interface CalendarSetup {
   readonly zone?: string;
   readonly now?: string;
   readonly configuration?: ISdCalendarConfiguration;
-  readonly language?: 'vi' | 'en';
+  readonly language?: Language;
 }
 
 /** Configures TestBed with the zone, a pinned "now" and an optional calendar configuration. */

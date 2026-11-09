@@ -247,6 +247,86 @@ describe('SdCalendar · edge cases', () => {
     expect(chips.map(chip => !!chip.querySelector('.sd-calendar__dot'))).toEqual([true, false]);
   }));
 
+  it('[CAL-B-17] starts text and asymmetric paddings from the inline start in right-to-left (R2 recheck N-1)', fakeAsync(() => {
+    const { host, settle } = mount({});
+    host.setAttribute('dir', 'rtl');
+    settle();
+    // why: the library reboot sets `body { text-align: left }`; the calendar starts its text from the inline start.
+    expect(getComputedStyle(host).textAlign).toBe('start');
+    const toolbar = getComputedStyle(q(host, '.sd-calendar__toolbar') ?? host);
+    expect([toolbar.paddingRight, toolbar.paddingLeft]).toEqual(['14px', '12px']);
+    const corner = getComputedStyle(q(host, '.sd-calendar__corner') ?? host);
+    expect([corner.paddingLeft, corner.paddingRight]).toEqual(['8px', '0px']);
+    const allDay = getComputedStyle(q(host, '.sd-calendar__all-day-label') ?? host);
+    expect([allDay.paddingLeft, allDay.paddingRight]).toEqual(['8px', '0px']);
+  }));
+
+  it('[CAL-B-18] removes the document Esc listener after Esc cancels a sweep or a resize, and on a cancelled resize (R2 recheck N-2)', fakeAsync(() => {
+    const added = spyOn(document, 'addEventListener').and.callThrough();
+    const removed = spyOn(document, 'removeEventListener').and.callThrough();
+    const escListeners = (spy: jasmine.Spy): unknown[] =>
+      spy.calls
+        .allArgs()
+        .filter(([type, , capture]) => type === 'keydown' && capture === true)
+        .map(([, listener]) => listener as unknown);
+    const leaked = (): number => {
+      const gone = escListeners(removed);
+      return escListeners(added).filter(listener => !gone.includes(listener)).length;
+    };
+    const onCreate = jasmine.createSpy('onCreate');
+    const onMove = jasmine.createSpy('onMove').and.returnValue('cancel');
+    const { host, settle } = mount({ create: { onCreate }, move: { onMove } });
+    const target = column(host, '2026/10/21');
+    pointer(target, 'pointerdown', at(host, '2026/10/21', 600));
+    pointer(target, 'pointermove', at(host, '2026/10/21', 700));
+    press(document, 'Escape');
+    pointer(target, 'pointerup', at(host, '2026/10/21', 700));
+    settle();
+    expect(escListeners(added).length).withContext('the sweep adds the listener').toBeGreaterThan(0);
+    expect(leaked()).withContext('sweep + Esc').toBe(0);
+    const handle = (): HTMLElement => q(block(host, 'review'), '[data-resize-handle]') ?? host;
+    pointer(handle(), 'pointerdown', centerOf(handle()));
+    press(document, 'Escape');
+    pointer(handle(), 'pointerup', centerOf(handle()));
+    settle();
+    expect(leaked()).withContext('resize + Esc').toBe(0);
+    pointer(handle(), 'pointerdown', centerOf(handle()));
+    pointer(handle(), 'pointermove', { x: centerOf(handle()).x, y: centerOf(handle()).y + 48 });
+    settle();
+    const time = (): string => text(q(block(host, 'review'), '.sd-calendar__event-time'));
+    expect(time()).toBe('14:00 – 16:30');
+    pointer(handle(), 'pointercancel', centerOf(handle()));
+    settle();
+    expect(leaked()).withContext('resize + pointercancel').toBe(0);
+    expect(time()).withContext('the live resize is dropped').toBe('14:00 – 15:30');
+    expect(onMove).not.toHaveBeenCalled();
+  }));
+
+  it('[CAL-B-19] names the all-day +N button with its visible text first in every locale (WCAG 2.5.3, R2 recheck N-4)', fakeAsync(() => {
+    const extra = ['a', 'b', 'c'].map(
+      (id): Event => ({ id: `extra-${id}`, title: `Cả ngày ${id}`, start: '2026/10/22', allDay: true, data: { room: '' } })
+    );
+    for (const language of ['vi', 'en', 'ja', 'ko', 'zh'] as const) {
+      configureCalendar({ language });
+      const fixture = createWith(SdCalendar<CalendarDto>, {
+        option: { dataSource: { onLoad: () => [...weekEvents(), ...extra] } },
+        date: '2026/10/22',
+      });
+      const host = fixture.nativeElement as HTMLElement;
+      host.style.height = '640px';
+      host.style.width = '960px';
+      fixture.detectChanges();
+      flushMicrotasks();
+      fixture.detectChanges();
+      const more = q(host, '[data-more][data-date="2026/10/22"]');
+      const label = more?.getAttribute('aria-label') ?? '';
+      expect(text(more)).withContext(language).toBe('+2');
+      expect(label.startsWith('+2')).withContext(`${language}: ${label}`).toBeTrue();
+      expect(label.length).withContext(language).toBeGreaterThan('+2, '.length);
+      TestBed.resetTestingModule();
+    }
+  }));
+
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {
     const warn = spyOn(console, 'warn');
     mount({}, { workingHours: { 1: [{ from: '17:00', to: '08:00' }], 2: [{ from: '08:00', to: '17:00' }] } });

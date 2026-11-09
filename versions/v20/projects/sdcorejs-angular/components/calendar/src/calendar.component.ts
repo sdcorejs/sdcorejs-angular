@@ -1142,6 +1142,13 @@ export class SdCalendar<T = unknown> {
     void this.#runMove(session.id, { ...targetOf(session.placement), endMinutes: resize.end }, 'resize', false);
   }
 
+  /** The browser took the pointer away (a scroll or a system gesture): the live resize is dropped. */
+  protected onResizeCancel(): void {
+    this.#resizeSession = null;
+    this.#resize.set(null);
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+  }
+
   /** Height of a block, following a live resize. */
   protected blockHeight(block: SdCalendarBlockView<T>): string {
     const resize = this.#resize();
@@ -1182,6 +1189,13 @@ export class SdCalendar<T = unknown> {
   protected childAutoId(kind: string): string | null {
     const root = this.rootAutoId();
     return root ? `${root}-${kind}` : null;
+  }
+
+  /** Name of the "+N" button of the all-day row: the visible "+2" leads it in every language (WCAG 2.5.3). */
+  protected allDayMoreLabel(count: number, day: SdCalendarDayView): string {
+    const visible = this.#i18n.t('core.component.calendar.more-short', { count });
+    const more = this.#i18n.t('core.component.calendar.more', { count });
+    return `${more.startsWith(visible) ? more : `${visible}, ${more}`}, ${day.label}`;
   }
 
   protected blocksOf(day: string): readonly SdCalendarBlockView<T>[] {
@@ -1490,6 +1504,10 @@ export class SdCalendar<T = unknown> {
         this.#resize.set(null);
       }
     });
+    // A cancelled sweep or resize has nothing left to end it, so the listener goes now; a drag ends on its drop.
+    if (!this.#press && !this.#dragSession && !this.#resizeSession) {
+      document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    }
   };
 
   #restoreFocus(id: string, origin: Element | null): void {

@@ -85,6 +85,8 @@ $hour: var(--sd-calendar-hour-height);
 
   display: block;
   min-width: 0;
+  // why: the library reboot sets `body { text-align: left }`; text starts from the inline start, also in RTL.
+  text-align: start;
 }
 
 .sd-calendar {
@@ -115,7 +117,8 @@ $hour: var(--sd-calendar-hour-height);
   align-items: center;
   gap: 12px;
   height: 56px;
-  padding: 0 12px 0 14px;
+  padding-block: 0;
+  padding-inline: 14px 12px;
   border-bottom: 1px solid tok(calendar-line);
 }
 
@@ -364,7 +367,8 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__corner {
   align-self: end;
-  padding: 0 8px 6px 0;
+  padding-block: 0 6px;
+  padding-inline: 0 8px;
 }
 
 .sd-calendar__all-day {
@@ -376,7 +380,8 @@ $hour: var(--sd-calendar-hour-height);
 }
 
 .sd-calendar__all-day-label {
-  padding: 8px 8px 0 0;
+  padding-block: 8px 0;
+  padding-inline: 0 8px;
   color: tok(text-secondary);
   font-size: fs(11);
   line-height: lh(14);
@@ -818,7 +823,8 @@ $hour: var(--sd-calendar-hour-height);
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);
   gap: 4px 12px;
-  padding: 10px 12px 10px 16px;
+  padding-block: 10px;
+  padding-inline: 16px 12px;
   border-bottom: 1px solid tok(calendar-line);
 }
 
@@ -945,9 +951,10 @@ $hour: var(--sd-calendar-hour-height);
   cursor: not-allowed;
 }
 
-// Direction icons point the other way in right-to-left.
+// Direction icons and the running progress bar go the other way in right-to-left.
 .sd-calendar__icon-button sd-icon:dir(rtl),
-.sd-calendar__clip:dir(rtl) {
+.sd-calendar__clip:dir(rtl),
+.sd-calendar__progress:dir(rtl) {
   transform: scaleX(-1);
 }
 
@@ -1063,11 +1070,18 @@ $hour: var(--sd-calendar-hour-height);
   }
 }
 
-// §8.3 "Đang kéo": border in the event colour, large shadow.
+// §8.3 "Đang kéo": the block itself (colour dot, title, time), border in the event colour, large shadow.
 .sd-calendar__proposal {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 4px;
   border: 1px solid var(--sd-calendar-event-color);
   background: var(--sd-calendar-event-bg);
   box-shadow: var(--sd-shadow-lg);
+
+  > .sd-calendar__dot {
+    margin-top: 5px;
+  }
 }
 
 .sd-calendar__cursor {
