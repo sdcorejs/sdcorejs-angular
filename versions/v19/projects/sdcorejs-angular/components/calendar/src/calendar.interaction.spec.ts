@@ -579,6 +579,30 @@ describe('SdCalendar · interaction', () => {
       expect(q(host, '[data-drag-proposal]')).toBeNull();
     }));
 
+    it('[CAL-B-07] draws the drag proposal in the colour of the dragged event (§8.3, R2 A-11)', fakeAsync(() => {
+      const onMove = moveSpy(() => 'cancel');
+      const { host, settle } = mount(store => {
+        store.events = store.events.map(event => (event.id === 'one-on-one' ? { ...event, color: 'rebeccapurple' } : event));
+        return { move: { onMove } };
+      });
+      for (const [id, color] of [
+        ['review', 'warning'],
+        ['one-on-one', 'custom'],
+      ] as const) {
+        const source = block(host, id) ?? host;
+        const from = { x: centerOf(source).x, y: source.getBoundingClientRect().top + 10 };
+        mouseDrag(source, { x: from.x, y: from.y - 48 }, { from, step: settle, release: false });
+        const proposal = q(host, '[data-drag-proposal]');
+        expect(proposal?.dataset['color']).withContext(id).toBe(color);
+        const tone = (element: Element | null): string =>
+          element ? getComputedStyle(element).getPropertyValue('--sd-calendar-event-color').trim() : 'none';
+        expect(tone(proposal)).withContext(id).toBe(tone(block(host, id)));
+        if (color === 'custom') expect(proposal ? getComputedStyle(proposal).borderTopColor : '').toBe('rgb(102, 51, 153)');
+        mouse(document, 'mouseup', { x: from.x, y: from.y - 48 });
+        settle();
+      }
+    }));
+
     it('[CAL-C-11] resizes the end by dragging the bottom edge, at least 15 minutes long', fakeAsync(() => {
       const onMove = moveSpy(() => 'cancel');
       const { host, settle } = mount(() => ({ move: { onMove } }));
