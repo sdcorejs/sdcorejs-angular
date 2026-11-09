@@ -465,8 +465,8 @@
                       [attr.title]="item.label"
                       [style.--sd-calendar-event-color]="item.customColor"
                       (click)="selectItem(item.event, $event)">
-                      <span class="sd-calendar__dot" aria-hidden="true"></span>
                       @if (line.showTitle) {
+                        <span class="sd-calendar__dot" aria-hidden="true"></span>
                         <span class="sd-calendar__chip-text">{{ line.text }}</span>
                       }
                     </div>
