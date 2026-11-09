@@ -26,7 +26,7 @@
 
 <!-- Panel danh sách theo khung Action Popover (handoff mục 3). why: ô tìm nằm ngoài listbox — nó là combobox điều khiển
      listbox qua aria-activedescendant, focus thật ở lại trong ô. -->
-<ng-template sdQueryPanel="listbox" #panel="sdQueryPanel" (closed)="reset()">
+<ng-template sdQueryPanel="listbox" #panel="sdQueryPanel" [sdQueryPanelControls]="listId" (closed)="reset()">
   <div
     class="sd-query-panel sd-query-panel--list c-field-picker-menu"
     tabindex="-1"

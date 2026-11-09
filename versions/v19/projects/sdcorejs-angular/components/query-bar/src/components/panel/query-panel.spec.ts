@@ -1,13 +1,15 @@
 import { Overlay, OverlayContainer } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { Component, TemplateRef, ViewContainerRef, inject, signal, viewChild } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ɵSdQueryPanelDirective, ɵSdQueryPanelCloseReason, ɵSdQueryPanelGroup, ɵSdQueryPanelTriggerDirective } from './query-panel';
 
 // Khung overlay nội bộ của sd-query-bar (handoff mục 2.2), thử với ba panel giả: danh sách, biểu mẫu, danh sách canh phải.
 @Component({
-  imports: [ɵSdQueryPanelDirective, ɵSdQueryPanelTriggerDirective],
+  imports: [ɵSdQueryPanelDirective, ɵSdQueryPanelTriggerDirective, MatTooltipModule],
   providers: [ɵSdQueryPanelGroup],
   template: `
     <button id="list-trigger" type="button" [sdQueryPanelTrigger]="list" (panelClosed)="log('list', $event)">List</button>
@@ -24,6 +26,7 @@ import { ɵSdQueryPanelDirective, ɵSdQueryPanelCloseReason, ɵSdQueryPanelGroup
     </div>
     <div id="chip-trigger" role="button" tabindex="0" [sdQueryPanelTrigger]="list">Chip</div>
     <button id="outside" type="button">Outside</button>
+    <button id="tip" type="button" matTooltip="Gợi ý">Tip</button>
     <span id="plain">Plain text</span>
 
     <ng-template sdQueryPanel="listbox" #list="sdQueryPanel">
@@ -63,6 +66,7 @@ class PanelHost {
   readonly form = viewChild.required<ɵSdQueryPanelDirective>('form');
   readonly endList = viewChild.required<ɵSdQueryPanelDirective>('endList');
   readonly child = viewChild.required<TemplateRef<unknown>>('child');
+  readonly tooltip = viewChild.required(MatTooltip);
   readonly views = inject(ViewContainerRef);
   readonly find = signal(false);
   readonly closed: string[] = [];
@@ -98,7 +102,7 @@ describe('ɵSdQueryPanelDirective', () => {
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [PanelHost] });
+    TestBed.configureTestingModule({ imports: [PanelHost, NoopAnimationsModule] });
     fixture = TestBed.createComponent(PanelHost);
     host = fixture.componentInstance;
     fixture.detectChanges();
@@ -343,6 +347,38 @@ describe('ɵSdQueryPanelDirective', () => {
       expect(host.list().origin()).toBe(el('#chip-trigger'));
       expect(el('#list-trigger').getAttribute('aria-expanded')).toBe('false');
       expect(el('#chip-trigger').getAttribute('aria-expanded')).toBe('true');
+    });
+  });
+
+  // R1 · N-1: MatTooltip cũng nghe keydownEvents() của overlay; tooltip của nút khác gắn sau panel nên nằm trên cùng và
+  // nuốt Esc đầu tiên.
+  describe('QB-B-01 Escape while a tooltip of another control is shown', () => {
+    it('QB-B-01 closes the panel on the first Escape and hides the tooltip', fakeAsync(() => {
+      openList();
+      host.tooltip().show(0);
+      tick();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.mat-mdc-tooltip-panel')).withContext('tooltip shown above the panel').not.toBeNull();
+      key(document.activeElement!, 'Escape');
+      expect(panel()).toBeNull();
+      expect(host.closed).toEqual(['list:escape']);
+      expect(document.activeElement).toBe(el('#list-trigger'));
+      host.tooltip().hide(0);
+      tick();
+    }));
+
+    it('QB-B-01 leaves Escape to an interactive overlay of a control stacked above (its own panel closes first)', () => {
+      el('#form-trigger').click();
+      fixture.detectChanges();
+      const childRef = TestBed.inject(Overlay).create();
+      childRef.attach(new TemplatePortal(host.child(), host.views));
+      fixture.detectChanges();
+      key(panel()!.querySelector('.probe-value')!, 'Escape');
+      expect(panel()).not.toBeNull();
+      childRef.dispose();
+      key(panel()!.querySelector('.probe-value')!, 'Escape');
+      expect(panel()).toBeNull();
+      expect(host.closed).toEqual(['form:escape']);
     });
   });
 

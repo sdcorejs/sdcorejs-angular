@@ -57,6 +57,9 @@ const END_POSITIONS: ConnectedPosition[] = [
 let nextPanelId = 0;
 
 const TABBABLE = 'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]';
+// A layer stacked above the panel holding one of these is the popup of a control (sd-select panel, date picker,
+// sd-operator menu): Escape belongs to it. A tooltip holds none of them.
+const INTERACTIVE = `${TABBABLE}, [role="listbox"], [role="menu"], [role="dialog"], [role="grid"], [role="tree"]`;
 const FIRST_OPTION = '[role="option"]:not([aria-disabled="true"]), [role="menuitem"]:not(:disabled):not([aria-disabled="true"])';
 
 /**
@@ -82,7 +85,8 @@ export class ɵSdQueryPanelGroup {
  * (`dialog`) and saved filters (`menu`). Replaces the Material menu the bar used before (handoff section 2.2).
  *
  * The template has one root element carrying `sd-query-panel`, its modifier and its role; the panel gives it the `id`
- * the trigger's `aria-controls` points to and `tabindex="-1"`. A form panel marks the wrapper of its first value control
+ * the trigger's `aria-controls` points to (unless `sdQueryPanelControls` names the element inside that has the role)
+ * and `tabindex="-1"`. A form panel marks the wrapper of its first value control
  * with `data-sd-query-panel-initial`.
  *
  * Internal (`ɵ`): not part of SemVer.
@@ -109,6 +113,13 @@ export class ɵSdQueryPanelDirective {
   readonly role = input.required<ɵSdQueryPanelRole>({ alias: 'sdQueryPanel' });
   /** Horizontal alignment with the trigger; flips when there is no room. */
   readonly align = input<'start' | 'end'>('start', { alias: 'sdQueryPanelAlign' });
+  /**
+   * Id of the element inside the panel that carries the popup role, when it is not the root (the field picker's listbox
+   * sits under its find box). The trigger's `aria-controls` points there.
+   */
+  readonly controls = input<string | undefined>(undefined, { alias: 'sdQueryPanelControls' });
+  /** Id the trigger's `aria-controls` names. */
+  readonly controlledId = computed(() => this.controls() ?? this.id);
 
   /** The panel opened and took focus. */
   readonly opened = output<void>();
@@ -244,16 +255,15 @@ export class ɵSdQueryPanelDirective {
       if (target && (origin.contains(target) || this.#returnFocusTo?.contains(target) || this.#inStackedLayer(target))) return;
       this.close('outside');
     });
-    const keys = ref.keydownEvents().subscribe(event => {
-      // why: Esc đã được control con xử lý (menu của sd-operator đóng chính nó) thì để nguyên cho control đó.
-      if (event.key !== 'Escape' || event.defaultPrevented || hasModifierKey(event)) return;
-      event.preventDefault();
-      this.close('escape');
-    });
+    // why: Esc bắt ở hai nơi. Focus luôn ở trong panel nên keydown của pane nhận trước — tooltip của một nút khác (gắn sau
+    // panel, nằm trên cùng) không nuốt được Esc qua OverlayKeyboardDispatcher (R1 · N-1). keydownEvents() giữ cho trường
+    // hợp focus đã ra khỏi pane.
+    const keys = ref.keydownEvents().subscribe(event => this.#escape(event));
     const pane = ref.overlayElement;
     const onKeydown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') this.#escape(event);
       // why: nội dung đã dùng Tab (bộ lọc đã lưu: nút áp → nút xoá của cùng hàng) thì không đóng.
-      if (event.key === 'Tab' && !event.defaultPrevented && this.#leavesByTab(event)) this.close('tab');
+      else if (event.key === 'Tab' && !event.defaultPrevented && this.#leavesByTab(event)) this.close('tab');
     };
     const onFocusOut = (event: FocusEvent): void => {
       const next = event.relatedTarget as Element | null;
@@ -269,6 +279,26 @@ export class ɵSdQueryPanelDirective {
       () => keys.unsubscribe(),
       () => pane.removeEventListener('keydown', onKeydown),
       () => pane.removeEventListener('focusout', onFocusOut)
+    );
+  }
+
+  /**
+   * Escape closes the panel unless a control already used it (`defaultPrevented`: the menu of sd-operator closing
+   * itself) or the popup of a control is open above the panel (an sd-select panel closes first).
+   */
+  #escape(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || !this.#ref || event.defaultPrevented || hasModifierKey(event) || this.#interactiveLayerAbove()) return;
+    event.preventDefault();
+    this.close('escape');
+  }
+
+  /** An overlay layer stacked above this panel that a user can interact with (not a tooltip). */
+  #interactiveLayerAbove(): boolean {
+    const host = this.#ref?.hostElement;
+    if (!host) return false;
+    return Array.from(this.#container.getContainerElement().children).some(
+      layer =>
+        layer !== host && !!(host.compareDocumentPosition(layer) & Node.DOCUMENT_POSITION_FOLLOWING) && !!layer.querySelector(INTERACTIVE)
     );
   }
 
@@ -337,7 +367,7 @@ export class ɵSdQueryPanelDirective {
     class: 'sd-query-panel-trigger',
     '[attr.aria-haspopup]': 'panel()?.role() ?? null',
     '[attr.aria-expanded]': 'panel() ? expanded() : null',
-    '[attr.aria-controls]': 'expanded() ? panel()!.id : null',
+    '[attr.aria-controls]': 'expanded() ? panel()!.controlledId() : null',
     '(pointerdown)': 'onPointerDown()',
     '(click)': 'onClick()',
     '(keydown)': 'onKeydown($event)',

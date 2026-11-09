@@ -111,6 +111,19 @@ describe('SdQueryFieldPicker', () => {
     expect(option('A').querySelector('.c-field-item-check')).not.toBeNull();
   });
 
+  // R1 · N-2: the trigger controls the listbox itself, not the panel frame around it.
+  it('QB-B-02 the trigger aria-controls points at the listbox, with and without the find box', () => {
+    open();
+    expect(document.getElementById(trigger().getAttribute('aria-controls')!)!.getAttribute('role')).toBe('listbox');
+    key(document.activeElement!, 'Escape');
+    host.fields.set(MANY);
+    fixture.detectChanges();
+    open();
+    const controlled = document.getElementById(trigger().getAttribute('aria-controls')!)!;
+    expect(controlled.getAttribute('role')).toBe('listbox');
+    expect(find()!.getAttribute('aria-controls')).toBe(controlled.id);
+  });
+
   it('picking an option emits the field and closes the panel; a used option does nothing', () => {
     host.used.set(new Set(['a']));
     fixture.detectChanges();
