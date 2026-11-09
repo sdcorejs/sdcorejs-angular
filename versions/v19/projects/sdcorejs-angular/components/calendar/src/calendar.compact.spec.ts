@@ -91,6 +91,21 @@ describe('SdCalendar · compact, touch and print', () => {
     expect(calendar.date()).toBe('2026/10/23');
   }));
 
+  it('[CAL-B-12] marks "Ngày" pressed when a narrow week is drawn as a day (§12, §15, R2 A-24)', fakeAsync(() => {
+    const { host, calendar } = mount({}, '390px');
+    expect(calendar.view()).toBe('week');
+    const pressed = qa(host, '[data-view-option]').filter(button => button.getAttribute('aria-pressed') === 'true');
+    expect(pressed.map(button => button.dataset['viewOption'])).toEqual(['day']);
+  }));
+
+  it('[CAL-B-13] puts the title first on the first row of the narrow toolbar (§12, R2 A-20)', fakeAsync(() => {
+    const { host } = mount({}, '390px');
+    const title = (q(host, '[data-title]') ?? host).getBoundingClientRect();
+    const today = (q(host, 'button[data-action="today"]') ?? host).getBoundingClientRect();
+    expect(title.left).toBeLessThan(today.left);
+    expect(Math.abs(title.top + title.height / 2 - (today.top + today.height / 2))).toBeLessThan(today.height / 2);
+  }));
+
   it('[CAL-C-18] starts a touch drag only after a 400ms hold', fakeAsync(() => {
     const { fixture, host, settle } = mount({}, '390px');
     const drag = fixture.debugElement.query(By.css('[data-event-id="client"]')).injector.get(CdkDrag);

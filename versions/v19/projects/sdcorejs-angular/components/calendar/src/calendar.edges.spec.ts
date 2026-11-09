@@ -196,6 +196,34 @@ describe('SdCalendar · edge cases', () => {
     expect(findCssRule(/sd-calendar__all-day-grid/)?.getPropertyValue('user-select')).toBe('none');
   }));
 
+  it('[CAL-B-11] lays blocks and chevrons out from the inline start in right-to-left (R2 A-16)', fakeAsync(() => {
+    const { host, settle } = mount({});
+    host.setAttribute('dir', 'rtl');
+    settle();
+    const day = column(host, '2026/10/21').getBoundingClientRect();
+    const review = block(host, 'review').getBoundingClientRect();
+    // The inline start is the right edge: the block sits 2px in from it and keeps the reserve on the left.
+    expect(Math.round(day.right - review.right)).toBe(2);
+    expect(review.left - day.left).toBeGreaterThan(2);
+    expect(getComputedStyle(q(host, 'button[data-action="prev"] sd-icon') ?? host).transform).not.toBe('none');
+  }));
+
+  it('[CAL-B-14] shows the not-allowed cursor while a sweep is refused by creatable (§9.2, R2 A-19)', fakeAsync(() => {
+    const onCreate = jasmine.createSpy('onCreate');
+    const { host, settle } = mount({ create: { onCreate, creatable: () => false } });
+    const target = column(host, '2026/10/21');
+    expect(getComputedStyle(target).cursor).toBe('cell');
+    pointer(target, 'pointerdown', at(host, '2026/10/21', 600));
+    pointer(target, 'pointermove', at(host, '2026/10/21', 700));
+    settle();
+    expect(q(host, '[data-create-ghost][data-blocked]')).not.toBeNull();
+    expect(getComputedStyle(target).cursor).toBe('not-allowed');
+    pointer(target, 'pointerup', at(host, '2026/10/21', 700));
+    settle();
+    expect(getComputedStyle(target).cursor).toBe('cell');
+    expect(onCreate).not.toHaveBeenCalled();
+  }));
+
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {
     const warn = spyOn(console, 'warn');
     mount({}, { workingHours: { 1: [{ from: '17:00', to: '08:00' }], 2: [{ from: '08:00', to: '17:00' }] } });
