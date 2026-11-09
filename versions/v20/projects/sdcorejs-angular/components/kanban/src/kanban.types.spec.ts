@@ -20,7 +20,7 @@ interface Order {
 
 // Compile-time contract (TESTING §3.7): the file only has to compile; the runtime checks are light.
 describe('sd-kanban types', () => {
-  it('accepts the four onMove answers and refuses others', () => {
+  it('[KAN-T-01] [KAN-SC-12] accepts the four onMove answers and refuses others', () => {
     const answers: SdKanbanOption<Order>[] = [
       { move: { onMove: () => true } },
       { move: { onMove: () => undefined } },
@@ -34,7 +34,7 @@ describe('sd-kanban types', () => {
     expect(answers.length + [misspelled, noCallback].length).toBe(6);
   });
 
-  it('types cards, flags, load results and requests by the DTO', () => {
+  it('[KAN-T-02] [KAN-SC-04] [KAN-SC-05] types cards, flags, load results and requests by the DTO', () => {
     const card: SdKanbanCard<Order> = { id: 'o-1', columnId: 'new', title: 'DH-1', data: { amount: 5 } };
     // @ts-expect-error a card needs a columnId and a title
     const incomplete: SdKanbanCard<Order> = { id: 'o-2' };
@@ -51,7 +51,7 @@ describe('sd-kanban types', () => {
     expect(amount).toBeDefined();
   });
 
-  it('gives every template directive a typed context', () => {
+  it('[KAN-T-03] gives every template directive a typed context (TESTING §3.7)', () => {
     const cardGuard: (directive: SdKanbanCardTemplateDirective<Order>, context: unknown) => context is SdKanbanCardTemplateContext<Order> =
       SdKanbanCardTemplateDirective.ngTemplateContextGuard;
     const actionsGuard: (

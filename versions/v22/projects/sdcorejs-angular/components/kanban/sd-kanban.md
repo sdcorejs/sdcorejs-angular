@@ -62,15 +62,15 @@ A board that only shows cards passes `option: {}`.
 | `columns` | `readonly SdKanbanColumn[]` | required | `id`, `label`, semantic `color` (default `secondary`), `prefixIcon`, `disabled`, `summary` (second line under the label). Shown in this order. |
 | `option` | `SdKanbanOption<T>` | required | `dataSource`, `pageSize` (20), `loadMore` (`'button'`), `move`. A new object reloads every column (data source) and cancels a pending move. |
 | `items` | `readonly SdKanbanCard<T>[] \| undefined` | `undefined` | Cards on the client. Ignored, with a dev-mode warning, while `option.dataSource` is set. |
-| `selectedId` | `string \| null` | `null` | Two-way. Back to `null` when that card is no longer in the data. |
+| `selectedId` | `string \| null` | `null` | Two-way. Back to `null` when that card is no longer in the data (checked once the data is there). |
 | `keyword` | `string` | `''` | Two-way search text. Works without `searchable` (your own search box). |
 | `searchable` | `boolean` | `false` | Shows the board search (shared `sd-search-field`, size sm, 280px). |
 | `collapsible` | `boolean` | `true` | Collapse buttons in the column headers. |
 | `collapsedColumns` | `readonly string[]` | `[]` | Two-way ids of collapsed columns. A collapsed column keeps its cards. |
 | `disabled` | `boolean` | `false` | No move, selection, search or collapse; the card name buttons are disabled. |
 | `readonly` | `boolean` | `false` | No move. Selection, search, collapse and "Show more" work. |
-| `ariaLabel` | `string` | "Board" | Name of the board region. |
-| `autoId` | `string` | — | E2E scope, see E2E hooks. |
+| `ariaLabel` | `string \| null \| undefined` | "Board" | Name of the board region. |
+| `autoId` | `string \| null \| undefined` | — | E2E scope, see E2E hooks. |
 
 ### Outputs
 
@@ -123,8 +123,11 @@ readonly option: SdKanbanOption<Order> = {
 - `keyword` changes wait 300ms, abort every load and reload every loaded column from `cursor: null`. The server filters; the board does not.
 - A new `option` reference reloads every column. Results of an aborted load are dropped.
 - A card whose `columnId` differs from `args.columnId`, or with an empty `title`, is dropped with a dev-mode warning. A card id already loaded (another page or another column) keeps the first one, with a warning.
-- The count is `total` when known, otherwise the loaded cards with "+" while there is a next page.
-- First load: three skeleton blocks and `aria-busy` on the list. First-page error: a message and Retry in place of the cards. Later-page error: a message and Retry in place of "Show more".
+- The count is `total` when known, otherwise the loaded cards with "+" while there is a next page. Screen readers hear "{n} cards" only when `total` is known; "–" and "n+" are read as shown.
+- A column without its first page (collapsed and never opened, loading it, or failed it) is not a move destination yet: its "Move to" entry is disabled, `Alt` + `←` `→` skips it, a drag fades it, and `move()` resolves `false`. Open or retry it first.
+- First load: three skeleton blocks and `aria-busy` on the list. First-page error: a message and Retry in place of the cards (the count goes back to "–" and the summary of the server is dropped). Later-page error: a message and Retry in place of "Show more".
+- An empty column says "No matching cards" while `keyword` is set, "No cards" otherwise.
+- A `selectedId` given with the board (a link to one card) is kept until the first pages of the open columns are in; it goes back to `null` only if the card is not there.
 - "Show more {count}" closes each loaded list; `count` is `min(pageSize, total − loaded)`, or `pageSize` without `total`. `loadMore: 'auto'` loads the next page when the button comes within 200px of the lane's view (`IntersectionObserver`; without it the button stays).
 - An accepted move removes the card from the source column (`total` − 1) and adds it to the target column (`total` + 1): at the top with `reorder` off, before `beforeId` with `reorder` on. `onLoad` is not called again.
 
@@ -202,7 +205,7 @@ Card content is clipped to the card (`contain: paint`, which keeps hit testing a
 
 The board scrolls horizontally inside its container. Lanes are 280px (`flex: 1 0 280px`). Under 600px of **host** width (`ResizeObserver`, so a board in a narrow column of a desktop page counts) the board is compact: lanes of 260px (collapsed 64px); the root gets `data-compact`. There is no single-column mode. With a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 40px high.
 
-Each lane has the neutral `--sd-kanban-lane-bg`; the column `color` marks an 8px dot before the label, or tints `prefixIcon`. The header shows the label, the `summary` line under it (12px, secondary, cut with an ellipsis) and the count. While dragging, only the lane under the pointer is highlighted, and lanes refused by `droppable` fade to 45% with a not-allowed cursor. Cards use `--sd-surface` with a `--sd-kanban-card-border` outline and no shadow. The "⋯" button is transparent with a mouse until the card is hovered or focused, pending, failed or its menu is open; on touch it is always shown. The six `--sd-kanban-*` tokens are listed in `assets/THEME.md`.
+Each lane has the neutral `--sd-kanban-lane-bg`; the column `color` marks an 8px dot before the label, or tints `prefixIcon`. The header shows the label, the `summary` line under it (12px, secondary, cut with an ellipsis) and the count. While dragging, the cursor is `grabbing`, only the lane under the pointer is highlighted, and lanes refused by `droppable` fade to 45% with a not-allowed cursor. With `reorder` off the old place of the card stays drawn at 40%. Cards use `--sd-surface` with a `--sd-kanban-card-border` outline and no shadow. The "⋯" button is transparent with a mouse until the card is hovered or focused, pending, failed or its menu is open; on touch it is always shown. The six `--sd-kanban-*` tokens are listed in `assets/THEME.md`.
 
 ## Accessibility
 

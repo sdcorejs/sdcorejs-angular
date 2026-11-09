@@ -202,7 +202,9 @@ describe('SdKanban · review R2 regressions', () => {
       expect(columnOf('x')).toBe('open');
       expect(await kanban().move('x', { columnId: 'done' })).toBeFalse();
       expect(onMove).not.toHaveBeenCalled();
-      expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' })).withContext('same column (PD R1)').toBeTrue();
+      expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' }))
+        .withContext('same column (PD R1)')
+        .toBeTrue();
     });
 
     it('[KAN-B-13] keeps the Dismiss button of a failed card above the name overlay', async () => {
@@ -287,9 +289,11 @@ describe('SdKanban · review R2 regressions', () => {
     const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
     const kanban = (): SdKanban<Dto> => fixture.componentInstance;
     const lane = (id: string): HTMLElement => host().querySelector<HTMLElement>(`.sd-kanban__column[data-column-id="${id}"]`)!;
-    const ids = (id: string): (string | null)[] => Array.from(lane(id)?.querySelectorAll('article') ?? []).map(a => a.getAttribute('data-card-id'));
+    const ids = (id: string): (string | null)[] =>
+      Array.from(lane(id)?.querySelectorAll('article') ?? []).map(a => a.getAttribute('data-card-id'));
     const count = (id: string): HTMLElement => lane(id).querySelector<HTMLElement>('.sd-kanban__count')!;
-    const name = (id: string): HTMLButtonElement => host().querySelector<HTMLButtonElement>(`[data-kanban-card-main="${encodeURIComponent(id)}"]`)!;
+    const name = (id: string): HTMLButtonElement =>
+      host().querySelector<HTMLButtonElement>(`[data-kanban-card-main="${encodeURIComponent(id)}"]`)!;
     const settle = (): void => {
       fixture.detectChanges();
       flushMicrotasks();
@@ -403,12 +407,16 @@ describe('SdKanban · review R2 regressions', () => {
       // move() refuses it, and a column that is loading again.
       onMove.calls.reset();
       let result: boolean | undefined;
-      void kanban().move('l', { columnId: 'done' }).then(value => (result = value));
+      void kanban()
+        .move('l', { columnId: 'done' })
+        .then(value => (result = value));
       settle();
       expect(result).toBeFalse();
       kanban().reload('open');
       settle();
-      void kanban().move('l', { columnId: 'open' }).then(value => (result = value));
+      void kanban()
+        .move('l', { columnId: 'open' })
+        .then(value => (result = value));
       settle();
       expect(result).withContext('open is loading again').toBeFalse();
       expect(onMove).not.toHaveBeenCalled();

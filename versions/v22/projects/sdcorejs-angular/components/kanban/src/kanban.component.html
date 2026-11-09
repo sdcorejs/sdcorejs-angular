@@ -51,7 +51,13 @@
     <p class="sd-kanban__sr-only" [id]="id + '-instructions'">
       {{ (_reorder ? 'core.component.kanban.instructions' : 'core.component.kanban.instructions-column') | sdTranslate }}
     </p>
-    <div class="sd-kanban__board" cdkDropListGroup tabindex="0" role="region" [attr.aria-label]="boardLabel()">
+    <div
+      class="sd-kanban__board"
+      cdkDropListGroup
+      tabindex="0"
+      role="region"
+      [attr.aria-label]="boardLabel()"
+      [attr.data-dragging]="_dragging !== null || null">
       @for (view of boardColumns(); track view.column.id) {
         @let _collapsed = collapsed(view.column.id);
         @let _columnToken = token(view.column.id);
@@ -86,7 +92,10 @@
                 <span class="sd-kanban__summary" data-summary><bdi>{{ view.summary }}</bdi></span>
               }
             </div>
-            <span class="sd-kanban__count" [attr.aria-label]="'core.component.kanban.count' | sdTranslate: { count: view.count }">
+            <!-- R2 A-5: a spoken count only when the total is known; "–" and "n+" are read as shown. -->
+            <span
+              class="sd-kanban__count"
+              [attr.aria-label]="view.total === null ? null : ('core.component.kanban.count' | sdTranslate: { count: view.total })">
               {{ view.countText }}
             </span>
             @if (_columnActionsTemplate && !_collapsed) {
@@ -140,8 +149,15 @@
                 @let _failureId = id + '-failure-' + _cardToken;
                 @if (!_reorder && _dragging === card.card.id) {
                   <!-- why: with sorting off the CDK placeholder follows the pointer to the target lane; this marks the old place. -->
-                  <div class="sd-kanban__card sd-kanban__origin" data-origin aria-hidden="true" [style.height.px]="originHeight()">
-                    <span class="sd-kanban__card-title">{{ card.card.title }}</span>
+                  <!-- §6: the whole card at .4, as the design draws it (R2 A-8); inert, the real card is being dragged. -->
+                  <div class="sd-kanban__card sd-kanban__origin" data-origin aria-hidden="true" inert [style.height.px]="originHeight()">
+                    <div class="sd-kanban__card-body">
+                      @if (_cardTemplate) {
+                        <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
+                      } @else {
+                        <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
+                      }
+                    </div>
                   </div>
                 }
                 <article
@@ -224,7 +240,8 @@
                 </article>
               } @empty {
                 <p class="sd-kanban__empty">
-                  {{ (view.count ? 'core.component.kanban.no-results' : 'core.component.kanban.empty-column') | sdTranslate }}
+                  <!-- items: cards hidden by the keyword; data source: the server found none for the keyword (R2 A-7). -->
+                  {{ ((dataMode() ? !!keyword().trim() : view.count > 0) ? 'core.component.kanban.no-results' : 'core.component.kanban.empty-column') | sdTranslate }}
                 </p>
               }
               @if (view.status === 'loading-more') {

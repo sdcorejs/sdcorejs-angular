@@ -74,6 +74,8 @@ interface ColumnView<T> {
   readonly cards: readonly CardView<T>[];
   /** Cards of the column: the server's total, or the loaded / given cards. */
   readonly count: number;
+  /** §3 column context: the server's `total`, or the column's cards in `items`; `null` while unknown. */
+  readonly total: number | null;
   /** Header count (§6): "n", "visible/total" while filtering items, "n+" with more pages, "–" while unknown. */
   readonly countText: string;
   readonly summary: string | null;
@@ -234,7 +236,7 @@ export class SdKanban<T = unknown> {
         .filter(view => dataMode || !keyword || (view.card.searchText ?? view.card.title).toLocaleLowerCase(locale).includes(keyword));
       if (!dataMode) {
         const countText = views.length !== all.length ? `${views.length}/${all.length}` : `${all.length}`;
-        const base = { column, cards: views, count: all.length, countText, summary: column.summary ?? null };
+        const base = { column, cards: views, count: all.length, total: all.length, countText, summary: column.summary ?? null };
         return { ...base, status: null, loaded: true, nextCursor: null, moreCount: 0 };
       }
       const state = this.#loader.state(column.id);
@@ -245,6 +247,7 @@ export class SdKanban<T = unknown> {
         column,
         cards: views,
         count: state.total ?? all.length,
+        total: state.total,
         countText,
         summary: state.summary ?? column.summary ?? null,
         status: state.status,
@@ -308,13 +311,21 @@ export class SdKanban<T = unknown> {
     // §5.2: loadMore 'auto' watches the "Show more" buttons; without IntersectionObserver the buttons stay.
     effect(() => {
       this.boardColumns();
-      if (this.option().loadMore !== 'auto' || typeof IntersectionObserver === 'undefined') return;
+      if (this.option().loadMore !== 'auto' || typeof IntersectionObserver === 'undefined') {
+        // R2: a new option without 'auto' stops the automatic loads.
+        this.#observer?.disconnect();
+        this.#observer = undefined;
+        this.#observed.clear();
+        return;
+      }
       afterNextRender(() => this.#observeLoadMore(), { injector: this.#injector });
     });
-    // SC-27: the selected card left the data.
+    // SC-27: the selected card left the data. Not before the data is there (R2 A-11): a selectedId given with the
+    // board (a link to one card) waits for `items`, or for the first pages of the open columns.
     effect(() => {
       const id = this.selectedId();
-      if (id !== null && !this.cards().some(card => card.id === id)) untracked(() => this.selectedId.set(null));
+      if (id === null || !this.#dataArrived()) return;
+      if (!this.cards().some(card => card.id === id)) untracked(() => this.selectedId.set(null));
     });
     // §9: the card template renders inside the name button, so it must not hold controls; checked once in dev mode.
     effect(() => {
@@ -384,9 +395,8 @@ export class SdKanban<T = unknown> {
     const origin = card && columns.find(column => column.id === card.columnId);
     if (!card || !target || target.disabled || !origin || origin.disabled) return false;
     const dataMode = this.dataMode();
-    // A column that is (re)loading its first page, or failed it, has no cards to place against.
-    if (dataMode && [origin.id, target.id].some(id => this.#loader.state(id).status === 'loading' || !this.#loader.state(id).loaded))
-      return false;
+    // A column that is (re)loading its first page, or does not have it, has no cards to place against (R2 A-3).
+    if (dataMode && [origin.id, target.id].some(id => !this.#ready(id))) return false;
     // SC-06, SC-08: both flags are evaluated again right before onMove, whatever the render showed.
     // droppable is about changing column; a move inside one column only needs movable (PD, R1).
     if (!allows(move.movable, card)) return false;
@@ -545,8 +555,28 @@ export class SdKanban<T = unknown> {
 
   /** `option.move.droppable` for the menu, Alt + arrow and the start of a drag (SC-08). */
   protected canDrop(view: CardView<T>, from: ColumnView<T>, to: SdKanbanColumn): boolean {
+    // R2 A-3: with a data source, a column without its first page (collapsed and never opened, loading, failed) is
+    // no destination yet: the menu entry is off, Alt + arrow skips it, a drag fades it.
+    if (this.dataMode() && to.id !== from.column.id && !this.#ready(to.id)) return false;
     const context: SdKanbanDropContext<T> = { card: view.card, from: from.column, to };
     return allows(this.option().move?.droppable, context);
+  }
+
+  /** Data source: the column shows its first page and is not loading it again. */
+  #ready(columnId: string): boolean {
+    const state = this.#loader.state(columnId);
+    return state.loaded && state.status !== 'loading';
+  }
+
+  /** `items` is set, or every open column of the data source has its first page or failed it (SC-27). */
+  #dataArrived(): boolean {
+    if (!this.dataMode()) return this.items() !== undefined;
+    return this.columns()
+      .filter(column => !this.collapsed(column.id))
+      .every(column => {
+        const state = this.#loader.state(column.id);
+        return state.loaded || state.status === 'error';
+      });
   }
 
   protected moveFromMenu(cardId: string, to: MoveTarget, trigger: HTMLButtonElement): void {
@@ -589,9 +619,9 @@ export class SdKanban<T = unknown> {
     return {
       $implicit: view.column,
       column: view.column,
-      total: view.count,
+      total: view.total,
       visibleCount: view.cards.length,
-      summary: view.column.summary ?? null,
+      summary: view.summary,
       collapsed: this.collapsed(view.column.id),
     };
   }
@@ -673,8 +703,11 @@ export class SdKanban<T = unknown> {
     this.#observer ??= new IntersectionObserver(
       entries => {
         for (const entry of entries) {
-          const id = entry.isIntersecting ? (entry.target as HTMLElement).dataset['loadMore'] : undefined;
-          if (id !== undefined) this.loadMore(id);
+          if (!entry.isIntersecting) continue;
+          // The button carries the encoded id (R2 A-4); find the column it stands for.
+          const token = (entry.target as HTMLElement).dataset['loadMore'];
+          const column = this.columns().find(candidate => this.token(candidate.id) === token);
+          if (column) this.loadMore(column.id);
         }
       },
       { rootMargin: '200px' }

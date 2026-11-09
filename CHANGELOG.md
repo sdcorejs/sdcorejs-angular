@@ -88,6 +88,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `SdKanbanMoveRequest<T>` is `{ card, from: { columnId, index }, to: { columnId, index, beforeId }, source, signal }`; `to.index` and `to.beforeId` are `null` without `reorder`, and `beforeId: null` means after the last loaded card. `previousItems` and `nextItems` are gone.
   - `move(itemId, toColumnId, toIndex?, source?)` becomes `move(cardId, { columnId, beforeId? }, source?)`.
 - `sdMove` emits after the board's data changed; read the new place from the request.
+- `pendingId` is a read-only signal (it was a writable `signal`); the board alone sets it.
 - `searchable` is an input and defaults to `false` (the option defaulted to `true`); `collapsible` is an input.
 - The drag handle is gone: the whole card drags (400ms press on touch), and the card's name is a button that is the tab stop and the keyboard target. The card template renders inside that button, so controls belong in `sdKanbanCardActionsTemplate`. Card template context: `item` becomes `card` (your object is `card.data`); column template context: `count` becomes `total` (`null` while unknown).
 - The narrow layout follows the host width under 600px (`data-compact`) instead of `@media (max-width: 599px)`.
@@ -171,11 +172,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Per column: three skeleton blocks on the first load, "Show {count} more" or an `IntersectionObserver` feed, first-page and later-page errors with Retry, `sdLoadError({ columnId, error })`, `reload(columnId?)` and `loadMore(columnId)`.
   - `total` and `summary` of the first page set the header count and a summary line under the label (`SdKanbanColumn.summary` without a data source). The count shows "n+" while more pages exist and "–" before a collapsed column first loads; collapsed columns load when expanded.
   - `keyword` reloads the loaded columns after 300ms; a new `option` reloads every column; a new `columns` loads only the new ones. Late results, cards of another column, cards without a title and duplicate ids are dropped (dev-mode warning).
-  - An accepted move updates both columns and their totals without calling `onLoad` again.
+  - An accepted move updates both columns and their totals without calling `onLoad` again. A column without its first page (collapsed and never opened, loading, failed) is not a destination until it loads.
 - `option.move.droppable({ card, from, to })` runs when a drag starts: refused lanes fade, get `data-blocked` and `aria-disabled`, and refuse the drop ("Can't move to {column}" is announced). The menu disables those destinations and `Alt` + `←` `→` skips them.
 - `option.move.onMove` may return `'cancel'`: the card goes back without an error or `sdMoveError`, and "Move of {title} cancelled" is announced.
 - Card selection: `selectedId` (two-way, back to `null` when the card leaves the data) and `sdSelect`, from a click, tap, `Enter` or `Space`; `Esc` clears it. The selected card has a primary outline and `aria-current="true"`; the card template context has `selected`.
-- With `reorder` off the old place of a dragged card fades instead of a drop slot; `pendingId` exposes the card waiting for `onMove`.
+- With `reorder` off the old place of a dragged card stays drawn at 40% instead of a drop slot; the cursor is `grabbing` while dragging.
 - E2E hooks: `data-status`, `data-blocked`, `data-summary`, `data-selected`, `data-pending`, `data-movable`, `data-kanban-card-main`, `data-kanban-menu`, `data-skeleton`, `data-load-error`, `data-load-more`, `data-action="retry"`, `data-compact`, and a `data-autoid` on each column.
 - i18n keys `core.component.kanban.{load-more,loading,load-error,retry,drop-blocked,cancelled,instructions-column,selected}` in the five locales.
 

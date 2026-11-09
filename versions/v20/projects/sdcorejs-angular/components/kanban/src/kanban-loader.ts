@@ -133,7 +133,12 @@ export class KanbanColumnLoader<T> {
       if (controller.signal.aborted) return;
       this.#controllers.delete(columnId);
       const first = cursor === null;
-      this.#patch(columnId, { status: 'error', failedCursor: cursor, ...(first ? { cards: [], loaded: false, total: null } : {}) });
+      // A failed first page leaves nothing of the old page on screen: cards, total and summary (R2 A-18).
+      this.#patch(columnId, {
+        status: 'error',
+        failedCursor: cursor,
+        ...(first ? { cards: [], loaded: false, total: null, summary: null } : {}),
+      });
       this.onError({ columnId, error });
       return;
     }
@@ -146,7 +151,14 @@ export class KanbanColumnLoader<T> {
     for (const card of before) seen.add(card.id);
     const accepted: SdKanbanCard<T>[] = [];
     for (const card of result.items ?? []) {
-      if (card.columnId !== columnId || typeof card.title !== 'string' || !card.title.trim() || !card.id) {
+      // SC-01, as `items` (kanbanDataInvalid): an id is a non-blank string.
+      if (
+        card.columnId !== columnId ||
+        typeof card.title !== 'string' ||
+        !card.title.trim() ||
+        typeof card.id !== 'string' ||
+        !card.id.trim()
+      ) {
         this.#warn(`dropped a card of column "${columnId}" with another columnId, no id or an empty title`);
         continue;
       }

@@ -242,6 +242,9 @@
   margin-top: 6px;
 }
 .sd-kanban__card-status {
+  // why: above the name's overlay (::after), so the Dismiss button of a failed card takes the click (R2 A-2).
+  position: relative;
+  z-index: 1;
   grid-area: status;
   display: flex;
   align-items: center;
@@ -391,6 +394,8 @@
   flex: 1;
   flex-direction: column;
   min-width: 0;
+  // why: the summary line follows the label in RTL, whatever alignment the page sets.
+  text-align: start;
 }
 .sd-kanban__summary {
   overflow: hidden;
@@ -419,8 +424,11 @@
   font-size: var(--sd-font-size-13, 13px);
   font-weight: var(--sd-font-weight-medium, 500);
   cursor: pointer;
-  &:hover {
-    background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+  // SC-36: hover only adds visuals, and only where there is hover.
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+    }
   }
   &:focus-visible {
     outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
@@ -490,6 +498,21 @@
   > .sd-kanban__cards {
     opacity: 0.45;
     cursor: not-allowed;
+  }
+}
+// §6: grabbing while a card is dragged. The CDK preview has pointer-events: none, so the cursor comes from what is
+// under it: the board, and not-allowed over a refused lane.
+.sd-kanban__board[data-dragging] {
+  cursor: grabbing;
+  .sd-kanban__card {
+    cursor: grabbing;
+  }
+  .sd-kanban__column[data-blocked] {
+    > .sd-kanban__header,
+    > .sd-kanban__cards,
+    .sd-kanban__card {
+      cursor: not-allowed;
+    }
   }
 }
 // Chỗ thả: khe nét đứt cùng chiều cao thẻ; nội dung ẩn bằng visibility để giữ chiều cao.
