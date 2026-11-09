@@ -64,6 +64,10 @@ interface CardView<T> {
   /** `beforeId` of one step up / down in the loaded cards; `undefined` at the edge. */
   readonly up: string | null | undefined;
   readonly down: string | null | undefined;
+  /** `option.move.movable` when the board renders (SC-06); `#move` evaluates it again right before `onMove`. */
+  readonly movable: boolean;
+  /** `encodeURIComponent(id)` for the data attributes. */
+  readonly token: string;
 }
 interface ColumnView<T> {
   readonly column: SdKanbanColumn;
@@ -214,6 +218,7 @@ export class SdKanban<T = unknown> {
     const dataMode = this.dataMode();
     const states = this.#loader.states();
     const pageSize = this.option().pageSize ?? 20;
+    const move = this.option().move;
     return this.columns().map(column => {
       const all = cards.filter(card => card.columnId === column.id);
       const views = all
@@ -222,6 +227,8 @@ export class SdKanban<T = unknown> {
           index,
           up: index > 0 ? all[index - 1].id : undefined,
           down: index < all.length - 1 ? (all[index + 2]?.id ?? null) : undefined,
+          movable: !!move && allows(move.movable, card),
+          token: encodeURIComponent(card.id),
         }))
         // why: with a data source the server filters by keyword; the board shows what it gets.
         .filter(view => dataMode || !keyword || (view.card.searchText ?? view.card.title).toLocaleLowerCase(locale).includes(keyword));

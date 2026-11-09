@@ -6,7 +6,6 @@ import { resolve } from 'node:path';
 
 declare global {
   interface Window {
-    __t0: number;
     __long: number[];
     axe: { run: (context: Element) => Promise<{ violations: { id: string; impact: string }[] }> };
   }
@@ -53,7 +52,12 @@ async function drag(page: Page, source: Locator, target: Locator, beforeDrop?: (
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 8, { steps: 2 });
-  await page.mouse.move(to.x + to.width / 2, to.y + (top ? 10 : Math.min(60, to.height / 2)), { steps: 10 });
+  const x = to.x + to.width / 2;
+  const y = to.y + (top ? 10 : Math.min(60, to.height / 2));
+  await page.mouse.move(x, y, { steps: 10 });
+  // why: one more move in the same direction once the target has settled, so a slow frame cannot leave the CDK
+  // without a sort at the drop point (seen once on a cold dev server).
+  await page.mouse.move(x, y + Math.sign(y - from.y) * 2);
   await beforeDrop?.();
   await page.mouse.up();
 }
@@ -232,12 +236,19 @@ test.describe('sd-kanban', () => {
     for (let run = 0; run < 5; run++) {
       await page.getByRole('button', { name: 'Dữ liệu mẫu' }).click();
       await expect(root.locator('article')).toHaveCount(7);
-      await page.evaluate(() => {
-        window.__t0 = performance.now();
-      });
-      await page.getByTestId('tasks-many').click();
+      // why: timed inside the page, from the click that sets the 800 cards to the end of the frame that shows them,
+      // so the Playwright round trips are not in the number.
+      samples.push(
+        await page.getByTestId('tasks-many').evaluate(
+          button =>
+            new Promise<number>(done => {
+              const start = performance.now();
+              (button as HTMLButtonElement).click();
+              requestAnimationFrame(() => setTimeout(() => done(performance.now() - start), 0));
+            }),
+        ),
+      );
       await expect(card(root, 'OPEN-200')).toBeAttached();
-      samples.push(await page.evaluate(() => new Promise<number>(done => requestAnimationFrame(() => done(performance.now() - window.__t0)))));
     }
     samples.sort((a, b) => a - b);
     test.info().annotations.push({ type: 'render-800-median-ms', description: samples[2].toFixed(1) });

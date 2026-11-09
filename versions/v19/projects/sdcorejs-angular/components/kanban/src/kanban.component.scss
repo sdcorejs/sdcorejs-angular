@@ -138,6 +138,10 @@
 // §6: the name button covers the card; pointer to select, grab when the card can be moved.
 .sd-kanban__card {
   position: relative;
+  // why: the card's positioned parts (name overlay, tools, actions) stay inside the card's own stacking context, so a
+  // hit test or a repaint while dragging skips the other cards (TESTING §10: 4 × 200 cards, hit test ~14ms → ~4ms).
+  // Card content is clipped to the card; popups belong in an overlay (sd-kanban.md).
+  contain: paint;
   cursor: pointer;
   &[data-movable] {
     cursor: grab;

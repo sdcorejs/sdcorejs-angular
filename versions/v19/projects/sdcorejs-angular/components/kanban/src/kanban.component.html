@@ -133,7 +133,7 @@
               </div>
             } @else if (!_collapsed) {
               @for (card of view.cards; track card.card.id) {
-                @let _cardToken = token(card.card.id);
+                @let _cardToken = card.token;
                 @let _cardPending = _pending === card.card.id;
                 @let _cardFailed = !!_failure && _failedId === card.card.id;
                 @let _failureId = id + '-failure-' + _cardToken;
@@ -148,7 +148,7 @@
                   class="sd-kanban__card"
                   cdkDrag
                   [cdkDragData]="card"
-                  [cdkDragDisabled]="_blocked || !!view.column.disabled || !isMovable(card.card)"
+                  [cdkDragDisabled]="_blocked || !!view.column.disabled || !card.movable"
                   [cdkDragStartDelay]="dragStartDelay"
                   (cdkDragStarted)="dragStarted(card, view, cardElement)"
                   (cdkDragEnded)="dragEnded()"
@@ -158,7 +158,7 @@
                   [class.sd-kanban__card--failed]="_cardFailed"
                   [attr.data-selected]="_selected === card.card.id || null"
                   [attr.data-pending]="_cardPending || null"
-                  [attr.data-movable]="(_hasMove && !_blocked && !view.column.disabled && isMovable(card.card)) || null"
+                  [attr.data-movable]="(_hasMove && !_blocked && !view.column.disabled && card.movable) || null"
                   [attr.aria-current]="_selected === card.card.id ? 'true' : null"
                   [attr.aria-label]="card.card.title"
                   [attr.data-card-id]="_cardToken"
@@ -191,40 +191,12 @@
                       type="button"
                       class="sd-kanban__icon-button"
                       [matMenuTriggerFor]="moveMenu"
-                      [disabled]="_blocked || !!view.column.disabled || !isMovable(card.card)"
+                      [matMenuTriggerData]="{ card, view, trigger: moveTrigger }"
+                      [disabled]="_blocked || !!view.column.disabled || !card.movable"
                       [attr.data-kanban-menu]="_cardToken"
                       [attr.aria-label]="'core.component.kanban.move-menu' | sdTranslate: { title: card.card.title }">
                       <sd-icon name="more_horiz" size="sm" />
                     </button>
-                    <mat-menu #moveMenu="matMenu">
-                      <!-- why: lazy content, so droppable runs when the menu opens, not at every render (§7.3). -->
-                      <ng-template matMenuContent>
-                      @if (_reorder) {
-                      <button
-                        mat-menu-item
-                        [disabled]="_blocked || card.up === undefined"
-                        (click)="moveFromMenu(card.card.id, { columnId: view.column.id, beforeId: card.up }, moveTrigger)">
-                        {{ 'core.component.kanban.move-up' | sdTranslate }}
-                      </button>
-                      <button
-                        mat-menu-item
-                        [disabled]="_blocked || card.down === undefined"
-                        (click)="moveFromMenu(card.card.id, { columnId: view.column.id, beforeId: card.down }, moveTrigger)">
-                        {{ 'core.component.kanban.move-down' | sdTranslate }}
-                      </button>
-                      }
-                      @for (column of columns(); track column.id) {
-                        @if (column.id !== view.column.id) {
-                          <button
-                            mat-menu-item
-                            [disabled]="_blocked || !!column.disabled || !canDrop(card, view, column)"
-                            (click)="moveFromMenu(card.card.id, { columnId: column.id }, moveTrigger)">
-                            {{ 'core.component.kanban.move-to' | sdTranslate: { column: column.label } }}
-                          </button>
-                        }
-                      }
-                      </ng-template>
-                    </mat-menu>
                   </div>
                   }
                   @if (_cardActionsTemplate) {
@@ -278,4 +250,33 @@
     </div>
   }
 </section>
+<!-- why: one move menu for the whole board; its lazy content gets the card from the trigger (§7.3, TESTING §10). -->
+<mat-menu #moveMenu="matMenu">
+  <ng-template matMenuContent let-card="card" let-view="view" let-trigger="trigger">
+    @if (reorder()) {
+      <button
+        mat-menu-item
+        [disabled]="moveBlocked() || card.up === undefined"
+        (click)="moveFromMenu(card.card.id, { columnId: view.column.id, beforeId: card.up }, trigger)">
+        {{ 'core.component.kanban.move-up' | sdTranslate }}
+      </button>
+      <button
+        mat-menu-item
+        [disabled]="moveBlocked() || card.down === undefined"
+        (click)="moveFromMenu(card.card.id, { columnId: view.column.id, beforeId: card.down }, trigger)">
+        {{ 'core.component.kanban.move-down' | sdTranslate }}
+      </button>
+    }
+    @for (column of columns(); track column.id) {
+      @if (column.id !== view.column.id) {
+        <button
+          mat-menu-item
+          [disabled]="moveBlocked() || !!column.disabled || !canDrop(card, view, column)"
+          (click)="moveFromMenu(card.card.id, { columnId: column.id }, trigger)">
+          {{ 'core.component.kanban.move-to' | sdTranslate: { column: column.label } }}
+        </button>
+      }
+    }
+  </ng-template>
+</mat-menu>
 <p class="sd-kanban__sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
