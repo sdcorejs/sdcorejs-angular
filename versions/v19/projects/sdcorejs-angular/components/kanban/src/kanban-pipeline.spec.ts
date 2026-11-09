@@ -213,7 +213,11 @@ describe('SdKanban · move pipeline', () => {
       mount({ onMove });
       expect(lists().every(candidate => candidate.sortingDisabled)).toBeTrue();
       expect(await kanban().move('x', { columnId: 'done', beforeId: 'd' })).toBeTrue();
-      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({ columnId: 'done', index: null, beforeId: null });
+      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({
+        columnId: 'done',
+        index: null,
+        beforeId: null,
+      });
       // x comes before d in the items array, so it stays above d in Done.
       expect(order()).withContext('keeps the place in the array').toEqual(['y', 'x', 'd']);
       expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' }))
@@ -254,7 +258,11 @@ describe('SdKanban · move pipeline', () => {
       await closeMenu();
       press('x', 'ArrowDown');
       await settle();
-      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({ columnId: 'open', index: 1, beforeId: null });
+      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({
+        columnId: 'open',
+        index: 1,
+        beforeId: null,
+      });
     });
   });
 

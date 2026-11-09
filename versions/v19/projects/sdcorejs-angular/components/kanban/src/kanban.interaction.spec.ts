@@ -92,7 +92,9 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       settle();
       expect(kanban().selectedId()).toBe('x');
       expect(selected).toHaveBeenCalledTimes(1);
-      expect((selected.calls.mostRecent()?.args[0] as Card | undefined)?.data).withContext('the card as given').toBe(dto);
+      expect((selected.calls.mostRecent()?.args[0] as Card | undefined)?.data)
+        .withContext('the card as given')
+        .toBe(dto);
       expect(live()).toBe(t('selected', 'First'));
       name('x').click();
       settle();
@@ -135,7 +137,10 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       mount();
       name('x').click();
       settle();
-      fixture.componentRef.setInput('items', data.filter(card => card.id !== 'x'));
+      fixture.componentRef.setInput(
+        'items',
+        data.filter(card => card.id !== 'x')
+      );
       settle();
       expect(kanban().selectedId()).toBeNull();
     }));
@@ -227,7 +232,9 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       const action = card.querySelector<HTMLButtonElement>('.test-action') ?? document.createElement('button');
       for (const control of [menu, action]) {
         const point = centerOf(control);
-        expect(control.contains(document.elementFromPoint(point.x, point.y))).withContext(control.className).toBeTrue();
+        expect(control.contains(document.elementFromPoint(point.x, point.y)))
+          .withContext(control.className)
+          .toBeTrue();
       }
       action.click();
       expect(hosted.componentInstance.acted()).toBe('x');

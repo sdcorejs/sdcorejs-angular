@@ -12,6 +12,7 @@ import {
   effect,
   inject,
   input,
+  isDevMode,
   linkedSignal,
   model,
   output,
@@ -150,6 +151,11 @@ export class SdKanban<T = unknown> {
   protected readonly originHeight = signal(0);
   /** Height of the card under the last press; the CDK takes the card out of the lane before `cdkDragStarted`. */
   #pressHeight = 0;
+  /** A drag just ended: a click the browser may send to the card for its mouseup must not select (kanban.md §7.2). */
+  #justDragged = false;
+  #warnedTemplate = false;
+  /** §7.2: a touch has to hold 400ms before a drag, so a tap selects and a swipe scrolls the board. */
+  protected readonly dragStartDelay = { touch: 400, mouse: 0 };
   /** Columns `droppable` refuses for the card being dragged, worked out once when the drag starts (kanban.md §7.2). */
   readonly #blocked = signal<ReadonlySet<string>>(new Set());
   protected readonly reorder = computed(() => !!this.option().move?.reorder);
@@ -200,6 +206,17 @@ export class SdKanban<T = unknown> {
           this.#cancel();
         }
       });
+    });
+    // SC-27: the selected card left the data.
+    effect(() => {
+      const id = this.selectedId();
+      if (id !== null && !this.cards().some(card => card.id === id)) untracked(() => this.selectedId.set(null));
+    });
+    // §9: the card template renders inside the name button, so it must not hold controls; checked once in dev mode.
+    effect(() => {
+      this.boardColumns();
+      if (!this.cardTemplate() || this.#warnedTemplate || !isDevMode()) return;
+      afterNextRender(() => this.#checkCardTemplate(), { injector: this.#injector });
     });
     inject(DestroyRef).onDestroy(() => {
       this.#destroyed = true;
@@ -329,12 +346,43 @@ export class SdKanban<T = unknown> {
     this.draggingId.set(view.card.id);
   }
 
-  /** Records the card's height while it is still in its lane (R1-B-03). */
+  /** Records the card's height while it is still in its lane (R1-B-03); a new press may select again. */
   protected notePress(element: HTMLElement): void {
     this.#pressHeight = element.getBoundingClientRect().height;
+    this.#justDragged = false;
+  }
+
+  /** Click, tap, Enter or Space on a card's name (SC-26); a click the browser sends after a drag is ignored. */
+  protected select(card: SdKanbanCard<T>, event?: MouseEvent): void {
+    if (this.disabled()) return;
+    if (event && event.detail > 0 && this.#justDragged) {
+      this.#justDragged = false;
+      return;
+    }
+    this.selectedId.set(card.id);
+    this.sdSelect.emit(card);
+    this.announcement.set(this.#i18n.t('core.component.kanban.selected', { title: card.title }));
+  }
+
+  /** Keys on a card's name (§7.4): Enter and Space select, Esc clears the selection, Alt + arrows move. */
+  protected cardKeydown(event: KeyboardEvent, view: CardView<T>, column: ColumnView<T>): void {
+    const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+    if ((event.key === 'Enter' || event.key === ' ') && !modified) {
+      event.preventDefault();
+      this.select(view.card);
+      return;
+    }
+    if (event.key === 'Escape' && !modified) {
+      if (this.selectedId() === null) return;
+      event.preventDefault();
+      this.selectedId.set(null);
+      return;
+    }
+    this.keydown(event, view, column);
   }
 
   protected dragEnded(): void {
+    this.#justDragged = true;
     this.#blocked.set(new Set());
     this.draggingId.set(null);
   }
@@ -408,7 +456,7 @@ export class SdKanban<T = unknown> {
       column: column.column,
       index: view.index,
       pending: this.pendingId() === view.card.id,
-      selected: false,
+      selected: this.selectedId() === view.card.id,
     };
   }
   protected token(id: string): string {
@@ -422,8 +470,8 @@ export class SdKanban<T = unknown> {
     this.moveFailure.set(undefined);
     this.failedId.set(null);
     if (cardId === undefined) return;
-    Array.from(this.#host.nativeElement.querySelectorAll<HTMLButtonElement>('[data-kanban-handle]'))
-      .find(button => button.getAttribute('data-kanban-handle') === this.token(cardId))
+    Array.from(this.#host.nativeElement.querySelectorAll<HTMLButtonElement>('[data-kanban-card-main]'))
+      .find(button => button.getAttribute('data-kanban-card-main') === this.token(cardId))
       ?.focus();
   }
 
@@ -435,6 +483,18 @@ export class SdKanban<T = unknown> {
     if (column && this.#blocked().has(column.id)) {
       this.announcement.set(this.#i18n.t('core.component.kanban.drop-blocked', { column: column.label }));
     }
+  }
+
+  #checkCardTemplate(): void {
+    if (this.#warnedTemplate) return;
+    const control = this.#host.nativeElement.querySelector(
+      '.sd-kanban__card-main :is(button, a[href], input, select, textarea, [tabindex])'
+    );
+    if (!control) return;
+    this.#warnedTemplate = true;
+    console.warn(
+      '[sd-kanban] sdKanbanCardTemplate renders inside the card name button; put buttons, links and fields in sdKanbanCardActionsTemplate.'
+    );
   }
 
   #rendered(id: string | null): boolean {
@@ -507,8 +567,8 @@ export class SdKanban<T = unknown> {
             (active && active !== document.body && active !== focus.origin && active !== focus.menuTrigger)
           )
             return;
-          Array.from(this.#host.nativeElement.querySelectorAll<HTMLButtonElement>('[data-kanban-handle]'))
-            .find(button => button.getAttribute('data-kanban-handle') === this.token(id))
+          Array.from(this.#host.nativeElement.querySelectorAll<HTMLButtonElement>('[data-kanban-card-main]'))
+            .find(button => button.getAttribute('data-kanban-card-main') === this.token(id))
             ?.focus();
         } finally {
           this.#releaseFocus(focus);

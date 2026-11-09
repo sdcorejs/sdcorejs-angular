@@ -135,6 +135,57 @@
     border-color: var(--sd-border-danger, var(--sd-error));
   }
 }
+// §6: the name button covers the card; pointer to select, grab when the card can be moved.
+.sd-kanban__card {
+  position: relative;
+  cursor: pointer;
+  &[data-movable] {
+    cursor: grab;
+  }
+  // Selected (§6): primary border and inset ring; pending and failed keep their border colour.
+  &[data-selected] {
+    border-color: var(--sd-primary);
+    box-shadow: inset 0 0 0 1px var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 4%, var(--sd-surface));
+  }
+  &[data-selected].sd-kanban__card--pending {
+    border-color: var(--sd-primary);
+  }
+  &[data-selected].sd-kanban__card--failed {
+    border-color: var(--sd-border-danger, var(--sd-error));
+  }
+  &:has(.sd-kanban__card-main:focus-visible) {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+.cdk-drag-preview.sd-kanban__card {
+  cursor: grabbing;
+}
+.sd-kanban__card-main {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: inherit;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
 .sd-kanban__card-body {
   grid-area: body;
   min-width: 0;
@@ -146,6 +197,8 @@
   font-weight: var(--sd-font-weight-semibold, 600);
 }
 .sd-kanban__card-tools {
+  position: relative;
+  z-index: 1;
   grid-area: tools;
   display: flex;
   align-items: flex-start;
@@ -174,6 +227,8 @@
   }
 }
 .sd-kanban__card-actions {
+  position: relative;
+  z-index: 1;
   grid-area: actions;
   display: flex;
   align-items: center;
@@ -249,10 +304,6 @@
     opacity: 0.5;
     cursor: default;
   }
-}
-.sd-kanban__handle {
-  cursor: grab;
-  touch-action: none;
 }
 .sd-kanban__empty {
   padding: 24px 8px;
@@ -368,7 +419,8 @@
     border-color: CanvasText;
   }
   .sd-kanban__card--pending,
-  .sd-kanban__card--failed {
+  .sd-kanban__card--failed,
+  .sd-kanban__card[data-selected] {
     outline: 2px solid Highlight;
   }
 }

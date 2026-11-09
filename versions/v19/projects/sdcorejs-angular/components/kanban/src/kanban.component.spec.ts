@@ -42,7 +42,8 @@ describe('SdKanban', () => {
   const initial = { open: ['x', 'y'], done: ['hidden'] };
   const columnOf = (id: string): string | null | undefined =>
     host().querySelector(`article[data-card-id="${id}"]`)?.closest('[data-column-id]')?.getAttribute('data-column-id');
-  const lastRequest = (spy: jasmine.Spy): SdKanbanMoveRequest<Dto> | undefined => spy.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined;
+  const lastRequest = (spy: jasmine.Spy): SdKanbanMoveRequest<Dto> | undefined =>
+    spy.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined;
   /** The card's name button: the focus and keyboard target of a card (kanban.md §6, §7.4). */
   const handle = (id: string): HTMLButtonElement => {
     const button = host().querySelector<HTMLButtonElement>(`[data-kanban-card-main="${id}"]`);
