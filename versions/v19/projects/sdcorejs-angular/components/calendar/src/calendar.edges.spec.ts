@@ -3,7 +3,7 @@ import { findCssRule } from '../../../testing';
 import { centerOf, mouse, mouseDrag, pointer, press } from '../../../testing/schedule-testing';
 import { SdCalendar } from './calendar.component';
 import type { SdCalendarEvent, SdCalendarMoveRequest, SdCalendarOption } from './calendar.model';
-import { configureCalendar, createWith, q, text, weekEvents, type CalendarDto } from './calendar.testing';
+import { configureCalendar, createWith, q, qa, text, weekEvents, type CalendarDto } from './calendar.testing';
 
 type Event = SdCalendarEvent<CalendarDto>;
 
@@ -238,6 +238,13 @@ describe('SdCalendar · edge cases', () => {
     // "Nghỉ phép", "Trực đêm" (it crosses midnight) and three extra bars: three rows, two more.
     expect(text(more)).toBe('+2');
     expect(more?.getAttribute('aria-label')).toBe(`+2 khác, ${dayLabel}`);
+  }));
+
+  it('[CAL-B-16] draws the dot of a month bar once per week row, not on the cells it continues into', fakeAsync(() => {
+    const { host } = mount({}, { view: 'month' });
+    const chips = qa(host, '[role="gridcell"] [data-event-id="leave"]');
+    expect(chips.map(chip => chip.closest('[role="gridcell"]')?.getAttribute('data-date'))).toEqual(['2026/10/22', '2026/10/23']);
+    expect(chips.map(chip => !!chip.querySelector('.sd-calendar__dot'))).toEqual([true, false]);
   }));
 
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {
