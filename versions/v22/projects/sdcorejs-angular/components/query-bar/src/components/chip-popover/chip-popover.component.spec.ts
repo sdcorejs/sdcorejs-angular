@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
 import { OverlayContainer } from '@angular/cdk/overlay';
-import { Component, reflectComponentType, viewChild } from '@angular/core';
+import { Component, reflectComponentType, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Subject, throwError } from 'rxjs';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdQueryChipPopover } from './chip-popover.component';
@@ -373,5 +374,147 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.editingValue()).toEqual({ from: 9, to: 5 });
     host.child()!.onEditingRangeTo(10);
     expect(host.child()!.editingValue()).toEqual({ from: 9, to: 10 });
+  });
+
+  describe('staging edge paths', () => {
+    const child = (): SdQueryChipPopover => host.child()!;
+    const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve));
+
+    it('reshapes the staged value between single, list and range operators', () => {
+      child().seed({ field: 'name', operator: 'EQUAL', data: 5 } as any, host.field!);
+      child().onEditingOperatorChange('BETWEEN');
+      expect(child().editingValue()).toEqual({ from: null, to: null });
+      child().onEditingValueInput({ from: 1, to: 2 });
+      child().onEditingOperatorChange('BETWEEN');
+      expect(child().editingValue()).withContext('a range stays').toEqual({ from: 1, to: 2 });
+
+      child().seed({ field: 'name', operator: 'EQUAL', data: null } as any, host.field!);
+      child().onEditingOperatorChange('IN');
+      expect(child().editingValue()).toEqual([]);
+      child().onEditingValueInput(['a', 'b']);
+      child().onEditingOperatorChange('EQUAL');
+      expect(child().editingValue()).withContext('a list keeps its first value').toBe('a');
+      child().onEditingOperatorChange('IN');
+      child().onEditingValueInput([]);
+      child().onEditingOperatorChange('NOT_EQUAL');
+      expect(child().editingValue()).withContext('an empty list').toBeNull();
+      child().onEditingOperatorChange('CONTAIN');
+      expect(child().editingValue()).toBeNull();
+    });
+
+    it('a required field keeps a staged value that is not a list when the selection empties', () => {
+      const tenant = {
+        key: 'tenant',
+        label: 'Kho',
+        type: 'values',
+        required: true,
+        option: { items: [], valueField: 'id', displayField: 'name' },
+      } as unknown as SdQueryField;
+      child().seed({ field: 'tenant', operator: 'IN', data: null } as any, tenant);
+      child().onEditingValueInput([]);
+      expect(child().editingValue()).toBeNull();
+      expect(child().minOneHint()).toBeTrue();
+    });
+
+    it('range ends and list toggles start from an empty staged value', () => {
+      child().seed(undefined, undefined);
+      child().onEditingRangeFrom(1);
+      expect(child().editingValue()).toEqual({ from: 1 });
+      child().editingValue.set(null);
+      child().onEditingRangeTo(2);
+      expect(child().editingValue()).toEqual({ to: 2 });
+      child().editingValue.set(null);
+      child().toggleEditingMultiValue('a');
+      expect(child().editingValue()).toEqual(['a']);
+    });
+
+    it('uses the [field], [filter] and [chipIndex] inputs before any seed', () => {
+      expect(child().currentField()).toBe(host.field);
+      expect(child().chipAutoId('value')).toBe('qb-chip0-value');
+      host.chipIndex = null;
+      fixture.detectChanges();
+      expect(child().chipAutoId('value')).toBe('qb-chipx-value');
+      child().editingOperator.set('EQUAL');
+      child().editingValue.set('z');
+      child().onMenuClosed('escape');
+      expect(host.committed).toEqual({ field: 'name', operator: 'EQUAL', data: 'z' });
+    });
+
+    it('has no operators without a field and commits nothing without a filter', () => {
+      host.field = undefined;
+      host.filter = undefined as unknown as Filter;
+      fixture.detectChanges();
+      expect(child().allowedOperators()).toEqual([]);
+      expect(child().showOperatorSelector()).toBeFalse();
+      child().onMenuClosed('escape');
+      expect(host.commitCount).toBe(0);
+    });
+
+    it('reads the options of a values field from a signal or from a function', async () => {
+      const values = (items: unknown): SdQueryField =>
+        ({ key: 's', label: 'S', type: 'values', option: { items, valueField: 'id', displayField: 'name' } }) as unknown as SdQueryField;
+      const filter = { field: 's', operator: 'IN', data: [] } as any;
+
+      child().seed(filter, values(signal([{ id: 1, name: 'A' }])));
+      expect(child().editingOptions()).toEqual([{ id: 1, name: 'A' }]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        values(() => Promise.resolve([{ id: 2, name: 'B' }]))
+      );
+      expect(child().editingOptionsLoading()).toBeTrue();
+      await flush();
+      expect(child().editingOptions()).toEqual([{ id: 2, name: 'B' }]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        values(() => null)
+      );
+      await flush();
+      expect(child().editingOptions()).toEqual([]);
+    });
+
+    it('loads lazy options from an observable or a promise and stops loading on error', async () => {
+      const lazy = (search?: unknown): SdQueryField =>
+        ({
+          key: 'lz',
+          label: 'LZ',
+          type: 'lazy-values',
+          option: { search, valueField: 'id', displayField: 'name' },
+        }) as unknown as SdQueryField;
+      const filter = { field: 'lz', operator: 'IN', data: [] } as any;
+
+      child().seed(filter, lazy());
+      expect(child().editingOptionsLoading()).withContext('no search').toBeFalse();
+
+      const results = new Subject<unknown[] | null>();
+      child().seed(
+        filter,
+        lazy(() => results)
+      );
+      expect(child().editingOptionsLoading()).toBeTrue();
+      results.next([{ id: 'x' }]);
+      expect(child().editingOptions()).toEqual([{ id: 'x' }]);
+      results.next(null);
+      expect(child().editingOptions()).toEqual([]);
+      results.complete();
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        lazy(() => throwError(() => new Error('down')))
+      );
+      expect(child().editingOptionsLoading()).withContext('error').toBeFalse();
+
+      child().seed(
+        filter,
+        lazy(() => Promise.resolve(null))
+      );
+      await flush();
+      expect(child().editingOptions()).toEqual([]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+    });
   });
 });

@@ -2357,6 +2357,303 @@ describe('SdQueryBar (host options)', () => {
       expect(fixture.nativeElement.querySelector('.c-saved-filters').getAttribute('data-autoid')).toBe('qb1-saved-filters');
     });
   });
+
+  describe('edge paths', () => {
+    const items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+    const tags = {
+      key: 'tags',
+      label: 'Nhãn',
+      type: 'values',
+      option: { items, valueField: 'id', displayField: 'name' },
+    } as unknown as SdQueryField;
+    const amount = { key: 'amount', label: 'Số tiền', type: 'number', operators: ['BETWEEN'] } as SdQueryField;
+    const group = { operator: 'OR', data: [{ field: 'name', operator: 'CONTAIN', data: 'a' }] } as any;
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+
+    it('takes null for autoId, fields, mode and density', () => {
+      fixture.componentRef.setInput('autoId', null);
+      fixture.componentRef.setInput('fields', null);
+      fixture.componentRef.setInput('mode', null);
+      fixture.componentRef.setInput('density', null);
+      fixture.detectChanges();
+      expect(component.resolvedAutoId()).toBeUndefined();
+      expect(component.fields()).toEqual([]);
+      expect(component.resolvedMode()).toBe('popover');
+      expect(component.resolvedDensity()).toBe('compact');
+
+      fixture.componentRef.setInput('autoId', 'qb9');
+      fixture.componentRef.setInput('density', 'comfortable');
+      fixture.detectChanges();
+      expect(component.resolvedAutoId()).toBe('qb9');
+      expect(component.resolvedDensity()).toBe('comfortable');
+    });
+
+    it('takes filters, logic and search from the option object once', () => {
+      const filters = [{ field: 'name', operator: 'CONTAIN', data: 'An' } as any];
+      setOption({ fields: [name], filters, logic: 'OR', search: 'đơn', showSearch: true });
+      expect(component.filters()).toBe(filters);
+      expect(component.logic()).toBe('OR');
+      expect(component.search()).toBe('đơn');
+      setOption({ fields: [name], filters, logic: 'OR', search: 'đơn', showSearch: true });
+      expect(component.filters()).toBe(filters);
+    });
+
+    it('shows the OR connector only with the logic toggle, OR and two chips; same logic or search again changes nothing', () => {
+      setOption({
+        fields: [name, tags],
+        showLogicToggle: true,
+        logic: 'OR',
+        filters: [{ field: 'name', operator: 'CONTAIN', data: 'a' } as any, { field: 'tags', operator: 'IN', data: ['a'] } as any],
+      });
+      expect(component.showOrConnector()).toBeTrue();
+      component.setLogic('AND');
+      expect(component.showOrConnector()).toBeFalse();
+      const logic: string[] = [];
+      const search: string[] = [];
+      component.logic.subscribe(value => logic.push(value));
+      component.search.subscribe(value => search.push(value));
+      component.setLogic('AND');
+      component.setSearch('');
+      expect(logic).toEqual([]);
+      expect(search).toEqual([]);
+    });
+
+    it('leaves a group filter and an unknown field out of chips, popovers and field lookups', () => {
+      setOption({ fields: [name], showOperatorOnChip: 'auto' });
+      component.filters.set([group, { field: 'ghost', operator: 'EQUAL', data: 'x' } as any]);
+      fixture.detectChanges();
+      expect(component.fieldOf(group)).toBeUndefined();
+      component.openChipPopover(0);
+      expect(component.editingIndex()).toBeNull();
+      component.openChipPopover(7);
+      expect(component.editingIndex()).toBeNull();
+      component.editingIndex.set(0);
+      expect(component.editingField()).toBeNull();
+      component.editingIndex.set(1);
+      expect(component.editingField()).toBeNull();
+      component.editingIndex.set(null);
+      expect(component.showOperatorFor(undefined, 'EQUAL')).toBeFalse();
+
+      setOption({ fields: [name], mode: 'inline' });
+      expect(typeof component.chipValueText({ field: 'ghost', operator: 'EQUAL', data: 'x' } as any)).toBe('string');
+    });
+
+    it('applies a saved filter without filters or logic; a locked field missing from the bar gets an empty chip', () => {
+      setOption({ fields: [name, status] });
+      component.filters.set([]);
+      component.onApplyFilter({
+        id: 'g',
+        name: 'G',
+        query: { filters: [group, { field: 'name', operator: 'CONTAIN', data: 'a' }] } as any,
+      });
+      expect(component.filters().map(filter => (filter as any).field)).toEqual(['status', 'name']);
+      expect(component.logic()).toBe('AND');
+
+      component.filters.set([]);
+      component.onApplyFilter({ id: 'q', name: 'Q', query: { search: 'đơn' } as any });
+      expect(component.filters()).toEqual([{ field: 'status', operator: 'IN', data: [] } as any]);
+      expect(component.search()).toBe('đơn');
+    });
+
+    it('shapes the value of a built chip to its operator', () => {
+      const list = { ...tags, operators: ['IN'] } as SdQueryField;
+      setOption({ fields: [amount, tags], mode: 'inline' });
+      component.commitBuildValue('nothing is being built');
+      component.pickBuildOperator('EQUAL');
+      expect(component.filters()).toEqual([]);
+
+      for (const [field, value] of [
+        [amount, 5],
+        [amount, null],
+        [list, null],
+        [list, ['a']],
+        [list, 'b'],
+      ] as [SdQueryField, unknown][]) {
+        component.beginBuild(field);
+        component.commitBuildValue(value);
+      }
+      expect(component.filters().map(filter => (filter as any).data)).toEqual([
+        { from: null, to: null },
+        { from: null, to: null },
+        [],
+        ['a'],
+        ['b'],
+      ]);
+    });
+
+    it('a range chip committed empty stores an empty range', () => {
+      setOption({ fields: [amount], mode: 'inline' });
+      component.filters.set([{ field: 'amount', operator: 'BETWEEN', data: { from: 1, to: 2 } } as any]);
+      component.onInlineRange(0, null);
+      expect((component.filters()[0] as any).data).toEqual({ from: null, to: null });
+    });
+
+    it('beginBuild for a pinned field focuses its chip instead of building a second one', async () => {
+      const region = { key: 'region', label: 'Vùng', type: 'string', pinned: true } as SdQueryField;
+      setOption({ fields: [region, name], mode: 'inline' });
+      component.beginBuild(region);
+      expect(component.building()).toBeNull();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(component.filters().length).toBe(1);
+      expect(host().querySelector('sd-query-inline-value-chip')!.contains(document.activeElement)).toBeTrue();
+    });
+
+    it('an empty value cancels the build: always for a required field, and from the seamless chip', () => {
+      const code = { key: 'code', label: 'Mã', type: 'string', required: true, operators: ['CONTAIN', 'EQUAL'] } as SdQueryField;
+      const plain = { ...name, operators: ['CONTAIN'] } as SdQueryField;
+      setOption({ fields: [code, name], mode: 'inline' });
+      // A host may call the build API before the bar adds the required chip.
+      component.filters.set([]);
+      component.beginBuild(code);
+      component.pickBuildOperator('EQUAL');
+      component.commitBuildValue('');
+      expect(component.building()).toBeNull();
+
+      component.beginBuild(plain);
+      component.onBuildSeamlessCommit({ from: null, to: null });
+      expect(component.building()).toBeNull();
+      component.beginBuild(plain);
+      component.onBuildSeamlessCommit(null);
+      expect(component.building()).toBeNull();
+      expect(component.filters()).toEqual([]);
+    });
+
+    it('adds a values chip with an empty list; Clear without onClearAll clears the bar', () => {
+      setOption({ fields: [tags] });
+      component.addFilter(tags);
+      expect((component.filters()[0] as any).data).toEqual([]);
+      component.filters.set([{ field: 'tags', operator: 'IN', data: ['a'] } as any]);
+      component.onClearClick();
+      expect(component.filters()).toEqual([]);
+    });
+
+    it('changeFilterField swaps the field of a chip with fresh defaults and ignores a bad index', async () => {
+      setOption({ fields: [name, tags] });
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+      component.changeFilterField(3, tags);
+      expect((component.filters()[0] as any).field).toBe('name');
+      component.changeFilterField(0, tags);
+      expect(component.filters()[0]).toEqual(jasmine.objectContaining({ field: 'tags', operator: 'IN', data: [] }));
+      component.changeFilterField(0, name);
+      expect((component.filters()[0] as any).data).toBeNull();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(overlay().querySelector('.c-chip-popover')).withContext('the chip popover opens again').not.toBeNull();
+    });
+
+    it('updateFilter and removeFilter ignore an index out of range', () => {
+      setOption({ fields: [name] });
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+      component.updateFilter(-1, { data: 'x' } as any);
+      component.removeFilter(4);
+      expect(component.filters()).toEqual([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+    });
+
+    it("applyOn 'commit': a chip emptied in its popover is dropped and applies; a stale index does nothing", () => {
+      const apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      setOption({ fields: [name], applyOn: 'commit' });
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+      component.editingIndex.set(0);
+      component.onChipPopoverCommit({ field: 'name', operator: 'CONTAIN', data: '' } as any);
+      expect(component.filters()).toEqual([]);
+      expect(apply).toHaveBeenCalledTimes(1);
+      component.editingIndex.set(4);
+      component.onChipPopoverCommit({ field: 'name', operator: 'CONTAIN', data: 'b' } as any);
+      expect(component.filters()).toEqual([]);
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+
+    describe('add condition keys', () => {
+      const addInput = (): HTMLInputElement => host().querySelector<HTMLInputElement>('.c-add-condition input')!;
+      const listbox = (): HTMLElement | null => overlay().querySelector<HTMLElement>('.c-field-picker-menu [role="listbox"]');
+      const keydown = (key: string, target: HTMLElement = addInput()): KeyboardEvent => {
+        const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+        target.dispatchEvent(event);
+        fixture.detectChanges();
+        return event;
+      };
+      const type = (text: string): void => {
+        addInput().focus();
+        addInput().value = text;
+        addInput().dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+      };
+
+      beforeEach(() => setOption({ fields: [name, tags], mode: 'inline' }));
+
+      it('keys that do not apply leave the box and the bar alone', () => {
+        addInput().focus();
+        expect(keydown('ArrowUp').defaultPrevented).withContext('ArrowUp, list closed').toBeFalse();
+        expect(keydown('Escape').defaultPrevented).withContext('Escape, empty box').toBeFalse();
+        expect(keydown('a').defaultPrevented).withContext('a letter').toBeFalse();
+        expect(keydown('Tab').defaultPrevented).withContext('Tab, list closed').toBeFalse();
+        expect(keydown('Backspace').defaultPrevented).withContext('Backspace, no chip').toBeTrue();
+        expect(document.activeElement).toBe(addInput());
+
+        type('n');
+        type('na');
+        expect(listbox()).not.toBeNull();
+        expect(keydown('Backspace').defaultPrevented).withContext('Backspace with text').toBeFalse();
+        keydown('ArrowUp');
+        expect(keydown('Tab').defaultPrevented).withContext('Tab closes the list').toBeFalse();
+        expect(listbox()).toBeNull();
+        expect(component.addQuery()).withContext('closing the list empties the box').toBe('');
+        // Text with the list closed: only when set from code.
+        component.addQuery.set('na');
+        expect(keydown('Enter').defaultPrevented).withContext('Enter with text, list closed').toBeFalse();
+        expect(keydown('Escape').defaultPrevented).withContext('Escape empties the text').toBeTrue();
+        expect(component.addQuery()).toBe('');
+
+        type('zzz');
+        expect(keydown('Enter').defaultPrevented).withContext('Enter with no match').toBeFalse();
+        expect(component.building()).toBeNull();
+      });
+
+      it('another key on the chip the box pointed at cancels the pending removal', () => {
+        component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
+        fixture.detectChanges();
+        addInput().focus();
+        keydown('Backspace');
+        const chip = document.activeElement as HTMLElement;
+        expect(chip).not.toBe(addInput());
+        keydown('ArrowLeft', chip);
+        keydown('Backspace', chip);
+        expect(component.filters().length).toBe(1);
+      });
+
+      it('matches rendered chips to their filters past a filter the bar does not know', () => {
+        component.filters.set([
+          { field: 'ghost', operator: 'EQUAL', data: 1 } as any,
+          { field: 'name', operator: 'CONTAIN', data: 'a' } as any,
+        ]);
+        fixture.detectChanges();
+        addInput().focus();
+        keydown('Backspace');
+        keydown('Backspace', document.activeElement as HTMLElement);
+        expect(component.filters().map(filter => (filter as any).field)).toEqual(['ghost']);
+      });
+
+      it('a finished chip leaves focus where the user moved it', async () => {
+        const outside = document.createElement('button');
+        document.body.appendChild(outside);
+        try {
+          component.beginBuild({ ...name, operators: ['CONTAIN'] } as SdQueryField);
+          outside.focus();
+          component.commitBuildValue('An');
+          fixture.detectChanges();
+          await fixture.whenStable();
+          expect(document.activeElement).toBe(outside);
+        } finally {
+          outside.remove();
+        }
+      });
+    });
+  });
 });
 
 @Component({

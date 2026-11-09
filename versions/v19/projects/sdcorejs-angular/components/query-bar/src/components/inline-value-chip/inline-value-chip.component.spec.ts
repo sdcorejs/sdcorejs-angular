@@ -246,4 +246,46 @@ describe('SdQueryInlineValueChip', () => {
       expect(component.phTo()).toBe('To');
     });
   });
+
+  describe('edge paths', () => {
+    it('a click on the pill focuses the first input; a click on the input or the × does not move focus', () => {
+      setup(stringField, 'abc');
+      const host = fixture.nativeElement as HTMLElement;
+      const input = host.querySelector('input')!;
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      try {
+        outside.focus();
+        (host.querySelector('.c-seamless') as HTMLElement).click();
+        expect(document.activeElement).toBe(input);
+
+        outside.focus();
+        input.click();
+        expect(document.activeElement).toBe(outside);
+        spyOn(component.remove, 'emit');
+        host.querySelector<HTMLElement>('.c-seamless__x')!.click();
+        expect(document.activeElement).toBe(outside);
+        expect(component.remove.emit).toHaveBeenCalled();
+      } finally {
+        outside.remove();
+      }
+    });
+
+    it('flags an error and emits nothing when one end of a number range is not a number', () => {
+      setup(numberField, { from: 1, to: 2 }, 'BETWEEN');
+      const emitted: unknown[] = [];
+      component.valueChange.subscribe(value => emitted.push(value));
+      component.draftTo.set('abc');
+      component.commitRange();
+      expect(component.state()).toBe('error');
+      expect(emitted).toEqual([]);
+    });
+
+    it('formats a number stored as text with the locale grouping', () => {
+      setup(numberField, '1234567', 'EQUAL');
+      expect(component.draft()).toBe((1234567).toLocaleString('vi-VN'));
+      setup(numberField, 'x1', 'EQUAL');
+      expect(component.draft()).withContext('not a number: shown as is').toBe('x1');
+    });
+  });
 });

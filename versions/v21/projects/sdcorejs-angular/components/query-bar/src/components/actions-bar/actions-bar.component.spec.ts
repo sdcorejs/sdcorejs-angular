@@ -39,6 +39,16 @@ describe('SdQueryActionsBar', () => {
     expect(component.logic()).toBe('AND');
   });
 
+  it('a click on the segment already chosen emits no logic change', () => {
+    fixture.componentRef.setInput('showLogicToggle', true);
+    fixture.componentRef.setInput('filtersCount', 2);
+    fixture.detectChanges();
+    const changes: string[] = [];
+    component.logic.subscribe(value => changes.push(value));
+    (fixture.nativeElement.querySelectorAll('.c-logic-segment') as NodeListOf<HTMLButtonElement>)[0].click();
+    expect(changes).toEqual([]);
+  });
+
   it('clear button emits (clear) and only renders when filtersCount > 0', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.c-clear-all')).toBeNull();

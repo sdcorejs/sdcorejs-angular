@@ -294,6 +294,55 @@ describe('SdQuerySavedFiltersMenu', () => {
       expect(document.activeElement).toBe(applyButtons()[0]);
       expect(menu()).not.toBeNull();
     });
+
+    it('QB-S-03 leaves keys that do not apply to the focused item alone', () => {
+      const cases: [() => HTMLElement, string][] = [
+        [() => deleteButtons()[0], 'ArrowRight'],
+        [() => applyButtons()[0], 'ArrowLeft'],
+        [saveButton, 'Delete'],
+        [saveButton, 'x'],
+        // Last: Tab on Save leaves the menu, which closes it.
+        [saveButton, 'Tab'],
+      ];
+      for (const [target, name] of cases) {
+        target().focus();
+        expect(key(target(), name).defaultPrevented).withContext(name).toBeFalse();
+      }
+      expect(component.savedFilters().length).toBe(2);
+    });
+
+    it('QB-S-03 ArrowUp from the panel itself goes to the last item', () => {
+      key(menu()!, 'ArrowUp');
+      expect(document.activeElement).toBe(saveButton());
+    });
+
+    it('QB-S-03 deleting the last row with Save locked moves focus to the row above, then to the panel', () => {
+      fixture.componentRef.setInput('canSave', false);
+      fixture.detectChanges();
+      key(applyButtons()[1], 'Delete');
+      expect(document.activeElement).toBe(applyButtons()[0]);
+      key(applyButtons()[0], 'Delete');
+      expect(component.savedFilters()).toEqual([]);
+      expect(document.activeElement).toBe(menu());
+    });
+  });
+
+  describe('closed panel', () => {
+    it('removeAt deletes without moving focus and onKeydown does nothing', () => {
+      seed(filter('a'), filter('b'));
+      mount();
+      component.removeAt(0);
+      expect(component.savedFilters().map(f => f.id)).toEqual(['b']);
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
+      component.onKeydown(event);
+      expect(event.defaultPrevented).toBeFalse();
+    });
+
+    it('promptSave asks nothing without a key', async () => {
+      mount({});
+      await component.promptSave();
+      expect(withInputSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('QB-S-04 delete and undo', () => {
@@ -349,6 +398,18 @@ describe('SdQuerySavedFiltersMenu', () => {
   });
 
   describe('QB-S-06 read errors', () => {
+    it('QB-S-06 blocked storage reads as a read error', () => {
+      const getItem = Storage.prototype.getItem;
+      spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, name: string) {
+        if (name === STORAGE) throw new DOMException('blocked', 'SecurityError');
+        return getItem.call(this, name);
+      });
+      seed(filter('a'));
+      mount();
+      expect(component.readError()).toBeTrue();
+      expect(component.savedFilters()).toEqual([]);
+    });
+
     it('QB-S-06 shows the read error line for unreadable JSON; saving replaces the broken list', async () => {
       localStorage.setItem(STORAGE, '{not json');
       mount();
