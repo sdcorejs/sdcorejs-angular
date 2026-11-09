@@ -128,6 +128,22 @@ describe('SdCalendar · recurring events', () => {
     expect((document.activeElement as HTMLElement | null)?.dataset['eventId']).toBe('standup');
   }));
 
+  it('[CAL-B-10] closes the scope bar silently when a reload aborts the move (SC-15, R2 B-3)', fakeAsync(() => {
+    const { host, calendar, onMove, settle } = mount();
+    const block = standup(host);
+    block?.focus();
+    press(block ?? host, 'ArrowDown', { alt: true });
+    settle();
+    expect(bar(host)).not.toBeNull();
+    calendar.reload();
+    settle();
+    expect(bar(host)).toBeNull();
+    expect(onMove).not.toHaveBeenCalled();
+    expect(text(q(host, '[role="status"]'))).not.toContain('Đã huỷ thay đổi');
+    expect(standup(host)?.dataset['start']).toBe('2026/10/19 09:00:00');
+    expect(standup(host)?.hasAttribute('data-pending')).toBeFalse();
+  }));
+
   it('[CAL-C-13] passes the chosen scope and reloads after "following" and "all"', fakeAsync(() => {
     for (const scope of ['this', 'following', 'all'] as const) {
       const { host, onMove, onLoad, settle } = mount();

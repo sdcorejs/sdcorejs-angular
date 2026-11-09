@@ -214,6 +214,33 @@ describe('SdCalendar · interaction', () => {
       expect(q(host, '[data-create-ghost]')).toBeNull();
     }));
 
+    it('[CAL-B-08] ignores an onCreate answer that arrives after a new option or after destroy (SC-15, R2 B-1)', fakeAsync(() => {
+      const late: Event = { id: 'late', title: 'Đến muộn', start: '2026/10/21 14:00:00', end: '2026/10/21 15:00:00', data: { room: 'Huế' } };
+      for (const outcome of ['resolve', 'reject'] as const) {
+        const wait = deferred<Event | void>();
+        const { host, fixture, calendar, settle } = creating(() => wait.promise);
+        sweep(host, '2026/10/21', 840, 900, settle);
+        expect(q(host, '[data-create-ghost][data-pending]')).withContext(outcome).not.toBeNull();
+        fixture.componentRef.setInput('option', { dataSource: { onLoad: () => weekEvents() } });
+        settle();
+        if (outcome === 'resolve') wait.resolve(late);
+        else wait.reject(new Error('late'));
+        settle();
+        expect(block(host, 'late')).withContext(outcome).toBeNull();
+        expect(calendar.selectedId()).withContext(outcome).toBeNull();
+        expect(q(host, '[data-band]')).withContext(outcome).toBeNull();
+        expect(q(host, '[data-create-ghost]')).withContext(outcome).toBeNull();
+        TestBed.resetTestingModule();
+      }
+      const wait = deferred<Event | void>();
+      const { host, fixture, calendar, settle } = creating(() => wait.promise);
+      sweep(host, '2026/10/21', 840, 900, settle);
+      fixture.destroy();
+      wait.resolve(late);
+      flushMicrotasks();
+      expect(calendar.selectedId()).toBeNull();
+    }));
+
     it('[CAL-SC-19] inserts the returned event and selects it without sdSelect', fakeAsync(() => {
       const created: Event = {
         id: 'new',
