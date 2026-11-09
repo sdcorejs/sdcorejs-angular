@@ -682,7 +682,7 @@ describe('SdTable filter.mode query-bar', () => {
       expect(el().querySelectorAll('thead .sd-table-filter-trigger').length).toBe(3);
       const code = trigger('code')!;
       expect(code.getAttribute('aria-label')).toBe(t('core.component.table.filter-by', { title: 'Mã đơn' }));
-      expect(code.getAttribute('aria-haspopup')).toBe('menu');
+      expect(code.getAttribute('aria-haspopup')).toBe('dialog');
       expect(code.classList).not.toContain('sd-table-filter-trigger--active');
       expect(getComputedStyle(code).opacity).toBe(hiddenOpacity());
       expect(trigger('status')).not.toBeNull();

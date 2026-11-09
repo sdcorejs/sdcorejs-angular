@@ -7,7 +7,7 @@
 @let _invalid = invalid();
 
 @if (disabled()) {
-  <!-- why: chip chỉ đọc không gắn matMenuTrigger — không có cách nào mở popover, kể cả openMenu() của parent. -->
+  <!-- why: chip chỉ đọc không gắn trigger của panel — không có cách nào mở popover, kể cả openMenu() của parent. -->
   <div
     role="button"
     tabindex="0"
@@ -21,7 +21,7 @@
   </div>
 } @else {
   <div
-    #chipTrigger="matMenuTrigger"
+    #chipTrigger
     role="button"
     tabindex="0"
     class="c-chip"
@@ -33,10 +33,8 @@
     [attr.aria-describedby]="describedBy() ?? null"
     [attr.data-field]="_filterField"
     [matTooltip]="_field?.label || _filterField"
-    [matMenuTriggerFor]="menu()"
-    (menuOpened)="open.emit()"
-    (keydown.enter)="chipTrigger.openMenu()"
-    (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
+    [sdQueryPanelTrigger]="panel()"
+    (panelOpened)="open.emit()">
     <ng-container [ngTemplateOutlet]="face" />
   </div>
 }

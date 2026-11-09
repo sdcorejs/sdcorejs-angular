@@ -1,23 +1,25 @@
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MatMenu, MatMenuModule } from '@angular/material/menu';
 
 import { SdQueryPopoverChip } from './popover-chip.component';
 import { SdQueryField } from '../../query-bar.model';
+import { ɵSdQueryPanelDirective } from '../panel/query-panel';
 
 @Component({
   standalone: true,
-  imports: [SdQueryPopoverChip, MatMenuModule],
+  imports: [SdQueryPopoverChip, ɵSdQueryPanelDirective],
   template: `
-    <mat-menu #m="matMenu"><button mat-menu-item>x</button></mat-menu>
+    <ng-template sdQueryPanel="dialog" #m="sdQueryPanel">
+      <div class="sd-query-panel sd-query-panel--form probe" role="dialog" aria-label="Edit"><input aria-label="Value" /></div>
+    </ng-template>
     <sd-query-popover-chip
       [field]="field"
       [filter]="filter"
       [active]="active"
       [showOperator]="showOperator"
       [valueText]="valueText"
-      [menu]="menu()!"
+      [panel]="menu()!"
       (open)="opened = true"
       (remove)="removed = true" />
   `,
@@ -30,7 +32,7 @@ class Host {
   valueText = 'abc';
   opened = false;
   removed = false;
-  menu = viewChild<MatMenu>('m');
+  menu = viewChild<ɵSdQueryPanelDirective>('m');
 }
 
 describe('SdQueryPopoverChip', () => {
@@ -84,5 +86,17 @@ describe('SdQueryPopoverChip', () => {
     removeEl.dispatchEvent(ev);
     expect(host.removed).toBe(true);
     expect(ev.stopPropagation).toHaveBeenCalled();
+  });
+  afterEach(() => fixture.destroy());
+
+  it('opens its dialog panel from Enter and tells the host (open) first', () => {
+    const chip = fixture.nativeElement.querySelector('.c-chip') as HTMLElement;
+    expect(chip.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(chip.getAttribute('aria-expanded')).toBe('false');
+    chip.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(host.opened).toBeTrue();
+    expect(document.querySelector('.probe')).not.toBeNull();
+    expect(chip.getAttribute('aria-expanded')).toBe('true');
   });
 });

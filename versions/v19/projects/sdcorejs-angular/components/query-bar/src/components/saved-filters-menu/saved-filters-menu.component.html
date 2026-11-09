@@ -25,7 +25,7 @@
     <div class="c-sf-heading" [id]="headingId">{{ headingLabel() }}</div>
     @if (readError()) {
       <div class="c-sf-state c-sf-state--error">
-        <sd-icon name="error" aria-hidden="true"></sd-icon>
+        <sd-icon name="error" size="16px" aria-hidden="true"></sd-icon>
         <span>{{ readErrorLabel() }}</span>
       </div>
     }
@@ -38,7 +38,7 @@
           class="c-sf-apply"
           [attr.data-autoid]="autoIdOf('saved-filter-' + i)"
           (click)="pick(f)">
-          <sd-icon class="c-sf-lead" name="filter_alt" aria-hidden="true"></sd-icon>
+          <sd-icon class="c-sf-lead" name="filter_alt" size="18px" aria-hidden="true"></sd-icon>
           <span class="c-sf-name">{{ f.name }}</span>
         </button>
         <button
@@ -48,7 +48,7 @@
           [attr.aria-label]="deleteLabel(f.name)"
           [attr.data-autoid]="autoIdOf('saved-filter-' + i + '-delete')"
           (click)="removeAt(i)">
-          <sd-icon name="delete" aria-hidden="true"></sd-icon>
+          <sd-icon name="delete" size="18px" aria-hidden="true"></sd-icon>
         </button>
       </div>
     } @empty {
@@ -65,7 +65,7 @@
       [disabled]="!_key || !canSave()"
       [attr.data-autoid]="autoIdOf('saved-filters-save')"
       (click)="onSave()">
-      <sd-icon name="bookmark_add" aria-hidden="true"></sd-icon>
+      <sd-icon name="bookmark_add" size="18px" aria-hidden="true"></sd-icon>
       <span>{{ saveLabel() }}</span>
     </button>
   </div>

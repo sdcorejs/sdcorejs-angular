@@ -42,7 +42,7 @@
   }
 
   <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
-       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`.
+       so the popover-mode @for chips can bind their [panel] to `chipPopover.panel()`.
        why: mở popover để EDIT chỉ cho chỉnh operator + value — KHÔNG đổi field.
        Bỏ [switchPickerMenu] → header render nhãn field tĩnh (read-only). Muốn đổi
        field thì xoá chip rồi thêm lại. -->
@@ -51,7 +51,7 @@
     [field]="editingField() ?? undefined"
     [filter]="_editingIndex !== null ? $any(_filters[_editingIndex!]) : undefined"
     [chipIndex]="_editingIndex"
-    [autoIdBase]="resolvedAutoId() ?? 'qb'"
+    [autoIdBase]="resolvedAutoId()"
     (commit)="onChipPopoverCommit($event)" />
 
   @if (_resolvedMode === 'inline') {
@@ -83,7 +83,7 @@
             [disabled]="true"
             [invalid]="_invalid"
             [describedBy]="_invalid ? _invalidHintId : undefined"
-            [menu]="chipPopover.menu()!"
+            [panel]="chipPopover.panel()"
             (open)="openChipPopover(i)"
             (remove)="removeFilter(i)" />
         } @else if (_field.type === 'string' || _field.type === 'number') {
@@ -139,14 +139,14 @@
     <button
       type="button"
       class="c-add-filter"
-      [matMenuTriggerFor]="addPicker.menu()"
+      [sdQueryPanelTrigger]="addPicker.panel()"
       [disabled]="_addDisabled"
       [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
-      (menuOpened)="addPicker.focusFind()">
+      [attr.aria-label]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   } @else {
-    <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
+    <!-- ===== POPOVER MODE (default) — compact chips edited in the chip popover panel ===== -->
     <!-- why: track theo rowId(filter) — xem ghi chú ở nhánh inline. -->
     @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
@@ -168,7 +168,7 @@
         [disabled]="!!_field?.disabled"
         [invalid]="_invalid"
         [describedBy]="_invalid ? _invalidHintId : undefined"
-        [menu]="chipPopover.menu()!"
+        [panel]="chipPopover.panel()"
         (open)="openChipPopover(i)"
         (remove)="removeFilter(i)" />
     }
@@ -177,10 +177,10 @@
     <button
       type="button"
       class="c-add-filter"
-      [matMenuTriggerFor]="addPicker.menu()"
+      [sdQueryPanelTrigger]="addPicker.panel()"
       [disabled]="_addDisabled"
       [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
-      (menuOpened)="addPicker.focusFind()">
+      [attr.aria-label]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   }
@@ -193,6 +193,7 @@
     #addPicker
     [fields]="pickerFields()"
     [usedKeys]="_usedFieldKeys"
+    [autoId]="resolvedAutoId()"
     (pick)="_resolvedMode === 'inline' ? beginBuild($event) : addFilter($event)" />
 
   <sd-query-actions-bar

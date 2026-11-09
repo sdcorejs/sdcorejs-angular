@@ -1,8 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, isSignal, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatMenu, MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { isObservable } from 'rxjs';
 
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -24,6 +22,9 @@ import {
   sdQueryFieldIcon,
   sdQueryShowOperatorSelector,
 } from '../../query-bar.model';
+import { ɵSdQueryPanelCloseReason, ɵSdQueryPanelDirective } from '../panel/query-panel';
+
+let nextLabelId = 0;
 
 interface Range {
   from?: string | number | null;
@@ -31,18 +32,17 @@ interface Range {
 }
 
 /**
- * Popover-mode chip editor — the entire `<mat-menu>` that opens when a popover-mode
- * chip is clicked. Owns ALL operator+value staging signals and async option loading.
+ * Popover-mode chip editor — the dialog panel that opens when a popover-mode chip is clicked (handoff section 4).
+ * Owns ALL operator+value staging signals and async option loading.
  *
  * why: tách khỏi `<sd-query-bar>` để parent chỉ giữ `editingIndex` (chip nào đang
  * mở) + nhận `(commit)` khi popover đóng. Mỗi lần parent gọi `seed(filter, field)`
  * trước khi mở chip popover, child reset staging signals + kích option loading.
  *
  * Public surface (template ref `#cp`):
- *   - `cp.menu()` — the `<mat-menu>` to feed `[menu]` of `<sd-query-popover-chip>`
- *   - `cp.seed(filter, field)` — parent reseeds staging before opening
- *   - `(commit)` output — emitted on mat-menu close with staged Filter
- *   - `(swapField)` output — emitted when the nested field switcher picks a new field
+ *   - `cp.panel()` — the panel to feed `[panel]` of `<sd-query-popover-chip>`
+ *   - `cp.seed(filter, field, index)` — parent reseeds staging before the panel renders
+ *   - `(commit)` output — emitted when the panel closes (Esc, click outside, Tab out, close) with the staged Filter
  */
 @Component({
   selector: 'sd-query-chip-popover',
@@ -51,11 +51,10 @@ interface Range {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ɵSdQueryPanelDirective,
     SdIcon,
     CommonModule,
     FormsModule,
-    MatMenuModule,
-    MatTooltipModule,
     SdButton,
     SdOperator,
     SdSelect,
@@ -67,7 +66,6 @@ interface Range {
 })
 export class SdQueryChipPopover {
   readonly #i18n = inject(I18nService);
-  readonly swapFieldTooltip = computed(() => this.#i18n.t('core.component.query-bar.swap-field'));
   readonly fromPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.from-number'));
   readonly toPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.to-number'));
   readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
@@ -90,23 +88,17 @@ export class SdQueryChipPopover {
   readonly chipIndex = input<number | null>(null);
 
   /** Prefix for `data-autoId` on inner controls. */
-  readonly autoIdBase = input<string>('qb');
-
-  /** MatMenu for the field switcher — parent passes its `<sd-query-field-picker>` menu. */
-  readonly switchPickerMenu = input<MatMenu | undefined>(undefined);
+  readonly autoIdBase = input<string | undefined>('qb');
 
   // ---------------------------------------------------------------------------
   // Outputs
   // ---------------------------------------------------------------------------
 
-  /** Emitted when mat-menu closes — parent splices `next` into filters[idx]. */
+  /** Emitted when the panel closes — parent splices `next` into filters[idx]. */
   readonly commit = output<Filter>();
 
-  /** Emitted when nested field-switcher picks a new field — parent calls changeFilterField. */
-  readonly swapField = output<SdQueryField>();
-
   // ---------------------------------------------------------------------------
-  // Staging signals — uncommitted edits, committed on menu close.
+  // Staging signals — uncommitted edits, committed when the panel closes.
   // ---------------------------------------------------------------------------
 
   /** Staged operator. */
@@ -118,17 +110,26 @@ export class SdQueryChipPopover {
   /** Loading flag for async option fetch. */
   readonly editingOptionsLoading = signal(false);
 
+  // why: `seed()` chạy trước khi panel vẽ nội dung, còn `[field]` / `[filter]` / `[chipIndex]` của cha chỉ cập nhật ở lượt
+  // change detection sau — giữ bản seed để lần vẽ đầu (và focus đầu tiên) đã đúng field.
+  readonly #seededField = signal<SdQueryField | undefined>(undefined);
+  readonly #seededFilter = signal<Filter | undefined>(undefined);
+  readonly #seededIndex = signal<number | null>(null);
+
+  /** Field being edited: the one seeded last, else the `[field]` input. */
+  readonly currentField = computed(() => this.#seededField() ?? this.field());
+
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
 
   readonly allowedOperators = computed<Operator[]>(() => {
-    const f = this.field();
+    const f = this.currentField();
     return f ? sdQueryAllowedOperators(f) : [];
   });
 
   readonly showOperatorSelector = computed<boolean>(() => {
-    const f = this.field();
+    const f = this.currentField();
     return f ? sdQueryShowOperatorSelector(f) : false;
   });
 
@@ -145,25 +146,31 @@ export class SdQueryChipPopover {
   /** Compose an autoId for an inner control (`<base>-chip<idx>-<role>`). */
   chipAutoId(role: string): string {
     const base = this.autoIdBase() ?? 'qb';
-    const idx = this.chipIndex();
+    const idx = this.#seededIndex() ?? this.chipIndex();
     return `${base}-chip${idx ?? 'x'}-${role}`;
   }
 
   readonly iconFor = sdQueryFieldIcon;
 
   // ---------------------------------------------------------------------------
-  // mat-menu instance — parent reads via `cp.menu()`
+  // Panel — the chip trigger binds `[panel]="cp.panel()"`
   // ---------------------------------------------------------------------------
 
-  readonly menu = viewChild<MatMenu>('menu');
+  readonly panel = viewChild.required<ɵSdQueryPanelDirective>('panel');
+
+  /** Id of the field label in the header — the dialog's accessible name. */
+  readonly labelId = `sd-query-chip-popover-label-${nextLabelId++}`;
 
   // ---------------------------------------------------------------------------
   // Seed — parent calls before opening the popover so staging signals are
   // primed from the current filter + the option list is loaded.
   // ---------------------------------------------------------------------------
 
-  /** Reseed staging from a new filter/field pair — call before opening the menu. */
-  seed(filter: Filter | undefined, field: SdQueryField | undefined): void {
+  /** Reseed staging from a new filter/field pair — call before the panel renders (`panelOpened`). */
+  seed(filter: Filter | undefined, field: SdQueryField | undefined, index: number | null = null): void {
+    this.#seededField.set(filter && field ? field : undefined);
+    this.#seededFilter.set(filter && field ? filter : undefined);
+    this.#seededIndex.set(filter && field ? index : null);
     if (!filter || !field) {
       this.editingOperator.set('EQUAL');
       this.editingValue.set(null);
@@ -246,15 +253,18 @@ export class SdQueryChipPopover {
   }
 
   // ---------------------------------------------------------------------------
-  // Menu lifecycle — close = commit
+  // Panel lifecycle — close = commit
   // ---------------------------------------------------------------------------
 
   /**
-   * mat-menu's (closed) handler — compose the next Filter from staging signals and
-   * emit (commit). Parent splices into its filters[] and nulls editingIndex.
+   * The panel closed (Esc, click outside, Tab out, `closeMenu()`, another panel opened): compose the next Filter from
+   * staging signals and emit (commit). Parent splices into its filters[] and nulls editingIndex.
    */
-  onMenuClosed(): void {
-    const f = this.filter();
+  onMenuClosed(_reason?: ɵSdQueryPanelCloseReason): void {
+    const f = this.#seededFilter() ?? this.filter();
+    this.#seededField.set(undefined);
+    this.#seededFilter.set(undefined);
+    this.#seededIndex.set(null);
     if (!f) return;
     const next: Filter = {
       field: (f as any).field,

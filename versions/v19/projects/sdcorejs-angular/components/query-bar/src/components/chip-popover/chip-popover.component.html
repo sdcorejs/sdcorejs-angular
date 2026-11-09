@@ -1,38 +1,29 @@
 <!--
   Chip popover — operator + value editor for the popover-mode chip.
-  Visual layout mirrors the previous inline `<mat-menu #chipPopover>` in query-bar.
+  Dialog panel theo khung Action Popover (handoff mục 4); header, thân, độ rộng giữ như bản trước.
   Body branches on operator + field.type — 8 paths preserved exactly.
 -->
-<mat-menu #menu="matMenu" class="c-chip-popover" xPosition="after" yPosition="below" (closed)="onMenuClosed()">
-  <ng-template matMenuContent>
-    @let _field = field();
-    @let _editingOperator = editingOperator();
-    @let _editingValue = editingValue();
-    @let _editingOptions = editingOptions();
-    @let _editingOptionsLoading = editingOptionsLoading();
-    @let _switchPickerMenu = switchPickerMenu();
+<ng-template sdQueryPanel="dialog" #panel="sdQueryPanel" (closed)="onMenuClosed($event)">
+  @let _field = currentField();
+  @let _editingOperator = editingOperator();
+  @let _editingValue = editingValue();
+  @let _editingOptions = editingOptions();
+  @let _editingOptionsLoading = editingOptionsLoading();
 
+  <div
+    class="sd-query-panel sd-query-panel--form c-chip-popover"
+    role="dialog"
+    tabindex="-1"
+    [attr.aria-labelledby]="labelId"
+    [attr.data-autoid]="autoIdBase() ? autoIdBase() + '-panel-chip' : null">
     @if (_field) {
-      <!-- why: header/body của popover là NHÓM control (role="group"), không phải nút — nên chúng
-           KHÔNG được nhận tabindex; tab phải đi thẳng vào các control bên trong. Thêm chặn Enter
-           bên cạnh chặn click: cả hai chỉ để mat-menu không tự đóng khi người dùng thao tác trong
-           popover; Escape và phím mũi tên vẫn bọt lên để menu đóng/điều hướng bình thường. -->
-      <div class="c-pop-header" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
-        <sd-icon [name]="iconFor(_field)"></sd-icon>
-        <!-- why: nested mat-menu trigger to swap the chip's field — parent provides
-             the field-picker MatMenu via [switchPickerMenu]. -->
-        @if (_switchPickerMenu) {
-          <button
-            type="button"
-            class="c-pop-header-field"
-            [matMenuTriggerFor]="_switchPickerMenu"
-            [matTooltip]="swapFieldTooltip()">
-            <span>{{ _field.label }}</span>
-            <sd-icon name="unfold_more"></sd-icon>
-          </button>
-        } @else {
-          <span class="c-pop-header-field">{{ _field.label }}</span>
-        }
+      <!-- why: header/body của popover là NHÓM control (role="group"), không phải nút — nên chúng KHÔNG được nhận tabindex;
+           tab đi thẳng vào các control bên trong. Bỏ chặn click / Enter của bản trước: panel không tự đóng khi bấm bên
+           trong, nên không còn gì phải chặn. -->
+      <div class="c-pop-header" role="group">
+        <sd-icon [name]="iconFor(_field)" aria-hidden="true"></sd-icon>
+        <!-- why: đổi field trong chip đã bỏ (handoff M7) — nhãn tĩnh, là tên của dialog. -->
+        <span class="c-pop-header-field" [id]="labelId">{{ _field.label }}</span>
         <!-- Operator selector (right-aligned). Disabled when field has ≤1 operator. -->
         <sd-operator
           class="c-pop-header-operator"
@@ -44,7 +35,7 @@
           (modelChange)="onEditingOperatorChange($any($event))" />
       </div>
 
-      <div class="c-pop-body" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+      <div class="c-pop-body" role="group" data-sd-query-panel-initial>
         @if (!isNoDataOperator(_editingOperator)) {
           @if (_editingOperator === 'BETWEEN') {
             @if (_field.type === 'date') {
@@ -157,5 +148,5 @@
         }
       </div>
     }
-  </ng-template>
-</mat-menu>
+  </div>
+</ng-template>

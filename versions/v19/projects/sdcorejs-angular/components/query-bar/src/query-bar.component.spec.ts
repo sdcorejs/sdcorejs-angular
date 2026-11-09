@@ -253,7 +253,7 @@ describe('SdQueryBar', () => {
       fixture.detectChanges();
 
       const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-      const item = overlay.querySelector('button[mat-menu-item]') as HTMLButtonElement;
+      const item = overlay.querySelector('[role="option"]') as HTMLButtonElement;
       item.click();
       fixture.detectChanges();
 
@@ -396,7 +396,7 @@ describe('SdQueryBar', () => {
       expect(chipDe).not.toBeNull();
       const chip = chipDe.nativeElement as HTMLElement;
       expect(chip.querySelector('sd-inline-text input')).not.toBeNull();
-      expect(chip.querySelector('[matMenuTriggerFor]')).toBeNull();
+      expect(chip.querySelector('.sd-query-panel-trigger')).toBeNull();
       expect(fixture.nativeElement.querySelector('sd-input')).toBeNull();
     });
 
@@ -408,7 +408,7 @@ describe('SdQueryBar', () => {
       const select = building.querySelector('sd-select');
       expect(select).not.toBeNull();
       expect(select.classList.contains('sd-bare')).toBe(true);
-      expect(building.querySelector('[matMenuTriggerFor]')).toBeNull();
+      expect(building.querySelector('.sd-query-panel-trigger')).toBeNull();
     });
 
     it('renders an inline-mode sd-select for a completed values chip', () => {
@@ -1079,7 +1079,7 @@ describe('SdQueryBar (host options)', () => {
     it('leaves pinned fields out of the field picker', () => {
       (fixture.nativeElement.querySelector('.c-add-filter') as HTMLButtonElement).click();
       fixture.detectChanges();
-      const labels = Array.from(overlay().querySelectorAll('button[mat-menu-item] .c-field-item-label')).map(el => el.textContent?.trim());
+      const labels = Array.from(overlay().querySelectorAll('[role="option"] .c-field-item-label')).map(el => el.textContent?.trim());
       expect(labels).toEqual(['Name']);
     });
 
@@ -1325,21 +1325,21 @@ describe('SdQueryBar (host options)', () => {
       fixture.componentRef.setInput('fields', fields);
       fixture.detectChanges();
       const panel = openPicker();
-      const find = panel.querySelector('.c-field-find-input') as HTMLInputElement;
+      const find = panel.querySelector('sd-search-field input') as HTMLInputElement;
       expect(find).not.toBeNull();
       expect(find.placeholder).toBe(i18n.t('core.component.query-bar.find-field'));
 
       find.value = 'don';
       find.dispatchEvent(new Event('input'));
       fixture.detectChanges();
-      const labels = Array.from(panel.querySelectorAll('button[mat-menu-item] .c-field-item-label')).map(el => el.textContent?.trim());
+      const labels = Array.from(panel.querySelectorAll('[role="option"] .c-field-item-label')).map(el => el.textContent?.trim());
       expect(labels).toEqual(['Mã đơn', 'Đơn vị']);
     });
 
     it('has no find box for eight fields or fewer', () => {
       fixture.componentRef.setInput('fields', [name]);
       fixture.detectChanges();
-      expect(openPicker().querySelector('.c-field-find-input')).toBeNull();
+      expect(openPicker().querySelector('sd-search-field input')).toBeNull();
     });
   });
 
@@ -1381,6 +1381,82 @@ describe('SdQueryBar (host options)', () => {
       } finally {
         origin.remove();
       }
+    });
+
+    it('QB-P-08 opens the chip of the field from a host icon, focuses its value control and gives focus back to the icon', async () => {
+      const icon = document.createElement('button');
+      icon.setAttribute('aria-label', 'Lọc theo tên');
+      document.body.appendChild(icon);
+      try {
+        component.filters.set([
+          { field: 'status', operator: 'IN', data: [] } as any,
+          { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+        ]);
+        fixture.detectChanges();
+        icon.focus();
+        component.openField('name', icon);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(component.editingIndex()).toBe(1);
+        const dialog = overlay().querySelector<HTMLElement>('.c-chip-popover')!;
+        expect(dialog.querySelector('.c-pop-header-field')!.textContent!.trim()).toBe('Name');
+        expect(dialog.querySelector('sd-input')!.contains(document.activeElement)).toBeTrue();
+
+        document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        fixture.detectChanges();
+        expect(overlay().querySelector('.c-chip-popover')).toBeNull();
+        expect(document.activeElement).toBe(icon);
+        expect(component.editingIndex()).toBeNull();
+      } finally {
+        icon.remove();
+      }
+    });
+
+    it('QB-P-08 a second openField for the open chip closes it (the icon toggles, as with the old menu backdrop)', async () => {
+      const icon = document.createElement('button');
+      document.body.appendChild(icon);
+      try {
+        component.openField('status', icon);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(overlay().querySelector('.c-chip-popover')).not.toBeNull();
+        icon.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        icon.click();
+        component.openField('status', icon);
+        fixture.detectChanges();
+        expect(overlay().querySelector('.c-chip-popover')).toBeNull();
+        expect(component.editingIndex()).toBeNull();
+      } finally {
+        icon.remove();
+      }
+    });
+
+    it('QB-P-02 renders all three panels as sd-query-panel with their modifier, never a Material menu panel', async () => {
+      setOption({ fields: [status, name], showSavedFilters: true, savedFiltersKey: 'qb-p-02' });
+      (fixture.nativeElement.querySelector('.c-add-filter') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--list.c-field-picker-menu')).not.toBeNull();
+
+      component.openField('status');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--form.c-chip-popover')).not.toBeNull();
+      // QB-P-06: the chip popover replaced the field picker.
+      expect(overlay().querySelector('.c-field-picker-menu')).toBeNull();
+
+      (fixture.nativeElement.querySelector('.c-saved-filters') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--list.c-saved-filters-menu')).not.toBeNull();
+      expect(overlay().querySelectorAll('.sd-query-panel').length).toBe(1);
+      expect(overlay().querySelector('[class*="mat-mdc-menu"]')).toBeNull();
+      localStorage.removeItem('sd-query-bar:savedFilters:qb-p-02');
+    });
+
+    it('QB-P-07 the add button announces a listbox and the chip a dialog', () => {
+      const add = fixture.nativeElement.querySelector('.c-add-filter') as HTMLElement;
+      expect(add.getAttribute('aria-haspopup')).toBe('listbox');
+      expect(add.getAttribute('aria-expanded')).toBe('false');
+      expect(chips()[0].getAttribute('aria-haspopup')).toBe('dialog');
     });
 
     it('starts building a chip in inline mode', () => {

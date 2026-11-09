@@ -18,7 +18,6 @@ import {
   viewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
@@ -32,7 +31,7 @@ import { SdQueryFieldPicker } from './components/field-picker/field-picker.compo
 import { SdQueryInlineChip } from './components/inline-chip/inline-chip.component';
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
 import { SdQueryPopoverChip } from './components/popover-chip/popover-chip.component';
-import { ɵSdQueryPanelGroup } from './components/panel/query-panel';
+import { ɵSdQueryPanelGroup, ɵSdQueryPanelTriggerDirective } from './components/panel/query-panel';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { ɵSdQueryChipLabels, ɵsdQueryChipValueText } from './query-bar-chip-text';
 import {
@@ -74,8 +73,8 @@ const hasValue = (value: unknown): boolean => value !== null && value !== undefi
     SdIcon,
     CommonModule,
     FormsModule,
-    MatMenuModule,
     MatTooltipModule,
+    ɵSdQueryPanelTriggerDirective,
     SdQueryActionsBar,
     SdQueryBuildChip,
     SdQueryChipPopover,
@@ -155,7 +154,7 @@ export class SdQueryBar {
   /**
    * Editing mode:
    * - `'popover'` (default) → compact chips; click a chip to edit operator + value in a
-   *   mat-menu popover, commit with "Áp dụng".
+   *   popover panel; the value is committed when the popover closes.
    * - `'inline'` → GitLab-style. Each filter's operator + value controls render directly
    *   on the bar (no popup, no per-filter apply). Edits update `filters` live; the user
    *   presses the search button (or Enter) once to fire `(apply)`.
@@ -646,8 +645,15 @@ export class SdQueryBar {
       else afterNextRender(() => this.#focusInlineChip(index), { injector: this.#injector });
       return;
     }
-    if (index < 0) this.#addFilter(field, returnFocusTo ?? undefined);
-    else this.popoverChips()[index]?.openMenu(returnFocusTo ?? undefined);
+    if (index < 0) {
+      this.#addFilter(field, returnFocusTo ?? undefined);
+      return;
+    }
+    const chip = this.popoverChips()[index];
+    // why: icon ở header bấm lần nữa khi popover của nó đang mở thì đóng lại — menu Material trước đây có backdrop nuốt lần bấm đó
+    // và đóng menu; panel mới không có backdrop.
+    if (chip?.isOpen()) chip.closeMenu();
+    else chip?.openMenu(returnFocusTo ?? undefined);
   }
 
   /** Clear-all button: the host's `onClearAll` when given, else the built-in clearAll(). */
@@ -665,9 +671,8 @@ export class SdQueryBar {
     const data = SD_QUERY_MULTI_OPERATORS.includes(operator) ? [] : null;
     list[index] = { field: field.key as any, operator, data } as Filter;
     this.filters.set(list);
-    // why: clicking an item in the nested fieldSwitchPicker closes both the picker AND
-    // the parent chipPopover. Re-open the chip's popover on the next render so user can
-    // continue picking operator + value without a second manual click.
+    // why: re-open the chip's popover on the next render so the user can pick operator + value for the new field
+    // without a second click.
     afterNextRender(() => this.popoverChips()[index]?.openMenu(), { injector: this.#injector });
   }
 
@@ -780,7 +785,7 @@ export class SdQueryBar {
     if (!filter || !('field' in filter)) return;
     this.editingIndex.set(index);
     const field = this.fieldByKey()[filter.field as string];
-    this.chipPopover()?.seed(filter, field);
+    this.chipPopover()?.seed(filter, field, index);
   }
 
   /**
@@ -803,7 +808,7 @@ export class SdQueryBar {
       return;
     }
     // why: popover chỉ đổi operator + value của CHÍNH chip đó → giữ track key, nếu không chip sẽ
-    // bị huỷ ngay lúc menu đóng (trigger của overlay biến mất giữa chừng).
+    // bị huỷ ngay lúc panel đóng (trigger của overlay biến mất giữa chừng).
     this.#inheritRowId(previous, next);
     list[idx] = next;
     this.filters.set(list);

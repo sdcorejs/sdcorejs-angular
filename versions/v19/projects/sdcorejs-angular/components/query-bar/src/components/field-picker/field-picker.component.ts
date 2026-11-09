@@ -1,45 +1,32 @@
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  ElementRef,
-  inject,
-  Injector,
-  input,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
-import { MatMenu, MatMenuModule } from '@angular/material/menu';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
+
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { I18nService } from '@sdcorejs/angular/i18n';
-import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
+import { ɵSdQueryPanelDirective } from '../panel/query-panel';
 
 /** More fields than this get a find box at the top of the picker. */
 const FIND_THRESHOLD = 8;
 
-/** Keys the find box leaves to mat-menu: close, move into the list, leave the menu. */
-const MENU_KEYS = new Set(['Escape', 'ArrowDown', 'ArrowUp', 'Tab']);
+let nextListId = 0;
 
 interface FieldGroup {
   label: string;
+  headingId: string;
   fields: SdQueryField[];
 }
 
 /**
- * Field picker mat-menu for `sd-query-bar`.
+ * Field picker of `sd-query-bar`: a listbox panel (handoff section 3). The "+" button opens it with
+ * `[sdQueryPanelTrigger]="picker.panel()"`; the chosen field comes back through `(pick)`. Fields in `[usedKeys]`
+ * render disabled with a check.
  *
- * Shared between two flows in the bar:
- * - "Add filter" — pass `[usedKeys]` (a Set of field keys already on the bar) so
- *   those entries render disabled with a check.
- * - "Đổi field" inside the chip popover — pass `[currentKey]` to disable the
- *   currently-bound field.
- *
- * Parent triggers via `[matMenuTriggerFor]="picker.menu()"` and receives the
- * chosen field through `(pick)`.
+ * Keyboard: without a find box focus moves over the options (↑ ↓ Home End, Enter picks). With the find box focus stays
+ * in it and the arrows move `aria-activedescendant` (combobox). No typeahead.
  */
 @Component({
   selector: 'sd-query-field-picker',
@@ -47,37 +34,35 @@ interface FieldGroup {
   styleUrl: './field-picker.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule],
+  imports: [NgTemplateOutlet, SdIcon, ɵSdQueryPanelDirective, ɵSdSearchField, ɵSdSearchFieldInputDirective],
 })
 export class SdQueryFieldPicker {
   readonly #i18n = inject(I18nService);
-  readonly #injector = inject(Injector);
   readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-bar.field-empty'));
   readonly findLabel = computed(() => this.#i18n.t('core.component.query-bar.find-field'));
 
-  /** Field list shown in the menu (caller-supplied; rendered in input order). */
+  /** Field list shown in the panel (caller-supplied; rendered in input order). */
   readonly fields = input<SdQueryField[]>([]);
 
-  /** Single key disabled with a trailing check — used in the chip-popover "Đổi field" flow. */
-  readonly currentKey = input<string | undefined>(undefined);
-
-  /** Set of keys already in use — used in the "Add filter" flow to grey out duplicates. */
+  /** Set of keys already in use — those render disabled with a check. */
   readonly usedKeys = input<Set<string>>(new Set<string>());
+
+  /** Prefix of `data-autoid` (handoff section 12). */
+  readonly autoId = input<string | undefined>(undefined);
 
   /** Emits when the user picks an enabled field. */
   readonly pick = output<SdQueryField>();
 
-  /** MatMenu instance — parent binds `[matMenuTriggerFor]="picker.menu()"`. */
-  readonly menu = viewChild.required(MatMenu);
+  /** The panel — the trigger binds `[sdQueryPanelTrigger]="picker.panel()"`. */
+  readonly panel = viewChild.required<ɵSdQueryPanelDirective>('panel');
 
   readonly iconFor = sdQueryFieldIcon;
+  readonly listId = `sd-query-field-list-${nextListId++}`;
 
-  // ---------------------------------------------------------------------------
-  // Groups + find box (long field lists, e.g. sd-table "Bộ lọc" / "Cột")
-  // ---------------------------------------------------------------------------
-
-  /** Text typed in the find box; reset when the menu closes. */
+  /** Text typed in the find box; reset when the panel closes. */
   readonly query = signal('');
+  /** Key of the option the arrows point at (`aria-activedescendant` / roving focus). */
+  readonly activeKey = signal<string | null>(null);
 
   /** Find box above more than eight fields. */
   readonly searchable = computed(() => this.fields().length > FIND_THRESHOLD);
@@ -92,7 +77,7 @@ export class SdQueryFieldPicker {
       const label = field.group ?? '';
       let group = byLabel.get(label);
       if (!group) {
-        group = { label, fields: [] };
+        group = { label, headingId: `${this.listId}-group-${groups.length}`, fields: [] };
         byLabel.set(label, group);
         groups.push(group);
       }
@@ -104,40 +89,117 @@ export class SdQueryFieldPicker {
   /** One group needs no heading. Counted on the whole list so filtering does not hide headings. */
   readonly showGroupHeadings = computed(() => new Set(this.fields().map(field => field.group ?? '')).size > 1);
 
-  private readonly findInput = viewChild<ElementRef<HTMLInputElement>>('findInput');
-
-  /**
-   * Called by the trigger's `(menuOpened)`: land in the find box. why: mat-menu focuses its first
-   * item after rendering (afterNextRender), so the find box takes focus in a later render callback.
-   */
-  focusFind(): void {
-    if (!this.searchable()) return;
-    afterNextRender(() => this.findInput()?.nativeElement.focus(), { injector: this.#injector });
-  }
-
-  onFindKeydown(event: KeyboardEvent): void {
-    if (!MENU_KEYS.has(event.key)) event.stopPropagation();
-  }
-
-  /** Per-field disabled state — current key OR used key OR field's own disabled flag. */
-  readonly disabledMap = computed<Set<string>>(() => {
-    const set = new Set(this.usedKeys());
-    const cur = this.currentKey();
-    if (cur) set.add(cur);
-    return set;
+  /** Visible fields in order, with the id of their option element. */
+  readonly #visible = computed(() => {
+    const ids = new Map<string, string>();
+    const list = this.groups().flatMap(group => group.fields);
+    list.forEach((field, index) => ids.set(field.key as string, `${this.listId}-option-${index}`));
+    return { list, ids };
   });
 
+  /** Id of the active option, for `aria-activedescendant`. */
+  readonly activeId = computed(() => {
+    const key = this.activeKey();
+    return key === null ? null : (this.#visible().ids.get(key) ?? null);
+  });
+
+  optionId(field: SdQueryField): string {
+    return this.#visible().ids.get(field.key as string) ?? '';
+  }
+
   isDisabled(field: SdQueryField): boolean {
-    return field.disabled === true || this.disabledMap().has(field.key as string);
+    return field.disabled === true || this.usedKeys().has(field.key as string);
   }
 
-  /** "Current" check icon — only when the field matches `currentKey`. */
-  isCurrent(field: SdQueryField): boolean {
-    return field.key === this.currentKey();
-  }
-
-  /** "Used" check icon — when the field is in `usedKeys` (not the same as current). */
+  /** "Used" check icon — when the field is in `usedKeys`. */
   isUsed(field: SdQueryField): boolean {
     return this.usedKeys().has(field.key as string);
+  }
+
+  /** Find box typed: filter, then point at the first enabled match (none while the box is empty). */
+  setQuery(text: string): void {
+    this.query.set(text);
+    this.activeKey.set(text.trim() ? ((this.#enabled()[0]?.key as string | undefined) ?? null) : null);
+  }
+
+  /**
+   * Moves the active option over the enabled ones, wrapping: `1` / `-1`, or `'first'` / `'last'`. With `focus`, the
+   * option also takes focus (no find box).
+   */
+  move(step: 1 | -1 | 'first' | 'last', focus = false): void {
+    const enabled = this.#enabled();
+    if (!enabled.length) return;
+    const current = enabled.findIndex(field => field.key === this.activeKey());
+    let index: number;
+    if (step === 'first') index = 0;
+    else if (step === 'last') index = enabled.length - 1;
+    else if (current < 0) index = step > 0 ? 0 : enabled.length - 1;
+    else index = (current + step + enabled.length) % enabled.length;
+    const key = enabled[index].key as string;
+    this.activeKey.set(key);
+    if (focus)
+      this.panel()
+        .element()
+        ?.querySelector<HTMLElement>(`#${CSS.escape(this.#visible().ids.get(key) ?? '')}`)
+        ?.focus();
+  }
+
+  /** Picks the active option; `false` when there is none. */
+  pickActive(): boolean {
+    const field = this.#enabled().find(item => item.key === this.activeKey());
+    if (!field) return false;
+    this.select(field);
+    return true;
+  }
+
+  /** Picks `field` unless it is disabled: the panel closes first, then `(pick)` fires. */
+  select(field: SdQueryField): void {
+    if (this.isDisabled(field)) return;
+    this.panel().close('select');
+    this.pick.emit(field);
+  }
+
+  /** Keys inside the panel (find box or an option). */
+  onKeydown(event: KeyboardEvent): void {
+    const inFind = (event.target as HTMLElement).tagName === 'INPUT';
+    switch (event.key) {
+      case 'ArrowDown':
+        this.move(1, !inFind);
+        break;
+      case 'ArrowUp':
+        this.move(-1, !inFind);
+        break;
+      case 'Home':
+      case 'End':
+        // In the find box Home / End move the caret.
+        if (inFind) return;
+        this.move(event.key === 'Home' ? 'first' : 'last', true);
+        break;
+      case 'Enter':
+        if (inFind) this.pickActive();
+        else {
+          const field = this.#visible().list.find(item => this.optionId(item) === (event.target as HTMLElement).id);
+          if (field) this.select(field);
+        }
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  }
+
+  /** An option took focus (roving focus, or a click): it becomes the active one. */
+  onOptionFocus(field: SdQueryField): void {
+    this.activeKey.set(field.key as string);
+  }
+
+  /** Panel closed: forget the find text and the active option. */
+  reset(): void {
+    this.query.set('');
+    this.activeKey.set(null);
+  }
+
+  #enabled(): SdQueryField[] {
+    return this.#visible().list.filter(field => !this.isDisabled(field));
   }
 }

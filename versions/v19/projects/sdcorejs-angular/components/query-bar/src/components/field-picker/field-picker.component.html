@@ -1,39 +1,72 @@
-<mat-menu #m="matMenu" xPosition="after" yPosition="below" class="c-field-picker-menu" (closed)="query.set('')">
-  @if (searchable()) {
-    <!-- why: ô lọc nằm trong mat-menu — chặn click (menu tự đóng) và phím gõ (typeahead của menu
-         sẽ nhảy focus sang mục), chỉ để Escape / mũi tên xuống / Tab đi tiếp cho menu. -->
-    <div class="c-field-find" role="group" (click)="$event.stopPropagation()" (keydown)="onFindKeydown($event)">
-      <sd-icon class="c-field-find-icon" name="search"></sd-icon>
-      <input
-        #findInput
-        class="c-field-find-input"
-        type="text"
-        autocomplete="off"
-        [placeholder]="findLabel()"
-        [attr.aria-label]="findLabel()"
-        [value]="query()"
-        (input)="query.set(findInput.value)" />
-    </div>
-  }
-  @for (group of groups(); track group.label) {
-    @if (showGroupHeadings()) {
-      <div class="c-field-group" role="presentation">{{ group.label }}</div>
+@let _autoId = autoId();
+@let _activeKey = activeKey();
+@let _showHeadings = showGroupHeadings();
+
+<ng-template #option let-field>
+  @let _disabled = isDisabled(field);
+  <button
+    type="button"
+    role="option"
+    tabindex="-1"
+    class="c-field-item"
+    [id]="optionId(field)"
+    [class.c-field-item--active]="field.key === _activeKey"
+    [attr.aria-selected]="field.key === _activeKey"
+    [attr.aria-disabled]="_disabled ? 'true' : null"
+    (focus)="onOptionFocus(field)"
+    (click)="select(field)">
+    <sd-icon class="c-field-item-icon" size="16px" [name]="iconFor(field)" aria-hidden="true"></sd-icon>
+    <span class="c-field-item-label">{{ field.label }}</span>
+    <span class="c-field-item-type">{{ field.type }}</span>
+    @if (isUsed(field)) {
+      <sd-icon class="c-field-item-check" size="14px" name="check" aria-hidden="true"></sd-icon>
     }
-    @for (field of group.fields; track $index) {
-      <button
-        type="button"
-        mat-menu-item
-        [disabled]="isDisabled(field)"
-        (click)="pick.emit(field)">
-        <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
-        <span class="c-field-item-label">{{ field.label }}</span>
-        <span class="c-field-item-type">{{ field.type }}</span>
-        @if (isCurrent(field) || isUsed(field)) {
-          <sd-icon class="c-field-item-check" name="check"></sd-icon>
+  </button>
+</ng-template>
+
+<!-- Panel danh sách theo khung Action Popover (handoff mục 3). why: ô tìm nằm ngoài listbox — nó là combobox điều khiển
+     listbox qua aria-activedescendant, focus thật ở lại trong ô. -->
+<ng-template sdQueryPanel="listbox" #panel="sdQueryPanel" (closed)="reset()">
+  <div
+    class="sd-query-panel sd-query-panel--list c-field-picker-menu"
+    tabindex="-1"
+    [attr.data-autoid]="_autoId ? _autoId + '-panel-field-picker' : null"
+    (keydown)="onKeydown($event)">
+    @if (searchable()) {
+      <sd-search-field class="c-field-find" size="sm">
+        <input
+          sdSearchFieldInput
+          type="text"
+          role="combobox"
+          autocomplete="off"
+          aria-autocomplete="list"
+          aria-expanded="true"
+          [attr.aria-controls]="listId"
+          [attr.aria-activedescendant]="activeId()"
+          [attr.aria-label]="findLabel()"
+          [placeholder]="findLabel()"
+          [value]="query()"
+          (input)="setQuery($any($event.target).value)" />
+      </sd-search-field>
+    }
+    <div class="c-field-list" role="listbox" [id]="listId" [attr.aria-label]="findLabel()">
+      @for (group of groups(); track group.label) {
+        @if (_showHeadings) {
+          <div role="group" [attr.aria-labelledby]="group.headingId">
+            <div class="c-field-group" role="presentation" [id]="group.headingId">{{ group.label }}</div>
+            @for (field of group.fields; track field.key) {
+              <ng-container [ngTemplateOutlet]="option" [ngTemplateOutletContext]="{ $implicit: field }" />
+            }
+          </div>
+        } @else {
+          @for (field of group.fields; track field.key) {
+            <ng-container [ngTemplateOutlet]="option" [ngTemplateOutletContext]="{ $implicit: field }" />
+          }
         }
-      </button>
+      }
+    </div>
+    @if (!groups().length) {
+      <div class="c-field-empty" role="status">{{ emptyLabel() }}</div>
     }
-  } @empty {
-    <div class="c-field-empty">{{ emptyLabel() }}</div>
-  }
-</mat-menu>
+  </div>
+</ng-template>

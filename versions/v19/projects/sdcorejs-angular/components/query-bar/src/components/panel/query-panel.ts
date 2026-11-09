@@ -79,7 +79,7 @@ export class ɵSdQueryPanelGroup {
 
 /**
  * Content of a query bar panel, rendered in a CDK overlay next to its trigger: field picker (`listbox`), chip popover
- * (`dialog`) and saved filters (`menu`). Replaces `mat-menu` in the bar (handoff section 2.2).
+ * (`dialog`) and saved filters (`menu`). Replaces the Material menu the bar used before (handoff section 2.2).
  *
  * The template has one root element carrying `sd-query-panel`, its modifier and its role; the panel gives it the `id`
  * the trigger's `aria-controls` points to and `tabindex="-1"`. A form panel marks the wrapper of its first value control
@@ -334,6 +334,7 @@ export class ɵSdQueryPanelDirective {
   exportAs: 'sdQueryPanelTrigger',
   standalone: true,
   host: {
+    class: 'sd-query-panel-trigger',
     '[attr.aria-haspopup]': 'panel()?.role() ?? null',
     '[attr.aria-expanded]': 'panel() ? expanded() : null',
     '[attr.aria-controls]': 'expanded() ? panel()!.id : null',
