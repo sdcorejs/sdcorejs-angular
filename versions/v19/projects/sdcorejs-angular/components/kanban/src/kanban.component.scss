@@ -319,6 +319,22 @@
 .cdk-drag-preview {
   box-shadow: var(--sd-shadow-md);
 }
+// `reorder` off (kanban.md §6): no drop slot; the old place stays faded in the source lane.
+.sd-kanban__no-slot {
+  display: none;
+}
+.sd-kanban__origin {
+  opacity: 0.4;
+  pointer-events: none;
+}
+// A lane `droppable` refuses, from the start of the drag to its end.
+.sd-kanban__column[data-blocked] {
+  > .sd-kanban__header,
+  > .sd-kanban__cards {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
 // Chỗ thả: khe nét đứt cùng chiều cao thẻ; nội dung ẩn bằng visibility để giữ chiều cao.
 .sd-kanban__card.cdk-drag-placeholder {
   opacity: 1;

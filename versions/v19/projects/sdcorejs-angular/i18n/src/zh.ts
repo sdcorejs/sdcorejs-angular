@@ -1381,6 +1381,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.move-to': '移到{column}',
   'core.component.kanban.no-results': '没有匹配的卡片',
   'core.component.kanban.empty-column': '没有卡片',
+  'core.component.kanban.cancelled': '已取消移动 {title}',
+  'core.component.kanban.drop-blocked': '无法移动到 {column}',
   'core.form.segmented.label': '选项',
   'core.form.segmented.required': '请选择一个选项',
   'core.form.segmented.invalid-items': '选项必须具有唯一的字符串、数字或布尔值。',

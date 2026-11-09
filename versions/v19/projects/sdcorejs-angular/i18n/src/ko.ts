@@ -1391,6 +1391,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.move-to': '{column}(으)로 이동',
   'core.component.kanban.no-results': '일치하는 카드가 없습니다',
   'core.component.kanban.empty-column': '카드가 없습니다',
+  'core.component.kanban.cancelled': '{title} 이동을 취소했습니다',
+  'core.component.kanban.drop-blocked': '{column}(으)로 옮길 수 없습니다',
   'core.form.segmented.label': '선택 항목',
   'core.form.segmented.required': '항목을 선택하세요',
   'core.form.segmented.invalid-items': '각 항목에는 고유한 문자열, 숫자 또는 불리언 값이 필요합니다.',

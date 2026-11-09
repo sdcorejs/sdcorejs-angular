@@ -1393,6 +1393,8 @@ export const EN_MESSAGES = {
   'core.component.kanban.move-to': 'Move to {column}',
   'core.component.kanban.no-results': 'No matching cards',
   'core.component.kanban.empty-column': 'No cards',
+  'core.component.kanban.cancelled': 'Move of {title} cancelled',
+  'core.component.kanban.drop-blocked': "Can't move to {column}",
   'core.form.segmented.label': 'Choices',
   'core.form.segmented.required': 'Please select an option',
   'core.form.segmented.invalid-items': 'Choices must have unique string, number, or boolean values.',

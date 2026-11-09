@@ -6,6 +6,9 @@
 @let _cardActionsTemplate = cardActionsTemplate();
 @let _columnTemplate = columnTemplate();
 @let _columnActionsTemplate = columnActionsTemplate();
+@let _reorder = reorder();
+@let _dragging = draggingId();
+@let _hasMove = hasMove();
 <section
   class="sd-kanban"
   [attr.aria-label]="boardLabel()"
@@ -51,6 +54,7 @@
           [class.sd-kanban__column--collapsed]="_collapsed"
           [attr.data-column-id]="_columnToken"
           [attr.data-color]="view.column.color || 'secondary'"
+          [attr.data-blocked]="isBlocked(view.column.id) || null"
           [attr.aria-labelledby]="id + '-heading-' + _columnToken">
           <header class="sd-kanban__header">
             <!-- Màu cột: chấm 8px trước nhãn; cột có prefixIcon thì icon tô màu thay cho chấm. -->
@@ -97,6 +101,8 @@
             [cdkDropListData]="view"
             [cdkDropListDisabled]="_blocked || !!view.column.disabled || _collapsed"
             [cdkDropListEnterPredicate]="enterPredicate"
+            [cdkDropListSortingDisabled]="!_reorder"
+            [attr.aria-disabled]="isBlocked(view.column.id) || null"
             (cdkDropListDropped)="drop($event)">
             @if (!_collapsed) {
               @for (card of view.cards; track card.card.id) {
@@ -104,16 +110,28 @@
                 @let _cardPending = _pending === card.card.id;
                 @let _cardFailed = !!_failure && _failedId === card.card.id;
                 @let _failureId = id + '-failure-' + _cardToken;
+                @if (!_reorder && _dragging === card.card.id) {
+                  <!-- why: with sorting off the CDK placeholder follows the pointer to the target lane; this marks the old place. -->
+                  <div class="sd-kanban__card sd-kanban__origin" data-origin aria-hidden="true" [style.height.px]="originHeight()">
+                    <span class="sd-kanban__card-title">{{ card.card.title }}</span>
+                  </div>
+                }
                 <article
+                  #cardElement
                   class="sd-kanban__card"
                   cdkDrag
                   [cdkDragData]="card"
-                  [cdkDragDisabled]="_blocked || !!view.column.disabled"
+                  [cdkDragDisabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
+                  (cdkDragStarted)="dragStarted(card, view, cardElement)"
+                  (cdkDragEnded)="dragEnded()"
                   [class.sd-kanban__card--pending]="_cardPending"
                   [class.sd-kanban__card--failed]="_cardFailed"
                   [attr.aria-label]="card.card.title"
                   [attr.data-card-id]="_cardToken"
                   [attr.data-autoid]="autoId() ? 'components-kanban-' + autoId() + '-card-' + _cardToken : null">
+                  @if (!_reorder) {
+                    <div *cdkDragPlaceholder class="sd-kanban__no-slot"></div>
+                  }
                   <div class="sd-kanban__card-body">
                     @if (_cardTemplate) {
                       <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
@@ -121,6 +139,7 @@
                       <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
                     }
                   </div>
+                  @if (_hasMove) {
                   <div class="sd-kanban__card-tools">
                     <button
                       #moveHandle
@@ -128,7 +147,7 @@
                       cdkDragHandle
                       class="sd-kanban__icon-button sd-kanban__handle"
                       [attr.data-kanban-handle]="_cardToken"
-                      [disabled]="_blocked || !!view.column.disabled"
+                      [disabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
                       [attr.aria-label]="'core.component.kanban.move-card' | sdTranslate: { title: card.card.title }"
                       [attr.aria-describedby]="_cardFailed ? id + '-instructions ' + _failureId : id + '-instructions'"
                       (keydown)="keydown($event, card, view)">
@@ -139,12 +158,15 @@
                       type="button"
                       class="sd-kanban__icon-button"
                       [matMenuTriggerFor]="moveMenu"
-                      [disabled]="_blocked || !!view.column.disabled"
+                      [disabled]="_blocked || !!view.column.disabled || !canMove(card.card)"
                       [attr.data-kanban-menu]="_cardToken"
                       [attr.aria-label]="'core.component.kanban.move-menu' | sdTranslate: { title: card.card.title }">
                       <sd-icon name="more_horiz" size="sm" />
                     </button>
                     <mat-menu #moveMenu="matMenu">
+                      <!-- why: lazy content, so droppable runs when the menu opens, not at every render (§7.3). -->
+                      <ng-template matMenuContent>
+                      @if (_reorder) {
                       <button
                         mat-menu-item
                         [disabled]="_blocked || card.up === undefined"
@@ -157,18 +179,21 @@
                         (click)="moveFromMenu(card.card.id, { columnId: view.column.id, beforeId: card.down }, moveTrigger)">
                         {{ 'core.component.kanban.move-down' | sdTranslate }}
                       </button>
+                      }
                       @for (column of columns(); track column.id) {
                         @if (column.id !== view.column.id) {
                           <button
                             mat-menu-item
-                            [disabled]="_blocked || !!column.disabled"
+                            [disabled]="_blocked || !!column.disabled || !canDrop(card, view, column)"
                             (click)="moveFromMenu(card.card.id, { columnId: column.id }, moveTrigger)">
                             {{ 'core.component.kanban.move-to' | sdTranslate: { column: column.label } }}
                           </button>
                         }
                       }
+                      </ng-template>
                     </mat-menu>
                   </div>
+                  }
                   @if (_cardActionsTemplate) {
                     <div class="sd-kanban__card-actions">
                       <ng-container
@@ -185,7 +210,7 @@
                     <div class="sd-kanban__card-status sd-kanban__card-status--error">
                       <sd-icon name="error" size="sm" />
                       <span class="sd-kanban__card-status-text" [id]="_failureId">{{ _failure }}</span>
-                      <button type="button" class="sd-kanban__text-button" (click)="dismissFailure(); moveHandle.focus()">
+                      <button type="button" class="sd-kanban__text-button" (click)="dismissFailure(card.card.id)">
                         {{ 'core.component.kanban.dismiss' | sdTranslate }}
                       </button>
                     </div>

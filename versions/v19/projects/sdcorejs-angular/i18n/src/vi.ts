@@ -1397,6 +1397,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.move-to': 'Chuyển đến {column}',
   'core.component.kanban.no-results': 'Không có thẻ phù hợp',
   'core.component.kanban.empty-column': 'Chưa có thẻ',
+  'core.component.kanban.cancelled': 'Đã huỷ chuyển {title}',
+  'core.component.kanban.drop-blocked': 'Không chuyển sang {column} được',
   'core.form.segmented.label': 'Lựa chọn',
   'core.form.segmented.required': 'Vui lòng chọn một giá trị',
   'core.form.segmented.invalid-items': 'Mỗi lựa chọn cần có giá trị chuỗi, số hoặc boolean duy nhất.',

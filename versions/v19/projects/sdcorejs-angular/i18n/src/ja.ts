@@ -1397,6 +1397,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.move-to': '{column}へ移動',
   'core.component.kanban.no-results': '一致するカードがありません',
   'core.component.kanban.empty-column': 'カードがありません',
+  'core.component.kanban.cancelled': '{title} の移動を取り消しました',
+  'core.component.kanban.drop-blocked': '{column} には移動できません',
   'core.form.segmented.label': '選択肢',
   'core.form.segmented.required': '選択肢を選んでください',
   'core.form.segmented.invalid-items': '選択肢の値は一意の文字列、数値、または真偽値にしてください。',

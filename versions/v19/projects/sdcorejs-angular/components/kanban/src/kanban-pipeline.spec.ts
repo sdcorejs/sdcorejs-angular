@@ -38,7 +38,8 @@ describe('SdKanban · move pipeline', () => {
   const focusTarget = (id: string): HTMLButtonElement => host().querySelector<HTMLButtonElement>(`[data-kanban-handle="${id}"]`)!;
   const drags = (): CdkDrag[] => fixture.debugElement.queryAll(By.directive(CdkDrag)).map(element => element.injector.get(CdkDrag));
   const drag = (id: string): CdkDrag => drags().find(candidate => candidate.data.card.id === id)!;
-  const lists = (): CdkDropList[] => fixture.debugElement.queryAll(By.directive(CdkDropList)).map(element => element.injector.get(CdkDropList));
+  const lists = (): CdkDropList[] =>
+    fixture.debugElement.queryAll(By.directive(CdkDropList)).map(element => element.injector.get(CdkDropList));
   const list = (columnId: string): CdkDropList => lists().find(candidate => candidate.data.column.id === columnId)!;
   const lane = (columnId: string): HTMLElement => host().querySelector<HTMLElement>(`.sd-kanban__column[data-column-id="${columnId}"]`)!;
   const menuItems = (): HTMLButtonElement[] =>
@@ -121,6 +122,8 @@ describe('SdKanban · move pipeline', () => {
       allow = false;
       expect(await kanban().move('x', { columnId: 'done' })).toBeFalse();
       expect(onMove).not.toHaveBeenCalled();
+      // why: the board is OnPush; the consumer's next render comes with new data or a new option.
+      fixture.componentRef.setInput('items', [...data]);
       fixture.detectChanges();
       expect(drag('x').disabled).withContext('the next render').toBeTrue();
       expect(host().querySelector<HTMLButtonElement>('[data-kanban-menu="x"]')!.disabled).toBeTrue();
@@ -147,7 +150,9 @@ describe('SdKanban · move pipeline', () => {
       const onMove = jasmine.createSpy('onMove').and.returnValue(true);
       const droppable = (context: SdKanbanDropContext<Dto>): boolean => context.to.id !== 'done';
       mount({ droppable, onMove });
-      expect(await kanban().move('x', { columnId: 'done' })).withContext('move()').toBeFalse();
+      expect(await kanban().move('x', { columnId: 'done' }))
+        .withContext('move()')
+        .toBeFalse();
       const items = await openMenu('x');
       const doneItem = items.find(item => item.textContent!.includes('Done'))!;
       const laterItem = items.find(item => item.textContent!.includes('Later'))!;
@@ -197,8 +202,12 @@ describe('SdKanban · move pipeline', () => {
       expect(lists().every(candidate => candidate.sortingDisabled)).toBeTrue();
       expect(await kanban().move('x', { columnId: 'done', beforeId: 'd' })).toBeTrue();
       expect((onMove.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>).to).toEqual({ columnId: 'done', index: null, beforeId: null });
-      expect(cards().map(card => card.id)).withContext('keeps the place in the array').toEqual(['x', 'y', 'd']);
-      expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' })).withContext('same column').toBeFalse();
+      expect(cards().map(card => card.id))
+        .withContext('keeps the place in the array')
+        .toEqual(['x', 'y', 'd']);
+      expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' }))
+        .withContext('same column')
+        .toBeFalse();
       fixture.detectChanges();
       const items = await openMenu('y');
       expect(items.map(item => item.textContent!.trim())).not.toContain(t('move-up'));
@@ -375,20 +384,42 @@ describe('SdKanban · move pipeline', () => {
     fixture.componentRef.setInput('items', [...data, { id: 'locked', columnId: 'open', title: 'Locked' }]);
     fixture.componentRef.setInput('columns', [...columns, { id: 'off', label: 'Off', disabled: true }]);
     fixture.detectChanges();
-    expect(await kanban().move('missing', { columnId: 'done' })).withContext('unknown card').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'missing' })).withContext('unknown column').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'off' })).withContext('disabled column').toBeFalse();
-    expect(await kanban().move('locked', { columnId: 'done' })).withContext('movable false').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'later' })).withContext('droppable false').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'open' })).withContext('same column').toBeFalse();
+    expect(await kanban().move('missing', { columnId: 'done' }))
+      .withContext('unknown card')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'missing' }))
+      .withContext('unknown column')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'off' }))
+      .withContext('disabled column')
+      .toBeFalse();
+    expect(await kanban().move('locked', { columnId: 'done' }))
+      .withContext('movable false')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'later' }))
+      .withContext('droppable false')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'open' }))
+      .withContext('same column')
+      .toBeFalse();
     answers.push(false, 'cancel', new Error('x'));
-    expect(await kanban().move('x', { columnId: 'done' })).withContext('false').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'done' })).withContext('cancel').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'done' })).withContext('error').toBeFalse();
-    expect(await kanban().move('x', { columnId: 'done' })).withContext('accepted').toBeTrue();
+    expect(await kanban().move('x', { columnId: 'done' }))
+      .withContext('false')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'done' }))
+      .withContext('cancel')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'done' }))
+      .withContext('error')
+      .toBeFalse();
+    expect(await kanban().move('x', { columnId: 'done' }))
+      .withContext('accepted')
+      .toBeTrue();
     fixture.componentRef.setInput('readonly', true);
     fixture.detectChanges();
-    expect(await kanban().move('x', { columnId: 'open' })).withContext('locked board').toBeFalse();
+    expect(await kanban().move('x', { columnId: 'open' }))
+      .withContext('locked board')
+      .toBeFalse();
   });
 
   it('[KAN-SC-18] undoes an accepted move with move(…, "api") without taking the focus', async () => {
