@@ -1380,7 +1380,8 @@ export const EN_MESSAGES = {
   'core.component.kanban.moved': '{title} moved to {column}, position {position}',
   'core.component.kanban.rejected': 'The move was rejected. Try another destination.',
   'core.component.kanban.error': 'Unable to move the card. Try again.',
-  'core.component.kanban.invalid-data': 'Check the cards and columns: IDs must be unique and non-empty, and every card needs a title and a known column.',
+  'core.component.kanban.invalid-data':
+    'Check the cards and columns: IDs must be unique and non-empty, and every card needs a title and a known column.',
   'core.component.kanban.dismiss': 'Dismiss',
   'core.component.kanban.instructions': 'Enter to select. Alt + Left or Right to change column; Alt + Up or Down to change position.',
   'core.component.kanban.instructions-column': 'Enter to select. Alt + Left or Right to change column.',

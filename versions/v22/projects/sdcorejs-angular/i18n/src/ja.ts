@@ -1384,7 +1384,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.moved': '{title}を{column}の{position}番目に移動しました',
   'core.component.kanban.rejected': '移動が拒否されました。別の列を選んでください。',
   'core.component.kanban.error': 'カードを移動できません。もう一度お試しください。',
-  'core.component.kanban.invalid-data': 'カードと列を確認してください。IDは一意で空でない必要があり、各カードにはタイトルと既存の列が必要です。',
+  'core.component.kanban.invalid-data':
+    'カードと列を確認してください。IDは一意で空でない必要があり、各カードにはタイトルと既存の列が必要です。',
   'core.component.kanban.dismiss': '閉じる',
   'core.component.kanban.instructions': 'Enter で選択。Alt + 左右矢印キーで列を移動、Alt + 上下矢印キーで位置を変更。',
   'core.component.kanban.instructions-column': 'Enter で選択。Alt + 左右矢印キーで列を移動。',
