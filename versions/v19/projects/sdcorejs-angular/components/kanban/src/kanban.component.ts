@@ -21,6 +21,7 @@ import {
 } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule } from '@angular/cdk/drag-drop';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
@@ -45,6 +46,7 @@ import {
   SdKanbanColumnActionsTemplateDirective,
   SdKanbanColumnTemplateDirective,
 } from './kanban.templates';
+import { KanbanColumnLoader, type KanbanColumnStatus } from './kanban-loader';
 import {
   kanbanApplyMove,
   kanbanDataInvalid,
@@ -65,7 +67,17 @@ interface CardView<T> {
 interface ColumnView<T> {
   readonly column: SdKanbanColumn;
   readonly cards: readonly CardView<T>[];
+  /** Cards of the column: the server's total, or the loaded / given cards. */
   readonly count: number;
+  /** Header count (§6): "n", "visible/total" while filtering items, "n+" with more pages, "–" while unknown. */
+  readonly countText: string;
+  readonly summary: string | null;
+  /** Data source only: the column's load state; `null` with items. */
+  readonly status: KanbanColumnStatus | null;
+  readonly loaded: boolean;
+  readonly nextCursor: string | null;
+  /** Cards the "Show more" button announces. */
+  readonly moreCount: number;
 }
 interface MoveOperation<T> {
   readonly request: SdKanbanMoveRequest<T>;
@@ -74,6 +86,8 @@ interface MoveOperation<T> {
   readonly columns: readonly SdKanbanColumn[];
   /** The `items` reference the move was proposed against; a new one cancels it. */
   readonly items: readonly SdKanbanCard<T>[] | undefined;
+  /** Data source: generations of the source and target columns; a reload of either cancels the move (§7.5). */
+  readonly generations: { readonly from: number; readonly to: number } | null;
   readonly focus?: MoveFocus;
 }
 interface MoveFocus {
@@ -101,6 +115,7 @@ function allows<C>(state: SdKanbanState<C> | undefined, context: C): boolean {
     NgTemplateOutlet,
     DragDropModule,
     MatMenuModule,
+    MatProgressSpinnerModule,
     SdIcon,
     SdDataState,
     SdTranslatePipe,
@@ -167,8 +182,18 @@ export class SdKanban<T = unknown> {
   /** Card the current failure belongs to; `null` for failures without a card (invalid configuration). */
   protected readonly failedId = signal<string | null>(null);
   /** The board's copy of `items`, changed by accepted moves; every new `items` reference replaces it (R1-B-01). */
-  protected readonly cards = linkedSignal<readonly SdKanbanCard<T>[]>(() => this.items() ?? []);
-  protected readonly dataInvalid = computed(() => kanbanDataInvalid(this.cards(), this.columns()));
+  readonly #localCards = linkedSignal<readonly SdKanbanCard<T>[]>(() => this.items() ?? []);
+  readonly #loader = new KanbanColumnLoader<T>(error => this.#loadFailed(error));
+  /** `option.dataSource` wins over `items` (SC-25). */
+  protected readonly dataMode = computed(() => !!this.option().dataSource);
+  /** Every card the board holds: the copy of `items`, or the loaded pages of the columns in column order. */
+  protected readonly cards = computed<readonly SdKanbanCard<T>[]>(() => {
+    if (!this.dataMode()) return this.#localCards();
+    const states = this.#loader.states();
+    return this.columns().flatMap(column => states.get(column.id)?.cards ?? []);
+  });
+  // §8: with a data source, invalid cards are left out by the loader; only the columns can block the board.
+  protected readonly dataInvalid = computed(() => kanbanDataInvalid(this.dataMode() ? [] : this.cards(), this.columns()));
   protected readonly locked = computed(() => this.disabled() || this.readonly() || this.dataInvalid());
   protected readonly moveBlocked = computed(() => this.locked() || this.pendingId() !== null || !this.option().move);
   protected readonly boardLabel = computed(() => this.ariaLabel() || this.#i18n.t('core.component.kanban.label'));
@@ -177,6 +202,9 @@ export class SdKanban<T = unknown> {
     const locale = this.#i18n.locale();
     const keyword = this.keyword().trim().toLocaleLowerCase(locale);
     const cards = this.cards();
+    const dataMode = this.dataMode();
+    const states = this.#loader.states();
+    const pageSize = this.option().pageSize ?? 20;
     return this.columns().map(column => {
       const all = cards.filter(card => card.columnId === column.id);
       const views = all
@@ -186,8 +214,28 @@ export class SdKanban<T = unknown> {
           up: index > 0 ? all[index - 1].id : undefined,
           down: index < all.length - 1 ? (all[index + 2]?.id ?? null) : undefined,
         }))
-        .filter(view => !keyword || (view.card.searchText ?? view.card.title).toLocaleLowerCase(locale).includes(keyword));
-      return { column, cards: views, count: all.length };
+        // why: with a data source the server filters by keyword; the board shows what it gets.
+        .filter(view => dataMode || !keyword || (view.card.searchText ?? view.card.title).toLocaleLowerCase(locale).includes(keyword));
+      if (!dataMode) {
+        const countText = views.length !== all.length ? `${views.length}/${all.length}` : `${all.length}`;
+        const base = { column, cards: views, count: all.length, countText, summary: column.summary ?? null };
+        return { ...base, status: null, loaded: true, nextCursor: null, moreCount: 0 };
+      }
+      const state = this.#loader.state(column.id);
+      const known = states.has(column.id) && state.loaded;
+      const countText = state.total !== null ? `${state.total}` : known ? `${all.length}${state.nextCursor !== null ? '+' : ''}` : '–';
+      const left = state.total !== null ? state.total - all.length : pageSize;
+      return {
+        column,
+        cards: views,
+        count: state.total ?? all.length,
+        countText,
+        summary: state.summary ?? column.summary ?? null,
+        status: state.status,
+        loaded: state.loaded,
+        nextCursor: state.nextCursor,
+        moreCount: Math.max(1, Math.min(pageSize, left)),
+      };
     });
   });
   // Pending/failure feedback is shown on the affected card; board-level text is only a fallback
@@ -203,12 +251,49 @@ export class SdKanban<T = unknown> {
       const option = this.option();
       const columns = this.columns();
       const locked = this.locked();
+      const states = this.#loader.states();
       untracked(() => {
         const operation = this.#operation;
-        if (operation && (items !== operation.items || option !== operation.option || columns !== operation.columns || locked)) {
-          this.#cancel();
-        }
+        if (!operation) return;
+        const generations = operation.generations;
+        const stale = generations
+          ? (states.get(operation.request.from.columnId)?.generation ?? 0) !== generations.from ||
+            (states.get(operation.request.to.columnId)?.generation ?? 0) !== generations.to
+          : items !== operation.items;
+        if (stale || option !== operation.option || columns !== operation.columns || locked) this.#cancel();
       });
+    });
+    // §5.2: load the columns on screen, the new ones and a collapsed one when it opens; a new option loads again.
+    effect(() => {
+      const option = this.option();
+      const columns = this.columns();
+      const collapsed = this.collapsedColumns();
+      untracked(() => this.#syncLoads(option, columns, collapsed));
+    });
+    // §5.2: a keyword loads every loaded column again, 300ms after the last change.
+    effect(() => {
+      const keyword = this.keyword();
+      untracked(() => {
+        clearTimeout(this.#keywordTimer);
+        if (!this.dataMode() || keyword === this.#loadedKeyword) return;
+        this.#keywordTimer = setTimeout(() => {
+          this.#loadedKeyword = keyword;
+          this.#loader.abort();
+          for (const id of this.#loader.states().keys()) this.#loader.load(id, this.option(), keyword);
+        }, 300);
+      });
+    });
+    // SC-25: items and a data source together.
+    effect(() => {
+      if (this.items() === undefined || !this.dataMode() || this.#warnedItems || !isDevMode()) return;
+      this.#warnedItems = true;
+      console.warn('[sd-kanban] `items` is ignored while `option.dataSource` is set.');
+    });
+    // §5.2: loadMore 'auto' watches the "Show more" buttons; without IntersectionObserver the buttons stay.
+    effect(() => {
+      this.boardColumns();
+      if (this.option().loadMore !== 'auto' || typeof IntersectionObserver === 'undefined') return;
+      afterNextRender(() => this.#observeLoadMore(), { injector: this.#injector });
     });
     // SC-27: the selected card left the data.
     effect(() => {
@@ -223,19 +308,36 @@ export class SdKanban<T = unknown> {
     });
     inject(DestroyRef).onDestroy(() => {
       this.#destroyed = true;
+      clearTimeout(this.#keywordTimer);
+      this.#observer?.disconnect();
+      this.#loader.abort();
       this.#cancel();
       for (const focus of this.#moveFocus) this.#releaseFocus(focus);
     });
   }
 
   /** Loads the first page of one column, or of every loaded column, again (data source only). */
-  reload(_columnId?: string): void {
-    // RED skeleton of checkpoint 4.
+  reload(columnId?: string): void {
+    if (!this.dataMode()) return;
+    const option = this.option();
+    const ids =
+      columnId !== undefined
+        ? [columnId]
+        : this.columns()
+            .filter(column => this.#shouldLoad(column.id))
+            .map(column => column.id);
+    for (const id of ids) if (this.columns().some(column => column.id === id)) this.#loader.load(id, option, this.keyword());
   }
 
   /** Loads the next page of a column (data source only); ignored while it loads or at the end. */
-  loadMore(_columnId: string): void {
-    // RED skeleton of checkpoint 4.
+  loadMore(columnId: string): void {
+    if (!this.dataMode()) return;
+    this.#loader.loadMore(columnId, this.option(), this.keyword());
+  }
+
+  /** Retry of a column's load error: the same page again. */
+  protected retry(columnId: string): void {
+    this.#loader.retry(columnId, this.option(), this.keyword());
   }
 
   /**
@@ -256,6 +358,10 @@ export class SdKanban<T = unknown> {
     const target = columns.find(column => column.id === to.columnId);
     const origin = card && columns.find(column => column.id === card.columnId);
     if (!card || !target || target.disabled || !origin || origin.disabled) return false;
+    const dataMode = this.dataMode();
+    // A column that is (re)loading its first page, or failed it, has no cards to place against.
+    if (dataMode && [origin.id, target.id].some(id => this.#loader.state(id).status === 'loading' || !this.#loader.state(id).loaded))
+      return false;
     // SC-06, SC-08: both flags are evaluated again right before onMove, whatever the render showed.
     // droppable is about changing column; a move inside one column only needs movable (PD, R1).
     if (!allows(move.movable, card)) return false;
@@ -277,6 +383,7 @@ export class SdKanban<T = unknown> {
       option,
       columns,
       items: this.items(),
+      generations: dataMode ? { from: this.#loader.state(origin.id).generation, to: this.#loader.state(target.id).generation } : null,
       focus: this.#trackFocus(cardId, menuTrigger),
     };
     this.#operation = operation;
@@ -303,8 +410,9 @@ export class SdKanban<T = unknown> {
       this.#operation = undefined;
       this.#pending.set(null);
       if (this.collapsed(target.id)) this.collapsedColumns.update(ids => ids.filter(id => id !== target.id));
-      const next = kanbanApplyMove(cards, cardId, { columnId: target.id, beforeId: placement.beforeId }, reorder);
-      this.cards.set(next);
+      if (dataMode) this.#loader.applyMove(card, target.id, placement.beforeId, reorder);
+      else this.#localCards.set(kanbanApplyMove(cards, cardId, { columnId: target.id, beforeId: placement.beforeId }, reorder));
+      const next = this.cards();
       this.sdMove.emit(request);
       this.announcement.set(
         this.#i18n.t('core.component.kanban.moved', {
@@ -498,6 +606,67 @@ export class SdKanban<T = unknown> {
     }
   }
 
+  #lastOption?: SdKanbanOption<T>;
+  #keywordTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The keyword the loaded pages were asked with. */
+  #loadedKeyword = '';
+  #warnedItems = false;
+  #observer?: IntersectionObserver;
+  readonly #observed = new Set<Element>();
+
+  /** A column is loaded once it is on screen (not collapsed) or was loaded before. */
+  #shouldLoad(columnId: string): boolean {
+    return !this.collapsed(columnId) || this.#loader.states().has(columnId);
+  }
+
+  #syncLoads(option: SdKanbanOption<T>, columns: readonly SdKanbanColumn[], collapsed: readonly string[]): void {
+    if (!option.dataSource) {
+      this.#loader.drop(new Set());
+      this.#lastOption = option;
+      return;
+    }
+    const keyword = this.keyword();
+    const replaced = this.#lastOption !== undefined && this.#lastOption !== option;
+    this.#lastOption = option;
+    this.#loader.drop(new Set(columns.map(column => column.id)));
+    for (const column of columns) {
+      const started = this.#loader.states().has(column.id);
+      if (replaced && started) this.#loader.load(column.id, option, keyword);
+      else if (!started && !collapsed.includes(column.id)) this.#loader.load(column.id, option, keyword);
+    }
+    this.#loadedKeyword = keyword;
+  }
+
+  /** SC-24, K3: a load error is read through the one status region and emitted. */
+  #loadFailed(error: SdKanbanLoadError): void {
+    this.announcement.set(this.#i18n.t('core.component.kanban.load-error'));
+    this.sdLoadError.emit(error);
+  }
+
+  #observeLoadMore(): void {
+    if (this.#destroyed) return;
+    this.#observer ??= new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          const id = entry.isIntersecting ? (entry.target as HTMLElement).dataset['loadMore'] : undefined;
+          if (id !== undefined) this.loadMore(id);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    const buttons = new Set(Array.from(this.#host.nativeElement.querySelectorAll('[data-load-more]')));
+    for (const button of this.#observed) {
+      if (buttons.has(button)) continue;
+      this.#observer.unobserve(button);
+      this.#observed.delete(button);
+    }
+    for (const button of buttons) {
+      if (this.#observed.has(button)) continue;
+      this.#observer.observe(button);
+      this.#observed.add(button);
+    }
+  }
+
   #checkCardTemplate(): void {
     if (this.#warnedTemplate) return;
     const control = this.#host.nativeElement.querySelector(
@@ -518,7 +687,10 @@ export class SdKanban<T = unknown> {
       !this.#destroyed &&
       this.#operation === operation &&
       !operation.controller.signal.aborted &&
-      this.items() === operation.items &&
+      (operation.generations
+        ? this.#loader.state(operation.request.from.columnId).generation === operation.generations.from &&
+          this.#loader.state(operation.request.to.columnId).generation === operation.generations.to
+        : this.items() === operation.items) &&
       this.option() === operation.option &&
       this.columns() === operation.columns &&
       !this.locked();

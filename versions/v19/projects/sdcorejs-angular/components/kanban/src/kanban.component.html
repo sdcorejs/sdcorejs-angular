@@ -58,24 +58,31 @@
           [attr.data-column-id]="_columnToken"
           [attr.data-color]="view.column.color || 'secondary'"
           [attr.data-blocked]="isBlocked(view.column.id) || null"
+          [attr.data-status]="view.status"
           [attr.aria-labelledby]="id + '-heading-' + _columnToken">
           <header class="sd-kanban__header">
             <!-- Màu cột: chấm 8px trước nhãn; cột có prefixIcon thì icon tô màu thay cho chấm. -->
             @if (!view.column.prefixIcon) {
               <span class="sd-kanban__dot" aria-hidden="true"></span>
             }
-            <h3 [id]="id + '-heading-' + _columnToken">
-              @if (_columnTemplate) {
-                <ng-container [ngTemplateOutlet]="_columnTemplate.template" [ngTemplateOutletContext]="columnContext(view)" />
-              } @else {
-                @if (view.column.prefixIcon) {
-                  <sd-icon [name]="view.column.prefixIcon" size="sm" />
+            <!-- §6: the label and the summary line form one column block in the place of the heading. -->
+            <div class="sd-kanban__heading">
+              <h3 [id]="id + '-heading-' + _columnToken">
+                @if (_columnTemplate) {
+                  <ng-container [ngTemplateOutlet]="_columnTemplate.template" [ngTemplateOutletContext]="columnContext(view)" />
+                } @else {
+                  @if (view.column.prefixIcon) {
+                    <sd-icon [name]="view.column.prefixIcon" size="sm" />
+                  }
+                  <span>{{ view.column.label }}</span>
                 }
-                <span>{{ view.column.label }}</span>
+              </h3>
+              @if (view.summary) {
+                <span class="sd-kanban__summary" data-summary>{{ view.summary }}</span>
               }
-            </h3>
+            </div>
             <span class="sd-kanban__count" [attr.aria-label]="'core.component.kanban.count' | sdTranslate: { count: view.count }">
-              {{ view.cards.length !== view.count ? view.cards.length + '/' + view.count : view.count }}
+              {{ view.countText }}
             </span>
             @if (_columnActionsTemplate && !_collapsed) {
               <ng-container [ngTemplateOutlet]="_columnActionsTemplate.template" [ngTemplateOutletContext]="columnContext(view)" />
@@ -106,8 +113,21 @@
             [cdkDropListEnterPredicate]="enterPredicate"
             [cdkDropListSortingDisabled]="!_reorder"
             [attr.aria-disabled]="isBlocked(view.column.id) || null"
+            [attr.aria-busy]="view.status === 'loading' || null"
             (cdkDropListDropped)="drop($event)">
-            @if (!_collapsed) {
+            @if (!_collapsed && view.status === 'loading' && !view.cards.length) {
+              @for (shape of [0, 1, 2]; track shape) {
+                <div class="sd-kanban__skeleton" data-skeleton aria-hidden="true"></div>
+              }
+            } @else if (!_collapsed && view.status === 'error' && !view.loaded) {
+              <div class="sd-kanban__load-error" data-load-error>
+                <sd-icon class="sd-kanban__load-error-icon" name="error" />
+                <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
+                <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
+                  {{ 'core.component.kanban.retry' | sdTranslate }}
+                </button>
+              </div>
+            } @else if (!_collapsed) {
               @for (card of view.cards; track card.card.id) {
                 @let _cardToken = token(card.card.id);
                 @let _cardPending = _pending === card.card.id;
@@ -229,6 +249,23 @@
                 <p class="sd-kanban__empty" role="status">
                   {{ (view.count ? 'core.component.kanban.no-results' : 'core.component.kanban.empty-column') | sdTranslate }}
                 </p>
+              }
+              @if (view.status === 'loading-more') {
+                <p class="sd-kanban__loading">
+                  <mat-progress-spinner mode="indeterminate" diameter="14" aria-hidden="true" />
+                  <span>{{ 'core.component.kanban.loading' | sdTranslate }}</span>
+                </p>
+              } @else if (view.status === 'error') {
+                <div class="sd-kanban__load-error sd-kanban__load-error--row" data-load-error>
+                  <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
+                  <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
+                    {{ 'core.component.kanban.retry' | sdTranslate }}
+                  </button>
+                </div>
+              } @else if (view.nextCursor !== null) {
+                <button type="button" class="sd-kanban__load-more" [attr.data-load-more]="view.column.id" (click)="loadMore(view.column.id)">
+                  {{ 'core.component.kanban.load-more' | sdTranslate: { count: view.moreCount } }}
+                </button>
               }
             }
           </div>

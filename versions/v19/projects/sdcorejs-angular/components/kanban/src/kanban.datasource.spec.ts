@@ -168,10 +168,11 @@ describe('SdKanban · dataSource by column', () => {
     mount();
     answer('open', page('open', ['a']));
     const pendingDone = last('done');
+    const before = calls.length;
     fixture.componentRef.setInput('keyword', '  DH-1 ');
     settle();
     tick(299);
-    expect(calls.length).toBe(2);
+    expect(calls.length).toBe(before);
     tick(1);
     settle();
     expect(pendingDone?.args.signal.aborted).toBeTrue();
@@ -233,7 +234,9 @@ describe('SdKanban · dataSource by column', () => {
     expect(loadsOf('open')[2]?.cursor).toBe('c1');
     answer('done', page('done', ['d']));
     answer('later', page('later', []));
-    expect(kanban().move('d', { columnId: 'later' })).withContext('other columns still move').toBeDefined();
+    expect(kanban().move('d', { columnId: 'later' }))
+      .withContext('other columns still move')
+      .toBeDefined();
     flushMicrotasks();
     settle();
     expect(ids('later')).toEqual(['d']);
