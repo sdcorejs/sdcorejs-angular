@@ -737,7 +737,6 @@ export const EN_MESSAGES = {
   'core.component.query-bar.placeholder.to-number': 'To',
   'core.component.query-bar.placeholder.from-text': 'from…',
   'core.component.query-bar.placeholder.to-text': 'to…',
-  'core.component.query-bar.swap-field': 'Swap field',
   'core.component.query-bar.placeholder.select-value': 'Select value',
   'core.component.query-bar.placeholder.enter-value': 'Enter value',
   'core.component.query-bar.loading-values': 'Loading...',

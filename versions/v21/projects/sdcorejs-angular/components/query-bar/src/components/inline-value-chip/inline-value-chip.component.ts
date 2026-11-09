@@ -50,6 +50,8 @@ export class SdQueryInlineValueChip {
   readonly autofocus = input(false);
   /** Pinned chip — no × segment. */
   readonly pinned = input(false);
+  /** Required field: `aria-required`; a value, once set, cannot be emptied (handoff B3). */
+  readonly required = input(false);
   /** Required chip without a value — error look while not focused, `aria-invalid`. */
   readonly invalid = input(false);
   /** Id set as `aria-describedby` (the host's required hint). */
@@ -142,6 +144,7 @@ export class SdQueryInlineValueChip {
       this.hasError.set(true);
       return;
     }
+    if (this.#keepsRequired(parsed.value == null || parsed.value === '')) return;
     this.hasError.set(false);
     this.valueChange.emit(parsed.value);
   }
@@ -155,6 +158,8 @@ export class SdQueryInlineValueChip {
       this.hasError.set(true);
       return;
     }
+    const blank = (value: unknown): boolean => value == null || value === '';
+    if (this.#keepsRequired(blank(from.value) && blank(to.value))) return;
     this.hasError.set(false);
     this.valueChange.emit({ from: from.value, to: to.value });
   }
@@ -172,6 +177,16 @@ export class SdQueryInlineValueChip {
     this.hasError.set(false);
     this.focused.set(false);
     ref?.blur();
+  }
+
+  /**
+   * B3: emptying the value of a required chip that has one gives the previous value back instead of committing.
+   * `true` when the commit was refused.
+   */
+  #keepsRequired(empty: boolean): boolean {
+    if (!empty || !this.required() || !this.hasValue()) return false;
+    this.revertAndBlur();
+    return true;
   }
 
   onRemove(ev: Event): void {

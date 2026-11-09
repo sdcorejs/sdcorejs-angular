@@ -741,7 +741,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.placeholder.to-number': '終了',
   'core.component.query-bar.placeholder.from-text': '開始…',
   'core.component.query-bar.placeholder.to-text': '終了…',
-  'core.component.query-bar.swap-field': 'フィールドを変更',
   'core.component.query-bar.placeholder.select-value': '値を選択',
   'core.component.query-bar.placeholder.enter-value': '値を入力',
   'core.component.query-bar.loading-values': '読み込み中...',

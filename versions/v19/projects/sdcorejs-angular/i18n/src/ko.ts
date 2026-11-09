@@ -738,7 +738,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.placeholder.to-number': '종료',
   'core.component.query-bar.placeholder.from-text': '시작…',
   'core.component.query-bar.placeholder.to-text': '종료…',
-  'core.component.query-bar.swap-field': '필드 변경',
   'core.component.query-bar.placeholder.select-value': '값 선택',
   'core.component.query-bar.placeholder.enter-value': '값 입력',
   'core.component.query-bar.loading-values': '로딩 중...',

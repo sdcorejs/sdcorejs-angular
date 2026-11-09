@@ -99,6 +99,7 @@ import {
   SdConvertToPagingReq,
   SdTableFilterRequest,
   SdTableOptionFilter,
+  SdTableOptionFilterQueryBar,
   TableFilterConfiguration,
   TableFilterRegister,
   TableFilterValue,
@@ -995,8 +996,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const filter = this.tableOption()?.filter;
     if (!ctx || !filter) return undefined;
     const autoId = this.autoId();
+    const savedFiltersKey = filter.queryBar?.savedFilters?.key;
     return {
       autoId: autoId ? `${autoId}-query-bar` : undefined,
+      // Bộ lọc đã lưu của thanh: áp đi qua (apply) → onQueryBarApply như mọi thay đổi của thanh, đọc một lần.
+      ...(savedFiltersKey ? { showSavedFilters: true, savedFiltersKey: `sd-table:${savedFiltersKey}` } : {}),
       fields: ctx.fields,
       mode: filter.queryBar?.editor ?? 'inline',
       density: 'compact',
@@ -1664,7 +1668,13 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (option.filter.modeSelectable === undefined && filterConfiguration?.modeSelectable !== undefined) {
       option.filter.modeSelectable = filterConfiguration.modeSelectable;
     }
-    if (filterConfiguration?.queryBar) option.filter.queryBar = { ...filterConfiguration.queryBar, ...option.filter.queryBar };
+    if (filterConfiguration?.queryBar) {
+      // why: savedFilters không lấy từ cấu hình chung (kể cả khi bị ép kiểu) — một khoá chung sẽ trộn bộ lọc đã lưu của mọi
+      // bảng (handoff query bar panels, Bước 0 điểm 4).
+      const shared: SdTableOptionFilterQueryBar = { ...filterConfiguration.queryBar };
+      delete shared.savedFilters;
+      option.filter.queryBar = { ...shared, ...option.filter.queryBar };
+    }
     // why: cột con của header nhóm cũng có filter và operator riêng.
     for (const column of leafColumns(option.columns)) {
       if (column.filter?.operator?.enable) {

@@ -281,10 +281,26 @@ const DEFAULT_OPERATOR_LIST_CACHE = new WeakMap<SdQueryField, Operator[]>();
  * - `operators` is an array → that array (deduped against the type set is the caller's job)
  * - otherwise (simple mode) → just the single default operator (no real choice)
  *
+ * A `required` field never offers `NULL` / `NOT_NULL`: its value cannot be left out (handoff B3).
+ *
  * The returned array is referentially stable for a given `field` object, so it is safe to call
  * straight from a template binding.
  */
 export function sdQueryAllowedOperators(field: SdQueryField): Operator[] {
+  const operators = baseAllowedOperators(field);
+  if (!field.required || !operators.some(op => SD_QUERY_NO_DATA_OPERATORS.includes(op))) return operators;
+  // why: lọc theo chính mảng gốc (hằng số, mảng của consumer hoặc mảng đã memo) để ref ổn định như nhánh không bắt buộc.
+  let required = REQUIRED_OPERATOR_LIST_CACHE.get(operators);
+  if (!required) {
+    required = operators.filter(op => !SD_QUERY_NO_DATA_OPERATORS.includes(op));
+    REQUIRED_OPERATOR_LIST_CACHE.set(operators, required);
+  }
+  return required;
+}
+
+const REQUIRED_OPERATOR_LIST_CACHE = new WeakMap<Operator[], Operator[]>();
+
+function baseAllowedOperators(field: SdQueryField): Operator[] {
   if (field.operators === true) return SD_QUERY_OPERATORS_BY_TYPE[field.type];
   if (Array.isArray(field.operators) && field.operators.length > 0) return field.operators;
 

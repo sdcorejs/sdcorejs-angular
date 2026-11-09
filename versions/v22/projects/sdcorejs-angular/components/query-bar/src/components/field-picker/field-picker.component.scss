@@ -1,104 +1,86 @@
-// Field-picker menu — renders into a document.body overlay, so styles pierce via
-// the panel class. Local tokens (kept in sync with query-bar.component.scss).
-$qb-primary:        var(--sd-primary);
-$qb-text:           var(--sd-query-bar-text, #212121);
+@use '../../../../../assets/scss/core/popover-panel' as panel;
+
+// Field picker (handoff mục 3) — panel danh sách theo khung Action Popover. Nội dung nằm trong template của component
+// nên style áp cả khi gắn vào overlay, không cần `::ng-deep`.
+$qb-primary: var(--sd-primary);
 $qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
-$qb-text-muted:     var(--sd-query-bar-text-muted, #7a7a7a);
-$qb-border:         var(--sd-query-bar-border, #d6d8db);
+$qb-text-muted: var(--sd-query-bar-text-muted, #7a7a7a);
 
-::ng-deep .mat-mdc-menu-panel.c-field-picker-menu {
-  min-width: 200px;
-  max-width: 260px;
+.c-field-picker-menu {
+  @include panel.panel-list;
+  min-width: min(200px, calc(100vw - 16px));
+  max-width: min(260px, calc(100vw - 16px));
 
-  .mat-mdc-menu-item { min-height: 36px; }
+  // Panel nhận focus khi mở bằng chuột (không có ô tìm); không vẽ vòng focus lên cả khung.
+  &:focus {
+    outline: none;
+  }
+}
 
-  // Material wraps the projected slots in `.mat-mdc-menu-item-text` — make it
-  // a flex row so label can flex + ellipsize while the type tag sticks right.
-  .mat-mdc-menu-item .mat-mdc-menu-item-text {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
+.c-field-find {
+  margin: 4px 4px 6px;
+}
+
+.c-field-group {
+  @include panel.heading;
+}
+
+.c-field-item {
+  @include panel.item;
+
+  // Mục đang được trỏ qua aria-activedescendant (focus thật ở ô tìm): như khi có focus bàn phím.
+  &.c-field-item--active {
+    background: color-mix(in srgb, var(--sd-text, #1a1b1f) 8%, transparent);
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
   }
 
-  .c-field-item-icon {
-    font-size: var(--sd-font-size-16, 16px);
-    width: 16px;
-    height: 16px;
-    margin-right: 8px;
-    color: $qb-text-secondary;
-    flex-shrink: 0;
-  }
-  .c-field-item-label {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: var(--sd-font-size-13, 13px);
-    color: $qb-text;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .c-field-item-type {
-    flex-shrink: 0;
-    margin-left: auto;
-    padding-left: 12px;
-    font-family: 'Roboto Mono', monospace;
-    font-size: var(--sd-font-size-11, 11px);
-    color: $qb-text-muted;
-  }
-  .c-field-item-check {
-    flex-shrink: 0;
-    font-size: var(--sd-font-size-14, 14px);
-    width: 14px;
-    height: 14px;
-    margin-left: 6px;
-    color: $qb-primary;
-  }
-  .c-field-empty {
-    padding: 12px 16px;
-    font-size: var(--sd-font-size-13, 13px);
-    color: $qb-text-muted;
-  }
+  // why: mục đã dùng / khoá giữ focus được (aria-disabled, không phải `disabled`) để trình đọc màn hình vẫn đọc tới.
+  &[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: default;
 
-  .c-field-group {
-    padding: 8px 16px 4px;
-    font-size: var(--sd-font-size-11, 11px);
-    font-weight: var(--sd-font-weight-medium, 500);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: $qb-text-muted;
-  }
-
-  .c-field-find {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 4px 8px 4px;
-    padding: 0 8px;
-    height: 32px;
-    border: 1px solid $qb-border;
-    border-radius: var(--sd-radius-6, 6px);
-
-    &:focus-within {
-      border-color: $qb-primary;
-      outline: 2px solid var(--sd-focus-ring-color);
-      outline-offset: -1px;
+    &:hover {
+      background: transparent;
     }
   }
-  .c-field-find-icon {
-    font-size: var(--sd-font-size-16, 16px);
-    width: 16px;
-    height: 16px;
-    color: $qb-text-muted;
-  }
-  .c-field-find-input {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    font: inherit;
-    font-size: var(--sd-font-size-13, 13px);
-    color: $qb-text;
-  }
+}
+
+.c-field-item-icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  font-size: var(--sd-font-size-16, 16px);
+  color: $qb-text-secondary;
+}
+
+.c-field-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c-field-item-type {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: var(--sd-font-size-11, 11px);
+  color: $qb-text-muted;
+}
+
+.c-field-item-check {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  font-size: var(--sd-font-size-14, 14px);
+  color: $qb-primary;
+}
+
+.c-field-empty {
+  padding: 12px;
+  font-size: var(--sd-font-size-13, 13px);
+  color: var(--sd-text-secondary, #555);
 }

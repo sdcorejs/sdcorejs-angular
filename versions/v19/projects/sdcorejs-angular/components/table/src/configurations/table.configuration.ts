@@ -33,8 +33,11 @@ export interface ISdTableConfiguration {
     /** Cho người dùng chọn giao diện lọc trong modal Thiết lập; `option.filter.modeSelectable` thắng. Mặc định là `true`. */
     modeSelectable?: SdTableOptionFilter['modeSelectable'];
 
-    /** Tuỳ chọn mặc định của mode `'query-bar'`; gộp theo từng field với `option.filter.queryBar`. */
-    queryBar?: SdTableOptionFilter['queryBar'];
+    /**
+     * Tuỳ chọn mặc định của mode `'query-bar'`; gộp theo từng field với `option.filter.queryBar`. Không có `savedFilters`:
+     * khoá bộ lọc đã lưu phải riêng từng bảng.
+     */
+    queryBar?: Omit<NonNullable<SdTableOptionFilter['queryBar']>, 'savedFilters'>;
 
     operator?: {
       list?: Partial<Record<SdTableColumn['type'], Operator[]>>;

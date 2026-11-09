@@ -10531,9 +10531,13 @@ interface Employee {
       description="Thanh chip lọc thống nhất (Jira / Linear style) — gọn nhẹ, hỗ trợ AND/OR, lưu bộ lọc, popover hoặc inline mode. Thay thế bộ lọc rời rạc trên đầu trang danh sách.">
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-che-do-popover') {
-      <demo-section heading="Chế độ popover" [props]="[{ name: 'mode', value: 'popover' }]">
+      <demo-section
+        heading="Chế độ popover"
+        [props]="[{ name: 'mode', value: 'popover' }, { name: 'savedFiltersKey', value: 'showcase.query-bar.popover' }]"
+        note="Nút + mở danh sách field; bấm chip mở popover sửa toán tử và giá trị — giá trị ghi khi đóng (Esc, bấm ra ngoài, Tab ra). Nút bookmark: lưu bộ lọc hiện tại, chọn để áp, xoá có Hoàn tác.">
         <div class="bar-box">
           <sd-query-bar
+            autoId="query-bar-popover"
             [fields]="fields"
             [(filters)]="filters"
             [(logic)]="logic"
@@ -10542,6 +10546,8 @@ interface Employee {
             [showSearch]="true"
             [showLogicToggle]="true"
             [showClearAll]="true"
+            [showSavedFilters]="true"
+            savedFiltersKey="showcase.query-bar.popover"
             (apply)="onApply()">
           </sd-query-bar>
         </div>
@@ -10549,16 +10555,23 @@ interface Employee {
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-che-do-inline') {
-      <demo-section heading="Chế độ inline" [props]="[{ name: 'mode', value: 'inline' }]" note="Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.">
+      <demo-section
+        heading="Chế độ inline"
+        [props]="[{ name: 'mode', value: 'inline' }, { name: 'required', value: 'Phòng ban' }]"
+        note="Bấm vào thanh hoặc gõ vào ô Thêm điều kiện để chọn field (gõ “kh”, Enter); Backspace hai lần ở ô rỗng xoá chip cuối. Phòng ban là field bắt buộc: luôn có chip, không bỏ trống được giá trị, Xoá lọc giữ nguyên. Chip values bấm vào giá trị để sửa inline (sd-select [viewed]='inline').">
         <div class="bar-box">
           <sd-query-bar
-            [fields]="fields"
+            autoId="query-bar-inline"
+            [fields]="inlineFields"
             [(filters)]="inlineFilters"
             [(logic)]="logic"
             mode="inline"
             density="compact"
+            [showSearch]="true"
             [showLogicToggle]="true"
             [showOperatorOnChip]="true"
+            [showSavedFilters]="true"
+            savedFiltersKey="showcase.query-bar.inline"
             (apply)="onApply()">
           </sd-query-bar>
         </div>
@@ -10580,6 +10593,12 @@ export class QueryBarDemoComponent {
     { value: 'HR', display: 'Nhân sự' },
     { value: 'FINANCE', display: 'Tài chính' },
     { value: 'MARKETING', display: 'Marketing' },
+  ];
+
+  readonly regionOptions = [
+    { value: 'NORTH', display: 'Miền Bắc' },
+    { value: 'CENTRAL', display: 'Miền Trung' },
+    { value: 'SOUTH', display: 'Miền Nam' },
   ];
 
   readonly statusOptions = [
@@ -10606,6 +10625,13 @@ export class QueryBarDemoComponent {
       icon: 'badge',
       option: { items: this.statusOptions, valueField: 'value', displayField: 'display' },
     },
+    {
+      type: 'values',
+      key: 'region',
+      label: 'Khu vực',
+      icon: 'map',
+      option: { items: this.regionOptions, valueField: 'value', displayField: 'display' },
+    },
     { type: 'number', key: 'salary', label: 'Lương', icon: 'payments', operators: true },
     { type: 'date', key: 'joinDate', label: 'Ngày vào', icon: 'event', operators: true },
     { type: 'boolean', key: 'active', label: 'Đang hoạt động', icon: 'toggle_on' },
@@ -10614,7 +10640,13 @@ export class QueryBarDemoComponent {
   readonly filters = signal<Filter<Employee>[]>([
     { field: 'department', operator: 'IN', value: ['TECH', 'SALES'], data: null } as unknown as Filter<Employee>,
   ]);
-  readonly inlineFilters = signal<Filter<Employee>[]>([]);
+  /** Inline demo: Phòng ban is required — its chip is always on the bar and its value cannot be emptied. */
+  readonly inlineFields: SdQueryField<Employee>[] = this.fields.map(field =>
+    field.key === 'department' ? { ...field, required: true } : field
+  );
+  readonly inlineFilters = signal<Filter<Employee>[]>([
+    { field: 'department', operator: 'IN', data: ['TECH'] } as unknown as Filter<Employee>,
+  ]);
   readonly logic = signal<SdQueryLogic>('AND');
   readonly search = signal<string>('');
 
@@ -15910,7 +15942,8 @@ export class TableQueryBarExampleComponent {
     filter: {
       // why: kiểu lọc là mặc định của ứng dụng; người dùng đổi trong Thiết lập › Bộ lọc và lựa chọn đó được lưu theo \`key\`.
       mode: 'query-bar',
-      queryBar: { editor: this.editor() },
+      // Bộ lọc đã lưu của thanh (nút bookmark), lưu trên trình duyệt theo key riêng của bảng.
+      queryBar: { editor: this.editor(), savedFilters: { key: 'showcase-table-query-bar' } },
       manualFilter: this.manualFilter(),
       key: 'showcase-table-query-bar',
       cacheable: true,
@@ -30062,16 +30095,23 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "components/query-bar/example-che-do-inline": {
     ...SHOWCASE_PAGE_SOURCES["components/query-bar"],
-    html: `<demo-section heading="Chế độ inline" [props]="[{ name: 'mode', value: 'inline' }]" note="Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.">
+    html: `<demo-section
+    heading="Chế độ inline"
+    [props]="[{ name: 'mode', value: 'inline' }, { name: 'required', value: 'Phòng ban' }]"
+    note="Bấm vào thanh hoặc gõ vào ô Thêm điều kiện để chọn field (gõ “kh”, Enter); Backspace hai lần ở ô rỗng xoá chip cuối. Phòng ban là field bắt buộc: luôn có chip, không bỏ trống được giá trị, Xoá lọc giữ nguyên. Chip values bấm vào giá trị để sửa inline (sd-select [viewed]='inline').">
     <div class="bar-box">
       <sd-query-bar
-        [fields]="fields"
+        autoId="query-bar-inline"
+        [fields]="inlineFields"
         [(filters)]="inlineFilters"
         [(logic)]="logic"
         mode="inline"
         density="compact"
+        [showSearch]="true"
         [showLogicToggle]="true"
         [showOperatorOnChip]="true"
+        [showSavedFilters]="true"
+        savedFiltersKey="showcase.query-bar.inline"
         (apply)="onApply()">
       </sd-query-bar>
     </div>
@@ -30079,9 +30119,13 @@ Bởi Nguyễn Văn A"></sd-badge>
   },
   "components/query-bar/example-che-do-popover": {
     ...SHOWCASE_PAGE_SOURCES["components/query-bar"],
-    html: `<demo-section heading="Chế độ popover" [props]="[{ name: 'mode', value: 'popover' }]">
+    html: `<demo-section
+    heading="Chế độ popover"
+    [props]="[{ name: 'mode', value: 'popover' }, { name: 'savedFiltersKey', value: 'showcase.query-bar.popover' }]"
+    note="Nút + mở danh sách field; bấm chip mở popover sửa toán tử và giá trị — giá trị ghi khi đóng (Esc, bấm ra ngoài, Tab ra). Nút bookmark: lưu bộ lọc hiện tại, chọn để áp, xoá có Hoàn tác.">
     <div class="bar-box">
       <sd-query-bar
+        autoId="query-bar-popover"
         [fields]="fields"
         [(filters)]="filters"
         [(logic)]="logic"
@@ -30090,6 +30134,8 @@ Bởi Nguyễn Văn A"></sd-badge>
         [showSearch]="true"
         [showLogicToggle]="true"
         [showClearAll]="true"
+        [showSavedFilters]="true"
+        savedFiltersKey="showcase.query-bar.popover"
         (apply)="onApply()">
       </sd-query-bar>
     </div>

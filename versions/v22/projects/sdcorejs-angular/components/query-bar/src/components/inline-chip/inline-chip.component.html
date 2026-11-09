@@ -17,8 +17,9 @@
   [class.c-token-editing]="_editing"
   [class.c-token-pinned]="pinned()"
   [class.c-token-invalid]="invalid()"
+  [attr.aria-required]="required() ? 'true' : null"
   [attr.aria-invalid]="invalid() ? 'true' : null"
-  [attr.aria-describedby]="describedBy() ?? null">
+  [attr.aria-describedby]="describedByIds()">
   <sd-icon class="c-token-icon" [name]="iconName()"></sd-icon>
   <span class="c-token-field">{{ _field.label }}</span>
 
@@ -79,7 +80,8 @@
           [multiple]="_multiple"
           [viewed]="'inline'"
           [clearable]="false"
-          [model]="$any(_data)"
+          [required]="required()"
+          [model]="$any(selectModel())"
           (sdChange)="_multiple ? emitLive($event) : emitSingleCommit($event)">
           <!-- why: viewed mode mặc định dùng comma-joined cho multi — quá dài cho chip.
                Override bằng template "head +N" giống popover chipValueText. -->
@@ -122,3 +124,7 @@
     </button>
   }
 </div>
+<!-- why: ngoài .c-token (overflow: hidden cắt nội dung) — host là display: contents nên dòng nhắc nằm ngay sau chip. -->
+@if (minOneHint()) {
+  <span class="c-token-required-hint" aria-live="polite" [id]="hintId">{{ minOneLabel() }}</span>
+}

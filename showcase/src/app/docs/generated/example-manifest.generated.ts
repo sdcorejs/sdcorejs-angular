@@ -1817,14 +1817,14 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/query-bar",
     sectionId: "example-che-do-popover",
     title: "Chế độ popover",
-    description: "Existing “Chế độ popover” scenario preserved from the showcase.",
+    description: "Nút + mở danh sách field; bấm chip mở popover sửa toán tử và giá trị — giá trị ghi khi đóng (Esc, bấm ra ngoài, Tab ra). Nút bookmark: lưu bộ lọc hiện tại, chọn để áp, xoá có Hoàn tác.",
   },
   {
     sourceKey: "components/query-bar/example-che-do-inline",
     pageKey: "components/query-bar",
     sectionId: "example-che-do-inline",
     title: "Chế độ inline",
-    description: "Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.",
+    description: "Bấm vào thanh hoặc gõ vào ô Thêm điều kiện để chọn field (gõ “kh”, Enter); Backspace hai lần ở ô rỗng xoá chip cuối. Phòng ban là field bắt buộc: luôn có chip, không bỏ trống được giá trị, Xoá lọc giữ nguyên. Chip values bấm vào giá trị để sửa inline (sd-select [viewed]='inline').",
   },
   {
     sourceKey: "components/query-builder/example-edit-view",

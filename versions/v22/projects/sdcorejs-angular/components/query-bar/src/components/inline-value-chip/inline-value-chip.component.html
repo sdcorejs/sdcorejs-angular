@@ -18,6 +18,7 @@
   class="c-seamless"
   role="group"
   [attr.aria-label]="field().label"
+  [attr.aria-required]="required() ? 'true' : null"
   [attr.aria-invalid]="invalid() ? 'true' : null"
   [attr.aria-describedby]="describedBy() ?? null"
   [attr.data-state]="_state"

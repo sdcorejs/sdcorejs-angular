@@ -27,8 +27,8 @@ Unified filter chip row (Jira / Linear / Notion / GitLab style) — replaces inl
 
 Pick via `[mode]`:
 
-- **`'popover'`** (default) — compact chips. Click a chip → opens a `mat-menu` editor (`<sd-query-chip-popover>`) for operator + value. Staged edits commit when the popover closes (no per-chip "Apply" button). One global Search action.
-- **`'inline'`** — GitLab-style token builder. Each filter's operator + value controls render directly on the bar. Edits write `filters` live; one Search button (or Enter in the search input) fires `(apply)`.
+- **`'popover'`** (default) — compact chips. Click a chip → opens the chip popover (`<sd-query-chip-popover>`, a dialog panel) for operator + value. Staged edits commit when the popover closes (no per-chip "Apply" button). The **+** button opens the field picker. One global Search action.
+- **`'inline'`** — GitLab-style token builder. Each filter's operator + value controls render directly on the bar. Edits write `filters` live; one Search button (or Enter in the search input) fires `(apply)`. Conditions are added from the **Add condition** box at the end of the chips instead of a **+** button (see [Add condition](#add-condition-inline-mode)).
 
 `canSearch()` gates the Search action — true when there's at least one filter OR a non-blank search string, and no `required` field is empty.
 
@@ -98,12 +98,12 @@ Knobs shared by every type, for a host that owns the chip list (for example `sd-
 
 | Field option | Effect |
 |---|---|
-| `pinned` | The chip is always on the bar: no remove button, `removeFilter` and Delete do nothing, left out of the field picker. An empty pinned chip reads `core.component.query-bar.all`. The host keeps one entry for the field in `filters`; the bar never adds it. `clearAll()` keeps pinned chips and empties them. |
-| `required` | An empty chip gets the error look, `aria-invalid="true"` and `aria-describedby` = `option.invalidHintId`; it reads `core.component.query-bar.placeholder.select-value`. `canSearch()` is false while `invalidFields()` is not empty. The bar renders no message itself — the host does. |
+| `pinned` | The chip is always on the bar: no remove button, `removeFilter` does nothing, left out of the field picker, never dropped when it closes empty. An empty pinned chip reads `core.component.query-bar.all`. When `filters` has no chip for the field, the bar adds an empty one (default operator), first and in `fields` order, without emitting `(apply)`. `clearAll()` keeps pinned chips and empties them. |
+| `required` | Implies `pinned` (everything above applies). An empty chip gets the error look, `aria-invalid="true"` and `aria-describedby` = `option.invalidHintId`; it reads `core.component.query-bar.placeholder.select-value`. `canSearch()` is false while `invalidFields()` is not empty. The bar renders no message itself — the host does. Once it has a value, the value cannot be emptied, and `clearAll()` keeps it — see [Required fields](#required-fields). Chips carry `aria-required="true"`. |
 | `group` | Field-picker heading. Groups keep the order in which they first appear; a single group shows no heading. |
 | `disabled` | The chip is read-only: no popover, no remove button, `aria-disabled="true"`. In inline mode it renders as that read-only chip too, instead of an editable inline chip. |
 
-The field picker gets a find box (`core.component.query-bar.find-field`) when it lists more than eight fields. It matches labels ignoring case and Vietnamese accents (`don` finds "Mã đơn" and "Đơn vị"); typing does not trigger the menu's typeahead.
+The field picker is a listbox panel (rows 40px, 14px text). In popover mode it gets a find box (`sd-search-field` sm, a combobox, `core.component.query-bar.find-field`) when it lists more than eight fields; in inline mode the **Add condition** box outside the panel plays that role. Both match labels ignoring case and Vietnamese accents (`don` finds "Mã đơn" and "Đơn vị"). Keyboard: ↑ ↓ Home End over the enabled options, Enter picks; with the find box, focus stays in it and the arrows move `aria-activedescendant`. No typeahead. Fields already on the bar are `aria-disabled` with a check.
 
 **Chip text.** `date` / `datetime` values show as `dd/MM/yyyy` / `dd/MM/yyyy HH:mm` through `SdDateTimeService`, never the model string. A `BETWEEN` range inside one year shortens to `01/10 – 31/10/2026`; a range with one end shows `core.component.query-bar.range.from` / `.range.to` (`Từ 01/10/2026`). A `BETWEEN` with both ends empty counts as empty (`isFilterActive()` is false).
 
@@ -129,7 +129,7 @@ Constants & helpers exported alongside the models:
 - `SD_QUERY_NO_DATA_OPERATORS` (`NULL`, `NOT_NULL`) — operators that hide the value control
 - `SD_QUERY_MULTI_OPERATORS` (`IN`, `NOT_IN`) — operators that switch the value to an array
 - `sdQueryFieldIcon(field)` — `field.icon ?? SD_QUERY_TYPE_ICON[type] ?? 'tune'`
-- `sdQueryAllowedOperators(field)` — resolves the tri-state to an `Operator[]`
+- `sdQueryAllowedOperators(field)` — resolves the tri-state to an `Operator[]`; a `required` field never offers `NULL` / `NOT_NULL`
 - `sdQueryDefaultOperator(field)` — picks the initial operator
 - `sdQueryShowOperatorSelector(field)` — true when the field exposes >1 operator
 
@@ -154,10 +154,10 @@ New usage should bind only `[option]`, like `sd-table`. Put `autoId`, `fields`, 
 | `mode` | `'popover' \| 'inline'` | `'popover'` | Editing UX (see Modes). |
 | `density` | `'compact' \| 'comfortable'` | `'compact'` | Chip / control height. |
 | `showSearch` | `boolean` | `false` | Render the free-text search input on the left. |
-| `showSavedFilters` | `boolean` | `false` | Render the bookmark dropdown. Disabled unless `savedFiltersKey` is set. |
+| `showSavedFilters` | `boolean` | `false` | Render the saved-filters button and panel. Disabled unless `savedFiltersKey` is set. |
 | `savedFiltersKey` | `string \| undefined` | `undefined` | Namespace for `localStorage` persistence (`sd-query-bar:savedFilters:<key>`). |
 | `showLogicToggle` | `boolean` | `false` | Render AND/OR segmented toggle (only when ≥2 filters). |
-| `showClearAll` | `boolean` | `true` | Show the clear-all button when ≥1 filter. Its label counts the chips **with a value** ("Xóa tất cả (N)"); with none, or with `clearDisabled`, it reads "Xóa tất cả". |
+| `showClearAll` | `boolean` | `true` | Show the clear-all button when ≥1 filter. Its label counts the chips **with a value** that clear would empty — required chips keep their value, so they do not count ("Xóa tất cả (N)"); with none, or with `clearDisabled`, it reads "Xóa tất cả". With the built-in `clearAll()` the button is disabled while that count is 0. |
 | `showOperatorOnChip` | `boolean \| 'auto'` | `false` | Render the operator icon on the chip face (else hidden — operator only visible in popover). `'auto'`: only on chips whose field offers more than one operator, or whose operator is not `SD_QUERY_DEFAULT_OPERATOR_BY_TYPE[type]`. |
 
 All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All other inputs accept `null | undefined` and transform to the canonical shape.
@@ -168,9 +168,9 @@ Options without a split input (set them in `[option]`):
 |---|---|---|---|
 | `applyOn` | `'search' \| 'commit'` | `'search'` | See [When edits apply](#when-edits-apply-optionapplyon). |
 | `appearance` | `'default' \| 'flush'` | `'default'` | `'flush'` drops the bar's border, radius, shadow and background (padding `8px 12px`) to sit inside a host card. |
-| `onClearAll` | `() => void` | `undefined` | Replaces the built-in `clearAll()` on the clear button. |
+| `onClearAll` | `() => void` | `undefined` | Replaces the built-in `clearAll()` on the clear button. The host should keep required values like `clearAll()` does (`sd-table` does). |
 | `clearDisabled` | `boolean` | `false` | Disables the clear button. |
-| `searchPlaceholder` | `string` | i18n | Overrides `core.component.query-bar.search-placeholder`. |
+| `searchPlaceholder` | `string` | i18n | Overrides `core.component.query-bar.search-placeholder`, and is the `aria-label` of the search input (else `core.component.query-bar.search`). |
 | `invalidHintId` | `string` | `undefined` | Id set as `aria-describedby` on empty required chips. |
 
 Content projection: `<ng-content select="[sdQueryBarEnd]">` renders after the action toolbar, inside the bar.
@@ -188,9 +188,9 @@ Content projection: `<ng-content select="[sdQueryBarEnd]">` renders after the ac
 > **Trigger model:** mutations (`addFilter`, `updateFilter`, …) ONLY mutate `filters` / `logic` / `search` models. The composite `(queryChange)` + `(apply)` outputs fire exactly once per Search action.
 
 ## Visual cues
-- One horizontal filter bar with optional free-text search input on the left and actions on the right.
-- Popover mode renders compact chips; chip click opens a Material menu editor for operator/value.
-- Inline mode renders GitLab-style tokens where operator/value controls sit directly in the chip row.
+- One horizontal filter bar with optional free-text search input (`sd-search-field`) on the left and actions on the right.
+- Popover mode renders compact chips; chip click opens the chip popover for operator/value. All three panels (field picker, chip popover, saved filters) share the frame of the `sd-button` Action Popover.
+- Inline mode renders GitLab-style tokens where operator/value controls sit directly in the chip row, followed by the borderless **Add condition** box.
 - Active chips show field label, value summary, optional operator glyph (read-only, with its name as tooltip), and a remove `×`.
 - Saved filters appear as bookmark controls near the Search action when enabled.
 - AND/OR toggle appears only when enabled and there are at least two filters.
@@ -206,15 +206,17 @@ Content projection: `<ng-content select="[sdQueryBarEnd]">` renders after the ac
 | `cancelBuild()` | Inline mode: abandon the in-progress chip. |
 | `changeFilterField(index, field)` | Swap the field of an existing chip (resets operator + value to new defaults). |
 | `updateFilter(index, patch)` | Replace chip at index. |
-| `removeFilter(index)` | Drop chip at index. No-op for a pinned chip. With `applyOn: 'commit'`, applies when the chip had a value. |
-| `clearAll()` | Reset filters to `[]`, keeping pinned chips with no value. |
-| `openField(key, returnFocusTo?)` | Open the editor of a field from outside the bar (e.g. a table header icon). Popover mode opens the chip's popover, adding the chip first; inline mode focuses the chip or starts building one. `returnFocusTo` gets focus when the popover closes. |
+| `removeFilter(index)` | Drop chip at index. No-op for a pinned or required chip. With `applyOn: 'commit'`, applies when the chip had a value. |
+| `clearAll()` | Required chips stay as they are (operator and value), pinned chips stay with no value, the rest go. |
+| `openField(key, returnFocusTo?)` | Open the editor of a field from outside the bar (e.g. a table header icon). Popover mode opens the chip's popover, adding the chip first; called again while that popover is open, it closes it. Inline mode focuses the chip or starts building one. `returnFocusTo` gets focus when the popover closes. |
 | `invalidFields()` | Signal — required fields without a value. |
 | `onInlineCommit(index, data)` / `onInlineRange(index, range)` | Template handlers of completed inline chips: `updateFilterData` / `setFilterRange` plus the `applyOn: 'commit'` check. |
 | `setLogic(value)` | Toggle AND ↔ OR. |
 | `setSearch(value)` | Update free-text search. |
 | `triggerApply()` | Emit `(queryChange)` + `(apply)` with the current composite query. |
-| `onApplyFilter(saved)` | Install a `SdSavedFilter` (filters + logic + search) + trigger apply. |
+| `onApplyFilter(saved)` | Install a `SdSavedFilter` (filters + logic + search) + trigger apply. Entries of fields the bar no longer has, or of disabled fields, are dropped; a required or pinned field keeps its current chip unless the saved filter has a value for it. |
+| `canSaveFilter()` | Signal — "Save current filter" is enabled: a chip has a value (required chips included) or the search box has text. |
+| `isLocked(field)` | Helper — the field is `pinned` or `required`, so its chip is always on the bar. |
 | `isFilterActive(filter)` | Helper — true if filter has non-empty data or NULL/NOT_NULL operator. |
 | `chipValueText(filter)` | Helper — value string shown on chip (handles BETWEEN range + multi-value `+N` summary). |
 | `allowedOperatorsFor(field)` | Helper — operators offered for `field`. The array is referentially stable per field object, so it is safe in a template binding. |
@@ -239,11 +241,12 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 
 | Child selector | File (under `src/`) | Responsibility |
 |---|---|---|
-| `<sd-query-saved-filters-menu>` | `saved-filters-menu.component.*` | Bookmark dropdown + `localStorage` persistence (CRUD on `SdSavedFilter[]`). |
-| `<sd-query-field-picker>` | `field-picker.component.*` | Both "Add filter" (`[usedKeys]`) and "Swap field" (`[currentKey]`) mat-menus — one component, two modes. |
-| `<sd-query-actions-bar>` | `actions-bar.component.*` | Right-pinned toolbar — divider, AND/OR toggle, saved-filters dropdown, clear-all, "Lưu bộ lọc" shortcut (calls `SdQuerySavedFiltersMenu.promptSave()` via viewChild), Search trigger. |
-| `<sd-query-popover-chip>` | `popover-chip.component.*` | Popover-mode chip face — `div[role=button]` host + nested `<sd-operator>` (button-in-button is invalid HTML) + × remove. Hosts the `[menu]` from `<sd-query-chip-popover>`. |
-| `<sd-query-chip-popover>` | `chip-popover.component.*` | Popover-mode editor (the `mat-menu` body). Owns operator + value staging signals, async option loading, range mutators, multi toggle. Emits `(commit)` on menu close → parent splices. `seed(filter, field)` reseeds before each open. |
+| `ɵSdQueryPanelDirective` / `ɵSdQueryPanelTriggerDirective` / `ɵSdQueryPanelGroup` | `components/panel/query-panel.ts` | Internal CDK Overlay frame of the three panels — see [Panels](#panels). |
+| `<sd-query-saved-filters-menu>` | `saved-filters-menu.component.*` | Saved-filters button + menu panel + `localStorage` persistence (`saved-filters-storage.ts`: reader, `Date` reviver). |
+| `<sd-query-field-picker>` | `field-picker.component.*` | "Add filter" listbox panel (`[usedKeys]` render disabled with a check). Popover mode: optional find box; inline mode: driven by the Add condition box (`setQuery`, `move`, `pickActive`). |
+| `<sd-query-actions-bar>` | `actions-bar.component.*` | Right-pinned toolbar — divider, AND/OR toggle, clear-all, saved-filters button (its panel holds "Lưu bộ lọc hiện tại"), Search trigger. |
+| `<sd-query-popover-chip>` | `popover-chip.component.*` | Popover-mode chip face — `div[role=button]` host + nested `<sd-operator>` (button-in-button is invalid HTML) + × remove. Triggers the `[panel]` of `<sd-query-chip-popover>`. |
+| `<sd-query-chip-popover>` | `chip-popover.component.*` | Popover-mode editor (a dialog panel). Owns operator + value staging signals, async option loading, range mutators, multi toggle. Emits `(commit)` whenever the panel closes → parent splices. `seed(filter, field, index)` reseeds before each open, before the panel renders. |
 | `<sd-query-inline-value-chip>` | `inline-value-chip.component.*` | Seamless string / number chip — the pill IS the input. Numbers are grouped with the thousands separator of `I18nService.locale()` (vi `25.000.000`, en `25,000,000`) and parsed back with the same separator, BETWEEN dual input, Enter commits / Esc reverts. Used by both completed and build chips. |
 | `<sd-query-inline-chip>` | `inline-chip.component.*` | Inline-mode completed chip for non-string/number types (boolean / date / datetime / values / lazy-values + BETWEEN). Owns its own click-to-edit / focusout-to-exit lifecycle and `#chipPicker` viewChild. |
 | `<sd-query-build-chip>` | `build-chip.component.*` | In-progress chip rendered while `building()` is non-null. Renders both seamless (string/number) and `.c-token-building` (operator step menu / value step picker) branches. Exposes `openOperator()` / `openPicker()` for the parent's auto-open `afterNextRender` flow. |
@@ -261,7 +264,8 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 | Seamless string/number input | `inline-value-chip.component.*` |
 | Saved-filters menu | `saved-filters-menu.component.*` |
 | AND/OR / Search / Clear | `actions-bar.component.*` |
-| Field picker (add or swap) | `field-picker.component.*` |
+| Field picker | `field-picker.component.*` |
+| A panel opens in the wrong place, closes too early or loses focus | `components/panel/query-panel.ts` |
 
 ## Inline chip rendering rules
 
@@ -274,15 +278,75 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 - **Inline build flow — date / datetime skip operator step:** when `beginBuild(field)` runs for a `date` / `datetime` field whose default operator (BETWEEN) is in `allowedOperators`, the operator step is skipped and the build chip lands on the value step with BETWEEN pre-selected. Reasoning: BETWEEN is overwhelmingly the common case for date filters; skipping one click matters. Other types keep the operator step when `allowed.length > 1`.
 - **Chip popover value controls** carry `hideInlineError` so the value editor stays compact (no reserved error-subscript row under each input).
 
+## Panels
+
+The field picker (listbox), the chip popover (dialog) and saved filters (menu) open in a CDK Overlay with the frame of the `sd-button` Action Popover (`assets/scss/core/_popover-panel.scss`: border, 8px radius, shadow, 40px rows with 14px text, 12px headings). No Material menu is involved.
+
+- **Position:** below the trigger, 4px away, start-aligned (saved filters end-aligned); flips above when there is no room; follows scrolling. Widths: field picker 200–260px, chip popover 280–320px, saved filters 220–320px.
+- **Open:** click, Enter or Space on the trigger (`aria-haspopup`, `aria-expanded`, `aria-controls`). From the keyboard a list lands on its find box or first option and a form on its first value control; from the mouse a list without a find box keeps focus on the panel.
+- **Close:** Escape, a click outside, Tab out of the panel (a list on any Tab, a form past its first / last control), picking an item, `closeMenu()`. Focus returns to the trigger, or to `returnFocusTo` of `openField()`; a click outside on another focusable element keeps focus there. The chip popover commits its value on every one of these. Escape is left to a control whose own popup (sd-select panel, date picker, sd-operator menu) is open above the panel; a click or focus inside such a popup does not close the panel.
+- **One at a time:** opening a panel closes the other panel of the same bar.
+
 ## Saved filters (`[savedFiltersKey]` + `[showSavedFilters]`)
 
-When both are set, the toolbar exposes two adjacent buttons next to Search:
+When both are set, the toolbar shows the saved-filters button (`bookmark_border`, `aria-haspopup="menu"`) before Search. Its panel holds:
 
-- The **bookmark dropdown** lists `SdSavedFilter[]` from `localStorage` under `sd-query-bar:savedFilters:<key>` — pick to apply, click `×` to delete. Empty state comes from `core.component.query-bar.saved-filters.empty`. Leading icon is `filter_alt` (matches the saved-filter intent — not a generic "play").
-- **Naming a saved filter uses `SdConfirmService.withInput`**, not `window.prompt`: `promptSave()` is `async` and resolves after the dialog settles (it returns without saving when the dialog is cancelled or the name is blank). `window.prompt` blocked the UI thread, could not be styled or translated, and is disabled outright in some embedding contexts. Consumers calling `promptSave()` from their own toolbar button get a `Promise<void>`; awaiting it is optional.
-- A separate **"Lưu bộ lọc hiện tại"** icon button (`bookmark_add`) sits immediately before the Search trigger. Clicking it prompts for a name and snapshots the current `{filters, logic, search}` into a new entry. The save action is intentionally adjacent to Search so the "name → save → search" flow stays in one toolbar zone.
+- A heading (`saved-filters.heading`), one row per `SdSavedFilter` stored in `localStorage` under `sd-query-bar:savedFilters:<key>` — an **apply** button (`filter_alt` + name, `role="menuitem"`) and, beside it, a **delete** button (`delete`, `aria-label` = `saved-filters.delete` with `{name}`) — a divider, and **"Lưu bộ lọc hiện tại"** (`bookmark_add`).
+- The delete button is hidden until its row is hovered or has focus, always shown (40px) on a coarse pointer.
+- **Keyboard:** ↑ ↓ Home End move over the apply buttons and "Lưu bộ lọc hiện tại"; → or Tab reach the delete button of the row, ← or Shift+Tab come back; Delete on an apply button deletes. After a delete, focus moves to the next row, else to "Lưu bộ lọc hiện tại".
+- **Apply** closes the panel and calls `onApplyFilter(saved)`.
+- **Delete** asks nothing: the list is written at once and an `info` toast (`saved-filters.deleted`, the name, action `saved-filters.undo`) offers Undo, which puts the filter back at its old index (clamped to the current length).
+- **Save** is disabled while no chip has a value (required chips count) and the search box is empty (`canSaveFilter()`). **Naming a saved filter uses `SdConfirmService.withInput`**, not `window.prompt`: `promptSave()` is `async` and resolves after the dialog settles (it returns without saving when the dialog is cancelled or the name is blank). The bar does not change after a save.
+- **States:** empty (`saved-filters.empty`); unreadable storage — broken JSON or not an array — shows `saved-filters.read-error` with an `error` icon, and saving replaces the broken list; entries without `id`, `name` or `query` are dropped one by one. A failing write (quota, blocked storage) on save, delete or Undo puts the previous list back and shows an `error` toast (`saved-filters.write-error`), never the exception text.
+- Dates come back as `Date`: strings in `Date#toJSON` form are revived when the list is read.
 
-Without a key both buttons stay disabled / hidden. `<sd-query-saved-filters-menu>` owns persistence — the host only reacts to `(applyFilter)`.
+Without a key the button stays disabled. `<sd-query-saved-filters-menu>` owns persistence — the host only reacts to `(applyFilter)`.
+
+## Required fields
+
+A `required` field is always on the bar (it implies `pinned`), and once its chip has a value, the value cannot be emptied:
+
+- Its operators never include `NULL` / `NOT_NULL`.
+- A single-value select is `required` and not clearable; picking the selected item again does not clear it.
+- A multi-value select keeps its previous values when a change would empty it, and shows `required-min-one` under the control (`aria-live="polite"`, referenced by `aria-describedby`).
+- Text, number, date, datetime and `BETWEEN` values that are cleared get their previous value back when the popover closes or the inline chip loses focus (`BETWEEN` needs one end).
+- With `applyOn: 'commit'`, a required chip is never dropped.
+- `clearAll()` keeps the chip as it is; `onApplyFilter()` keeps it unless the saved filter has a value for it.
+- The only empty state is the first one, when there is no default: the chip is invalid and Search / Enter are blocked.
+
+The bar enforces this in its mutators too (`onInlineCommit`, `onInlineRange`, `commitBuildValue`), so a host calling them directly cannot empty a required chip.
+
+## Search box
+
+With `showSearch`, the search box is `sd-search-field` — size `xs` (28px) at `density: 'compact'`, `sm` (32px) at `'comfortable'` — at least 220px wide. The input is named by `option.searchPlaceholder`, else `core.component.query-bar.search`; it has `enterkeyhint="search"` and `autocomplete="off"`. Enter applies (`applySearch()`, blocked while a required field is empty). The clear button (`search-clear`) and Escape with text empty the box and apply once; Escape on an empty box does nothing.
+
+## Add condition (inline mode)
+
+In inline mode the last item of the chip row is a borderless **Add condition** box (`add-condition`, `role="combobox"`) that drives the field picker listbox (`aria-expanded`, `aria-controls`, `aria-activedescendant`); focus stays in the box.
+
+- **Opens** on a click in the box, a click on the empty part of the chip row, typing, ↓ or Alt+↓ — not when the box only receives focus from Tab.
+- **Typing** filters the list (accents ignored) and points at the first enabled match; ↑ ↓ move; Enter picks it (`beginBuild(field)`) and empties the box.
+- **Enter** on an empty box with the list closed applies, like Search (blocked while a required field is empty).
+- **Escape** closes the list and empties the box; focus stays.
+- **Backspace** on an empty box moves focus to the last chip; a second Backspace (or Delete) removes it — never a required or pinned chip.
+- When a chip is finished (value committed, build cancelled), focus returns to the box and the list stays closed.
+- With nothing left to add the box is disabled; its tooltip keeps the "+" label.
+
+Popover mode keeps the **+** button, which opens the field picker with its own find box.
+
+## E2E (`data-autoid`)
+
+With an `autoId` (`<A>`):
+
+| Element | `data-autoid` |
+| --- | --- |
+| Search input / clear button | `<A>-search` / `<A>-search-clear` |
+| Add condition box (inline) | `<A>-add-condition` |
+| Panels | `<A>-panel-field-picker`, `<A>-panel-chip`, `<A>-panel-saved-filters` |
+| Saved-filters button | `<A>-saved-filters` |
+| Apply / delete of saved filter `<i>` | `<A>-saved-filter-<i>` / `<A>-saved-filter-<i>-delete` |
+| "Lưu bộ lọc hiện tại" | `<A>-saved-filters-save` |
+| Chip controls | `<A>-chip<i>-<role>` (popover), `<A>-inline<i>-value` (inline) |
 
 ## Examples
 
@@ -374,8 +438,9 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 
 ## Known limitations / next iterations
 
-- E2E / integration specs not yet written — only unit specs per sub-component.
 - Operator picker dropdown doesn't support keyboard arrow navigation yet (planned).
+- The field picker's find box appears above eight fields only (popover mode).
+- Saved filters live in this browser only (`localStorage`); there is no loading state, sharing, renaming or "active filter" marker.
 - No `Esc` shortcut to cancel an in-progress build chip (planned).
 - `(values | lazy-values).option.items` async-function variant is loaded once per popover open — no caching across opens. Acceptable for the current usage; revisit if a heavy endpoint hurts UX. (Chip labels are resolved separately, once — see "Labels of restored values".)
 
@@ -398,7 +463,9 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 
 ## Accessibility
 
-- **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"`. They exist only to stop clicks from closing the `mat-menu`, so they must not become tab stops — Tab goes straight to the operator picker and value editors. They now also stop Enter for the same reason; Escape and arrow keys still bubble so the menu closes / navigates normally.
+- **Panels:** field picker `role="listbox"` (options `role="option"`, used fields `aria-disabled="true"`, the active option through `aria-activedescendant` of the find box or the Add condition box); chip popover `role="dialog"` named by the field label (`aria-labelledby`); saved filters `role="menu"` with `menuitem` apply / save buttons and plain delete buttons beside them (no nested interactive elements). Triggers carry `aria-haspopup`, `aria-expanded` and, while open, `aria-controls`.
+- **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"` and are not tab stops — Tab goes straight to the operator picker and value editors.
+- **Required chips** carry `aria-required="true"`; the `required-min-one` line is `aria-live="polite"` and referenced by `aria-describedby`.
 - **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.
 - **Required chips** carry `aria-invalid="true"` while empty and point `aria-describedby` at `option.invalidHintId`, so the host's explanation is read with the chip.
 - **`openField(key, returnFocusTo)`** returns focus to `returnFocusTo` when the popover closes — the chip it opened may be dropped on close (`applyOn: 'commit'`), and the user started from the host control.
@@ -427,12 +494,18 @@ as `computed()` signals (not the `sdTranslate` pipe) because the pipe is pure an
 | Boolean chip value, default true / false    | `core.component.query-bar.boolean.true` / `.false` | `chipValueText()`, plus the build chip and inline chip toggle buttons (same keys, so one field never shows two languages) |
 | Seamless value placeholder (number / text)  | `core.component.query-bar.placeholder.value` / `.text` | inline value chip `ph()` |
 | BETWEEN from / to placeholders              | `core.component.query-bar.placeholder.from-number` / `.to-number` / `.from-text` / `.to-text` | inline value chip `phFrom()` / `phTo()`; popover editor `fromPlaceholder()` / `toPlaceholder()` |
-| Popover: swap-field tooltip                 | `core.component.query-bar.swap-field`           | chip popover `swapFieldTooltip()` |
 | Popover: value placeholders (select / text)  | `core.component.query-bar.placeholder.select-value` / `.enter-value` | chip popover `selectValuePlaceholder()` / `enterValuePlaceholder()` |
 | Popover: lazy-values loading text           | `core.component.query-bar.loading-values`       | chip popover `loadingValuesLabel()` |
 | Field picker empty state                    | `core.component.query-bar.field-empty`          | field picker `emptyLabel()` |
 | Saved filters: tooltip / disabled tooltip   | `core.component.query-bar.saved-filters.tooltip` / `.tooltip-disabled` | saved-filters menu |
-| Saved filters: delete / empty / save        | `core.component.query-bar.saved-filters.delete` / `.empty` / `.save` | saved-filters menu |
+| Saved filters: delete (`{name}`) / empty / save | `core.component.query-bar.saved-filters.delete` / `.empty` / `.save` | saved-filters menu |
+| Saved filters: heading                      | `core.component.query-bar.saved-filters.heading` | saved-filters menu |
+| Saved filters: delete toast title / Undo    | `core.component.query-bar.saved-filters.deleted` / `.undo` | saved-filters menu `remove()` |
+| Saved filters: read / write error           | `core.component.query-bar.saved-filters.read-error` / `.write-error` | saved-filters menu |
 | Saved filters: name prompt label            | `core.component.query-bar.saved-filters.name-label` | saved-filters menu `promptSave()` |
+| Search input `aria-label` (no `searchPlaceholder`) | `core.component.query-bar.search`         | `searchLabel()`           |
+| Search clear button                         | `core.component.query-bar.search-clear`         | `searchClearLabel()`      |
+| Add condition box (inline)                  | `core.component.query-bar.add-condition`        | `addConditionLabel()`     |
+| Required multi-value hint                   | `core.component.query-bar.required-min-one`     | chip popover / inline chip `minOneLabel()` |
 
 `SdQueryField.trueLabel` / `falseLabel` still override the boolean defaults when a field supplies them.

@@ -738,7 +738,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.placeholder.to-number': 'Đến',
   'core.component.query-bar.placeholder.from-text': 'từ…',
   'core.component.query-bar.placeholder.to-text': 'đến…',
-  'core.component.query-bar.swap-field': 'Đổi field',
   'core.component.query-bar.placeholder.select-value': 'Chọn giá trị',
   'core.component.query-bar.placeholder.enter-value': 'Nhập giá trị',
   'core.component.query-bar.loading-values': 'Đang tải...',

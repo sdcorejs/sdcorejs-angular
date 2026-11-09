@@ -1,11 +1,10 @@
+@use '../../../../../assets/scss/core/popover-panel' as panel;
+
 // Saved-filters trigger button — matches the other toolbar icon buttons.
-$qb-primary:       var(--sd-primary);
-$qb-border:        var(--sd-query-bar-border, #d6d8db);
-$qb-text-secondary:var(--sd-query-bar-text-secondary, #5f6368);
-$qb-text-muted:    var(--sd-query-bar-text-muted, #7a7a7a);
-$qb-border-soft:   var(--sd-query-bar-border-soft, #e2e4e7);
-$qb-bg:            var(--sd-query-bar-bg, #ffffff);
-$qb-danger:        var(--sd-query-bar-chip-danger, #d23535);
+$qb-primary: var(--sd-primary);
+$qb-border: var(--sd-query-bar-border, #d6d8db);
+$qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
+$qb-bg: var(--sd-query-bar-bg, #ffffff);
 
 :host {
   display: inline-flex;
@@ -24,112 +23,169 @@ $qb-danger:        var(--sd-query-bar-chip-danger, #d23535);
   cursor: pointer;
   padding: 0;
 
-  sd-icon { font-size: var(--sd-font-size-18, 18px); width: 18px; height: 18px; }
+  sd-icon {
+    font-size: var(--sd-font-size-18, 18px);
+    width: 18px;
+    height: 18px;
+  }
 
-  &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
-  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+  &:hover:not([disabled]) {
+    border-color: $qb-primary;
+    color: $qb-primary;
+  }
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
-// Menu renders into a document.body overlay — pierce via the panel class.
-::ng-deep .mat-mdc-menu-panel.c-saved-filters-menu {
-  min-width: 220px;
-  max-width: 320px;
+// Panel (handoff mục 5.2) — nằm trong template của component nên style áp cả khi nội dung gắn vào overlay.
+.c-saved-filters-menu {
+  @include panel.panel-list;
+  min-width: min(220px, calc(100vw - 16px));
 
-  // why: mat-menu-item template wrap content trong `<span.mat-mdc-menu-item-text>`
-  // (Material 19 source: `<ng-content select="sd-icon">` + `<span class="mat-mdc-menu-item-text">
-  // <ng-content></ng-content></span>`). Default base CSS đặt `.mat-mdc-menu-item-text {flex:1}`
-  // nhưng KHÔNG set display:flex → name và × ngồi inline-flow trong span, `margin-left:auto`
-  // trên × KHÔNG đẩy được. Fix: force flex layout vào span đó.
-  //
-  // Cũng override padding mat-menu-item-with-icon-trailing-spacing để × sát mép phải hơn
-  // (default 12px → 4px), kết hợp gap để name/× tách rõ.
-  .mat-mdc-menu-item.c-sf-row {
-    min-height: 40px;
-    padding-left: 16px;
-    padding-right: 4px;
+  // Panel nhận focus khi mở bằng chuột (không có ô tìm); không vẽ vòng focus lên cả khung.
+  &:focus {
+    outline: none;
+  }
+}
+
+.c-sf-heading {
+  @include panel.heading;
+}
+
+.c-sf-divider {
+  @include panel.divider;
+}
+
+.c-sf-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--sd-radius-4, 4px);
+
+  &:hover,
+  &:focus-within {
+    background: color-mix(in srgb, var(--sd-text, #1a1b1f) 8%, transparent);
+  }
+}
+
+// Nút áp: phần chính của hàng; nền nhấn nằm trên cả hàng nên nút không tự tô.
+.c-sf-apply {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 4px 8px 12px;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
   }
 
-  .mat-mdc-menu-item.c-sf-row .mat-mdc-menu-item-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    line-height: 1.4;
+  @media (pointer: coarse) {
+    min-height: 44px;
+  }
+}
+
+.c-sf-lead {
+  @include panel.icon;
+}
+
+.c-sf-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Nút xoá: ẩn (vẫn focus được) tới khi hàng được rê chuột hoặc chứa focus; luôn hiện ở cỡ chạm.
+.c-sf-del {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sd-radius-4, 4px);
+  background: transparent;
+  color: var(--sd-text-secondary, #555);
+  cursor: pointer;
+  opacity: 0;
+
+  sd-icon {
+    width: 18px;
+    height: 18px;
+    font-size: var(--sd-font-size-18, 18px);
   }
 
-  // why: hàng này tự lo khoảng cách bằng `gap: 8px` trên `.mat-mdc-menu-item-text` ở trên, nên phải
-  // tắt margin mặc định của leading icon trong menu (core/menu.scss) — nếu không icon cách nhãn
-  // 8px + 12px.
-  .c-sf-lead {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 0;
-    font-size: var(--sd-font-size-18, 18px) !important;
-    width: 18px !important;
-    height: 18px !important;
-    line-height: 1;
+  &:hover {
+    background: color-mix(in srgb, var(--sd-error) 8%, transparent);
+    color: var(--sd-error);
   }
 
-  .c-sf-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: -2px;
   }
+}
 
-  .c-sf-del {
-    flex: 0 0 auto;
-    margin-left: auto;       // why: pin × sát mép phải. Combined với padding-right:4px của row,
-                             // × cách mép phải đúng 4px — visually flush.
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    color: $qb-text-muted;
-    cursor: pointer;
-    padding: 0;
+.c-sf-row:hover .c-sf-del,
+.c-sf-row:focus-within .c-sf-del,
+.c-saved-filters-menu--coarse .c-sf-del {
+  opacity: 1;
+}
 
-    // why: base mat-menu-item CSS đặt `.mat-mdc-menu-item sd-icon { margin-right: 12px }`
-    // (giả định icon là leading) — leak vào × icon → bị đẩy lệch trái trong vòng tròn hover.
-    // Zero ra margin + đảm bảo box vuông 16×16 + line-height: 16px để glyph nằm chính giữa.
-    sd-icon {
-      margin: 0 !important;
-      padding: 0;
-      font-size: var(--sd-font-size-16, 16px) !important;
-      width: 16px !important;
-      height: 16px !important;
-      line-height: var(--sd-line-height-16, 16px) !important;
-      text-align: center;
-      overflow: hidden;
-    }
+.c-saved-filters-menu--coarse .c-sf-del {
+  width: 40px;
+  height: 40px;
+}
 
-    // Material applies its menu-item spacing to the renderer inside the SdIcon
-    // host, so reset the nested mat-icon as well as the facade element.
-    sd-icon mat-icon {
-      margin: 0 !important;
-    }
+.c-sf-save {
+  @include panel.item;
 
-    &:hover { background: rgba(0, 0, 0, 0.06); color: $qb-danger; }
+  sd-icon {
+    @include panel.icon;
+    color: var(--sd-primary);
   }
+}
 
-  .c-sf-empty {
-    padding: 12px 16px;
-    font-size: var(--sd-font-size-13, 13px);
-    color: $qb-text-muted;
-  }
+// Trạng thái trống / đọc lỗi (handoff mục 5.6).
+.c-sf-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  font-size: var(--sd-font-size-13, 13px);
+  line-height: var(--sd-line-height-18, 18px);
+  color: var(--sd-text-secondary, #555);
 
-  // why: ngăn list saved-filter và footer save action — visual cue 2 nhóm khác nhau.
-  .c-sf-divider {
-    border: 0;
-    border-top: 1px solid $qb-border-soft;
-    margin: 4px 0;
+  sd-icon {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    font-size: var(--sd-font-size-16, 16px);
+    color: var(--sd-error);
   }
+}
 
-  .c-sf-save sd-icon {
-    margin-right: 8px;
-  }
+.c-sf-state--error {
+  color: var(--sd-text, #1a1b1f);
 }

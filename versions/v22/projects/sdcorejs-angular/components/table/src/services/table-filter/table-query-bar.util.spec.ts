@@ -556,9 +556,10 @@ describe('table-query-bar.util', () => {
   describe('sdTableQueryTriggerPopup', () => {
     const field = (patch: Partial<SdQueryField>) => ({ key: 'column:x', label: 'X', type: 'string', ...patch }) as SdQueryField;
 
-    it('is the chip menu with the popover editor', () => {
-      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', true)).toBe('menu');
-      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', false)).toBe('menu');
+    // QB-P-07: the chip popover is a dialog panel now (handoff section 2.3).
+    it('is the chip popover dialog with the popover editor', () => {
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', true)).toBe('dialog');
+      expect(sdTableQueryTriggerPopup(field({ operators: ['CONTAIN'] }), 'popover', false)).toBe('dialog');
     });
 
     it('is nothing with the inline editor when the field has a chip, which only gets focus', () => {

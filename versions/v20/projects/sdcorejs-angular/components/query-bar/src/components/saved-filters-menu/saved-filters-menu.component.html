@@ -1,36 +1,72 @@
+@let _key = key();
 <button
   type="button"
   class="c-saved-filters"
-  [disabled]="!key()"
-  [matMenuTriggerFor]="menu"
-  [matTooltip]="key() ? tooltipLabel() : tooltipDisabledLabel()">
+  [disabled]="!_key"
+  [sdQueryPanelTrigger]="panel"
+  [matTooltip]="_key ? tooltipLabel() : tooltipDisabledLabel()"
+  [attr.aria-label]="tooltipLabel()"
+  [attr.data-autoid]="autoIdOf('saved-filters')"
+  (panelOpened)="onOpening()">
   <sd-icon name="bookmark_border"></sd-icon>
 </button>
 
-<mat-menu #menu="matMenu" class="c-saved-filters-menu" xPosition="before" yPosition="below">
-  @for (f of savedFilters(); track f.id) {
-    <button type="button" mat-menu-item class="c-sf-row" (click)="pick(f)">
-      <sd-icon class="c-sf-lead" name="filter_alt"></sd-icon>
-      <span class="c-sf-name">{{ f.name }}</span>
-      <span
-        role="button"
-        tabindex="0"
-        class="c-sf-del"
-        [attr.aria-label]="deleteLabel()"
-        (click)="remove(f.id, $event)"
-        (keydown.enter)="remove(f.id, $event)">
-        <sd-icon name="close"></sd-icon>
-      </span>
+<!-- Panel theo khung Action Popover (handoff mục 5.2): tiêu đề, hàng [nút áp | nút xoá], đường kẻ, "Lưu bộ lọc hiện tại".
+     why: nút xoá là button thường đặt CẠNH nút áp (không lồng trong nhau, ngoài vòng mũi tên của menu). -->
+<ng-template sdQueryPanel="menu" sdQueryPanelAlign="end" #panel="sdQueryPanel">
+  <div
+    class="sd-query-panel sd-query-panel--list c-saved-filters-menu"
+    role="menu"
+    tabindex="-1"
+    [class.c-saved-filters-menu--coarse]="coarse()"
+    [attr.aria-labelledby]="headingId"
+    [attr.data-autoid]="autoIdOf('panel-saved-filters')"
+    (keydown)="onKeydown($event)">
+    <div class="c-sf-heading" [id]="headingId">{{ headingLabel() }}</div>
+    @if (readError()) {
+      <div class="c-sf-state c-sf-state--error">
+        <sd-icon name="error" size="16px" aria-hidden="true"></sd-icon>
+        <span>{{ readErrorLabel() }}</span>
+      </div>
+    }
+    @for (f of savedFilters(); track f.id; let i = $index) {
+      <div class="c-sf-row" role="none">
+        <button
+          type="button"
+          role="menuitem"
+          tabindex="-1"
+          class="c-sf-apply"
+          [attr.data-autoid]="autoIdOf('saved-filter-' + i)"
+          (click)="pick(f)">
+          <sd-icon class="c-sf-lead" name="filter_alt" size="18px" aria-hidden="true"></sd-icon>
+          <span class="c-sf-name">{{ f.name }}</span>
+        </button>
+        <button
+          type="button"
+          tabindex="-1"
+          class="c-sf-del"
+          [attr.aria-label]="deleteLabel(f.name)"
+          [attr.data-autoid]="autoIdOf('saved-filter-' + i + '-delete')"
+          (click)="removeAt(i)">
+          <sd-icon name="delete" size="18px" aria-hidden="true"></sd-icon>
+        </button>
+      </div>
+    } @empty {
+      @if (!readError()) {
+        <div class="c-sf-state">{{ emptyLabel() }}</div>
+      }
+    }
+    <div class="c-sf-divider" role="separator"></div>
+    <button
+      type="button"
+      role="menuitem"
+      tabindex="-1"
+      class="c-sf-save"
+      [disabled]="!_key || !canSave()"
+      [attr.data-autoid]="autoIdOf('saved-filters-save')"
+      (click)="onSave()">
+      <sd-icon name="bookmark_add" size="18px" aria-hidden="true"></sd-icon>
+      <span>{{ saveLabel() }}</span>
     </button>
-  } @empty {
-    <div class="c-sf-empty">{{ emptyLabel() }}</div>
-  }
-  <!-- why: footer save action sống trong mat-menu để dropdown gom 1 vùng (list +
-       save) — user mở dropdown thấy ngay cả 2 hành động, không phải tìm nút lưu
-       ở chỗ khác trên toolbar. -->
-  <hr class="c-sf-divider" aria-hidden="true" />
-  <button type="button" mat-menu-item class="c-sf-save" [disabled]="!key()" (click)="promptSave()">
-    <sd-icon name="bookmark_add"></sd-icon>
-    <span>{{ saveLabel() }}</span>
-  </button>
-</mat-menu>
+  </div>
+</ng-template>

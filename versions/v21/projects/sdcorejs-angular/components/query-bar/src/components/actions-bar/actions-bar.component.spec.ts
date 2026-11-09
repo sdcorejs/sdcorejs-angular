@@ -83,8 +83,8 @@ describe('SdQueryActionsBar', () => {
   });
 
   // why: standalone save-filter button đã bị xóa — footer "Lưu bộ lọc hiện tại"
-  // sống trong mat-menu của saved-filters-menu (1 zone: list + save).
-  it('does NOT render a standalone .c-save-filter button (footer moved into saved-filters mat-menu)', () => {
+  // sống trong panel của saved-filters-menu (1 zone: list + save).
+  it('does NOT render a standalone .c-save-filter button (footer moved into the saved-filters panel)', () => {
     fixture.componentRef.setInput('showSavedFilters', true);
     fixture.componentRef.setInput('savedFiltersKey', 'demo');
     fixture.detectChanges();

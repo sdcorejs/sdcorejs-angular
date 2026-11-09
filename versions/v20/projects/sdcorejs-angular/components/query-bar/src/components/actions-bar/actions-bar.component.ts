@@ -12,7 +12,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
  * Search trigger. Owns no business logic — just routes user intent back via
  * outputs (`(logic)` model, `(clear)`, `(search)`, `(applyFilter)`).
  *
- * The "save current query" action lives INSIDE the saved-filters mat-menu
+ * The "save current query" action lives INSIDE the saved-filters panel
  * footer (one zone for both apply + save). The dropdown trigger sits
  * immediately before Search so the user sees one filter-cluster on the right.
  */
@@ -36,6 +36,10 @@ export class SdQueryActionsBar {
   readonly showSavedFilters = input(false, { transform: booleanAttribute });
   readonly savedFiltersKey = input<string | undefined>(undefined);
   readonly query = input<SdQuery>({ filters: [], logic: 'AND' });
+  /** `false` disables "Save current filter" (nothing to save). */
+  readonly canSaveFilter = input(true);
+  /** Prefix of `data-autoid` for the saved-filters controls. */
+  readonly autoId = input<string | undefined>(undefined);
   readonly applyFilter = output<SdSavedFilter>();
 
   // Clear-all —

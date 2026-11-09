@@ -17,8 +17,7 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatMenuModule } from '@angular/material/menu';
+import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
@@ -32,8 +31,10 @@ import { SdQueryFieldPicker } from './components/field-picker/field-picker.compo
 import { SdQueryInlineChip } from './components/inline-chip/inline-chip.component';
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
 import { SdQueryPopoverChip } from './components/popover-chip/popover-chip.component';
+import { ɵSdQueryPanelGroup, ɵSdQueryPanelTriggerDirective } from './components/panel/query-panel';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { ɵSdQueryChipLabels, ɵsdQueryChipValueText } from './query-bar-chip-text';
+import { ɵsdQueryFilterActive } from './query-bar-filter';
 import {
   BuildingChip,
   SD_QUERY_DEFAULT_OPERATOR_BY_TYPE,
@@ -58,20 +59,28 @@ interface Range {
 /** Shared empty array — stable reference so template bindings don't churn change detection. */
 const EMPTY_ARRAY: any[] = [];
 
-const hasValue = (value: unknown): boolean => value !== null && value !== undefined && value !== '';
-
 @Component({
   selector: 'sd-query-bar',
   templateUrl: './query-bar.component.html',
   styleUrls: ['./query-bar.component.scss', './query-bar.controls.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // why: ba panel của thanh (field picker, chip popover, bộ lọc đã lưu) dùng chung một nhóm — mở panel này thì panel kia
+  // đóng (handoff mục 2.2).
+  providers: [ɵSdQueryPanelGroup],
+  // why: bấm vào chỗ trống của vùng chip (mode inline) mở danh sách field của ô Thêm điều kiện (handoff mục 8); Backspace /
+  // Delete trên chip đang được trỏ từ ô đó thì xoá chip. Nghe trên host — vùng chip chỉ là khung, không nhận focus.
+  host: {
+    '(click)': 'onMainClick($event)',
+    '(keydown)': 'onMainKeydown($event)',
+  },
   imports: [
     SdIcon,
     CommonModule,
-    FormsModule,
-    MatMenuModule,
     MatTooltipModule,
+    ɵSdQueryPanelTriggerDirective,
+    ɵSdSearchField,
+    ɵSdSearchFieldInputDirective,
     SdQueryActionsBar,
     SdQueryBuildChip,
     SdQueryChipPopover,
@@ -151,7 +160,7 @@ export class SdQueryBar {
   /**
    * Editing mode:
    * - `'popover'` (default) → compact chips; click a chip to edit operator + value in a
-   *   mat-menu popover, commit with "Áp dụng".
+   *   popover panel; the value is committed when the popover closes.
    * - `'inline'` → GitLab-style. Each filter's operator + value controls render directly
    *   on the bar (no popup, no per-filter apply). Edits update `filters` live; the user
    *   presses the search button (or Enter) once to fire `(apply)`.
@@ -183,9 +192,29 @@ export class SdQueryBar {
    */
   readonly currentQuery = computed<SdQuery>(() => this.#buildQuery());
 
-  /** Receive an applied filter from the saved-filters menu — re-install bar state + trigger apply. */
+  /**
+   * Receive an applied filter from the saved-filters menu — re-install bar state + trigger apply (handoff B4). Entries of
+   * fields the bar no longer has, or of disabled fields, are dropped. A required or pinned field takes the saved chip
+   * only when it has a value; otherwise its current chip (operator included) stays. Required and pinned chips come
+   * first, in field order.
+   */
   onApplyFilter(saved: SdSavedFilter): void {
-    this.filters.set(saved.query.filters ?? []);
+    const fields = this.fieldByKey();
+    const keyOf = (filter: Filter): string => ('field' in filter ? (filter.field as string) : '');
+    const usable = (saved.query.filters ?? []).filter(filter => {
+      const field = fields[keyOf(filter)];
+      return !!field && !field.disabled;
+    });
+    const current = this.filters();
+    const locked: Filter[] = [];
+    for (const field of this.resolvedFields()) {
+      if (!this.isLocked(field)) continue;
+      const key = field.key as string;
+      const fromSaved = usable.find(filter => keyOf(filter) === key && this.isFilterActive(filter));
+      locked.push(fromSaved ?? current.find(filter => keyOf(filter) === key) ?? this.#emptyChip(field));
+    }
+    const rest = usable.filter(filter => !this.isLocked(fields[keyOf(filter)]));
+    this.filters.set([...locked, ...rest]);
     this.logic.set(saved.query.logic ?? 'AND');
     if (saved.query.search !== undefined) this.search.set(saved.query.search);
     this.triggerApply();
@@ -231,6 +260,12 @@ export class SdQueryBar {
   readonly searchPlaceholder = computed(
     () => this.option()?.searchPlaceholder ?? this.#i18n.t('core.component.query-bar.search-placeholder')
   );
+  /** Tên của ô tìm cho trình đọc màn hình: `option.searchPlaceholder` nếu host đặt, không thì key `search`. */
+  readonly searchLabel = computed(() => this.option()?.searchPlaceholder ?? this.#i18n.t('core.component.query-bar.search'));
+  /** Nhãn nút xoá của ô tìm. */
+  readonly searchClearLabel = computed(() => this.#i18n.t('core.component.query-bar.search-clear'));
+  /** Nhãn và placeholder của ô Thêm điều kiện (mode inline). */
+  readonly addConditionLabel = computed(() => this.#i18n.t('core.component.query-bar.add-condition'));
   /** Chữ trên chip ghim đang rỗng. */
   readonly allLabel = computed(() => this.#i18n.t('core.component.query-bar.all'));
   /** Chữ trên chip bắt buộc đang rỗng — "Tất cả" sai nghĩa khi field không cho phép bỏ trống. */
@@ -253,10 +288,28 @@ export class SdQueryBar {
   readonly resolvedShowOperatorOnChip = computed(() => this.option()?.showOperatorOnChip ?? this.showOperatorOnChip());
   readonly resolvedApplyOn = computed(() => this.option()?.applyOn ?? 'search');
   readonly resolvedAppearance = computed(() => this.option()?.appearance ?? 'default');
-  readonly resolvedClearDisabled = computed(() => !!this.option()?.clearDisabled);
+  /**
+   * Clear-all is disabled when the host says so, or — with the built-in clearAll() — when no chip but required ones has a
+   * value: there is nothing left to clear (handoff B2).
+   */
+  readonly resolvedClearDisabled = computed(() => {
+    const option = this.option();
+    return !!option?.clearDisabled || (!option?.onClearAll && this.activeCount() === 0);
+  });
   readonly resolvedInvalidHintId = computed(() => this.option()?.invalidHintId);
 
   constructor() {
+    // why: B1 — field bắt buộc hoặc ghim luôn có chip. Thiếu thì thêm chip rỗng ngay trong lượt cập nhật filters này
+    // (không phát apply); thanh không bao giờ bỏ chip đó.
+    effect(() => {
+      const filters = this.filters();
+      const fields = this.resolvedFields();
+      untracked(() => {
+        const next = this.#withLockedChips(filters, fields);
+        if (next !== filters) this.filters.set(next);
+      });
+    });
+
     effect(() => {
       const option = this.option();
       if (!option) return;
@@ -293,11 +346,11 @@ export class SdQueryBar {
     return set;
   });
 
-  /** Fields the user can add: pinned fields always have their chip, so the picker leaves them out. */
+  /** Fields the user can add: pinned and required fields always have their chip, so the picker leaves them out. */
   readonly pickerFields = computed<SdQueryField[]>(() => {
     const fields = this.resolvedFields();
-    // why: giữ nguyên ref khi không có field ghim để picker (OnPush) không bị dirty vô cớ.
-    return fields.some(field => field.pinned) ? fields.filter(field => !field.pinned) : fields;
+    // why: giữ nguyên ref khi không có field ghim / bắt buộc để picker (OnPush) không bị dirty vô cớ.
+    return fields.some(field => this.isLocked(field)) ? fields.filter(field => !this.isLocked(field)) : fields;
   });
 
   /** "+" is disabled when nothing is left to add. */
@@ -319,11 +372,24 @@ export class SdQueryBar {
     return invalid.length ? invalid : EMPTY_ARRAY;
   });
 
-  /** Chips holding a value — the number shown in the clear-all label. */
-  readonly activeCount = computed(() => this.filters().filter(filter => this.isFilterActive(filter)).length);
+  /**
+   * Chips holding a value that Clear would empty — the number shown in the clear-all label. Required chips keep their
+   * value on clear, so they are not counted (handoff B2).
+   */
+  readonly activeCount = computed(
+    () => this.filters().filter(filter => !this.fieldOf(filter)?.required && this.isFilterActive(filter)).length
+  );
 
   /** Render the global AND/OR connector text between chips when `logic === 'OR'`. */
   readonly showOrConnector = computed(() => this.resolvedShowLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2);
+
+  /**
+   * "Save current filter" needs something to save: a chip with a value (required chips included — Bước 0, decision 2)
+   * or text in the search box.
+   */
+  readonly canSaveFilter = computed(
+    () => this.filters().some(filter => this.isFilterActive(filter)) || (this.resolvedShowSearch() && this.search().trim().length > 0)
+  );
 
   /** Search button is actionable only when there is something to apply and no required field is empty. */
   readonly canSearch = computed(() => (this.filters().length > 0 || this.search().trim().length > 0) && this.invalidFields().length === 0);
@@ -415,12 +481,7 @@ export class SdQueryBar {
    * A BETWEEN range is active when either end is set; `{ from: null, to: null }` is empty.
    */
   isFilterActive(filter: Filter): boolean {
-    if (SD_QUERY_NO_DATA_OPERATORS.includes(filter.operator as Operator)) return true;
-    const data = (filter as any).data;
-    if (data === null || data === undefined || data === '') return false;
-    if (Array.isArray(data)) return data.length > 0;
-    if (filter.operator === 'BETWEEN' && typeof data === 'object') return hasValue(data.from) || hasValue(data.to);
-    return true;
+    return ɵsdQueryFilterActive(filter);
   }
 
   /** Rendered value text on a chip. */
@@ -439,9 +500,17 @@ export class SdQueryBar {
     return 'field' in filter ? this.fieldByKey()[filter.field as string] : undefined;
   }
 
-  /** Pinned chips have no remove button and survive removeFilter / clearAll. */
+  /**
+   * Pinned and required chips have no remove button and survive removeFilter / clearAll; an empty one is never dropped
+   * (handoff B1: `required` implies `pinned`).
+   */
   isPinned(filter: Filter): boolean {
-    return !!this.fieldOf(filter)?.pinned;
+    return this.isLocked(this.fieldOf(filter));
+  }
+
+  /** The field always has its chip on the bar: `pinned` or `required`. */
+  isLocked(field: SdQueryField | undefined): boolean {
+    return !!field && (!!field.pinned || !!field.required);
   }
 
   /** Empty chip of a required field. */
@@ -514,6 +583,7 @@ export class SdQueryBar {
   /** Value committed by a completed inline chip (seamless input, picker, boolean toggle). */
   onInlineCommit(index: number, data: unknown): void {
     const previous = this.filters()[index];
+    if (this.#emptiesRequired(previous, { data } as Partial<Filter>)) return;
     this.updateFilterData(index, data);
     this.#applyIfChanged(previous, this.filters()[index]);
   }
@@ -521,12 +591,28 @@ export class SdQueryBar {
   /** Range committed by a completed inline BETWEEN chip. */
   onInlineRange(index: number, ev: { from: unknown; to: unknown } | null): void {
     const previous = this.filters()[index];
+    if (this.#emptiesRequired(previous, { data: ev ?? { from: null, to: null } } as Partial<Filter>)) return;
     this.setFilterRange(index, ev);
     this.#applyIfChanged(previous, this.filters()[index]);
   }
 
+  /**
+   * B3: a required chip that has a value cannot become empty — the chips already refuse it; the bar refuses it too when
+   * a host calls the mutators directly. The first empty state (B5) is the only empty one.
+   */
+  #emptiesRequired(previous: Filter | undefined, patch: Partial<Filter>): boolean {
+    if (!previous || !this.fieldOf(previous)?.required || !this.isFilterActive(previous)) return false;
+    return !this.isFilterActive({ ...previous, ...patch } as Filter);
+  }
+
   /** Entry point from the field picker — start building a chip for `field`. */
   beginBuild(field: SdQueryField): void {
+    // why: field ghim / bắt buộc luôn có chip sẵn (B1) — host gọi beginBuild cho nó thì đưa tới chip đó, không dựng chip thứ hai.
+    const existing = this.isLocked(field) ? this.filters().findIndex(filter => 'field' in filter && filter.field === field.key) : -1;
+    if (existing >= 0) {
+      afterNextRender(() => this.#focusInlineChip(existing), { injector: this.#injector });
+      return;
+    }
     const allowed = sdQueryAllowedOperators(field);
     const def = sdQueryDefaultOperator(field);
     // why: date/datetime mặc định là BETWEEN — skip operator step để user vào value
@@ -544,6 +630,7 @@ export class SdQueryBar {
     if (SD_QUERY_NO_DATA_OPERATORS.includes(operator)) {
       this.#pushComplete(field, operator, null);
       this.#building.set(null);
+      this.#returnToAddInput();
       return;
     }
     this.#building.set({ field, operator, step: 'value' });
@@ -557,6 +644,7 @@ export class SdQueryBar {
     if (SD_QUERY_NO_DATA_OPERATORS.includes(op)) {
       this.#pushComplete(b.field, op, null);
       this.#building.set(null);
+      this.#returnToAddInput();
       return;
     }
     this.#building.set({ ...b, operator: op, step: 'value' });
@@ -567,8 +655,14 @@ export class SdQueryBar {
   commitBuildValue(value: unknown): void {
     const b = this.#building();
     if (!b || !b.operator) return;
+    // B3: an empty value never makes a chip for a required field.
+    if (b.field.required && !this.isFilterActive({ field: b.field.key, operator: b.operator, data: value } as Filter)) {
+      this.cancelBuild();
+      return;
+    }
     this.#pushComplete(b.field, b.operator, value);
     this.#building.set(null);
+    this.#returnToAddInput();
   }
 
   /**
@@ -588,6 +682,153 @@ export class SdQueryBar {
   /** Abandon the in-progress chip. */
   cancelBuild(): void {
     this.#building.set(null);
+    this.#returnToAddInput();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inline mode — "Add condition" combobox (handoff section 8)
+  // ---------------------------------------------------------------------------
+
+  /** The "Add condition" input (inline mode). */
+  private readonly addInput = viewChild<ElementRef<HTMLInputElement>>('addInput');
+  /** The field picker the box drives. */
+  private readonly addPicker = viewChild(SdQueryFieldPicker);
+  /** Text typed in the box — filters the field list. */
+  readonly addQuery = signal('');
+  /** The chip the first Backspace on an empty box moved focus to; a second Backspace removes it. */
+  #pendingRemove: { element: HTMLElement; index: number } | null = null;
+
+  /** A field was picked in the field picker: inline builds a chip from it, popover adds a chip and opens it. */
+  onPick(field: SdQueryField): void {
+    if (this.resolvedMode() !== 'inline') {
+      this.addFilter(field);
+      return;
+    }
+    this.addQuery.set('');
+    this.beginBuild(field);
+  }
+
+  /** Opens the field list under the box, keeping focus in the box (combobox). */
+  openAddList(): void {
+    const input = this.addInput()?.nativeElement;
+    const picker = this.addPicker();
+    if (!input || !picker || input.disabled || picker.panel().isOpen()) return;
+    picker.setQuery(this.addQuery());
+    picker.panel().open(input, { focus: false });
+  }
+
+  /** Typing filters the list and opens it; the first enabled match is pointed at. */
+  onAddInput(text: string): void {
+    this.addQuery.set(text);
+    this.addPicker()?.setQuery(text);
+    this.openAddList();
+  }
+
+  onAddKeydown(event: KeyboardEvent): void {
+    const picker = this.addPicker();
+    if (!picker) return;
+    const open = picker.panel().isOpen();
+    switch (event.key) {
+      case 'ArrowDown':
+        if (!open) {
+          this.openAddList();
+          // Alt+ArrowDown only opens; ArrowDown also points at the first option.
+          if (!event.altKey) picker.move(1);
+        } else picker.move(1);
+        break;
+      case 'ArrowUp':
+        if (!open) return;
+        picker.move(-1);
+        break;
+      case 'Enter':
+        if (open) {
+          if (!picker.pickActive()) return;
+        } else if (!this.addQuery()) {
+          // why: ô rỗng, danh sách đóng — Enter là "Tìm kiếm" của thanh, bị chặn khi còn field bắt buộc rỗng.
+          this.applySearch();
+        } else return;
+        break;
+      case 'Escape':
+        if (!open && !this.addQuery()) return;
+        if (open) picker.panel().close('escape');
+        this.addQuery.set('');
+        event.stopPropagation();
+        break;
+      case 'Backspace':
+        if (this.addQuery()) return;
+        this.#focusLastChip();
+        break;
+      case 'Tab':
+        if (open) picker.panel().close('tab');
+        return;
+      default:
+        return;
+    }
+    event.preventDefault();
+  }
+
+  /** A click on the empty part of the chip area (inline mode) focuses the box and opens the list. */
+  onMainClick(event: MouseEvent): void {
+    const target = event.target as Element | null;
+    if (this.resolvedMode() !== 'inline' || !target?.classList.contains('c-query-bar__main')) return;
+    this.addInput()?.nativeElement.focus();
+    this.openAddList();
+  }
+
+  /** Backspace / Delete on the chip the box pointed at removes it — never a required or pinned chip. */
+  onMainKeydown(event: KeyboardEvent): void {
+    const pending = this.#pendingRemove;
+    if (!pending || event.target !== pending.element) return;
+    if (event.key !== 'Backspace' && event.key !== 'Delete') {
+      this.#pendingRemove = null;
+      return;
+    }
+    event.preventDefault();
+    const filter = this.filters()[pending.index];
+    if (!filter || this.isPinned(filter) || this.fieldOf(filter)?.disabled) return;
+    this.#pendingRemove = null;
+    this.removeFilter(pending.index);
+    afterNextRender(() => this.addInput()?.nativeElement.focus(), { injector: this.#injector });
+  }
+
+  /** First Backspace on an empty box: focus the last chip so a second Backspace removes it. */
+  #focusLastChip(): void {
+    const rendered = this.#chipElements();
+    const last = rendered[rendered.length - 1];
+    if (!last) return;
+    if (!last.element.hasAttribute('tabindex')) last.element.tabIndex = -1;
+    last.element.focus();
+    this.#pendingRemove = last;
+  }
+
+  /** The focusable wrapper of each rendered inline chip, with the index of its filter. */
+  #chipElements(): { element: HTMLElement; index: number }[] {
+    const elements = Array.from(
+      this.#host.nativeElement.querySelectorAll<HTMLElement>(
+        '.c-query-bar__main > sd-query-inline-value-chip .c-seamless, .c-query-bar__main > sd-query-inline-chip .c-token, .c-query-bar__main > sd-query-popover-chip .c-chip'
+      )
+    );
+    // why: @for chỉ vẽ chip của field thanh biết — ghép phần tử thứ n với filter thứ n có field.
+    const indexes = this.filters()
+      .map((filter, index) => (this.fieldOf(filter) ? index : -1))
+      .filter(index => index >= 0);
+    return elements.map((element, position) => ({ element, index: indexes[position] })).filter(entry => entry.index !== undefined);
+  }
+
+  /**
+   * After a chip is finished (value committed, build cancelled) focus goes back to the box, without opening the list —
+   * unless the user has moved focus somewhere else meanwhile.
+   */
+  #returnToAddInput(): void {
+    if (this.resolvedMode() !== 'inline') return;
+    afterNextRender(
+      () => {
+        const active = document.activeElement;
+        if (active && active !== document.body && !this.#host.nativeElement.contains(active)) return;
+        this.addInput()?.nativeElement.focus();
+      },
+      { injector: this.#injector }
+    );
   }
 
   /**
@@ -634,8 +875,15 @@ export class SdQueryBar {
       else afterNextRender(() => this.#focusInlineChip(index), { injector: this.#injector });
       return;
     }
-    if (index < 0) this.#addFilter(field, returnFocusTo ?? undefined);
-    else this.popoverChips()[index]?.openMenu(returnFocusTo ?? undefined);
+    if (index < 0) {
+      this.#addFilter(field, returnFocusTo ?? undefined);
+      return;
+    }
+    const chip = this.popoverChips()[index];
+    // why: icon ở header bấm lần nữa khi popover của nó đang mở thì đóng lại — menu Material trước đây có backdrop nuốt lần bấm đó
+    // và đóng menu; panel mới không có backdrop.
+    if (chip?.isOpen()) chip.closeMenu();
+    else chip?.openMenu(returnFocusTo ?? undefined);
   }
 
   /** Clear-all button: the host's `onClearAll` when given, else the built-in clearAll(). */
@@ -653,9 +901,8 @@ export class SdQueryBar {
     const data = SD_QUERY_MULTI_OPERATORS.includes(operator) ? [] : null;
     list[index] = { field: field.key as any, operator, data } as Filter;
     this.filters.set(list);
-    // why: clicking an item in the nested fieldSwitchPicker closes both the picker AND
-    // the parent chipPopover. Re-open the chip's popover on the next render so user can
-    // continue picking operator + value without a second manual click.
+    // why: re-open the chip's popover on the next render so the user can pick operator + value for the new field
+    // without a second click.
     afterNextRender(() => this.popoverChips()[index]?.openMenu(), { injector: this.#injector });
   }
 
@@ -699,20 +946,49 @@ export class SdQueryBar {
     if (this.resolvedApplyOn() === 'commit' && this.isFilterActive(removed)) this.#applyChipChange();
   }
 
-  /** Empties the bar. Pinned chips stay, reset to their field's default operator and no value. */
+  /**
+   * Empties the bar (handoff B2). Required chips stay as they are (operator and value); pinned chips stay, reset to their
+   * field's default operator and no value; other chips go.
+   */
   clearAll(): void {
     if (this.filters().length === 0) return;
     const kept: Filter[] = [];
     for (const filter of this.filters()) {
       const field = this.fieldOf(filter);
+      if (field?.required) {
+        kept.push(filter);
+        continue;
+      }
       if (!field?.pinned) continue;
-      const operator = sdQueryDefaultOperator(field);
-      const next = { field: field.key as any, operator, data: SD_QUERY_MULTI_OPERATORS.includes(operator) ? [] : null } as Filter;
+      const next = this.#emptyChip(field);
       this.#inheritRowId(filter, next);
       kept.push(next);
     }
-    this.filters.set(kept);
+    this.filters.set(this.#withLockedChips(kept, this.resolvedFields()));
     this.editingIndex.set(null);
+  }
+
+  /** A chip of `field` with its default operator and no value. */
+  #emptyChip(field: SdQueryField): Filter {
+    const operator = sdQueryDefaultOperator(field);
+    return { field: field.key as any, operator, data: SD_QUERY_MULTI_OPERATORS.includes(operator) ? [] : null } as Filter;
+  }
+
+  /**
+   * B1: every pinned or required field has a chip. Missing ones are added empty; the locked chips then come first in
+   * field order, the others keep their order. Returns `filters` itself when nothing is missing.
+   */
+  #withLockedChips(filters: Filter[], fields: SdQueryField[]): Filter[] {
+    const locked = fields.filter(field => this.isLocked(field));
+    if (!locked.length) return filters;
+    const chips = new Map<string, Filter>();
+    for (const filter of filters) if ('field' in filter && !chips.has(filter.field as string)) chips.set(filter.field as string, filter);
+    if (locked.every(field => chips.has(field.key as string))) return filters;
+    const keys = new Set(locked.map(field => field.key as string));
+    return [
+      ...locked.map(field => chips.get(field.key as string) ?? this.#emptyChip(field)),
+      ...filters.filter(filter => !('field' in filter) || !keys.has(filter.field as string)),
+    ];
   }
 
   setLogic(value: SdQueryLogic): void {
@@ -724,6 +1000,19 @@ export class SdQueryBar {
     if (this.search() === value) return;
     if (this.#searchBase === null) this.#searchBase = this.search();
     this.search.set(value);
+  }
+
+  /** Clear button of the search box: empties the text and applies once (handoff 7.2). */
+  clearSearch(): void {
+    this.setSearch('');
+    this.applySearch();
+  }
+
+  /** Escape in the search box: like the clear button when there is text; nothing on an empty box. */
+  onSearchEscape(event: Event): void {
+    if (!this.search()) return;
+    event.preventDefault();
+    this.clearSearch();
   }
 
   /** Enter in the search box: applies the typed text too, unless a required field is still empty. */
@@ -768,7 +1057,7 @@ export class SdQueryBar {
     if (!filter || !('field' in filter)) return;
     this.editingIndex.set(index);
     const field = this.fieldByKey()[filter.field as string];
-    this.chipPopover()?.seed(filter, field);
+    this.chipPopover()?.seed(filter, field, index);
   }
 
   /**
@@ -791,7 +1080,7 @@ export class SdQueryBar {
       return;
     }
     // why: popover chỉ đổi operator + value của CHÍNH chip đó → giữ track key, nếu không chip sẽ
-    // bị huỷ ngay lúc menu đóng (trigger của overlay biến mất giữa chừng).
+    // bị huỷ ngay lúc panel đóng (trigger của overlay biến mất giữa chừng).
     this.#inheritRowId(previous, next);
     list[idx] = next;
     this.filters.set(list);

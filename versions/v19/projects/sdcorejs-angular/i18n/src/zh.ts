@@ -734,7 +734,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.placeholder.to-number': '结束',
   'core.component.query-bar.placeholder.from-text': '起始…',
   'core.component.query-bar.placeholder.to-text': '结束…',
-  'core.component.query-bar.swap-field': '更改字段',
   'core.component.query-bar.placeholder.select-value': '选择值',
   'core.component.query-bar.placeholder.enter-value': '输入值',
   'core.component.query-bar.loading-values': '加载中...',

@@ -254,7 +254,7 @@ describe('SdQueryBar', () => {
       fixture.detectChanges();
 
       const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-      const item = overlay.querySelector('button[mat-menu-item]') as HTMLButtonElement;
+      const item = overlay.querySelector('[role="option"]') as HTMLButtonElement;
       item.click();
       fixture.detectChanges();
 
@@ -366,7 +366,7 @@ describe('SdQueryBar', () => {
       const apply = jasmine.createSpy('apply');
       component.apply.subscribe(apply);
 
-      const input = fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
+      const input = fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement;
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
       expect(apply).toHaveBeenCalledTimes(1);
@@ -397,7 +397,7 @@ describe('SdQueryBar', () => {
       expect(chipDe).not.toBeNull();
       const chip = chipDe.nativeElement as HTMLElement;
       expect(chip.querySelector('sd-inline-text input')).not.toBeNull();
-      expect(chip.querySelector('[matMenuTriggerFor]')).toBeNull();
+      expect(chip.querySelector('.sd-query-panel-trigger')).toBeNull();
       expect(fixture.nativeElement.querySelector('sd-input')).toBeNull();
     });
 
@@ -409,7 +409,7 @@ describe('SdQueryBar', () => {
       const select = building.querySelector('sd-select');
       expect(select).not.toBeNull();
       expect(select.classList.contains('sd-bare')).toBe(true);
-      expect(building.querySelector('[matMenuTriggerFor]')).toBeNull();
+      expect(building.querySelector('.sd-query-panel-trigger')).toBeNull();
     });
 
     it('renders an inline-mode sd-select for a completed values chip', () => {
@@ -977,7 +977,7 @@ describe('SdQueryBar (extras)', () => {
       fixture.componentRef.setInput('showSearch', true);
       fixture.detectChanges();
 
-      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('.c-search-input');
+      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('sd-search-field input');
       expect(input().placeholder).toBe('Tìm kiếm...');
 
       i18n.setLanguage('en', { reload: false });
@@ -1080,7 +1080,7 @@ describe('SdQueryBar (host options)', () => {
     it('leaves pinned fields out of the field picker', () => {
       (fixture.nativeElement.querySelector('.c-add-filter') as HTMLButtonElement).click();
       fixture.detectChanges();
-      const labels = Array.from(overlay().querySelectorAll('button[mat-menu-item] .c-field-item-label')).map(el => el.textContent?.trim());
+      const labels = Array.from(overlay().querySelectorAll('[role="option"] .c-field-item-label')).map(el => el.textContent?.trim());
       expect(labels).toEqual(['Name']);
     });
 
@@ -1167,7 +1167,7 @@ describe('SdQueryBar (host options)', () => {
       const apply = jasmine.createSpy('apply');
       component.apply.subscribe(apply);
       const enter = () =>
-        (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+        (fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).dispatchEvent(
           new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
         );
       component.setSearch('abc');
@@ -1260,7 +1260,7 @@ describe('SdQueryBar (host options)', () => {
 
       it('keeps the applied search text when a chip change applies; Enter applies the typed text', () => {
         const enter = () =>
-          (fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).dispatchEvent(
+          (fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).dispatchEvent(
             new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
           );
         component.setSearch('abc');
@@ -1281,7 +1281,7 @@ describe('SdQueryBar (host options)', () => {
       });
 
       it('applies on Enter in the search box', () => {
-        const input = fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
+        const input = fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement;
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         expect(apply).toHaveBeenCalledTimes(1);
       });
@@ -1326,21 +1326,21 @@ describe('SdQueryBar (host options)', () => {
       fixture.componentRef.setInput('fields', fields);
       fixture.detectChanges();
       const panel = openPicker();
-      const find = panel.querySelector('.c-field-find-input') as HTMLInputElement;
+      const find = panel.querySelector('sd-search-field input') as HTMLInputElement;
       expect(find).not.toBeNull();
       expect(find.placeholder).toBe(i18n.t('core.component.query-bar.find-field'));
 
       find.value = 'don';
       find.dispatchEvent(new Event('input'));
       fixture.detectChanges();
-      const labels = Array.from(panel.querySelectorAll('button[mat-menu-item] .c-field-item-label')).map(el => el.textContent?.trim());
+      const labels = Array.from(panel.querySelectorAll('[role="option"] .c-field-item-label')).map(el => el.textContent?.trim());
       expect(labels).toEqual(['Mã đơn', 'Đơn vị']);
     });
 
     it('has no find box for eight fields or fewer', () => {
       fixture.componentRef.setInput('fields', [name]);
       fixture.detectChanges();
-      expect(openPicker().querySelector('.c-field-find-input')).toBeNull();
+      expect(openPicker().querySelector('sd-search-field input')).toBeNull();
     });
   });
 
@@ -1382,6 +1382,82 @@ describe('SdQueryBar (host options)', () => {
       } finally {
         origin.remove();
       }
+    });
+
+    it('QB-P-08 opens the chip of the field from a host icon, focuses its value control and gives focus back to the icon', async () => {
+      const icon = document.createElement('button');
+      icon.setAttribute('aria-label', 'Lọc theo tên');
+      document.body.appendChild(icon);
+      try {
+        component.filters.set([
+          { field: 'status', operator: 'IN', data: [] } as any,
+          { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+        ]);
+        fixture.detectChanges();
+        icon.focus();
+        component.openField('name', icon);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(component.editingIndex()).toBe(1);
+        const dialog = overlay().querySelector<HTMLElement>('.c-chip-popover')!;
+        expect(dialog.querySelector('.c-pop-header-field')!.textContent!.trim()).toBe('Name');
+        expect(dialog.querySelector('sd-input')!.contains(document.activeElement)).toBeTrue();
+
+        document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        fixture.detectChanges();
+        expect(overlay().querySelector('.c-chip-popover')).toBeNull();
+        expect(document.activeElement).toBe(icon);
+        expect(component.editingIndex()).toBeNull();
+      } finally {
+        icon.remove();
+      }
+    });
+
+    it('QB-P-08 a second openField for the open chip closes it (the icon toggles, as with the old menu backdrop)', async () => {
+      const icon = document.createElement('button');
+      document.body.appendChild(icon);
+      try {
+        component.openField('status', icon);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        expect(overlay().querySelector('.c-chip-popover')).not.toBeNull();
+        icon.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+        icon.click();
+        component.openField('status', icon);
+        fixture.detectChanges();
+        expect(overlay().querySelector('.c-chip-popover')).toBeNull();
+        expect(component.editingIndex()).toBeNull();
+      } finally {
+        icon.remove();
+      }
+    });
+
+    it('QB-P-02 renders all three panels as sd-query-panel with their modifier, never a Material menu panel', async () => {
+      setOption({ fields: [status, name], showSavedFilters: true, savedFiltersKey: 'qb-p-02' });
+      (fixture.nativeElement.querySelector('.c-add-filter') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--list.c-field-picker-menu')).not.toBeNull();
+
+      component.openField('status');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--form.c-chip-popover')).not.toBeNull();
+      // QB-P-06: the chip popover replaced the field picker.
+      expect(overlay().querySelector('.c-field-picker-menu')).toBeNull();
+
+      (fixture.nativeElement.querySelector('.c-saved-filters') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.sd-query-panel.sd-query-panel--list.c-saved-filters-menu')).not.toBeNull();
+      expect(overlay().querySelectorAll('.sd-query-panel').length).toBe(1);
+      expect(overlay().querySelector('[class*="mat-mdc-menu"]')).toBeNull();
+      localStorage.removeItem('sd-query-bar:savedFilters:qb-p-02');
+    });
+
+    it('QB-P-07 the add button announces a listbox and the chip a dialog', () => {
+      const add = fixture.nativeElement.querySelector('.c-add-filter') as HTMLElement;
+      expect(add.getAttribute('aria-haspopup')).toBe('listbox');
+      expect(add.getAttribute('aria-expanded')).toBe('false');
+      expect(chips()[0].getAttribute('aria-haspopup')).toBe('dialog');
     });
 
     it('starts building a chip in inline mode', () => {
@@ -1437,7 +1513,7 @@ describe('SdQueryBar (host options)', () => {
   describe('Q8 search placeholder and end slot', () => {
     it('overrides the i18n placeholder', () => {
       setOption({ showSearch: true, searchPlaceholder: 'Mã đơn, khách hàng…' });
-      expect((fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement).placeholder).toBe('Mã đơn, khách hàng…');
+      expect((fixture.nativeElement.querySelector('sd-search-field input') as HTMLInputElement).placeholder).toBe('Mã đơn, khách hàng…');
     });
 
     it('projects [sdQueryBarEnd] after the action toolbar', () => {
@@ -1595,6 +1671,690 @@ describe('SdQueryBar (host options)', () => {
       component.filters.set([{ field: 'warehouse', operator: 'EQUAL', data: 7 } as any]);
       await resolve();
       expect(component.chipValueText(component.filters()[0])).toBe('7');
+    });
+  });
+
+  // Handoff section 6 (B1–B5): a required field is always on the bar and its value cannot be emptied.
+  describe('QB-R required fields', () => {
+    const items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+    const tenant = {
+      key: 'tenant',
+      label: 'Kho',
+      type: 'values',
+      required: true,
+      operators: true,
+      option: { items, valueField: 'id', displayField: 'name' },
+    } as unknown as SdQueryField;
+    const owner = {
+      key: 'owner',
+      label: 'Người phụ trách',
+      type: 'values',
+      required: true,
+      operators: ['EQUAL'],
+      option: { items, valueField: 'id', displayField: 'name' },
+    } as unknown as SdQueryField;
+    const region = { key: 'region', label: 'Vùng', type: 'string', pinned: true } as SdQueryField;
+    const code = { key: 'code', label: 'Mã', type: 'string', required: true } as SdQueryField;
+    const amount = { key: 'amount', label: 'Số tiền', type: 'number', required: true, operators: ['EQUAL', 'BETWEEN'] } as SdQueryField;
+    const joined = { key: 'joined', label: 'Ngày vào', type: 'date', required: true, operators: ['EQUAL', 'BETWEEN'] } as SdQueryField;
+    const at = { key: 'at', label: 'Lúc', type: 'datetime', required: true, operators: ['EQUAL'] } as SdQueryField;
+    const archived = { key: 'archived', label: 'Lưu trữ', type: 'string', disabled: true } as SdQueryField;
+
+    const fieldsOf = (): string[] => component.filters().map(filter => (filter as any).field);
+    const chipOf = (key: string): HTMLElement =>
+      Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.c-chip')).find(el => el.dataset['field'] === key)!;
+    const open = async (key: string): Promise<void> => {
+      component.openField(key);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.c-chip-popover')).withContext(`popover of ${key} open`).not.toBeNull();
+      expect(component.editingIndex())
+        .withContext(`editing ${key}`)
+        .toBe(component.filters().findIndex(f => (f as any).field === key));
+    };
+    const escape = (): void => {
+      const press = (): void => {
+        document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        fixture.detectChanges();
+      };
+      // why: sd-tooltip của control đang focus (sd-select) bắt Esc ở pha capture để ẩn tooltip trước (WCAG 1.4.13) — lần
+      // Esc thứ hai mới tới panel, như với menu Material trước đây.
+      const tooltip = !!overlay().querySelector('.c-sd-tooltip-panel .c-sd-tooltip-container');
+      press();
+      if (tooltip) press();
+      expect(overlay().querySelector('.c-chip-popover')).withContext('popover closed by Escape').toBeNull();
+    };
+
+    it('QB-R-01 adds an empty chip for a required (or pinned) field, first and in field order, without emitting apply', () => {
+      const apply = jasmine.createSpy('apply');
+      const queryChange = jasmine.createSpy('queryChange');
+      component.apply.subscribe(apply);
+      component.queryChange.subscribe(queryChange);
+      fixture.componentRef.setInput('fields', [name, tenant, region]);
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'x' } as any]);
+      fixture.detectChanges();
+      expect(component.filters().map(f => [(f as any).field, f.operator, (f as any).data])).toEqual([
+        ['tenant', 'IN', []],
+        ['region', 'CONTAIN', null],
+        ['name', 'CONTAIN', 'x'],
+      ]);
+      expect(apply).not.toHaveBeenCalled();
+      expect(queryChange).not.toHaveBeenCalled();
+    });
+
+    it('QB-R-01 a required chip has no ×, cannot be removed and stays out of the field picker', () => {
+      fixture.componentRef.setInput('fields', [tenant, name]);
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a'] } as any]);
+      fixture.detectChanges();
+      expect(chipOf('tenant').querySelector('.c-chip-remove')).toBeNull();
+      component.removeFilter(0);
+      expect(fieldsOf()).toEqual(['tenant']);
+      expect(component.pickerFields().map(f => f.key)).toEqual(['name']);
+      // why: "Chọn giá trị", not "Tất cả", on an empty required chip.
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: [] } as any]);
+      fixture.detectChanges();
+      expect(chipOf('tenant').querySelector('.c-chip-value')!.textContent!.trim()).toBe(
+        i18n.t('core.component.query-bar.placeholder.select-value')
+      );
+    });
+
+    it('QB-R-02 clearAll keeps required chips, resets pinned ones and drops the rest; activeCount skips required', () => {
+      fixture.componentRef.setInput('fields', [tenant, region, name]);
+      component.filters.set([
+        { field: 'tenant', operator: 'NOT_IN', data: ['a'] } as any,
+        { field: 'region', operator: 'CONTAIN', data: 'Bắc' } as any,
+        { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+      ]);
+      fixture.detectChanges();
+      const tenantChip = component.filters()[0];
+      expect(component.activeCount()).toBe(2);
+      const clear = fixture.nativeElement.querySelector('.c-clear-all') as HTMLButtonElement;
+      expect(clear.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.clear-all', { count: 2 }));
+
+      component.clearAll();
+      fixture.detectChanges();
+      expect(component.filters()[0]).toBe(tenantChip);
+      expect(component.filters().map(f => [(f as any).field, f.operator, (f as any).data])).toEqual([
+        ['tenant', 'NOT_IN', ['a']],
+        ['region', 'CONTAIN', null],
+      ]);
+      expect(component.activeCount()).toBe(0);
+      expect((fixture.nativeElement.querySelector('.c-clear-all') as HTMLButtonElement).disabled).toBeTrue();
+    });
+
+    it('QB-R-03 drops NULL and NOT_NULL from the operators of a required field', () => {
+      const allowed = sdQueryAllowedOperators(tenant);
+      expect(allowed).toEqual(['IN', 'NOT_IN']);
+      expect(sdQueryAllowedOperators(tenant)).toBe(allowed);
+      expect(sdQueryAllowedOperators({ ...tenant, required: false } as SdQueryField)).toContain('NULL');
+    });
+
+    it('QB-R-03 the chip popover offers only those operators', async () => {
+      fixture.componentRef.setInput('fields', [tenant]);
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a'] } as any]);
+      fixture.detectChanges();
+      await open('tenant');
+      expect(component.chipPopover()!.allowedOperators()).toEqual(['IN', 'NOT_IN']);
+      escape();
+    });
+
+    it('QB-R-04 a single-value select of a required field offers no way to clear it (popover and inline)', async () => {
+      fixture.componentRef.setInput('fields', [owner]);
+      component.filters.set([{ field: 'owner', operator: 'EQUAL', data: 'a' } as any]);
+      fixture.detectChanges();
+      await open('owner');
+      const popoverSelect = fixture.debugElement.query(By.css('.c-chip-popover sd-select')).componentInstance;
+      expect(popoverSelect.clearable()).toBeFalse();
+      expect(popoverSelect.required()).toBeTrue();
+      expect(overlay().querySelector('.c-chip-popover .sd-clear-btn, .c-chip-popover .sd-inline-clear')).toBeNull();
+      escape();
+
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.detectChanges();
+      const inlineSelect = fixture.debugElement.query(By.css('sd-query-inline-chip sd-select')).componentInstance;
+      expect(inlineSelect.clearable()).toBeFalse();
+      expect(inlineSelect.required()).toBeTrue();
+    });
+
+    it('QB-R-05 emptying a multi-value required chip keeps the previous values and shows the hint (popover)', async () => {
+      fixture.componentRef.setInput('fields', [tenant]);
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a', 'b'] } as any]);
+      fixture.detectChanges();
+      await open('tenant');
+      const popover = component.chipPopover()!;
+      popover.onEditingValueInput([]);
+      fixture.detectChanges();
+      expect(popover.editingValue()).toEqual(['a', 'b']);
+      const hint = overlay().querySelector<HTMLElement>('.c-pop-required-hint')!;
+      expect(hint.textContent!.trim()).toBe(i18n.t('core.component.query-bar.required-min-one'));
+      expect(hint.getAttribute('aria-live')).toBe('polite');
+      expect(getComputedStyle(hint).fontSize).toBe('12px');
+      expect(overlay().querySelector('.c-pop-body')!.getAttribute('aria-describedby')).toBe(hint.id);
+      popover.onEditingValueInput(['b']);
+      fixture.detectChanges();
+      expect(overlay().querySelector('.c-pop-required-hint')).toBeNull();
+      escape();
+      expect((component.filters()[0] as any).data).toEqual(['b']);
+    });
+
+    it('QB-R-05 emptying a multi-value required chip keeps the previous values and shows the hint (inline)', () => {
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.componentRef.setInput('fields', [tenant]);
+      component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a'] } as any]);
+      fixture.detectChanges();
+      const chip = fixture.debugElement.query(By.directive(SdQueryInlineChip)).componentInstance as SdQueryInlineChip;
+      chip.emitLive([]);
+      fixture.detectChanges();
+      expect((component.filters()[0] as any).data).toEqual(['a']);
+      const hint = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.c-token-required-hint')!;
+      expect(hint.textContent!.trim()).toBe(i18n.t('core.component.query-bar.required-min-one'));
+      expect(hint.getAttribute('aria-live')).toBe('polite');
+      expect((fixture.nativeElement as HTMLElement).querySelector('.c-token')!.getAttribute('aria-describedby')).toContain(hint.id);
+      // The bar refuses an empty value even when a host calls it directly.
+      component.onInlineCommit(0, []);
+      expect((component.filters()[0] as any).data).toEqual(['a']);
+    });
+
+    describe('QB-R-06 emptying then leaving gives the previous value back', () => {
+      const cases: [string, SdQueryField, any, any][] = [
+        ['string', code, { operator: 'CONTAIN', data: 'abc' }, ''],
+        ['number', amount, { operator: 'EQUAL', data: 5 }, null],
+        ['date', joined, { operator: 'EQUAL', data: new Date('2026-11-09T00:00:00.000Z') }, null],
+        ['datetime', at, { operator: 'EQUAL', data: new Date('2026-11-09T03:00:00.000Z') }, null],
+        ['BETWEEN', amount, { operator: 'BETWEEN', data: { from: 1, to: 9 } }, { from: null, to: null }],
+      ];
+      for (const [kind, field, filter, empty] of cases) {
+        it(`QB-R-06 ${kind}: popover closed with an empty value`, async () => {
+          fixture.componentRef.setInput('fields', [field]);
+          component.filters.set([{ field: field.key, ...filter } as any]);
+          fixture.detectChanges();
+          await open(field.key as string);
+          // why: vẽ lại để control trong popover cũng rỗng — vài control ghi giá trị đang hiện khi bị blur lúc đóng.
+          component.chipPopover()!.editingValue.set(empty);
+          fixture.detectChanges();
+          escape();
+          expect(component.filters()[0]).toEqual(jasmine.objectContaining({ operator: filter.operator, data: filter.data }));
+        });
+      }
+
+      it('QB-R-06 BETWEEN keeps a range with one end', async () => {
+        fixture.componentRef.setInput('fields', [amount]);
+        component.filters.set([{ field: 'amount', operator: 'BETWEEN', data: { from: 1, to: 9 } } as any]);
+        fixture.detectChanges();
+        await open('amount');
+        component.chipPopover()!.editingValue.set({ from: null, to: 4 });
+        fixture.detectChanges();
+        escape();
+        expect((component.filters()[0] as any).data).toEqual({ from: null, to: 4 });
+      });
+
+      it('QB-R-06 inline seamless chip: clearing the text then leaving restores it', () => {
+        fixture.componentRef.setInput('mode', 'inline');
+        fixture.componentRef.setInput('fields', [code]);
+        component.filters.set([{ field: 'code', operator: 'CONTAIN', data: 'abc' } as any]);
+        fixture.detectChanges();
+        const chip = fixture.debugElement.query(By.directive(SdQueryInlineValueChip)).componentInstance as SdQueryInlineValueChip;
+        const changes = jasmine.createSpy('valueChange');
+        chip.valueChange.subscribe(changes);
+        chip.draft.set('');
+        chip.commitSingle();
+        expect(changes).not.toHaveBeenCalled();
+        expect(chip.draft()).toBe('abc');
+        expect((component.filters()[0] as any).data).toBe('abc');
+      });
+
+      it('QB-R-06 inline seamless BETWEEN: clearing both ends then leaving restores them', () => {
+        fixture.componentRef.setInput('mode', 'inline');
+        fixture.componentRef.setInput('fields', [amount]);
+        component.filters.set([{ field: 'amount', operator: 'BETWEEN', data: { from: 1, to: 9 } } as any]);
+        fixture.detectChanges();
+        const chip = fixture.debugElement.query(By.directive(SdQueryInlineValueChip)).componentInstance as SdQueryInlineValueChip;
+        chip.draftFrom.set('');
+        chip.draftTo.set('');
+        chip.commitRange();
+        expect(chip.draftFrom()).not.toBe('');
+        expect((component.filters()[0] as any).data).toEqual({ from: 1, to: 9 });
+        component.onInlineRange(0, { from: null, to: null });
+        expect((component.filters()[0] as any).data).toEqual({ from: 1, to: 9 });
+      });
+    });
+
+    it("QB-R-07 applyOn: 'commit' never drops a required chip, empty or emptied", async () => {
+      setOption({ fields: [code, name], applyOn: 'commit' });
+      component.filters.set([{ field: 'code', operator: 'CONTAIN', data: null } as any]);
+      fixture.detectChanges();
+      await open('code');
+      escape();
+      expect(fieldsOf()).toEqual(['code']);
+      component.filters.set([{ field: 'code', operator: 'CONTAIN', data: 'abc' } as any]);
+      fixture.detectChanges();
+      await open('code');
+      component.chipPopover()!.editingValue.set('');
+      fixture.detectChanges();
+      escape();
+      expect(component.filters()).toEqual([jasmine.objectContaining({ field: 'code', data: 'abc' })]);
+    });
+
+    describe('QB-R-08 applying a saved filter (B4)', () => {
+      const fields = (): SdQueryField[] => [tenant, region, name, archived];
+      beforeEach(() => {
+        fixture.componentRef.setInput('fields', fields());
+        component.filters.set([
+          { field: 'tenant', operator: 'NOT_IN', data: ['a'] } as any,
+          { field: 'region', operator: 'CONTAIN', data: 'Nam' } as any,
+          { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+        ]);
+        fixture.detectChanges();
+      });
+
+      it('QB-R-08 keeps current required and pinned chips the saved filter lacks or leaves empty; drops unknown and disabled fields', () => {
+        const apply = jasmine.createSpy('apply');
+        component.apply.subscribe(apply);
+        component.onApplyFilter({
+          id: 's',
+          name: 'S',
+          query: {
+            logic: 'AND',
+            filters: [
+              { field: 'name', operator: 'CONTAIN', data: 'y' },
+              { field: 'gone', operator: 'EQUAL', data: 1 },
+              { field: 'archived', operator: 'CONTAIN', data: 'old' },
+              { field: 'region', operator: 'CONTAIN', data: '' },
+            ] as any,
+          },
+        });
+        expect(component.filters().map(f => [(f as any).field, f.operator, (f as any).data])).toEqual([
+          ['tenant', 'NOT_IN', ['a']],
+          ['region', 'CONTAIN', 'Nam'],
+          ['name', 'CONTAIN', 'y'],
+        ]);
+        expect(apply).toHaveBeenCalledTimes(1);
+      });
+
+      it('QB-R-08 takes the saved value of a required or pinned field when it has one, in field order', () => {
+        component.onApplyFilter({
+          id: 's',
+          name: 'S',
+          query: {
+            logic: 'OR',
+            filters: [
+              { field: 'name', operator: 'CONTAIN', data: 'y' },
+              { field: 'region', operator: 'CONTAIN', data: 'Bắc' },
+              { field: 'tenant', operator: 'IN', data: ['b'] },
+            ] as any,
+          },
+        });
+        expect(component.filters().map(f => [(f as any).field, f.operator, (f as any).data])).toEqual([
+          ['tenant', 'IN', ['b']],
+          ['region', 'CONTAIN', 'Bắc'],
+          ['name', 'CONTAIN', 'y'],
+        ]);
+        expect(component.logic()).toBe('OR');
+      });
+    });
+
+    it('QB-R-09 a required field empty from the start stays invalid and blocks Search and Enter (B5)', () => {
+      setOption({ fields: [tenant, name], showSearch: true });
+      component.filters.set([]);
+      fixture.detectChanges();
+      const apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      expect(chipOf('tenant').classList).toContain('c-chip-invalid');
+      expect(component.invalidFields().map(f => f.key)).toEqual(['tenant']);
+      component.setSearch('abc');
+      fixture.detectChanges();
+      expect(component.canSearch()).toBeFalse();
+      component.applySearch();
+      expect(apply).not.toHaveBeenCalled();
+    });
+
+    it('QB-R-10 marks required chips aria-required (popover and inline)', () => {
+      fixture.componentRef.setInput('fields', [tenant, code, region]);
+      component.filters.set([
+        { field: 'tenant', operator: 'IN', data: ['a'] } as any,
+        { field: 'code', operator: 'CONTAIN', data: 'abc' } as any,
+      ]);
+      fixture.detectChanges();
+      expect(chipOf('tenant').getAttribute('aria-required')).toBe('true');
+      expect(chipOf('region').hasAttribute('aria-required')).toBeFalse();
+
+      fixture.componentRef.setInput('mode', 'inline');
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      expect(host.querySelector('sd-query-inline-chip .c-token')!.getAttribute('aria-required')).toBe('true');
+      expect(host.querySelector('sd-query-inline-value-chip .c-seamless')!.getAttribute('aria-required')).toBe('true');
+    });
+  });
+
+  // Handoff section 7: the search box of the bar is the shared sd-search-field.
+  describe('QB-F search box', () => {
+    const searchField = (): HTMLElement => (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('sd-search-field')!;
+    const searchInput = (): HTMLInputElement => searchField().querySelector<HTMLInputElement>('input')!;
+    const keydown = (target: Element, key: string): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    let apply: jasmine.Spy;
+
+    beforeEach(() => {
+      apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      setOption({ fields: [name], showSearch: true, autoId: 'qb1' });
+    });
+
+    it('QB-F-02 is xs at compact density and sm at comfortable, at least 220px wide', () => {
+      expect(searchField().classList).toContain('sd-xs');
+      expect(searchField().getBoundingClientRect().height).toBe(28);
+      expect(searchField().getBoundingClientRect().width).toBeGreaterThanOrEqual(220);
+      setOption({ fields: [name], showSearch: true, density: 'comfortable' });
+      expect(searchField().classList).toContain('sd-sm');
+      expect(searchField().getBoundingClientRect().height).toBe(32);
+      expect((fixture.nativeElement as HTMLElement).querySelector('.c-search-icon, .c-search-kbd')).toBeNull();
+    });
+
+    it('QB-F-03 names the input with searchPlaceholder, else the search key; search-friendly attributes and autoIds', () => {
+      const input = searchInput();
+      expect(input.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.search'));
+      expect(input.placeholder).toBe(i18n.t('core.component.query-bar.search-placeholder'));
+      expect(input.getAttribute('enterkeyhint')).toBe('search');
+      expect(input.getAttribute('autocomplete')).toBe('off');
+      expect(input.getAttribute('data-autoid')).toBe('qb1-search');
+      component.setSearch('abc');
+      fixture.detectChanges();
+      const clear = searchField().querySelector<HTMLButtonElement>('button.sd-search-field__clear')!;
+      expect(clear.getAttribute('data-autoid')).toBe('qb1-search-clear');
+      expect(clear.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.search-clear'));
+
+      setOption({ fields: [name], showSearch: true, searchPlaceholder: 'Mã đơn…' });
+      expect(searchInput().getAttribute('aria-label')).toBe('Mã đơn…');
+      expect(searchInput().placeholder).toBe('Mã đơn…');
+    });
+
+    it('QB-F-04 the clear button empties the text and applies once', () => {
+      component.setSearch('abc');
+      fixture.detectChanges();
+      searchField().querySelector<HTMLButtonElement>('button.sd-search-field__clear')!.click();
+      fixture.detectChanges();
+      expect(component.search()).toBe('');
+      expect(searchInput().value).toBe('');
+      expect(apply).toHaveBeenCalledTimes(1);
+      expect(apply.calls.mostRecent().args[0].search).toBe('');
+    });
+
+    it('QB-F-04 Escape with text empties it and applies once; Escape on an empty box does nothing', () => {
+      const input = searchInput();
+      input.value = 'abc';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.search()).toBe('abc');
+      keydown(input, 'Escape');
+      expect(component.search()).toBe('');
+      expect(apply).toHaveBeenCalledTimes(1);
+      keydown(input, 'Escape');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+
+    it('QB-F-05 Enter applies the text; a required field still empty blocks it', () => {
+      const input = searchInput();
+      input.value = 'abc';
+      input.dispatchEvent(new Event('input'));
+      keydown(input, 'Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+      expect(apply.calls.mostRecent().args[0].search).toBe('abc');
+
+      setOption({ fields: [{ ...status, required: true } as SdQueryField, name], showSearch: true });
+      keydown(searchInput(), 'Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Handoff section 8: inline mode adds conditions from a combobox at the end of the chips.
+  describe('QB-I add condition (inline)', () => {
+    const code = { key: 'code', label: 'Mã đơn', type: 'string' } as SdQueryField;
+    const customer = { key: 'customer', label: 'Khách hàng', type: 'string' } as SdQueryField;
+    const region = { key: 'region', label: 'Khu vực', type: 'string' } as SdQueryField;
+    const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
+    const addInput = (): HTMLInputElement => host().querySelector<HTMLInputElement>('.c-add-condition input')!;
+    const listbox = (): HTMLElement | null => overlay().querySelector<HTMLElement>('.c-field-picker-menu [role="listbox"]');
+    const optionLabels = (): string[] =>
+      Array.from(overlay().querySelectorAll('.c-field-picker-menu [role="option"] .c-field-item-label')).map(el => el.textContent!.trim());
+    const keydown = (key: string, init: KeyboardEventInit = {}): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
+      addInput().dispatchEvent(event);
+      fixture.detectChanges();
+      return event;
+    };
+    // A real user types into a focused box.
+    const type = (text: string): void => {
+      addInput().focus();
+      addInput().value = text;
+      addInput().dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    };
+    let apply: jasmine.Spy;
+
+    beforeEach(() => {
+      apply = jasmine.createSpy('apply');
+      component.apply.subscribe(apply);
+      setOption({ fields: [code, customer, region], mode: 'inline', autoId: 'qb1' });
+    });
+
+    it('QB-I-01 replaces the + button with a combobox carrying the ARIA of a list popup', () => {
+      expect(host().querySelector('.c-add-filter')).toBeNull();
+      const input = addInput();
+      expect(input.getAttribute('role')).toBe('combobox');
+      expect(input.getAttribute('aria-autocomplete')).toBe('list');
+      expect(input.getAttribute('aria-expanded')).toBe('false');
+      expect(input.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.add-condition'));
+      expect(input.placeholder).toBe(i18n.t('core.component.query-bar.add-condition'));
+      expect(input.getAttribute('data-autoid')).toBe('qb1-add-condition');
+      // A real click focuses the box first.
+      input.focus();
+      input.click();
+      fixture.detectChanges();
+      expect(input.getAttribute('aria-expanded')).toBe('true');
+      expect(input.getAttribute('aria-controls')).toBe(listbox()!.id);
+      expect(document.activeElement).toBe(input);
+      expect(overlay().querySelector('.c-field-picker-menu sd-search-field')).withContext('no find box inside the panel').toBeNull();
+    });
+
+    it('QB-I-02 opens on click, on a click on the empty bar, on typing, on ArrowDown and Alt+ArrowDown — not on Tab focus', () => {
+      addInput().focus();
+      fixture.detectChanges();
+      expect(listbox()).withContext('focus alone').toBeNull();
+
+      addInput().click();
+      fixture.detectChanges();
+      expect(listbox()).withContext('click').not.toBeNull();
+      keydown('Escape');
+
+      (host().querySelector('.c-query-bar__main') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(listbox()).withContext('empty bar').not.toBeNull();
+      expect(document.activeElement).toBe(addInput());
+      keydown('Escape');
+
+      type('k');
+      expect(listbox()).withContext('typing').not.toBeNull();
+      keydown('Escape');
+
+      keydown('ArrowDown');
+      expect(listbox()).withContext('ArrowDown').not.toBeNull();
+      keydown('Escape');
+
+      keydown('ArrowDown', { altKey: true });
+      expect(listbox()).withContext('Alt+ArrowDown').not.toBeNull();
+    });
+
+    it('QB-I-03 typing filters without accents, points at the first match; Enter builds it and empties the box', () => {
+      type('kh');
+      expect(optionLabels()).toEqual(['Khách hàng', 'Khu vực']);
+      const first = Array.from(overlay().querySelectorAll<HTMLElement>('[role="option"]'))[0];
+      expect(addInput().getAttribute('aria-activedescendant')).toBe(first.id);
+      expect(document.activeElement).toBe(addInput());
+      keydown('ArrowDown');
+      keydown('ArrowUp');
+      keydown('Enter');
+      expect(component.building()?.field.key).toBe('customer');
+      expect(addInput().value).toBe('');
+      expect(listbox()).toBeNull();
+    });
+
+    it('QB-I-04 Enter on an empty box with the list closed applies; a required field still empty blocks it', () => {
+      keydown('Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+      setOption({ fields: [{ ...code, required: true } as SdQueryField, customer], mode: 'inline' });
+      keydown('Enter');
+      expect(apply).toHaveBeenCalledTimes(1);
+    });
+
+    it('QB-I-05 Backspace on an empty box focuses the last chip, then removes it; never a required or pinned chip', () => {
+      component.filters.set([
+        { field: 'code', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'customer', operator: 'CONTAIN', data: 'b' } as any,
+      ]);
+      fixture.detectChanges();
+      keydown('Backspace');
+      const last = host().querySelectorAll<HTMLElement>('sd-query-inline-value-chip .c-seamless')[1];
+      expect(document.activeElement).toBe(last);
+      last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(component.filters().map(f => (f as any).field)).toEqual(['code']);
+      expect(document.activeElement).toBe(addInput());
+      expect(apply).not.toHaveBeenCalled();
+
+      setOption({ fields: [{ ...code, pinned: true } as SdQueryField, customer], mode: 'inline' });
+      component.filters.set([{ field: 'code', operator: 'CONTAIN', data: 'a' } as any]);
+      fixture.detectChanges();
+      keydown('Backspace');
+      const pinned = host().querySelector<HTMLElement>('sd-query-inline-value-chip .c-seamless')!;
+      expect(document.activeElement).toBe(pinned);
+      pinned.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(component.filters().length).toBe(1);
+    });
+
+    it('QB-I-06 Escape closes the list and empties the box, keeping focus', () => {
+      type('kh');
+      const escape = keydown('Escape');
+      expect(escape.defaultPrevented).toBeTrue();
+      expect(listbox()).toBeNull();
+      expect(addInput().value).toBe('');
+      expect(document.activeElement).toBe(addInput());
+    });
+
+    it('QB-I-06 a finished chip sends focus back to the box without opening the list', async () => {
+      addInput().focus();
+      keydown('ArrowDown');
+      keydown('Enter');
+      expect(component.building()?.field.key).toBe('code');
+      component.onBuildSeamlessCommit('DH-1');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.filters().map(f => (f as any).data)).toEqual(['DH-1']);
+      expect(document.activeElement).toBe(addInput());
+      expect(listbox()).toBeNull();
+
+      keydown('ArrowDown');
+      keydown('Enter');
+      component.cancelBuild();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(addInput());
+      expect(listbox()).toBeNull();
+    });
+
+    it('QB-I-07 disables the box when every field is used; popover mode keeps the + button', () => {
+      component.filters.set([
+        { field: 'code', operator: 'CONTAIN', data: 'a' } as any,
+        { field: 'customer', operator: 'CONTAIN', data: 'b' } as any,
+        { field: 'region', operator: 'CONTAIN', data: 'c' } as any,
+      ]);
+      fixture.detectChanges();
+      expect(addInput().disabled).toBeTrue();
+
+      setOption({ fields: [code, customer, region], mode: 'popover' });
+      expect(host().querySelector('.c-add-condition')).toBeNull();
+      expect(host().querySelector('.c-add-filter')).not.toBeNull();
+    });
+  });
+
+  describe('QB-S saved filters on the bar', () => {
+    const STORAGE = 'sd-query-bar:savedFilters:qb-spec';
+    const joined = { key: 'joined', label: 'Ngày vào', type: 'date', operators: ['EQUAL'] } as unknown as SdQueryField;
+    const region = { key: 'region', label: 'Vùng', type: 'string', required: true, pinned: true } as SdQueryField;
+    const saveButton = (): HTMLButtonElement => overlay().querySelector<HTMLButtonElement>('.c-sf-save')!;
+    const openSaved = (): void => {
+      (fixture.nativeElement.querySelector('.c-saved-filters') as HTMLButtonElement).click();
+      fixture.detectChanges();
+    };
+
+    beforeEach(() => {
+      localStorage.removeItem(STORAGE);
+      setOption({ fields: [name, joined, region], showSavedFilters: true, savedFiltersKey: 'qb-spec', showSearch: true, autoId: 'qb1' });
+    });
+
+    afterEach(() => localStorage.removeItem(STORAGE));
+
+    it('QB-S-05 locks "Save current filter" until a chip has a value or the search box has text', () => {
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: '' } as any]);
+      fixture.detectChanges();
+      openSaved();
+      expect(saveButton().disabled).toBeTrue();
+
+      component.setSearch('  ');
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeTrue();
+      component.setSearch('đơn');
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeFalse();
+
+      component.setSearch('');
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'An' } as any]);
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeFalse();
+    });
+
+    it('QB-S-05 a value on a required chip alone is enough to save (Bước 0, decision 2)', () => {
+      component.filters.set([{ field: 'region', operator: 'CONTAIN', data: 'Bắc' } as any]);
+      fixture.detectChanges();
+      expect(component.canSaveFilter()).toBeTrue();
+    });
+
+    it('QB-S-08 a date saved earlier comes back as a Date and the chip shows that day', () => {
+      const day = new Date('2026-11-09T05:00:00.000Z');
+      localStorage.setItem(
+        STORAGE,
+        JSON.stringify([{ id: 'd', name: 'Hôm đó', query: { filters: [{ field: 'joined', operator: 'EQUAL', data: day }], logic: 'AND' } }])
+      );
+      // A new bar reads the list again, as after a page reload.
+      fixture.destroy();
+      fixture = TestBed.createComponent(SdQueryBar);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      setOption({ fields: [name, joined, region], showSavedFilters: true, savedFiltersKey: 'qb-spec', showSearch: true });
+      openSaved();
+      overlay().querySelector<HTMLButtonElement>('.c-sf-apply')!.click();
+      fixture.detectChanges();
+
+      const restored = component.filters().find(filter => (filter as any).field === 'joined') as any;
+      expect(restored.data instanceof Date).toBeTrue();
+      expect(restored.data.getTime()).toBe(day.getTime());
+      const text = component.chipValueText({ field: 'joined', operator: 'EQUAL', data: day } as any);
+      const host = fixture.nativeElement as HTMLElement;
+      const chip = Array.from(host.querySelectorAll<HTMLElement>('.c-chip')).find(el => el.dataset['field'] === 'joined')!;
+      expect(chip.querySelector('.c-chip-value')!.textContent!.trim()).toBe(text);
+    });
+
+    it('QB-S-10 passes the bar autoId to the saved-filters trigger', () => {
+      expect(fixture.nativeElement.querySelector('.c-saved-filters').getAttribute('data-autoid')).toBe('qb1-saved-filters');
     });
   });
 });

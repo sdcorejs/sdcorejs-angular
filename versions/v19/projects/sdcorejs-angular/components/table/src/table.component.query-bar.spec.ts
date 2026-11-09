@@ -556,6 +556,116 @@ describe('SdTable filter.mode query-bar', () => {
     }));
   });
 
+  // Handoff query bar panels, section 9.1: saved filters of the bar, per table.
+  describe('saved filters', () => {
+    const STORAGE = 'sd-query-bar:savedFilters:sd-table:orders-qbt';
+    const overlay = (): HTMLElement => document.querySelector('.cdk-overlay-container') as HTMLElement;
+    const savedButton = (): HTMLButtonElement | null => el().querySelector('sd-query-bar .c-saved-filters');
+
+    afterEach(() => {
+      localStorage.removeItem(STORAGE);
+      localStorage.removeItem('sd-query-bar:savedFilters:sd-table:global');
+    });
+
+    it('QB-T-01 filter.queryBar.savedFilters.key turns the button on under sd-query-bar:savedFilters:sd-table:<key>', fakeAsync(() => {
+      configure();
+      localStorage.setItem(STORAGE, JSON.stringify([{ id: 'a', name: 'Đơn mới', query: { logic: 'AND', filters: [] } }]));
+      mount(buildOption({ queryBar: { savedFilters: { key: 'orders-qbt' } } }));
+      expect(table.queryBarOption()!.showSavedFilters).toBeTrue();
+      expect(table.queryBarOption()!.savedFiltersKey).toBe('sd-table:orders-qbt');
+      expect(savedButton()!.getAttribute('data-autoid')).toBe('components-table-orders-query-bar-saved-filters');
+      savedButton()!.click();
+      fixture.detectChanges();
+      expect(overlay().querySelector('.c-sf-apply .c-sf-name')!.textContent!.trim()).toBe('Đơn mới');
+      overlay()
+        .querySelector<HTMLElement>('.c-saved-filters-menu')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      settle();
+    }));
+
+    it('QB-T-01 has no saved-filters button without the option', fakeAsync(() => {
+      configure();
+      mount(buildOption());
+      expect(savedButton()).toBeNull();
+      expect(table.queryBarOption()!.showSavedFilters).toBeFalsy();
+    }));
+
+    it('QB-T-01 ignores savedFilters from SD_TABLE_CONFIGURATION: one shared key would mix every table (Bước 0, decision 4)', fakeAsync(() => {
+      mobile.set(false);
+      TestBed.configureTestingModule({
+        imports: [QueryBarHost, NoopAnimationsModule],
+        providers: [
+          { provide: SdViewportService, useValue: { isMobile: mobile } },
+          { provide: SD_TABLE_CONFIGURATION, useValue: { filter: { queryBar: { editor: 'popover', savedFilters: { key: 'global' } } } } },
+        ],
+      });
+      mount(buildOption());
+      expect(savedButton()).toBeNull();
+      expect(bar().resolvedMode()).withContext('the rest of the shared queryBar still applies').toBe('popover');
+    }));
+
+    it('QB-T-02 applying a saved filter reads once with its values; fields the table no longer has are dropped', fakeAsync(() => {
+      configure();
+      localStorage.setItem(
+        STORAGE,
+        JSON.stringify([
+          {
+            id: 's',
+            name: 'Đơn đã trả',
+            query: {
+              logic: 'AND',
+              search: 'DH',
+              filters: [
+                { field: 'column:total', operator: 'EQUAL', data: 500 },
+                { field: 'column:gone', operator: 'EQUAL', data: 1 },
+                { field: 'external:status', operator: 'IN', data: ['paid'] },
+              ],
+            },
+          },
+        ])
+      );
+      mount(buildOption({ queryBar: { savedFilters: { key: 'orders-qbt' } } }));
+      loader.calls.reset();
+      savedButton()!.click();
+      fixture.detectChanges();
+      overlay().querySelector<HTMLButtonElement>('.c-sf-apply')!.click();
+      settle();
+      expect(loader).toHaveBeenCalledTimes(1);
+      const request = table.getFilterRequest();
+      expect(request.rawColumnFilter['total' as never]).toBe(500 as never);
+      expect(request.rawExternalFilter['status' as never]).toEqual(['paid'] as never);
+      expect(request.quickSearch?.term).toBe('DH');
+      expect(indexOf('column:gone')).toBe(-1);
+    }));
+  });
+
+  describe('search box', () => {
+    beforeEach(() => configure());
+
+    it('QB-T-04 is the sd-search-field of the bar, bound to quickSearch.term, with the quick search placeholder', fakeAsync(() => {
+      mount(buildOption());
+      const field = el().querySelector('sd-query-bar sd-search-field') as HTMLElement;
+      expect(field).not.toBeNull();
+      expect(field.classList).withContext('the table bar is compact').toContain('sd-xs');
+      const input = field.querySelector('input') as HTMLInputElement;
+      expect(input.placeholder).toBe('Mã đơn…');
+      expect(input.getAttribute('aria-label')).toBe('Mã đơn…');
+      expect(input.getAttribute('data-autoid')).toBe('components-table-orders-query-bar-search');
+
+      input.value = 'DH';
+      input.dispatchEvent(new Event('input'));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      settle();
+      expect(table.getFilterRequest().quickSearch?.term).toBe('DH');
+
+      loader.calls.reset();
+      (field.querySelector('button.sd-search-field__clear') as HTMLButtonElement).click();
+      settle();
+      expect(table.getFilterRequest().quickSearch?.term).toBe('');
+      expect(loader).toHaveBeenCalledTimes(1);
+    }));
+  });
+
   describe('clearing', () => {
     beforeEach(() => configure());
 

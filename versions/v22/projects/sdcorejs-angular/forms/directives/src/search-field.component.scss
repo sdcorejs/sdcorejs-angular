@@ -25,6 +25,15 @@
   gap: 6px;
 }
 
+// Cỡ xs: khớp chip 28px của sd-query-bar ở density compact (handoff query bar, mục 7.1). Không có token chiều cao
+// 28px (thang control chỉ có sm/md/lg) và không thêm token mới.
+:host(.sd-xs) {
+  height: 28px;
+  padding: 0 4px 0 8px;
+  gap: 6px;
+  font-size: var(--sd-font-size-13, 13px);
+}
+
 // Sau control.box để thắng hover cùng độ ưu tiên: ô disabled không đổi viền khi rê chuột.
 :host(.sd-disabled) {
   border-color: var(--sd-control-border-disabled, var(--sd-border));
@@ -98,15 +107,22 @@
   height: var(--sd-search-field-clear-size, 24px);
 }
 
+:host(.sd-xs) .sd-search-field__clear {
+  width: var(--sd-search-field-clear-size, 20px);
+  height: var(--sd-search-field-clear-size, 20px);
+}
+
 // Chữ 16px tránh iOS tự zoom khi focus; ô và nút xoá đủ cỡ chạm.
 @media (pointer: coarse) {
-  :host {
+  :host,
+  :host(.sd-xs) {
     min-height: var(--sd-control-height-coarse, 44px);
     font-size: var(--sd-font-size-16, 16px);
   }
 
   :host .sd-search-field__clear,
-  :host(.sd-sm) .sd-search-field__clear {
+  :host(.sd-sm) .sd-search-field__clear,
+  :host(.sd-xs) .sd-search-field__clear {
     width: var(--sd-search-field-clear-size, 40px);
     height: var(--sd-search-field-clear-size, 40px);
   }

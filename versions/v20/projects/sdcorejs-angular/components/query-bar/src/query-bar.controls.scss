@@ -1,44 +1,12 @@
 // ---------------------------------------------------------------------------
-// query-bar — control skin
-// Re-skins the Core UI form controls (sd-input / sd-select / sd-date / sd-datetime
-// / sd-input-number) used inside the query-bar. ONLY icon colours are touched —
-// never size, height, padding, or font-size (those stay owned by the Core UI components).
-//
-// The outline (radius, colour per state, 1px focus width, focus ring) is no longer
-// re-skinned here: it comes from the shared control tokens (`--sd-control-*`, design
-// handoff wave 2 · D) like every other form field. The old skin forced a 6px radius
-// and the query-bar border colours with !important, which blocked those tokens.
-//
-// Two reach points:
-//   1. `.c-query-bar` — inline-mode controls live in the component DOM.
-//   2. `.c-chip-popover` / `.c-field-picker-menu` — popover controls render in a
-//      CDK overlay attached to <body>, outside the host, so they need their own
-//      panel-class selector.
+// query-bar — control skin of the inline-mode controls (they live in the bar's own DOM).
+// The chip popover applies the same skin to its panel (`_control-skin.scss`); the old
+// global reach into the overlay through the Material menu panel classes is gone.
 // ---------------------------------------------------------------------------
-
-$qbc-primary:      var(--sd-primary);
-
-@mixin qb-control-skin {
-  .mat-mdc-form-field {
-    // Trailing chevron / clear icons → neutral, primary on focus
-    .mat-mdc-select-arrow,
-    .mat-mdc-form-field-icon-suffix sd-icon {
-      color: var(--sd-query-bar-text-secondary, #5f6368);
-    }
-    &.mat-focused .mat-mdc-select-arrow {
-      color: $qbc-primary;
-    }
-  }
-}
+@use './control-skin';
 
 .c-query-bar {
   ::ng-deep {
-    @include qb-control-skin;
+    @include control-skin.skin;
   }
-}
-
-// Popover controls live in the overlay — reach them via the panel classes.
-::ng-deep .mat-mdc-menu-panel.c-chip-popover,
-::ng-deep .mat-mdc-menu-panel.c-field-picker-menu {
-  @include qb-control-skin;
 }

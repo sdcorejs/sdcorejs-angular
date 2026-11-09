@@ -1,38 +1,32 @@
-import { Component, viewChild } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { Component, reflectComponentType, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdQueryChipPopover } from './chip-popover.component';
 import { Filter } from '@sdcorejs/utils/models';
 import { SdQueryField } from '../../query-bar.model';
+import { ɵSdQueryPanelTriggerDirective } from '../panel/query-panel';
 
 /**
- * Host wrapper — declares a switchPicker mat-menu + a button trigger that opens the
- * chip popover so its `<ng-template matMenuContent>` is actually instantiated.
- *
- * why: ChipPopover's body lives inside an mat-menu `<ng-template matMenuContent>` —
- * only renders after the menu opens. Tests need to open the menu via a real trigger.
+ * Host wrapper — a button trigger that opens the chip popover panel so its template is actually instantiated (the
+ * body only renders while the panel is open).
  */
 @Component({
   standalone: true,
-  imports: [SdQueryChipPopover, MatMenuModule],
+  imports: [SdQueryChipPopover, ɵSdQueryPanelTriggerDirective],
   template: `
-    <mat-menu #switch="matMenu">
-      <button mat-menu-item>x</button>
-    </mat-menu>
-    <button #t="matMenuTrigger" [matMenuTriggerFor]="cp.menu()!">open</button>
+    <button #t type="button" [sdQueryPanelTrigger]="cp.panel()">open</button>
+    <button id="outside" type="button">outside</button>
     <sd-query-chip-popover
       #cp
       [field]="field"
       [filter]="filter"
       [chipIndex]="chipIndex"
       [autoIdBase]="autoIdBase"
-      [switchPickerMenu]="switchMenu()!"
-      (commit)="committed = $event; commitCount = commitCount + 1"
-      (swapField)="swapped = $event" />
+      (commit)="committed = $event; commitCount = commitCount + 1" />
   `,
 })
 class Host {
@@ -43,10 +37,8 @@ class Host {
 
   committed: any = undefined;
   commitCount = 0;
-  swapped: any = undefined;
 
-  switchMenu = viewChild<MatMenu>('switch');
-  trigger = viewChild<MatMenuTrigger>('t');
+  trigger = viewChild('t', { read: ɵSdQueryPanelTriggerDirective });
   child = viewChild(SdQueryChipPopover);
 }
 
@@ -67,6 +59,11 @@ describe('SdQueryChipPopover', () => {
     host.trigger()!.openMenu();
     fixture.detectChanges();
   }
+
+  const panel = (): HTMLElement | null =>
+    TestBed.inject(OverlayContainer).getContainerElement().querySelector<HTMLElement>('.c-chip-popover');
+
+  afterEach(() => fixture.destroy());
 
   beforeEach(async () => {
     await build();
@@ -270,18 +267,84 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.isEditingMultiSelected('z')).toBe(false);
   });
 
-  // ---- 13: field switcher button has matMenuTriggerFor pointed at parent menu
-  it('field switcher button uses [matMenuTriggerFor] of the provided switchPickerMenu', () => {
+  // ---- 13: M7 — the nested field switcher is gone; the header names the field as plain text
+  it('QB-FP-05 has no switchPickerMenu input or field switcher; the header label names the dialog', () => {
+    const inputs = reflectComponentType(SdQueryChipPopover)!.inputs.map(entry => entry.propName);
+    expect(inputs).not.toContain('switchPickerMenu');
+    const outputs = reflectComponentType(SdQueryChipPopover)!.outputs.map(entry => entry.propName);
+    expect(outputs).not.toContain('swapField');
+    // @ts-expect-error switchPickerMenu was removed (handoff M7)
+    expect(host.child()!.switchPickerMenu).toBeUndefined();
+
     host.child()!.seed(host.filter, host.field!);
-    fixture.detectChanges();
     openPopover();
-    // Field switch button is rendered with `[matMenuTriggerFor]` — query for the
-    // directive instance instead of the raw attribute (Angular doesn't reflect it).
-    const switchBtn = document.querySelector('.c-pop-header-field') as HTMLElement | null;
-    expect(switchBtn).not.toBeNull();
+    const dialog = panel()!;
+    const label = dialog.querySelector('.c-pop-header-field')!;
+    expect(label.tagName).toBe('SPAN');
+    expect(label.textContent!.trim()).toBe('Name');
+    expect(dialog.querySelector('button.c-pop-header-field, [role="button"].c-pop-header-field')).toBeNull();
+    expect(dialog.getAttribute('aria-labelledby')).toBe(label.id);
   });
 
-  // ---- 14: mat-menu (closed) emits commit with current staging
+  it('QB-P-07 renders a dialog panel (form kind) with the autoId of the chip panel', () => {
+    host.child()!.seed(host.filter, host.field!);
+    openPopover();
+    const dialog = panel()!;
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.classList).toContain('sd-query-panel');
+    expect(dialog.classList).toContain('sd-query-panel--form');
+    expect(dialog.getAttribute('data-autoid')).toBe('qb-panel-chip');
+    expect(host.trigger()!.panel()!.role()).toBe('dialog');
+  });
+
+  it('QB-P-05 lands in the first value control, not the operator', () => {
+    host.child()!.seed(host.filter, host.field!);
+    openPopover();
+    expect(panel()!.querySelector('sd-input')!.contains(document.activeElement)).toBeTrue();
+  });
+
+  describe('QB-P-04 commits the staged value on every way out', () => {
+    const stage = (): void => {
+      host.child()!.seed(host.filter, host.field!);
+      openPopover();
+      host.child()!.editingValue.set('xyz');
+      fixture.detectChanges();
+    };
+
+    it('QB-P-04 Escape', () => {
+      stage();
+      document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+
+    it('QB-P-04 click outside', () => {
+      stage();
+      const outside = fixture.nativeElement.querySelector('#outside') as HTMLElement;
+      outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      outside.click();
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+
+    it('QB-P-04 Tab out of the last control', () => {
+      stage();
+      // The value input (focused on open) is the last control of a string chip: the operator is disabled.
+      const value = panel()!.querySelector<HTMLInputElement>('sd-input input')!;
+      expect(document.activeElement).toBe(value);
+      value.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+  });
+
+  // ---- 14: panel close emits commit with current staging
   it('menu close emits (commit) with { field, operator, data } from staging', () => {
     host.child()!.seed(host.filter, host.field!);
     fixture.detectChanges();

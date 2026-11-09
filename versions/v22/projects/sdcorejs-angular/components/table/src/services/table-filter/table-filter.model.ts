@@ -135,6 +135,13 @@ export interface SdTableOptionFilterQueryBar {
   pinned?: string[];
   /** Field không đưa vào thanh; giá trị đang có vẫn được gửi đi. */
   exclude?: string[];
+  /**
+   * Bộ lọc đã lưu của thanh (nút bookmark): lưu trên trình duyệt (localStorage) dưới khoá
+   * `sd-query-bar:savedFilters:sd-table:<key>`. Chỉ có ở chế độ query bar trên desktop; lưu chip, logic và từ khoá —
+   * không lưu sắp xếp, cột hay số dòng. Áp bộ lọc đã lưu đọc dữ liệu một lần; field bảng không còn có thì bị bỏ.
+   * Chỉ đọc từ option của bảng, không từ `SD_TABLE_CONFIGURATION` (một key chung sẽ trộn bộ lọc của mọi bảng).
+   */
+  savedFilters?: { key: string };
 }
 
 type FilterDates = Pick<SdDateTimeService, 'begin' | 'end' | 'beginOfNextDay' | 'parse'>;
