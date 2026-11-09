@@ -228,6 +228,18 @@ describe('SdCalendar · edge cases', () => {
     expect(onCreate).not.toHaveBeenCalled();
   }));
 
+  it('[CAL-B-15] names the "+N" button of the all-day row with the count and the day (R2 A-09)', fakeAsync(() => {
+    const extra = ['a', 'b', 'c'].map(
+      (id): Event => ({ id: `extra-${id}`, title: `Cả ngày ${id}`, start: '2026/10/22', allDay: true, data: { room: '' } })
+    );
+    const { host } = mount({}, {}, () => [...weekEvents(), ...extra]);
+    const more = q(host, '[data-more][data-date="2026/10/22"]');
+    const dayLabel = q(host, '[data-day-header][data-date="2026/10/22"] button')?.getAttribute('aria-label');
+    // "Nghỉ phép", "Trực đêm" (it crosses midnight) and three extra bars: three rows, two more.
+    expect(text(more)).toBe('+2');
+    expect(more?.getAttribute('aria-label')).toBe(`+2 khác, ${dayLabel}`);
+  }));
+
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {
     const warn = spyOn(console, 'warn');
     mount({}, { workingHours: { 1: [{ from: '17:00', to: '08:00' }], 2: [{ from: '08:00', to: '17:00' }] } });
