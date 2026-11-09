@@ -111,7 +111,9 @@ describe('SdCalendar · recurring events', () => {
       flushMicrotasks();
       settle();
       expect(bar(host)).withContext(name).toBeNull();
-      expect((document.activeElement as HTMLElement | null)?.dataset['eventId']).withContext(name).toBe('standup');
+      expect((document.activeElement as HTMLElement | null)?.dataset['eventId'])
+        .withContext(name)
+        .toBe('standup');
     }
   }));
 

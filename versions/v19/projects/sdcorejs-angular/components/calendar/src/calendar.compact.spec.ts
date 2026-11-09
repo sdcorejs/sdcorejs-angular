@@ -162,7 +162,9 @@ describe('SdCalendar · compact, touch and print', () => {
     fixture.destroy();
     expect(leaked()).withContext('destroy').toEqual([]);
     expect(FakeResizeObserver.instances.length).toBeGreaterThan(0);
-    expect(FakeResizeObserver.instances.every(observer => observer.disconnected)).withContext('ResizeObserver').toBeTrue();
+    expect(FakeResizeObserver.instances.every(observer => observer.disconnected))
+      .withContext('ResizeObserver')
+      .toBeTrue();
   }));
 
   it('[CAL-C-18] swipes the day grid and the strip by at least 60px to change day and week', fakeAsync(() => {

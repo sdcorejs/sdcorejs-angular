@@ -215,7 +215,13 @@ describe('SdCalendar · interaction', () => {
     }));
 
     it('[CAL-B-08] ignores an onCreate answer that arrives after a new option or after destroy (SC-15, R2 B-1)', fakeAsync(() => {
-      const late: Event = { id: 'late', title: 'Đến muộn', start: '2026/10/21 14:00:00', end: '2026/10/21 15:00:00', data: { room: 'Huế' } };
+      const late: Event = {
+        id: 'late',
+        title: 'Đến muộn',
+        start: '2026/10/21 14:00:00',
+        end: '2026/10/21 15:00:00',
+        data: { room: 'Huế' },
+      };
       for (const outcome of ['resolve', 'reject'] as const) {
         const wait = deferred<Event | void>();
         const { host, fixture, calendar, settle } = creating(() => wait.promise);
@@ -623,7 +629,9 @@ describe('SdCalendar · interaction', () => {
         expect(proposal?.dataset['color']).withContext(id).toBe(color);
         const tone = (element: Element | null): string =>
           element ? getComputedStyle(element).getPropertyValue('--sd-calendar-event-color').trim() : 'none';
-        expect(tone(proposal)).withContext(id).toBe(tone(block(host, id)));
+        expect(tone(proposal))
+          .withContext(id)
+          .toBe(tone(block(host, id)));
         if (color === 'custom') expect(proposal ? getComputedStyle(proposal).borderTopColor : '').toBe('rgb(102, 51, 153)');
         mouse(document, 'mouseup', { x: from.x, y: from.y - 48 });
         settle();
