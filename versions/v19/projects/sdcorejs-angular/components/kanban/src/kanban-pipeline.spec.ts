@@ -43,7 +43,11 @@ describe('SdKanban · move pipeline', () => {
   const live = (): string => host().querySelector('[aria-live="polite"]')?.textContent?.trim() ?? '';
   const t = (key: string, params?: I18nParams): string => TestBed.inject(I18nService).t(`core.component.kanban.${key}`, params);
   const article = (id: string): HTMLElement => host().querySelector<HTMLElement>(`[data-card-id="${id}"]`)!;
-  const focusTarget = (id: string): HTMLButtonElement => host().querySelector<HTMLButtonElement>(`[data-kanban-handle="${id}"]`)!;
+  const focusTarget = (id: string): HTMLButtonElement => {
+    const button = host().querySelector<HTMLButtonElement>(`[data-kanban-card-main="${id}"]`);
+    expect(button).withContext(`name button of ${id}`).not.toBeNull();
+    return button ?? document.createElement('button');
+  };
   const drags = (): CdkDrag[] => fixture.debugElement.queryAll(By.directive(CdkDrag)).map(element => element.injector.get(CdkDrag));
   const drag = (id: string): CdkDrag => drags().find(candidate => candidate.data.card.id === id)!;
   const lists = (): CdkDropList[] =>
@@ -59,7 +63,7 @@ describe('SdKanban · move pipeline', () => {
     return menuItems();
   };
   const press = (id: string, key: string): void => {
-    const target = focusTarget(id) ?? article(id);
+    const target = focusTarget(id);
     target.focus();
     target.dispatchEvent(new KeyboardEvent('keydown', { altKey: true, key, bubbles: true, cancelable: true }));
   };
@@ -171,7 +175,7 @@ describe('SdKanban · move pipeline', () => {
       await settle();
       expect(columnOf('x')).withContext('Alt + Right skips the refused column').toBe('later');
       expect(onMove).toHaveBeenCalledTimes(1);
-      expect((onMove.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>).to.columnId).toBe('later');
+      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to.columnId).toBe('later');
     });
 
     it('[KAN-C-10] works out droppable once when a drag starts, marks refused lanes and clears them when it ends', () => {
@@ -209,7 +213,7 @@ describe('SdKanban · move pipeline', () => {
       mount({ onMove });
       expect(lists().every(candidate => candidate.sortingDisabled)).toBeTrue();
       expect(await kanban().move('x', { columnId: 'done', beforeId: 'd' })).toBeTrue();
-      expect((onMove.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>).to).toEqual({ columnId: 'done', index: null, beforeId: null });
+      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({ columnId: 'done', index: null, beforeId: null });
       // x comes before d in the items array, so it stays above d in Done.
       expect(order()).withContext('keeps the place in the array').toEqual(['y', 'x', 'd']);
       expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' }))
@@ -250,7 +254,7 @@ describe('SdKanban · move pipeline', () => {
       await closeMenu();
       press('x', 'ArrowDown');
       await settle();
-      expect((onMove.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>).to).toEqual({ columnId: 'open', index: 1, beforeId: null });
+      expect((onMove.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined)?.to).toEqual({ columnId: 'open', index: 1, beforeId: null });
     });
   });
 

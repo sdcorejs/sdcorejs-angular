@@ -130,6 +130,10 @@ export class SdKanban<T = unknown> {
   readonly readonly = input(false, { transform: booleanAttribute });
   readonly ariaLabel = input<string | null | undefined>();
   readonly autoId = input<string | null | undefined>();
+  /** Id of the selected card; back to `null` when that card is no longer in the data (SC-26, SC-27). */
+  readonly selectedId = model<string | null>(null);
+  /** Click, tap, Enter or Space on a card; also sets `selectedId`. */
+  readonly sdSelect = output<SdKanbanCard<T>>();
   readonly sdMove = output<SdKanbanMoveRequest<T>>();
   readonly sdMoveError = output<SdKanbanMoveError<T>>();
   readonly #pending = signal<string | null>(null);

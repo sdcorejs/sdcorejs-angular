@@ -42,8 +42,13 @@ describe('SdKanban', () => {
   const initial = { open: ['x', 'y'], done: ['hidden'] };
   const columnOf = (id: string): string | null | undefined =>
     host().querySelector(`article[data-card-id="${id}"]`)?.closest('[data-column-id]')?.getAttribute('data-column-id');
-  const lastRequest = (spy: jasmine.Spy): SdKanbanMoveRequest<Dto> => spy.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>;
-  const handle = (id: string): HTMLButtonElement => host().querySelector<HTMLButtonElement>(`[data-kanban-handle="${id}"]`)!;
+  const lastRequest = (spy: jasmine.Spy): SdKanbanMoveRequest<Dto> | undefined => spy.calls.mostRecent()?.args[0] as SdKanbanMoveRequest<Dto> | undefined;
+  /** The card's name button: the focus and keyboard target of a card (kanban.md §6, §7.4). */
+  const handle = (id: string): HTMLButtonElement => {
+    const button = host().querySelector<HTMLButtonElement>(`[data-kanban-card-main="${id}"]`);
+    expect(button).withContext(`name button of ${id}`).not.toBeNull();
+    return button ?? document.createElement('button');
+  };
   const setOption = (value: SdKanbanOption<Dto>): void => {
     fixture.componentRef.setInput('option', value);
     fixture.detectChanges();
@@ -138,7 +143,7 @@ describe('SdKanban', () => {
       const tools = card.querySelector<HTMLElement>('.sd-kanban__card-tools')!;
       expect(getComputedStyle(tools).opacity).toBe('0');
       expect(getComputedStyle(tools).visibility).withContext('still reachable by Tab').toBe('visible');
-      card.querySelector<HTMLButtonElement>('[data-kanban-handle]')!.focus();
+      handle('x').focus();
       expect(getComputedStyle(tools).opacity).withContext(':focus-within').toBe('1');
     });
 
@@ -180,8 +185,8 @@ describe('SdKanban', () => {
     expect(columnOf('x')).toBe('done');
     expect(fixture.componentInstance.items()).withContext('the input is not changed').toBe(data);
     expect(moved).toHaveBeenCalledTimes(1);
-    expect(lastRequest(moved).to).toEqual({ columnId: 'done', index: 1, beforeId: null });
-    expect(lastRequest(moved).from).toEqual({ columnId: 'open', index: 0 });
+    expect(lastRequest(moved)?.to).toEqual({ columnId: 'done', index: 1, beforeId: null });
+    expect(lastRequest(moved)?.from).toEqual({ columnId: 'open', index: 0 });
   });
 
   it('[KAN-SC-02] keeps the data reference of a card after an accepted move', async () => {
@@ -189,9 +194,9 @@ describe('SdKanban', () => {
     setOption(withMove(onMove));
     expect(await fixture.componentInstance.move('x', { columnId: 'done' })).toBeTrue();
     expect(await fixture.componentInstance.move('x', { columnId: 'open' })).toBeTrue();
-    const kept = lastRequest(onMove).card;
-    expect(kept.columnId).toBe('done');
-    expect(kept.data).toBe(dto);
+    const kept = lastRequest(onMove)?.card;
+    expect(kept?.columnId).toBe('done');
+    expect(kept?.data).toBe(dto);
   });
 
   it('[KAN-SC-03] works on deeply frozen items and columns without changing them', async () => {
@@ -372,8 +377,8 @@ describe('SdKanban', () => {
       fixture.componentRef.setInput('keyword', '');
       fixture.detectChanges();
       expect(layout()['done']).toEqual(['hidden', 'x', 'z']);
-      expect(lastRequest(moved).to).toEqual({ columnId: 'done', index: 1, beforeId: 'z' });
-      expect(lastRequest(moved).source).toBe('drag');
+      expect(lastRequest(moved)?.to).toEqual({ columnId: 'done', index: 1, beforeId: 'z' });
+      expect(lastRequest(moved)?.source).toBe('drag');
     });
   });
 
@@ -385,7 +390,7 @@ describe('SdKanban', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(layout()['open']).toEqual(['y', 'x']);
-    expect(lastRequest(moved).source).toBe('keyboard');
+    expect(lastRequest(moved)?.source).toBe('keyboard');
   });
 
   it('[KAN-C-10] routes movement menu actions through the same move pipeline', async () => {
@@ -397,8 +402,8 @@ describe('SdKanban', () => {
     expect(menuButtons[0].disabled).withContext('the first card cannot go up').toBeTrue();
     menuButtons[1].click();
     await fixture.whenStable();
-    expect(lastRequest(moved).source).toBe('menu');
-    expect(lastRequest(moved).to).toEqual({ columnId: 'open', index: 1, beforeId: null });
+    expect(lastRequest(moved)?.source).toBe('menu');
+    expect(lastRequest(moved)?.to).toEqual({ columnId: 'open', index: 1, beforeId: null });
   });
 
   it('[KAN-R-08] keeps a collapsed column and expands it when a move into it is accepted', async () => {
@@ -551,14 +556,14 @@ describe('SdKanban', () => {
   });
 
   for (const accepted of [true, false]) {
-    it(`[KAN-R-04] restores the initiating control after ${accepted ? 'acceptance' : 'rejection'} when pending disables it`, async () => {
+    it(`[KAN-R-04] keeps the focus on the card's name while its move waits, and after ${accepted ? 'acceptance' : 'rejection'}`, async () => {
       const confirmation = deferred<boolean>();
       setOption(withMove(() => confirmation.promise));
       handle('x').focus();
       expect(document.activeElement).toBe(handle('x'));
       const result = fixture.componentInstance.move('x', { columnId: 'done' }, 'keyboard');
       fixture.detectChanges();
-      expect(handle('x').disabled).toBeTrue();
+      expect(handle('x').disabled).withContext('the name stays usable while pending').toBeFalse();
       confirmation.resolve(accepted);
       expect(await result).toBe(accepted);
       fixture.detectChanges();
@@ -618,7 +623,7 @@ describe('SdKanban', () => {
         expect(host().textContent).not.toContain('private backend detail');
         const message = status.querySelector<HTMLElement>('[id]')!;
         expect(message.textContent!.trim()).toBe(t(reason));
-        expect(handle('x').getAttribute('aria-describedby')!.split(' ')).toContain(message.id);
+        expect((handle('x').getAttribute('aria-describedby') ?? '').split(' ')).toContain(message.id);
         fixture.detectChanges();
         expect(layout()).toEqual(initial);
         expect(card('x').closest('[data-column-id]')!.getAttribute('data-column-id')).toBe('open');
@@ -676,7 +681,8 @@ describe('SdKanban', () => {
         fixture.componentRef.setInput('items', [...data]);
         fixture.detectChanges();
       }
-      expect(remove).toHaveBeenCalledWith('focusin', listener![1], true);
+      expect(remove).toHaveBeenCalledWith('focusin', jasmine.anything(), true);
+      if (listener) expect(remove).toHaveBeenCalledWith('focusin', listener[1], true);
       confirmation.resolve(true);
       expect(await result).toBeFalse();
     });
