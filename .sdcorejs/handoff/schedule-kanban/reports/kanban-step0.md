@@ -1,5 +1,7 @@
 # sd-kanban · Bước 0 (G0)
-Nhánh `feat/kanban-api` từ `main @ e501644f` (commit đầu: gói handoff). Chờ PD duyệt (R0) trước G1.
+Nhánh `feat/kanban-api` từ `main @ e501644f` (commit đầu: gói handoff).
+
+> **PD đã duyệt ngày 09/11/2026 (R0): "Làm theo bạn đề xuất".** K1–K10 và năm câu hỏi cuối file theo cột "Đề xuất": một live region `role="status"`; checkpoint 5 dựng hai ví dụ showcase cho E2E; debounce 300ms trong component chỉ ở chế độ `dataSource`; chép `testing/schedule-testing.ts` của calendar; khi `reorder` tắt, placeholder của CDK cao 0 và component tự vẽ dấu chỗ cũ.
 Đã đọc: `schedule-kanban/{PROMPT,SHARED-CONTRACT,TESTING,REVIEW}.md`, `design-kanban/{README,PROMPT,kanban}.md`, code `components/kanban/**` trên main, `sd-kanban.md`, showcase `pages/components/kanban`, `THEME.md` mục Kanban, `@angular/cdk@19.2.19` `fesm2022/drag-drop.mjs`.
 
 ## A. Mâu thuẫn và điểm cần PD chốt

@@ -24,20 +24,31 @@ import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { ɵSdSearchField, ɵSdSearchFieldInputDirective } from '@sdcorejs/angular/forms/directives';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdKanbanColumn, SdKanbanId, SdKanbanMoveError, SdKanbanMoveRequest, SdKanbanMoveSource, SdKanbanOption } from './kanban.model';
+import {
+  SdKanbanCard,
+  SdKanbanCardTemplateContext,
+  SdKanbanColumn,
+  SdKanbanColumnTemplateContext,
+  SdKanbanMoveError,
+  SdKanbanMoveRequest,
+  SdKanbanMoveSource,
+  SdKanbanOption,
+} from './kanban.model';
 import {
   SdKanbanCardActionsTemplateDirective,
   SdKanbanCardTemplateDirective,
   SdKanbanColumnActionsTemplateDirective,
   SdKanbanColumnTemplateDirective,
 } from './kanban.templates';
-import { kanbanDataInvalid, prepareKanbanMove } from './kanban.utils';
+import { kanbanApplyMove, kanbanDataInvalid, kanbanDropTarget, kanbanNextColumn, kanbanResolveMove, kanbanStepTarget } from './kanban.utils';
 
 interface CardView<T> {
-  readonly item: T;
-  readonly id: SdKanbanId;
-  readonly title: string;
+  readonly card: SdKanbanCard<T>;
+  /** Index in the loaded cards of its column (before the keyword). */
   readonly index: number;
+  /** `beforeId` of one step up / down in the loaded cards; `undefined` at the edge. */
+  readonly up: string | null | undefined;
+  readonly down: string | null | undefined;
 }
 interface ColumnView<T> {
   readonly column: SdKanbanColumn;
@@ -49,6 +60,8 @@ interface MoveOperation<T> {
   readonly controller: AbortController;
   readonly option: SdKanbanOption<T>;
   readonly columns: readonly SdKanbanColumn[];
+  /** The `items` reference the move was proposed against; a new one cancels it. */
+  readonly items: readonly SdKanbanCard<T>[] | undefined;
   readonly focus?: MoveFocus;
 }
 interface MoveFocus {
@@ -58,8 +71,12 @@ interface MoveFocus {
   abandoned: boolean;
   scheduled: boolean;
 }
+interface MoveTarget {
+  readonly columnId: string;
+  readonly beforeId?: string | null;
+}
 
-/** Generic ordered board with one consumer-confirmed, serial move pipeline. */
+/** Generic board of cards in columns, with one consumer-confirmed, serial move pipeline. */
 @Component({
   selector: 'sd-kanban',
   standalone: true,
@@ -85,22 +102,22 @@ export class SdKanban<T = unknown> {
   #operation?: MoveOperation<T>;
   readonly #moveFocus = new Set<MoveFocus>();
   #destroyed = false;
-  readonly columns = input<readonly SdKanbanColumn[]>([]);
+  readonly columns = input.required<readonly SdKanbanColumn[]>();
   readonly option = input.required<SdKanbanOption<T>>();
-  readonly model = model<readonly T[]>([]);
+  /** Cards already on the client. Ignored when `option.dataSource` is set. */
+  readonly items = input<readonly SdKanbanCard<T>[] | undefined>(undefined);
   readonly keyword = model('');
-  readonly collapsedColumns = model<readonly SdKanbanId[]>([]);
+  /** Shows the board search; `keyword` works without it (the consumer's own search box). */
+  readonly searchable = input(false, { transform: booleanAttribute });
+  readonly collapsible = input(true, { transform: booleanAttribute });
+  readonly collapsedColumns = model<readonly string[]>([]);
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
-  readonly loading = input(false, { transform: booleanAttribute });
-  readonly error = input<string | null | undefined>();
   readonly ariaLabel = input<string | null | undefined>();
   readonly autoId = input<string | null | undefined>();
-  readonly sdChange = output<readonly T[]>();
   readonly sdMove = output<SdKanbanMoveRequest<T>>();
   readonly sdMoveError = output<SdKanbanMoveError<T>>();
-  readonly sdRetry = output<void>();
-  readonly pendingId = signal<SdKanbanId | null>(null);
+  readonly pendingId = signal<string | null>(null);
   protected readonly cardTemplate = contentChild(SdKanbanCardTemplateDirective<T>);
   protected readonly cardActionsTemplate = contentChild(SdKanbanCardActionsTemplateDirective<T>);
   protected readonly columnTemplate = contentChild(SdKanbanColumnTemplateDirective);
@@ -108,25 +125,36 @@ export class SdKanban<T = unknown> {
   protected readonly announcement = signal('');
   protected readonly moveFailure = signal<string | undefined>(undefined);
   /** Card the current failure belongs to; `null` for failures without a card (invalid configuration). */
-  protected readonly failedId = signal<SdKanbanId | null>(null);
-  protected readonly dataInvalid = computed(() => kanbanDataInvalid(this.model(), this.columns(), this.option()));
-  protected readonly locked = computed(() => this.disabled() || this.readonly() || this.loading() || !!this.error() || this.dataInvalid());
-  protected readonly moveBlocked = computed(() => this.locked() || this.pendingId() !== null);
+  protected readonly failedId = signal<string | null>(null);
+  /** The board's copy of `items` after accepted moves; a new `items` reference replaces it. */
+  readonly #local = signal<{ readonly source: readonly SdKanbanCard<T>[] | undefined; readonly cards: readonly SdKanbanCard<T>[] } | null>(
+    null
+  );
+  protected readonly cards = computed<readonly SdKanbanCard<T>[]>(() => {
+    const items = this.items();
+    const local = this.#local();
+    return local && local.source === items ? local.cards : (items ?? []);
+  });
+  protected readonly dataInvalid = computed(() => kanbanDataInvalid(this.cards(), this.columns()));
+  protected readonly locked = computed(() => this.disabled() || this.readonly() || this.dataInvalid());
+  protected readonly moveBlocked = computed(() => this.locked() || this.pendingId() !== null || !this.option().move);
   protected readonly boardLabel = computed(() => this.ariaLabel() || this.#i18n.t('core.component.kanban.label'));
   protected readonly boardColumns = computed<readonly ColumnView<T>[]>(() => {
     if (this.dataInvalid()) return [];
-    const option = this.option();
-    const keyword = this.keyword().trim().toLocaleLowerCase(this.#i18n.locale());
+    const locale = this.#i18n.locale();
+    const keyword = this.keyword().trim().toLocaleLowerCase(locale);
+    const cards = this.cards();
     return this.columns().map(column => {
-      const all = this.model().filter(item => Object.is(option.getColumnId(item), column.id));
-      const cards = all
-        .map((item, index) => ({ item, id: option.getId(item), title: option.getTitle(item), index }))
-        .filter(
-          card =>
-            (!option.filter || option.filter(card.item)) &&
-            (!keyword || (option.getSearchText?.(card.item) ?? card.title).toLocaleLowerCase(this.#i18n.locale()).includes(keyword))
-        );
-      return { column, cards, count: all.length };
+      const all = cards.filter(card => card.columnId === column.id);
+      const views = all
+        .map((card, index) => ({
+          card,
+          index,
+          up: index > 0 ? all[index - 1].id : undefined,
+          down: index < all.length - 1 ? (all[index + 2]?.id ?? null) : undefined,
+        }))
+        .filter(view => !keyword || (view.card.searchText ?? view.card.title).toLocaleLowerCase(locale).includes(keyword));
+      return { column, cards: views, count: all.length };
     });
   });
   // Pending/failure feedback is shown on the affected card; board-level text is only a fallback
@@ -138,16 +166,13 @@ export class SdKanban<T = unknown> {
 
   constructor() {
     effect(() => {
-      const items = this.model();
+      const items = this.items();
       const option = this.option();
       const columns = this.columns();
       const locked = this.locked();
       untracked(() => {
         const operation = this.#operation;
-        if (
-          operation &&
-          (items !== operation.request.previousItems || option !== operation.option || columns !== operation.columns || locked)
-        ) {
+        if (operation && (items !== operation.items || option !== operation.option || columns !== operation.columns || locked)) {
           this.#cancel();
         }
       });
@@ -160,78 +185,75 @@ export class SdKanban<T = unknown> {
   }
 
   /**
-   * Propose a full-column insertion, optionally wait for persistence, then commit once.
-   * No-op, locked, rejected and stale requests return false without a change event.
+   * Runs the move pipeline: `to.beforeId` is the card the moved card goes before (`null` or left out: the end of the
+   * column). Resolves `true` only when `option.move.onMove` accepts.
    */
-  move(itemId: SdKanbanId, columnId: SdKanbanId, index?: number, source: SdKanbanMoveSource = 'api'): Promise<boolean> {
-    return this.#move(itemId, columnId, index, source);
+  move(cardId: string, to: MoveTarget, source: SdKanbanMoveSource = 'api'): Promise<boolean> {
+    return this.#move(cardId, to, source);
   }
 
-  async #move(
-    itemId: SdKanbanId,
-    columnId: SdKanbanId,
-    index: number | undefined,
-    source: SdKanbanMoveSource,
-    menuTrigger?: HTMLButtonElement
-  ): Promise<boolean> {
+  async #move(cardId: string, to: MoveTarget, source: SdKanbanMoveSource, menuTrigger?: HTMLButtonElement): Promise<boolean> {
     if (this.#destroyed || this.moveBlocked()) return false;
     const option = this.option();
+    const move = option.move!;
+    const columns = this.columns();
+    const cards = this.cards();
+    const card = cards.find(candidate => candidate.id === cardId);
+    const target = columns.find(column => column.id === to.columnId);
+    const origin = card && columns.find(column => column.id === card.columnId);
+    if (!card || !target || target.disabled || !origin || origin.disabled) return false;
+    // why: checkpoint 1 keeps main's ordering behaviour; `option.move.reorder` takes over in checkpoint 2.
+    const reorder = true;
+    const placement = kanbanResolveMove(cards, cardId, to, reorder);
+    if (!placement) return false;
     const controller = new AbortController();
-    let request: SdKanbanMoveRequest<T> | undefined;
-    try {
-      const targetCount = this.model().filter(
-        item => Object.is(option.getColumnId(item), columnId) && !Object.is(option.getId(item), itemId)
-      ).length;
-      request = prepareKanbanMove(this.model(), this.columns(), option, itemId, columnId, index ?? targetCount, source, controller.signal);
-      if (!request || (option.canMove && !option.canMove(request))) return false;
-    } catch (error) {
-      if (request) this.#fail(request, 'error', error);
-      else {
-        this.failedId.set(null);
-        this.moveFailure.set(this.#i18n.t('core.component.kanban.invalid-data'));
-      }
-      return false;
-    }
+    const request: SdKanbanMoveRequest<T> = Object.freeze({
+      card,
+      from: Object.freeze({ columnId: card.columnId, index: placement.fromIndex }),
+      to: Object.freeze({ columnId: target.id, index: placement.index, beforeId: placement.beforeId }),
+      source,
+      signal: controller.signal,
+    });
     const operation: MoveOperation<T> = {
       request,
       controller,
       option,
-      columns: this.columns(),
-      focus: this.#trackFocus(itemId, menuTrigger),
+      columns,
+      items: this.items(),
+      focus: this.#trackFocus(cardId, menuTrigger),
     };
     this.#operation = operation;
-    this.pendingId.set(itemId);
+    this.pendingId.set(cardId);
     this.moveFailure.set(undefined);
     this.failedId.set(null);
-    this.announcement.set(this.#i18n.t('core.component.kanban.pending', { title: option.getTitle(request.item) }));
+    this.announcement.set(this.#i18n.t('core.component.kanban.pending', { title: card.title }));
     try {
-      const accepted = option.move ? await option.move(request) : true;
+      const accepted = await move.onMove(request);
       if (!this.#current(operation)) return false;
       if (accepted === false) {
         this.#fail(request, 'rejected');
-        this.#focusCard(itemId, operation.focus);
+        this.#focusCard(cardId, operation.focus);
         return false;
       }
       this.#operation = undefined;
       this.pendingId.set(null);
-      if (this.collapsed(columnId)) this.collapsedColumns.update(ids => ids.filter(id => !Object.is(id, columnId)));
-      this.model.set(request.nextItems);
-      this.sdChange.emit(request.nextItems);
+      if (this.collapsed(target.id)) this.collapsedColumns.update(ids => ids.filter(id => id !== target.id));
+      const next = kanbanApplyMove(cards, cardId, { columnId: target.id, beforeId: placement.beforeId }, reorder);
+      this.#local.set({ source: operation.items, cards: next });
       this.sdMove.emit(request);
-      const column = operation.columns.find(candidate => Object.is(candidate.id, columnId))!;
       this.announcement.set(
         this.#i18n.t('core.component.kanban.moved', {
-          title: option.getTitle(request.item),
-          column: column.label,
-          position: request.toIndex + 1,
+          title: card.title,
+          column: target.label,
+          position: next.filter(candidate => candidate.columnId === target.id).findIndex(candidate => candidate.id === cardId) + 1,
         })
       );
-      this.#focusCard(itemId, operation.focus);
+      this.#focusCard(cardId, operation.focus);
       return true;
     } catch (error) {
       if (this.#current(operation)) {
         this.#fail(request, 'error', error);
-        this.#focusCard(itemId, operation.focus);
+        this.#focusCard(cardId, operation.focus);
       }
       return false;
     } finally {
@@ -246,58 +268,69 @@ export class SdKanban<T = unknown> {
   protected drop(event: CdkDragDrop<ColumnView<T>, ColumnView<T>, CardView<T>>): void {
     if (!event.isPointerOverContainer || this.moveBlocked()) return;
     if (event.previousContainer === event.container && event.previousIndex === event.currentIndex) return;
-    const card = event.item.data;
-    const targetId = event.container.data.column.id;
-    const visible = event.container.data.cards.filter(candidate => !Object.is(candidate.id, card.id));
-    const anchor = visible[event.currentIndex];
-    const complete = this.model().filter(
-      item => Object.is(this.option().getColumnId(item), targetId) && !Object.is(this.option().getId(item), card.id)
+    const card = event.item.data.card;
+    const view = event.container.data;
+    const loaded = this.cards().filter(candidate => candidate.columnId === view.column.id);
+    const { beforeId } = kanbanDropTarget(
+      loaded,
+      view.cards.map(candidate => candidate.card),
+      card.id,
+      event.currentIndex
     );
-    const index = anchor ? complete.findIndex(item => Object.is(this.option().getId(item), anchor.id)) : complete.length;
-    void this.move(card.id, targetId, index, 'drag');
+    void this.#move(card.id, { columnId: view.column.id, beforeId }, 'drag');
   }
 
-  protected moveFromMenu(itemId: SdKanbanId, columnId: SdKanbanId, index: number | undefined, trigger: HTMLButtonElement): void {
-    void this.#move(itemId, columnId, index, 'menu', trigger);
+  protected moveFromMenu(cardId: string, to: MoveTarget, trigger: HTMLButtonElement): void {
+    void this.#move(cardId, to, 'menu', trigger);
   }
 
-  protected keydown(event: KeyboardEvent, card: CardView<T>, view: ColumnView<T>): void {
-    if (this.moveBlocked() || view.column.disabled || !event.altKey || event.ctrlKey || event.metaKey) return;
+  protected keydown(event: KeyboardEvent, view: CardView<T>, column: ColumnView<T>): void {
+    if (this.moveBlocked() || column.column.disabled || !event.altKey || event.ctrlKey || event.metaKey) return;
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
     event.stopPropagation();
+    const cardId = view.card.id;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      void this.move(card.id, view.column.id, card.index + (event.key === 'ArrowUp' ? -1 : 1), 'keyboard');
+      const beforeId = kanbanStepTarget(this.cards(), cardId, event.key === 'ArrowUp' ? -1 : 1);
+      if (beforeId !== undefined) void this.move(cardId, { columnId: column.column.id, beforeId }, 'keyboard');
       return;
     }
-    const enabled = this.columns().filter(column => !column.disabled);
     const rtl = getComputedStyle(this.#host.nativeElement).direction === 'rtl';
-    const direction = (event.key === 'ArrowLeft' ? -1 : 1) * (rtl ? -1 : 1);
-    const target = enabled[enabled.findIndex(column => Object.is(column.id, view.column.id)) + direction];
-    if (target) void this.move(card.id, target.id, undefined, 'keyboard');
+    const target = kanbanNextColumn(this.columns(), column.column.id, event.key as 'ArrowLeft' | 'ArrowRight', rtl, candidate =>
+      this.collapsed(candidate.id)
+    );
+    if (target) void this.move(cardId, { columnId: target.id }, 'keyboard');
   }
 
-  protected collapsed(id: SdKanbanId): boolean {
-    return this.collapsedColumns().some(value => Object.is(id, value));
+  protected collapsed(id: string): boolean {
+    return this.collapsedColumns().includes(id);
   }
-  protected toggleColumn(id: SdKanbanId): void {
-    if (this.disabled() || this.option().collapsible === false) return;
-    this.collapsedColumns.update(ids => (this.collapsed(id) ? ids.filter(value => !Object.is(value, id)) : [...ids, id]));
+  protected toggleColumn(id: string): void {
+    if (this.disabled() || !this.collapsible()) return;
+    this.collapsedColumns.update(ids => (ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]));
   }
-  protected columnContext(view: ColumnView<T>) {
+  protected columnContext(view: ColumnView<T>): SdKanbanColumnTemplateContext {
     return {
       $implicit: view.column,
       column: view.column,
-      count: view.count,
+      total: view.count,
       visibleCount: view.cards.length,
+      summary: view.column.summary ?? null,
       collapsed: this.collapsed(view.column.id),
     };
   }
-  protected cardContext(card: CardView<T>, view: ColumnView<T>) {
-    return { $implicit: card.item, item: card.item, column: view.column, index: card.index, pending: this.pendingId() !== null };
+  protected cardContext(view: CardView<T>, column: ColumnView<T>): SdKanbanCardTemplateContext<T> {
+    return {
+      $implicit: view.card,
+      card: view.card,
+      column: column.column,
+      index: view.index,
+      pending: this.pendingId() === view.card.id,
+      selected: false,
+    };
   }
-  protected token(id: SdKanbanId): string {
-    return `${typeof id}-${encodeURIComponent(String(id))}`;
+  protected token(id: string): string {
+    return encodeURIComponent(id);
   }
   protected updateKeyword(event: Event): void {
     this.keyword.set((event.target as HTMLInputElement).value);
@@ -307,9 +340,9 @@ export class SdKanban<T = unknown> {
     this.failedId.set(null);
   }
 
-  #rendered(id: SdKanbanId | null): boolean {
+  #rendered(id: string | null): boolean {
     return (
-      id !== null && this.boardColumns().some(view => !this.collapsed(view.column.id) && view.cards.some(card => Object.is(card.id, id)))
+      id !== null && this.boardColumns().some(view => !this.collapsed(view.column.id) && view.cards.some(card => card.card.id === id))
     );
   }
   #current(operation: MoveOperation<T>): boolean {
@@ -317,7 +350,7 @@ export class SdKanban<T = unknown> {
       !this.#destroyed &&
       this.#operation === operation &&
       !operation.controller.signal.aborted &&
-      this.model() === operation.request.previousItems &&
+      this.items() === operation.items &&
       this.option() === operation.option &&
       this.columns() === operation.columns &&
       !this.locked();
@@ -333,12 +366,12 @@ export class SdKanban<T = unknown> {
   }
   #fail(request: SdKanbanMoveRequest<T>, reason: 'error' | 'rejected', error?: unknown): void {
     const message = this.#i18n.t(`core.component.kanban.${reason}`);
-    this.failedId.set(request.itemId);
+    this.failedId.set(request.card.id);
     this.moveFailure.set(message);
     this.announcement.set(message);
     this.sdMoveError.emit({ request, reason, error });
   }
-  #trackFocus(id: SdKanbanId, menuTrigger?: HTMLButtonElement): MoveFocus | undefined {
+  #trackFocus(id: string, menuTrigger?: HTMLButtonElement): MoveFocus | undefined {
     const host = this.#host.nativeElement;
     const document = host.ownerDocument;
     const origin = document.activeElement;
@@ -365,7 +398,7 @@ export class SdKanban<T = unknown> {
     focus.stop();
     this.#moveFocus.delete(focus);
   }
-  #focusCard(id: SdKanbanId, focus?: MoveFocus): void {
+  #focusCard(id: string, focus?: MoveFocus): void {
     if (!focus) return;
     focus.scheduled = true;
     afterNextRender(
