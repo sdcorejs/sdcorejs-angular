@@ -47,7 +47,7 @@
           class="sd-calendar__view"
           [attr.data-view-option]="option"
           [attr.data-autoid]="childAutoId('view-' + option)"
-          [attr.aria-pressed]="option === activeView()"
+          [attr.aria-pressed]="option === _view"
           (click)="setView(option)">
           {{ viewLabel(option) }}
         </button>
@@ -248,6 +248,7 @@
           role="group"
           tabindex="0"
           [class.sd-calendar__columns--create]="canCreate()"
+          [class.sd-calendar__columns--blocked]="!!ghost()?.blocked"
           [attr.aria-label]="title()"
           [attr.aria-describedby]="gridInstructionsId"
           [attr.aria-activedescendant]="_cursor ? cursorId : null"

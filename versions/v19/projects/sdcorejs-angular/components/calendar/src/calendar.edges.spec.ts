@@ -198,13 +198,17 @@ describe('SdCalendar · edge cases', () => {
 
   it('[CAL-B-11] lays blocks and chevrons out from the inline start in right-to-left (R2 A-16)', fakeAsync(() => {
     const { host, settle } = mount({});
+    const gaps = (): { start: number; end: number } => {
+      const day = column(host, '2026/10/21').getBoundingClientRect();
+      const review = block(host, 'review').getBoundingClientRect();
+      return { start: Math.round(review.left - day.left), end: Math.round(day.right - review.right) };
+    };
+    const ltr = gaps();
     host.setAttribute('dir', 'rtl');
     settle();
-    const day = column(host, '2026/10/21').getBoundingClientRect();
-    const review = block(host, 'review').getBoundingClientRect();
-    // The inline start is the right edge: the block sits 2px in from it and keeps the reserve on the left.
-    expect(Math.round(day.right - review.right)).toBe(2);
-    expect(review.left - day.left).toBeGreaterThan(2);
+    // The inline start is the right edge: the gaps of left-to-right are mirrored, the reserve is on the left.
+    expect(gaps()).toEqual({ start: ltr.end, end: ltr.start });
+    expect(ltr.end).toBeGreaterThan(ltr.start);
     expect(getComputedStyle(q(host, 'button[data-action="prev"] sd-icon') ?? host).transform).not.toBe('none');
   }));
 
