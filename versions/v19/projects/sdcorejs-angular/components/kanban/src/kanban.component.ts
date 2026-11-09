@@ -32,6 +32,7 @@ import {
   SdKanbanColumn,
   SdKanbanColumnTemplateContext,
   SdKanbanDropContext,
+  SdKanbanLoadError,
   SdKanbanMoveError,
   SdKanbanMoveRequest,
   SdKanbanMoveSource,
@@ -136,6 +137,8 @@ export class SdKanban<T = unknown> {
   /** Click, tap, Enter or Space on a card; also sets `selectedId`. */
   readonly sdSelect = output<SdKanbanCard<T>>();
   readonly sdMove = output<SdKanbanMoveRequest<T>>();
+  /** `option.dataSource.onLoad` threw or rejected, for the first page or a later one; never for an aborted load. */
+  readonly sdLoadError = output<SdKanbanLoadError>();
   readonly sdMoveError = output<SdKanbanMoveError<T>>();
   readonly #pending = signal<string | null>(null);
   /** Id of the card whose move waits for `onMove`; read-only. */
@@ -223,6 +226,16 @@ export class SdKanban<T = unknown> {
       this.#cancel();
       for (const focus of this.#moveFocus) this.#releaseFocus(focus);
     });
+  }
+
+  /** Loads the first page of one column, or of every loaded column, again (data source only). */
+  reload(_columnId?: string): void {
+    // RED skeleton of checkpoint 4.
+  }
+
+  /** Loads the next page of a column (data source only); ignored while it loads or at the end. */
+  loadMore(_columnId: string): void {
+    // RED skeleton of checkpoint 4.
   }
 
   /**
