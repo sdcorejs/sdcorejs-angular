@@ -184,6 +184,8 @@ test.describe('sd-calendar', () => {
     await page.keyboard.press('Escape');
     await expect(root.locator('[role="alertdialog"]')).toHaveCount(0);
     await expect(block(root, 'standup-20261019')).toHaveAttribute('data-start', start!);
+    // SC-29 (R2 A-18): the focus goes back to the block, not to the page body.
+    await expect(block(root, 'standup-20261019')).toBeFocused();
   });
 
   test('[CAL-E-07] shows the rejected outline and the Dismiss band, focus stays', async ({ page }) => {
