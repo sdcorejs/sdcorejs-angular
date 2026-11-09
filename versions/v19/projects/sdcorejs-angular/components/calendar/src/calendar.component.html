@@ -227,6 +227,7 @@
                   [attr.data-date]="_days[$index].day"
                   [style.grid-column]="$index + 1"
                   [style.grid-row]="_allDay.rows + 1"
+                  [attr.aria-label]="('core.component.calendar.more' | sdTranslate: { count }) + ', ' + _days[$index].label"
                   (click)="openDay(_days[$index].day)">
                   {{ 'core.component.calendar.more-short' | sdTranslate: { count } }}
                 </button>
