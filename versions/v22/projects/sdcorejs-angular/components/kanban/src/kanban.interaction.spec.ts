@@ -233,6 +233,8 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       const menu = card.querySelector<HTMLButtonElement>('[data-kanban-menu]') ?? document.createElement('button');
       const action = card.querySelector<HTMLButtonElement>('.test-action') ?? document.createElement('button');
       for (const control of [menu, action]) {
+        // why: elementFromPoint only sees the viewport; in the full suite other specs' leftovers push the host down.
+        control.scrollIntoView({ block: 'center', inline: 'center' });
         const point = centerOf(control);
         expect(control.contains(document.elementFromPoint(point.x, point.y)))
           .withContext(control.className)

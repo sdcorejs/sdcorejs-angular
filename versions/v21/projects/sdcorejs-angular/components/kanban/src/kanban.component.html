@@ -82,7 +82,8 @@
                 }
               </h3>
               @if (view.summary) {
-                <span class="sd-kanban__summary" data-summary>{{ view.summary }}</span>
+                <!-- why: bdi keeps "14,7 triệu ₫" in its own order on an RTL page; the line still aligns with the lane. -->
+                <span class="sd-kanban__summary" data-summary><bdi>{{ view.summary }}</bdi></span>
               }
             </div>
             <span class="sd-kanban__count" [attr.aria-label]="'core.component.kanban.count' | sdTranslate: { count: view.count }">

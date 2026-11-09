@@ -330,14 +330,25 @@
     .sd-kanban__count {
       order: 3;
     }
-    h3 {
+    // why: the label sits in the heading block (label + summary, §6), so the order goes on the block.
+    .sd-kanban__heading {
       order: 4;
+      flex: none;
+      align-items: center;
+    }
+    // A 64px lane has no room for the summary line.
+    .sd-kanban__summary {
+      display: none;
     }
   }
   h3 {
     writing-mode: vertical-rl;
     text-orientation: mixed;
     margin-top: 8px;
+    // why: with flex: 1 and overflow-wrap: anywhere the vertical label shrank to one letter per column.
+    flex: none;
+    overflow-wrap: normal;
+    white-space: nowrap;
   }
 }
 .sd-kanban__failure {

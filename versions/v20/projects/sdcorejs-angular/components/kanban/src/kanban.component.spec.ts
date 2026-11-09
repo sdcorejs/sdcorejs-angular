@@ -115,6 +115,40 @@ describe('SdKanban', () => {
       expect(top('.sd-kanban__dot')).toBeLessThan(top('.sd-kanban__count'));
     });
 
+    it('[KAN-B-06] keeps the vertical label under the count and inside a collapsed lane, without the summary line', () => {
+      fixture.componentRef.setInput('columns', [
+        { id: 'open', label: 'Open', summary: '9 triệu ₫' },
+        { id: 'done', label: 'Done' },
+      ]);
+      fixture.detectChanges();
+      column('open').querySelector<HTMLButtonElement>('.sd-kanban__header button[aria-expanded]')!.click();
+      fixture.detectChanges();
+      const lane = column('open');
+      const rect = (selector: string) => lane.querySelector<HTMLElement>(selector)!.getBoundingClientRect();
+      expect(rect('h3').top).withContext('label under the count').toBeGreaterThanOrEqual(rect('.sd-kanban__count').bottom);
+      expect(rect('h3').top).withContext('label inside the lane').toBeGreaterThanOrEqual(lane.getBoundingClientRect().top);
+      expect(getComputedStyle(lane.querySelector('h3')!).writingMode).toBe('vertical-rl');
+      expect(rect('h3').width).withContext('one column of text, not one letter per column').toBeLessThan(32);
+      expect(rect('h3').height).toBeGreaterThan(rect('h3').width);
+      const summary = lane.querySelector<HTMLElement>('[data-summary]');
+      expect(summary === null || getComputedStyle(summary).display === 'none')
+        .withContext('no summary in 64px')
+        .toBeTrue();
+    });
+
+    it('[KAN-B-07] isolates the summary text, so "14,7 triệu ₫" keeps its order on an RTL page', () => {
+      fixture.componentRef.setInput('columns', [
+        { id: 'open', label: 'Open', summary: '14,7 triệu ₫' },
+        { id: 'done', label: 'Done' },
+      ]);
+      fixture.detectChanges();
+      host().setAttribute('dir', 'rtl');
+      const text = column('open').querySelector<HTMLElement>('[data-summary] bdi');
+      expect(text?.textContent).toBe('14,7 triệu ₫');
+      expect(text ? getComputedStyle(text).unicodeBidi : '').toBe('isolate');
+      host().removeAttribute('dir');
+    });
+
     it('[KAN-R-09] shows the count as 13px secondary tabular text, "visible/total" while filtering', () => {
       const count = column('open').querySelector<HTMLElement>('.sd-kanban__count')!;
       const style = getComputedStyle(count);
@@ -460,7 +494,21 @@ describe('SdKanban', () => {
     });
   }
 
-  it('[KAN-R-06] keeps an API move in another board from taking focus from a matching card id', async () => {
+  it('[KAN-SC-31] a move() from the API leaves the focus where it is', async () => {
+    const outside = document.createElement('input');
+    document.body.appendChild(outside);
+    try {
+      outside.focus();
+      expect(await fixture.componentInstance.move('x', { columnId: 'done' })).toBeTrue();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(outside);
+    } finally {
+      outside.remove();
+    }
+  });
+
+  it('[KAN-R-06] [KAN-SC-31] keeps an API move in another board from taking focus from a matching card id', async () => {
     const other = TestBed.createComponent(SdKanban<Dto>);
     other.componentRef.setInput('option', option);
     other.componentRef.setInput('columns', columns);
@@ -478,7 +526,7 @@ describe('SdKanban', () => {
   });
 
   for (const outcome of ['accepted', 'rejected', 'error'] as const) {
-    it(`[KAN-R-05] preserves focus in an outside input after a pending keyboard move is ${outcome}`, async () => {
+    it(`[KAN-R-05] [KAN-SC-30] preserves focus in an outside input after a pending keyboard move is ${outcome}`, async () => {
       const confirmation = deferred<boolean>();
       setOption(withMove(() => confirmation.promise));
       handle('x').focus();
@@ -521,7 +569,7 @@ describe('SdKanban', () => {
     expect(host().querySelector('sd-search-field')).toBeNull();
   });
 
-  it('[KAN-R-05] preserves focus moved to this board search while persistence is pending', async () => {
+  it('[KAN-R-05] [KAN-SC-30] preserves focus moved to this board search while persistence is pending', async () => {
     const confirmation = deferred<boolean>();
     fixture.componentRef.setInput('searchable', true);
     setOption(withMove(() => confirmation.promise));
