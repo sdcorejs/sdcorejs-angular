@@ -60,7 +60,10 @@ export class SdCalendarDayCellTemplateDirective<T = unknown> {
   }
 }
 
-/** Replaces the content of an agenda row. `let-event`. */
+/**
+ * Content of the place column of an agenda row, shown when the host is at least 720px wide (§11). Below that width
+ * the column, and the template, are left out. `let-event`.
+ */
 @Directive({ selector: 'ng-template[sdCalendarAgendaItemTemplate]', standalone: true })
 export class SdCalendarAgendaItemTemplateDirective<T = unknown> {
   readonly template = inject<TemplateRef<SdCalendarAgendaItemTemplateContext<T>>>(TemplateRef);

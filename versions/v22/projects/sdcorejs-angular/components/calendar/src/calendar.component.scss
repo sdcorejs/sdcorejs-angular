@@ -130,7 +130,7 @@ $hour: var(--sd-calendar-hour-height);
   @include bare-button;
 
   height: var(--sd-control-height-sm, 32px);
-  margin-right: 4px;
+  margin-inline-end: 4px;
   padding: 0 14px;
   border: 1px solid tok(border);
   border-radius: radius(8);
@@ -182,7 +182,7 @@ $hour: var(--sd-calendar-hour-height);
   font-weight: $medium;
 
   & + & {
-    border-left: 1px solid tok(border);
+    border-inline-start: 1px solid tok(border);
   }
 
   &[aria-pressed='true'] {
@@ -308,7 +308,7 @@ $hour: var(--sd-calendar-hour-height);
   justify-content: center;
   gap: 2px;
   min-width: 0;
-  border-left: 1px solid tok(calendar-line);
+  border-inline-start: 1px solid tok(calendar-line);
 }
 
 .sd-calendar__weekday {
@@ -359,7 +359,7 @@ $hour: var(--sd-calendar-hour-height);
   color: tok(text-secondary);
   font-size: fs(11);
   line-height: lh(14);
-  text-align: right;
+  text-align: end;
 }
 
 .sd-calendar__corner {
@@ -380,7 +380,7 @@ $hour: var(--sd-calendar-hour-height);
   color: tok(text-secondary);
   font-size: fs(11);
   line-height: lh(14);
-  text-align: right;
+  text-align: end;
 }
 
 .sd-calendar__all-day-grid {
@@ -409,13 +409,13 @@ $hour: var(--sd-calendar-hour-height);
   cursor: pointer;
 
   &[data-clipped-start] {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
   }
 
   &[data-clipped-end] {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
   }
 }
 
@@ -446,7 +446,7 @@ $hour: var(--sd-calendar-hour-height);
   color: tok(primary);
   font-size: fs(12);
   font-weight: $medium;
-  text-align: left;
+  text-align: start;
 }
 
 .sd-calendar__body {
@@ -461,7 +461,7 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__hour {
   position: absolute;
-  right: 8px;
+  inset-inline-end: 8px;
   margin-top: -7px;
   color: tok(text-secondary);
   font-size: fs(11);
@@ -486,7 +486,7 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__column {
   position: relative;
   min-width: 0;
-  border-left: 1px solid tok(calendar-line);
+  border-inline-start: 1px solid tok(calendar-line);
   // why: hour and half-hour lines are two repeating gradients, not one element per slot (§7, SC-44).
   background-image:
     linear-gradient(to bottom, transparent calc(100% - 1px), tok(calendar-line) calc(100% - 1px)),
@@ -505,16 +505,16 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__off {
   position: absolute;
-  right: 0;
-  left: 0;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
   background: tok(calendar-off-hours);
   pointer-events: none;
 }
 
 .sd-calendar__now {
   position: absolute;
-  right: 0;
-  left: 0;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
   z-index: 4;
   height: 2px;
   background: tok(calendar-now);
@@ -523,7 +523,7 @@ $hour: var(--sd-calendar-hour-height);
   &::before {
     position: absolute;
     top: -4px;
-    left: -5px;
+    inset-inline-start: -5px;
     width: 10px;
     height: 10px;
     border-radius: radius(999);
@@ -534,8 +534,8 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__skeleton {
   position: absolute;
-  right: var(--sd-calendar-reserve);
-  left: 2px;
+  inset-inline-end: var(--sd-calendar-reserve);
+  inset-inline-start: 2px;
   border-radius: radius(6);
   background: tok(surface-muted);
 }
@@ -545,7 +545,8 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__bar,
 .sd-calendar__chip,
 .sd-calendar__agenda-row,
-.sd-calendar__cell-dot {
+.sd-calendar__cell-dot,
+.sd-calendar__proposal {
   --sd-calendar-event-bg: color-mix(in srgb, var(--sd-calendar-event-color) 14%, #{tok(surface)});
   --sd-calendar-event-border: color-mix(in srgb, var(--sd-calendar-event-color) 28%, #{tok(surface)});
   --sd-calendar-event-dot: var(--sd-calendar-event-color);
@@ -587,7 +588,7 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__event {
   position: absolute;
-  left: calc(2px + (100% - 2px - var(--sd-calendar-reserve)) * var(--sd-calendar-column) / var(--sd-calendar-columns));
+  inset-inline-start: calc(2px + (100% - 2px - var(--sd-calendar-reserve)) * var(--sd-calendar-column) / var(--sd-calendar-columns));
   z-index: 1;
   display: flex;
   align-items: flex-start;
@@ -703,7 +704,7 @@ $hour: var(--sd-calendar-hour-height);
   box-sizing: border-box;
   padding: 4px;
   border-bottom: 1px solid tok(calendar-line);
-  border-left: 1px solid tok(calendar-line);
+  border-inline-start: 1px solid tok(calendar-line);
   cursor: pointer;
 
   &[data-off] {
@@ -778,15 +779,15 @@ $hour: var(--sd-calendar-hour-height);
   }
 
   &--bar[data-join-start] {
-    margin-left: -5px;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    margin-inline-start: -5px;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
   }
 
   &--bar[data-join-end] {
-    margin-right: -5px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    margin-inline-end: -5px;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
   }
 }
 
@@ -938,6 +939,18 @@ $hour: var(--sd-calendar-hour-height);
   cursor: cell;
 }
 
+// §9.2: a sweep that creatable refuses shows the not-allowed cursor.
+.sd-calendar__columns--blocked,
+.sd-calendar__columns--blocked .sd-calendar__column:not([data-out-of-range]) {
+  cursor: not-allowed;
+}
+
+// Direction icons point the other way in right-to-left.
+.sd-calendar__icon-button sd-icon:dir(rtl),
+.sd-calendar__clip:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .sd-calendar__event[data-movable] {
   touch-action: none;
 }
@@ -945,7 +958,7 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__event[data-pending],
 .sd-calendar__bar[data-pending] {
   // Saving at the proposed position: full width, dashed (§8.3).
-  left: 2px;
+  inset-inline-start: 2px;
   z-index: 3;
   width: calc(100% - 2px - var(--sd-calendar-reserve));
   border: 1px dashed var(--sd-calendar-event-color);
@@ -979,9 +992,9 @@ $hour: var(--sd-calendar-hour-height);
 
 .sd-calendar__resize {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
-  left: 0;
+  inset-inline-start: 0;
   height: 8px;
   cursor: ns-resize;
   touch-action: none;
@@ -989,10 +1002,10 @@ $hour: var(--sd-calendar-hour-height);
   &::after {
     position: absolute;
     bottom: 3px;
-    left: 50%;
+    inset-inline-start: 50%;
     width: 16px;
     height: 3px;
-    margin-left: -8px;
+    margin-inline-start: -8px;
     border-radius: radius(2);
     background: var(--sd-calendar-event-color);
     content: '';
@@ -1018,7 +1031,7 @@ $hour: var(--sd-calendar-hour-height);
     &::after {
       width: 24px;
       height: 6px;
-      margin-left: -12px;
+      margin-inline-start: -12px;
       opacity: 1;
     }
   }
@@ -1027,8 +1040,8 @@ $hour: var(--sd-calendar-hour-height);
 .sd-calendar__ghost,
 .sd-calendar__proposal {
   position: absolute;
-  right: var(--sd-calendar-reserve);
-  left: 2px;
+  inset-inline-end: var(--sd-calendar-reserve);
+  inset-inline-start: 2px;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -1050,16 +1063,17 @@ $hour: var(--sd-calendar-hour-height);
   }
 }
 
+// §8.3 "Đang kéo": border in the event colour, large shadow.
 .sd-calendar__proposal {
-  border: 1px solid tok(primary);
-  background: tok(primary-light);
+  border: 1px solid var(--sd-calendar-event-color);
+  background: var(--sd-calendar-event-bg);
   box-shadow: var(--sd-shadow-lg);
 }
 
 .sd-calendar__cursor {
   position: absolute;
-  right: 0;
-  left: 0;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
   z-index: 2;
   display: none;
   box-sizing: border-box;
@@ -1092,9 +1106,9 @@ $hour: var(--sd-calendar-hour-height);
 // ---- scope bar (§9.6) ----
 .sd-calendar__scope {
   position: absolute;
-  right: 12px;
+  inset-inline-end: 12px;
   bottom: 12px;
-  left: 12px;
+  inset-inline-start: 12px;
   z-index: 10;
   padding: 12px 14px;
   border-radius: radius(10);
@@ -1152,7 +1166,8 @@ $hour: var(--sd-calendar-hour-height);
   }
 
   .sd-calendar__title {
-    order: -1;
+    // §12 and the mobile design: the title leads the first row, the buttons follow on its right.
+    order: -2;
     flex: 1 1 0;
   }
 

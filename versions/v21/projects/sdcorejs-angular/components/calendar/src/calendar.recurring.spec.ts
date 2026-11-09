@@ -92,6 +92,60 @@ describe('SdCalendar · recurring events', () => {
     }
   }));
 
+  // why: in the browser the continuation after the scope answer runs as a microtask before change detection removes
+  // the bar, so the focus is still on a bar button when the calendar decides where it goes (R2 A-18).
+  it('[CAL-B-05] puts the focus back on the block when the scope bar closes before change detection (SC-29)', fakeAsync(() => {
+    const { host, settle } = mount();
+    const closes: [string, (target: HTMLElement) => void][] = [
+      ['Esc', target => void press(target, 'Escape')],
+      ['Huỷ', () => scopeButton(host, 'cancel')?.click()],
+      ['Chỉ lần này', () => scopeButton(host, 'this')?.click()],
+    ];
+    for (const [name, close] of closes) {
+      const block = standup(host);
+      block?.focus();
+      press(block ?? host, 'ArrowDown', { alt: true });
+      settle();
+      expect(document.activeElement).withContext(name).toBe(scopeButton(host, 'this'));
+      close(bar(host) ?? host);
+      flushMicrotasks();
+      settle();
+      expect(bar(host)).withContext(name).toBeNull();
+      expect((document.activeElement as HTMLElement | null)?.dataset['eventId'])
+        .withContext(name)
+        .toBe('standup');
+    }
+  }));
+
+  it('[CAL-B-05] puts the focus on the block after the scope bar of a mouse drag closes', fakeAsync(() => {
+    const { host, settle } = mount('cancel');
+    const block = standup(host) ?? host;
+    const from = { x: centerOf(block).x, y: block.getBoundingClientRect().top + 5 };
+    mouseDrag(block, { x: from.x, y: from.y + 48 }, { from, step: settle });
+    expect(document.activeElement).toBe(scopeButton(host, 'this'));
+    scopeButton(host, 'cancel')?.click();
+    flushMicrotasks();
+    settle();
+    expect(bar(host)).toBeNull();
+    expect((document.activeElement as HTMLElement | null)?.dataset['eventId']).toBe('standup');
+  }));
+
+  it('[CAL-B-10] closes the scope bar silently when a reload aborts the move (SC-15, R2 B-3)', fakeAsync(() => {
+    const { host, calendar, onMove, settle } = mount();
+    const block = standup(host);
+    block?.focus();
+    press(block ?? host, 'ArrowDown', { alt: true });
+    settle();
+    expect(bar(host)).not.toBeNull();
+    calendar.reload();
+    settle();
+    expect(bar(host)).toBeNull();
+    expect(onMove).not.toHaveBeenCalled();
+    expect(text(q(host, '[role="status"]'))).not.toContain('Đã huỷ thay đổi');
+    expect(standup(host)?.dataset['start']).toBe('2026/10/19 09:00:00');
+    expect(standup(host)?.hasAttribute('data-pending')).toBeFalse();
+  }));
+
   it('[CAL-C-13] passes the chosen scope and reloads after "following" and "all"', fakeAsync(() => {
     for (const scope of ['this', 'following', 'all'] as const) {
       const { host, onMove, onLoad, settle } = mount();

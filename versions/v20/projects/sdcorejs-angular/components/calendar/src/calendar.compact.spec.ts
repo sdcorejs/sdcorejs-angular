@@ -91,6 +91,21 @@ describe('SdCalendar · compact, touch and print', () => {
     expect(calendar.date()).toBe('2026/10/23');
   }));
 
+  it('[CAL-B-12] marks "Ngày" pressed when a narrow week is drawn as a day (§12, §15, R2 A-24)', fakeAsync(() => {
+    const { host, calendar } = mount({}, '390px');
+    expect(calendar.view()).toBe('week');
+    const pressed = qa(host, '[data-view-option]').filter(button => button.getAttribute('aria-pressed') === 'true');
+    expect(pressed.map(button => button.dataset['viewOption'])).toEqual(['day']);
+  }));
+
+  it('[CAL-B-13] puts the title first on the first row of the narrow toolbar (§12, R2 A-20)', fakeAsync(() => {
+    const { host } = mount({}, '390px');
+    const title = (q(host, '[data-title]') ?? host).getBoundingClientRect();
+    const today = (q(host, 'button[data-action="today"]') ?? host).getBoundingClientRect();
+    expect(title.left).toBeLessThan(today.left);
+    expect(Math.abs(title.top + title.height / 2 - (today.top + today.height / 2))).toBeLessThan(today.height / 2);
+  }));
+
   it('[CAL-C-18] starts a touch drag only after a 400ms hold', fakeAsync(() => {
     const { fixture, host, settle } = mount({}, '390px');
     const drag = fixture.debugElement.query(By.css('[data-event-id="client"]')).injector.get(CdkDrag);
@@ -115,6 +130,41 @@ describe('SdCalendar · compact, touch and print', () => {
     expect(q(host, '[data-drag-proposal]')).not.toBeNull();
     touch(document, 'touchend', to, block);
     settle();
+  }));
+
+  it('[CAL-B-06] removes the document Esc listener after a swipe, a cancelled press and on destroy (R2 A-05, A-17)', fakeAsync(() => {
+    const added = spyOn(document, 'addEventListener').and.callThrough();
+    const removed = spyOn(document, 'removeEventListener').and.callThrough();
+    const escListeners = (spy: jasmine.Spy): unknown[] =>
+      spy.calls
+        .allArgs()
+        .filter(([type, , capture]) => type === 'keydown' && capture === true)
+        .map(([, listener]) => listener as unknown);
+    const leaked = (): unknown[] => {
+      const gone = escListeners(removed);
+      return escListeners(added).filter(listener => !gone.includes(listener));
+    };
+    const { fixture, host, settle } = mount({}, '390px');
+    const grid = q(host, '[data-day-column]') ?? host;
+    const from = centerOf(grid);
+    pointer(grid, 'pointerdown', from, 'touch');
+    pointer(grid, 'pointermove', { x: from.x - 80, y: from.y + 5 }, 'touch');
+    pointer(grid, 'pointerup', { x: from.x - 80, y: from.y + 5 }, 'touch');
+    settle();
+    expect(escListeners(added).length).withContext('swipe adds the listener').toBeGreaterThan(0);
+    expect(leaked()).withContext('swipe').toEqual([]);
+    const column = q(host, '[data-day-column]') ?? host;
+    pointer(column, 'pointerdown', centerOf(column), 'mouse');
+    pointer(column, 'pointercancel', centerOf(column), 'mouse');
+    settle();
+    expect(leaked()).withContext('pointercancel').toEqual([]);
+    pointer(column, 'pointerdown', centerOf(column), 'mouse');
+    fixture.destroy();
+    expect(leaked()).withContext('destroy').toEqual([]);
+    expect(FakeResizeObserver.instances.length).toBeGreaterThan(0);
+    expect(FakeResizeObserver.instances.every(observer => observer.disconnected))
+      .withContext('ResizeObserver')
+      .toBeTrue();
   }));
 
   it('[CAL-C-18] swipes the day grid and the strip by at least 60px to change day and week', fakeAsync(() => {

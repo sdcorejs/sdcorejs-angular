@@ -215,6 +215,8 @@ interface SdCalendarDragProposal {
   readonly end: number;
   readonly title: string;
   readonly outside: boolean;
+  readonly color: string;
+  readonly customColor: string | null;
 }
 
 @Component({
@@ -328,6 +330,8 @@ export class SdCalendar<T = unknown> {
     readonly id: string;
     readonly placement: SdCalendarPlacement;
     readonly title: string;
+    readonly color: string;
+    readonly customColor: string | null;
     readonly start: Point;
     readonly scrollTop: number;
     readonly columns: readonly { readonly day: string; readonly left: number; readonly right: number }[];
@@ -917,9 +921,9 @@ export class SdCalendar<T = unknown> {
     const press = this.#press;
     if (!press) return;
     this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     // §12: a horizontal touch swipe of at least 60px on the day grid moves one day.
     if (press.touch && domEvent && this.displayView() === 'day' && this.#swipe(press, domEvent)) return;
-    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     const ghost = this.#ghost();
     if (!this.#operation.busy()) this.#ghost.set(null);
     // §9.1: a press on an empty slot clears the selection; with option.create it also creates there.
@@ -954,6 +958,7 @@ export class SdCalendar<T = unknown> {
 
   protected onGridPointerCancel(): void {
     this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     if (!this.#operation.busy()) this.#ghost.set(null);
   }
 
@@ -1065,6 +1070,8 @@ export class SdCalendar<T = unknown> {
       id: item.event.id,
       placement: item.placement,
       title: item.event.title,
+      color: item.color,
+      customColor: item.customColor,
       start: this.#pickup ?? pointOf(start.event) ?? { x: 0, y: 0 },
       scrollTop: this.scroller()?.nativeElement.scrollTop ?? 0,
       columns,
@@ -1199,8 +1206,11 @@ export class SdCalendar<T = unknown> {
     const signal = this.#operation.begin('move');
     if (!signal) return false;
     const origin = keyboard ? document.activeElement : null;
+    let restore = keyboard;
     let scope: SdCalendarMoveScope | null = placed.event.occurrence ? 'this' : null;
     if (placed.event.occurrence && source !== 'api') {
+      // The scope bar takes the focus, so it goes back to the block when the bar closes, after a mouse drag too.
+      restore = true;
       // §9.6: an occurrence waits at the proposal (dashed, no sync icon) until the user picks a scope.
       this.#moving.set({ id, target, saving: false });
       scope = await new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title: placed.event.title, answer }));
@@ -1209,11 +1219,11 @@ export class SdCalendar<T = unknown> {
         this.#operation.end(signal);
         this.#moving.set(null);
         this.#announce(this.#i18n.t('core.component.calendar.cancelled'));
-        if (keyboard) this.#restoreFocus(id, origin);
+        this.#restoreFocus(id, origin);
         return false;
       }
     }
-    return this.#commitMove(placed, target, from, to, source, scope, signal, keyboard ? origin : null, keyboard);
+    return this.#commitMove(placed, target, from, to, source, scope, signal, origin, restore);
   }
 
   /** Answer of the scope bar; `null` is Cancel (Esc too). */
@@ -1240,7 +1250,7 @@ export class SdCalendar<T = unknown> {
     scope: SdCalendarMoveScope | null,
     signal: AbortSignal,
     origin: Element | null,
-    keyboard: boolean
+    restore: boolean
   ): Promise<boolean> {
     const move = untracked(this.option).move!;
     // SC-06: the flag is evaluated once more right before the callback.
@@ -1258,7 +1268,7 @@ export class SdCalendar<T = unknown> {
     if (outcome.kind === 'aborted') return false;
     this.#operation.end(signal);
     this.#moving.set(null);
-    if (keyboard) this.#restoreFocus(event.id, origin);
+    if (restore) this.#restoreFocus(event.id, origin);
     if (outcome.kind === 'cancelled') {
       this.#announce(this.#i18n.t('core.component.calendar.cancelled'));
       return false;
@@ -1431,7 +1441,8 @@ export class SdCalendar<T = unknown> {
     const duration = placement.endMinutes - placement.startMinutes;
     const start = sdCalendarSnapMove(placement.startMinutes, delta, duration, sdCalendarMoveStep(this.stepValue()));
     const day = columns[column]?.day ?? placement.startDay;
-    this.#drag.set({ id: session.id, day, start, end: start + duration, title: session.title, outside });
+    const { title, color, customColor } = session;
+    this.#drag.set({ id: session.id, day, start, end: start + duration, title, outside, color, customColor });
   }
 
   /** Scrolls while the pointer is within 40px of the top or bottom of the scroll area, faster closer to it (§9.3). */
@@ -1483,8 +1494,10 @@ export class SdCalendar<T = unknown> {
 
   #restoreFocus(id: string, origin: Element | null): void {
     const active = document.activeElement;
+    // A focus still inside the scope bar is the calendar's own: the bar is about to be removed (SC-29, R2 A-18).
+    const inScopeBar = !!active && !!this.#host.nativeElement.querySelector('.sd-calendar__scope')?.contains(active);
     // SC-30: the user moved the focus somewhere else while waiting; keep it there.
-    if (active && active !== document.body && active !== origin && active.isConnected) return;
+    if (active && active !== document.body && active !== origin && active.isConnected && !inScopeBar) return;
     this.#focusTarget = id;
     this.#focusPending();
   }

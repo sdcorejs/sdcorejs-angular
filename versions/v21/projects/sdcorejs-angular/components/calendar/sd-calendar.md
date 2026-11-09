@@ -231,11 +231,16 @@ Always present (with or without `autoId`):
 
 | Element | Attributes |
 | --- | --- |
-| Root | `data-view`, `data-from`, `data-to`, `data-compact` |
-| Event (block, bar, chip, agenda row) | `data-event-id`, `data-start`, `data-end`, `data-all-day`, `data-pending`, `data-selected`, `data-failed`, `data-past`, `data-color` |
+| Root | `data-view`, `data-display` (what is drawn: a narrow week is `day`), `data-from`, `data-to`, `data-compact` |
+| Block (time grid) | `data-event-id`, `data-start`, `data-end`, `data-all-day`, `data-pending`, `data-selected`, `data-failed`, `data-past`, `data-color`, `data-size`, `data-movable`, `data-dragging`; its resize handle `data-resize-handle` |
+| All-day bar | `data-event-id`, `data-start`, `data-end`, `data-all-day`, `data-pending`, `data-selected`, `data-failed`, `data-past`, `data-color`, `data-clipped-start`, `data-clipped-end` |
+| Month chip | `data-event-id`, `data-color`, `data-past`, `data-selected` |
+| Agenda row | `data-event-id`, `data-color`, `data-past`, `data-pending`, `data-selected`; the place column `data-agenda-place` |
+| Transient | `data-create-ghost` (with `data-pending`, `data-blocked`), `data-drag-proposal`, `data-now`, `data-skeleton` |
 | Time grid | `data-region="time-grid"`, day columns `data-day-column` + `data-date`, `data-off`, `data-today`, `data-out-of-range`; headers `data-day-header` |
 | Month cell | `role="gridcell"` + `data-date` |
 | Agenda day | `data-agenda-day` + `data-date` |
+| Toolbar | `data-title`, `data-zone`, narrow day strip `data-day-strip` |
 | Buttons | `data-action` (`today`, `prev`, `next`, `retry`, `dismiss`), `data-view-option`, `data-more`, `data-scope` |
 | Bands | `data-band="load-error"`, `data-band="move-error"` |
 

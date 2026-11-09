@@ -3,7 +3,7 @@ import { findCssRule } from '../../../testing';
 import { centerOf, mouse, mouseDrag, pointer, press } from '../../../testing/schedule-testing';
 import { SdCalendar } from './calendar.component';
 import type { SdCalendarEvent, SdCalendarMoveRequest, SdCalendarOption } from './calendar.model';
-import { configureCalendar, createWith, q, text, weekEvents, type CalendarDto } from './calendar.testing';
+import { configureCalendar, createWith, q, qa, text, weekEvents, type CalendarDto } from './calendar.testing';
 
 type Event = SdCalendarEvent<CalendarDto>;
 
@@ -194,6 +194,57 @@ describe('SdCalendar · edge cases', () => {
     mount({});
     expect(findCssRule(/sd-calendar__columns/)?.getPropertyValue('user-select')).toBe('none');
     expect(findCssRule(/sd-calendar__all-day-grid/)?.getPropertyValue('user-select')).toBe('none');
+  }));
+
+  it('[CAL-B-11] lays blocks and chevrons out from the inline start in right-to-left (R2 A-16)', fakeAsync(() => {
+    const { host, settle } = mount({});
+    const gaps = (): { start: number; end: number } => {
+      const day = column(host, '2026/10/21').getBoundingClientRect();
+      const review = block(host, 'review').getBoundingClientRect();
+      return { start: Math.round(review.left - day.left), end: Math.round(day.right - review.right) };
+    };
+    const ltr = gaps();
+    host.setAttribute('dir', 'rtl');
+    settle();
+    // The inline start is the right edge: the gaps of left-to-right are mirrored, the reserve is on the left.
+    expect(gaps()).toEqual({ start: ltr.end, end: ltr.start });
+    expect(ltr.end).toBeGreaterThan(ltr.start);
+    expect(getComputedStyle(q(host, 'button[data-action="prev"] sd-icon') ?? host).transform).not.toBe('none');
+  }));
+
+  it('[CAL-B-14] shows the not-allowed cursor while a sweep is refused by creatable (§9.2, R2 A-19)', fakeAsync(() => {
+    const onCreate = jasmine.createSpy('onCreate');
+    const { host, settle } = mount({ create: { onCreate, creatable: () => false } });
+    const target = column(host, '2026/10/21');
+    expect(getComputedStyle(target).cursor).toBe('cell');
+    pointer(target, 'pointerdown', at(host, '2026/10/21', 600));
+    pointer(target, 'pointermove', at(host, '2026/10/21', 700));
+    settle();
+    expect(q(host, '[data-create-ghost][data-blocked]')).not.toBeNull();
+    expect(getComputedStyle(target).cursor).toBe('not-allowed');
+    pointer(target, 'pointerup', at(host, '2026/10/21', 700));
+    settle();
+    expect(getComputedStyle(target).cursor).toBe('cell');
+    expect(onCreate).not.toHaveBeenCalled();
+  }));
+
+  it('[CAL-B-15] names the "+N" button of the all-day row with the count and the day (R2 A-09)', fakeAsync(() => {
+    const extra = ['a', 'b', 'c'].map(
+      (id): Event => ({ id: `extra-${id}`, title: `Cả ngày ${id}`, start: '2026/10/22', allDay: true, data: { room: '' } })
+    );
+    const { host } = mount({}, {}, () => [...weekEvents(), ...extra]);
+    const more = q(host, '[data-more][data-date="2026/10/22"]');
+    const dayLabel = q(host, '[data-day-header][data-date="2026/10/22"] button')?.getAttribute('aria-label');
+    // "Nghỉ phép", "Trực đêm" (it crosses midnight) and three extra bars: three rows, two more.
+    expect(text(more)).toBe('+2');
+    expect(more?.getAttribute('aria-label')).toBe(`+2 khác, ${dayLabel}`);
+  }));
+
+  it('[CAL-B-16] draws the dot of a month bar once per week row, not on the cells it continues into', fakeAsync(() => {
+    const { host } = mount({}, { view: 'month' });
+    const chips = qa(host, '[role="gridcell"] [data-event-id="leave"]');
+    expect(chips.map(chip => chip.closest('[role="gridcell"]')?.getAttribute('data-date'))).toEqual(['2026/10/22', '2026/10/23']);
+    expect(chips.map(chip => !!chip.querySelector('.sd-calendar__dot'))).toEqual([true, false]);
   }));
 
   it('[CAL-C-20] warns once for a working-hours range it has to ignore', fakeAsync(() => {

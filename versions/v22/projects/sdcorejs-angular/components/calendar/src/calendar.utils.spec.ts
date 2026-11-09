@@ -272,6 +272,20 @@ describe('sd-calendar utils', () => {
       ]);
       expect(sdCalendarStack([])).toEqual([]);
     });
+
+    it('[CAL-B-09] starts a new cluster at an event that begins exactly at the latest end (R2 B-2)', () => {
+      expect(
+        sdCalendarStack([
+          { start: 540, end: 600 },
+          { start: 540, end: 570 },
+          { start: 600, end: 660 },
+        ])
+      ).toEqual([
+        { index: 0, column: 0, columns: 2 },
+        { index: 1, column: 1, columns: 2 },
+        { index: 2, column: 0, columns: 1 },
+      ]);
+    });
   });
 
   describe('all-day rows', () => {

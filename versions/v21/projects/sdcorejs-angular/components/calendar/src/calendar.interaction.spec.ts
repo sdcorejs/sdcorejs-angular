@@ -214,6 +214,39 @@ describe('SdCalendar · interaction', () => {
       expect(q(host, '[data-create-ghost]')).toBeNull();
     }));
 
+    it('[CAL-B-08] ignores an onCreate answer that arrives after a new option or after destroy (SC-15, R2 B-1)', fakeAsync(() => {
+      const late: Event = {
+        id: 'late',
+        title: 'Đến muộn',
+        start: '2026/10/21 14:00:00',
+        end: '2026/10/21 15:00:00',
+        data: { room: 'Huế' },
+      };
+      for (const outcome of ['resolve', 'reject'] as const) {
+        const wait = deferred<Event | void>();
+        const { host, fixture, calendar, settle } = creating(() => wait.promise);
+        sweep(host, '2026/10/21', 840, 900, settle);
+        expect(q(host, '[data-create-ghost][data-pending]')).withContext(outcome).not.toBeNull();
+        fixture.componentRef.setInput('option', { dataSource: { onLoad: () => weekEvents() } });
+        settle();
+        if (outcome === 'resolve') wait.resolve(late);
+        else wait.reject(new Error('late'));
+        settle();
+        expect(block(host, 'late')).withContext(outcome).toBeNull();
+        expect(calendar.selectedId()).withContext(outcome).toBeNull();
+        expect(q(host, '[data-band]')).withContext(outcome).toBeNull();
+        expect(q(host, '[data-create-ghost]')).withContext(outcome).toBeNull();
+        TestBed.resetTestingModule();
+      }
+      const wait = deferred<Event | void>();
+      const { host, fixture, calendar, settle } = creating(() => wait.promise);
+      sweep(host, '2026/10/21', 840, 900, settle);
+      fixture.destroy();
+      wait.resolve(late);
+      flushMicrotasks();
+      expect(calendar.selectedId()).toBeNull();
+    }));
+
     it('[CAL-SC-19] inserts the returned event and selects it without sdSelect', fakeAsync(() => {
       const created: Event = {
         id: 'new',
@@ -577,6 +610,32 @@ describe('SdCalendar · interaction', () => {
       mouseDrag(review(), { x: from.x, y: from.y + 96 }, { from: grab(), step: settle, beforeRelease: () => press(document, 'Escape') });
       expect(onMove.calls.count()).toBe(count);
       expect(q(host, '[data-drag-proposal]')).toBeNull();
+    }));
+
+    it('[CAL-B-07] draws the drag proposal in the colour of the dragged event (§8.3, R2 A-11)', fakeAsync(() => {
+      const onMove = moveSpy(() => 'cancel');
+      const { host, settle } = mount(store => {
+        store.events = store.events.map(event => (event.id === 'one-on-one' ? { ...event, color: 'rebeccapurple' } : event));
+        return { move: { onMove } };
+      });
+      for (const [id, color] of [
+        ['review', 'warning'],
+        ['one-on-one', 'custom'],
+      ] as const) {
+        const source = block(host, id) ?? host;
+        const from = { x: centerOf(source).x, y: source.getBoundingClientRect().top + 10 };
+        mouseDrag(source, { x: from.x, y: from.y - 48 }, { from, step: settle, release: false });
+        const proposal = q(host, '[data-drag-proposal]');
+        expect(proposal?.dataset['color']).withContext(id).toBe(color);
+        const tone = (element: Element | null): string =>
+          element ? getComputedStyle(element).getPropertyValue('--sd-calendar-event-color').trim() : 'none';
+        expect(tone(proposal))
+          .withContext(id)
+          .toBe(tone(block(host, id)));
+        if (color === 'custom') expect(proposal ? getComputedStyle(proposal).borderTopColor : '').toBe('rgb(102, 51, 153)');
+        mouse(document, 'mouseup', { x: from.x, y: from.y - 48 });
+        settle();
+      }
     }));
 
     it('[CAL-C-11] resizes the end by dragging the bottom edge, at least 15 minutes long', fakeAsync(() => {
