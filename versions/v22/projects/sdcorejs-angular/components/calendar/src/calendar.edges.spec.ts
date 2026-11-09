@@ -248,11 +248,14 @@ describe('SdCalendar · edge cases', () => {
   }));
 
   it('[CAL-B-17] starts text and asymmetric paddings from the inline start in right-to-left (R2 recheck N-1)', fakeAsync(() => {
+    // why: the library reboot sets `body { text-align: left }`, but Karma loads no global style; the test sets it.
+    document.body.style.textAlign = 'left';
     const { host, settle } = mount({});
     host.setAttribute('dir', 'rtl');
     settle();
-    // why: the library reboot sets `body { text-align: left }`; the calendar starts its text from the inline start.
-    expect(getComputedStyle(host).textAlign).toBe('start');
+    const textAlign = getComputedStyle(host).textAlign;
+    document.body.style.textAlign = '';
+    expect(textAlign).toBe('start');
     const toolbar = getComputedStyle(q(host, '.sd-calendar__toolbar') ?? host);
     expect([toolbar.paddingRight, toolbar.paddingLeft]).toEqual(['14px', '12px']);
     const corner = getComputedStyle(q(host, '.sd-calendar__corner') ?? host);
@@ -323,6 +326,8 @@ describe('SdCalendar · edge cases', () => {
       expect(text(more)).withContext(language).toBe('+2');
       expect(label.startsWith('+2')).withContext(`${language}: ${label}`).toBeTrue();
       expect(label.length).withContext(language).toBeGreaterThan('+2, '.length);
+      // vi and en already start `more` with "+2"; it is not said twice.
+      if (language === 'vi' || language === 'en') expect(label.startsWith('+2,')).withContext(`${language}: ${label}`).toBeFalse();
       TestBed.resetTestingModule();
     }
   }));
