@@ -638,6 +638,19 @@ describe('SdCalendar · interaction', () => {
       }
     }));
 
+    it('[CAL-B-20] gives the drag proposal the colour dot of a block (§8.3, R2 recheck N-3)', fakeAsync(() => {
+      const onMove = moveSpy(() => 'cancel');
+      const { host, settle } = mount(() => ({ move: { onMove } }));
+      const source = block(host, 'review') ?? host;
+      const from = { x: centerOf(source).x, y: source.getBoundingClientRect().top + 10 };
+      mouseDrag(source, { x: from.x, y: from.y - 48 }, { from, step: settle, release: false });
+      const proposal = q(host, '[data-drag-proposal]');
+      expect(q(proposal ?? host, ':scope > .sd-calendar__dot')).not.toBeNull();
+      expect(q(proposal ?? host, '.sd-calendar__event-title')?.textContent?.trim()).toBe('Review ngân sách Q4');
+      mouse(document, 'mouseup', { x: from.x, y: from.y - 48 });
+      settle();
+    }));
+
     it('[CAL-C-11] resizes the end by dragging the bottom edge, at least 15 minutes long', fakeAsync(() => {
       const onMove = moveSpy(() => 'cancel');
       const { host, settle } = mount(() => ({ move: { onMove } }));
