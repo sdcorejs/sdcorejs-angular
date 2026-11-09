@@ -1,11 +1,11 @@
 # sd-kanban · test
-Commit: mã `0215aff4`, báo cáo và E2E ở commit kế tiếp (nhánh `feat/kanban-api`) · Node local v26 (PD chốt K1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
+Commit: mã `871a4642` (sau sửa R2), báo cáo và E2E ở commit kế tiếp (nhánh `feat/kanban-api`) · Node local v26 (PD chốt K1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
 
 ## Lệnh (TESTING.md §1)
 | Lệnh | Kết quả |
 | --- | --- |
-| `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage` | Ở `cfa8e0a1` + sửa KAN-C-16 (trước KAN-B-06, -07): 9224/9224 SUCCESS, seed 208298, 5 phút 27 giây. Tổng: statements 88% (39712/45125), branches 79.27%, functions 87.1%, lines 90.37% (ngưỡng karma không báo lỗi). Lần chạy trước đó (cùng mã, chưa sửa C-16): 9222/9223, 1 lỗi KAN-C-16 chỉ khi chạy cả suite (fixture bị đẩy ra ngoài viewport; đã cuộn control vào màn hình trước khi hit-test). |
-| Lệnh nhanh kanban (`--include='projects/sdcorejs-angular/components/kanban/**/*.spec.ts'`) | 143/143 SUCCESS ở `0215aff4` |
+| `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage` | Ở `871a4642`: 9246/9246 SUCCESS, seed 269070, 4 phút 58 giây. Tổng: statements 88.02% (39738/45144), branches 79.33%, functions 87.11%, lines 90.39% (ngưỡng karma không báo lỗi). Trước R2: 9224/9224 (seed 208298); một lần trước nữa 9222/9223 với lỗi KAN-C-16 chỉ khi chạy cả suite (fixture ngoài viewport; đã cuộn control vào màn hình trước khi hit-test). |
+| Lệnh nhanh kanban (`--include='projects/sdcorejs-angular/components/kanban/**/*.spec.ts'`) | 163/163 SUCCESS ở `871a4642` |
 | `npm run lint` (v19) | All files pass linting |
 | `npx ng build sdcorejs-angular` | exit 0, 104 entry point `Built` |
 | `npm run test:theme` | trong `npm run test:scripts`: exit 0, 0 fail |
@@ -21,11 +21,11 @@ Statements từ báo cáo HTML của Istanbul, branches và lines từ `lcov.inf
 | File | Statements | Branches | Lines | Ngưỡng |
 | --- | --- | --- | --- | --- |
 | `kanban.utils.ts` | 100% (82/82) | 100% (55/55) | 100% (51/51) | 100/100 ✓ |
-| `kanban.component.ts` | 97.07% (431/444) | 91.22% (239/262) | 99.45% (359/361) | ≥90/≥85 ✓ |
-| `kanban-loader.ts` | 99% (100/101) | 92.31% (60/65) | 100% (81/81) | — (lớp nội bộ) |
-| `kanban.templates.ts` | 62.5% (10/16) | — | 57.14% (8/14) | không đo (§2), type test |
+| `kanban.component.ts` | 98.05% (454/463) | 94.38% (252/267) | 100% (375/375) | ≥90/≥85 ✓ |
+| `kanban-loader.ts` | 99% (100/101) | 93.94% (62/66) | 100% (81/81) | — (lớp nội bộ) |
+| `kanban.templates.ts` | 75% (12/16) | — | 71.43% (10/14) | không đo (§2), type test |
 
-`kanban.templates.ts` và `kanban.model.ts`: không đo (TESTING §2), có type test `kanban.types.spec.ts` (union `onMove`, context template, `items` sai kiểu). `kanban-loader.ts` không có ngưỡng riêng (lớp nội bộ, không export). Số coverage đo ở lần chạy đầy đủ nêu trên; KAN-B-06, -07 chỉ thêm SCSS, một `<bdi>` và test.
+`kanban.templates.ts` và `kanban.model.ts`: không đo (TESTING §2), có type test `kanban.types.spec.ts` (union `onMove`, context template, `items` sai kiểu). `kanban-loader.ts` không có ngưỡng riêng (lớp nội bộ, không export). Số coverage đo ở lần chạy đầy đủ tại `871a4642`.
 
 ## Mã test
 Mọi mã của SHARED-CONTRACT (trừ phần dưới "Bỏ qua có lý do") và của TESTING §7 có test xanh. Bảng sinh từ tên test (`[KAN-…]`) và từ bảng mã của các test chạy theo bảng (`kanban-pipeline.spec.ts`, kết quả `onMove`).
@@ -48,7 +48,7 @@ Mọi mã của SHARED-CONTRACT (trừ phần dưới "Bỏ qua có lý do") và
 | KAN-C-08 | kanban.datasource.spec.ts:197 | ✓ |
 | KAN-C-09 | kanban.datasource.spec.ts:215 | ✓ |
 | KAN-C-10 | kanban-pipeline.spec.ts:181, kanban-pipeline.spec.ts:198, kanban.component.spec.ts:431 | ✓ |
-| KAN-C-11 | kanban-pipeline.spec.ts:211, kanban-pipeline.spec.ts:238 | ✓ |
+| KAN-C-11 | kanban-pipeline.spec.ts:211, kanban-pipeline.spec.ts:238, kanban.review.spec.ts:252 | ✓ |
 | KAN-C-12 | kanban-pipeline.spec.ts:252, kanban.component.spec.ts:185 | ✓ |
 | KAN-C-13 | kanban.datasource.spec.ts:257, kanban.datasource.spec.ts:273 | ✓ |
 | KAN-C-14 | kanban.interaction.spec.ts:123, kanban.interaction.spec.ts:182, kanban.interaction.spec.ts:267 | ✓ |
@@ -56,17 +56,19 @@ Mọi mã của SHARED-CONTRACT (trừ phần dưới "Bỏ qua có lý do") và
 | KAN-C-16 | kanban.interaction.spec.ts:223 | ✓ |
 | KAN-C-17 | kanban.component.spec.ts:373, kanban.component.spec.ts:553, kanban.component.spec.ts:568 | ✓ |
 | KAN-C-18 | kanban.interaction.spec.ts:255 | ✓ |
-| KAN-C-19 | kanban.interaction.spec.ts:209 | ✓ |
+| KAN-C-19 | kanban.interaction.spec.ts:209, kanban.review.spec.ts:258 | ✓ |
 | KAN-SC-01 | kanban.component.spec.ts:452, kanban.datasource.spec.ts:333 | ✓ |
 | KAN-SC-02 | kanban.component.spec.ts:227, kanban.utils.spec.ts:45 | ✓ |
 | KAN-SC-03 | kanban.component.spec.ts:237, kanban.utils.spec.ts:45 | ✓ |
+| KAN-SC-04 | kanban.types.spec.ts:37 | ✓ |
+| KAN-SC-05 | kanban.types.spec.ts:37 | ✓ |
 | KAN-SC-06 | kanban-pipeline.spec.ts:129, kanban-pipeline.spec.ts:145 | ✓ |
 | KAN-SC-07 | kanban-pipeline.spec.ts:118 | ✓ |
 | KAN-SC-08 | kanban-pipeline.spec.ts:161 | ✓ |
 | KAN-SC-09 | kanban-pipeline.spec.ts:276, kanban.component.spec.ts:215 | ✓ |
 | KAN-SC-10 | kanban-pipeline.spec.ts:277 | ✓ |
 | KAN-SC-11 | kanban-pipeline.spec.ts:278, kanban.component.spec.ts:264 | ✓ |
-| KAN-SC-12 | kanban-pipeline.spec.ts:279 | ✓ |
+| KAN-SC-12 | kanban-pipeline.spec.ts:279, kanban.types.spec.ts:23 | ✓ |
 | KAN-SC-13 | kanban-pipeline.spec.ts:280, kanban.component.spec.ts:264 | ✓ |
 | KAN-SC-14 | kanban-pipeline.spec.ts:332 | ✓ |
 | KAN-SC-15 | kanban-pipeline.spec.ts:347, kanban.component.spec.ts:307, kanban.component.spec.ts:321, kanban.component.spec.ts:719, kanban.datasource.spec.ts:312 | ✓ |
@@ -99,16 +101,16 @@ Mọi mã của SHARED-CONTRACT (trừ phần dưới "Bỏ qua có lý do") và
 | KAN-R-07 | kanban.component.spec.ts:649, kanban.component.spec.ts:665, kanban.component.spec.ts:686, kanban.component.spec.ts:695 | ✓ |
 | KAN-R-08 | kanban.component.spec.ts:444 | ✓ |
 | KAN-R-09 | kanban.component.spec.ts:82, kanban.component.spec.ts:91, kanban.component.spec.ts:109, kanban.component.spec.ts:152, kanban.component.spec.ts:166, kanban.component.spec.ts:172, kanban.component.spec.ts:361, kanban.component.spec.ts:708 | ✓ |
-| KAN-E-01 | kanban.e2e.ts:117, kanban.e2e.ts:231, kanban.e2e.ts:245 | ✓ |
-| KAN-E-02 | kanban.e2e.ts:131 | ✓ |
-| KAN-E-03 | kanban.e2e.ts:144 | ✓ |
-| KAN-E-04 | kanban.e2e.ts:157 | ✓ |
-| KAN-E-05 | kanban.e2e.ts:166 | ✓ |
-| KAN-E-06 | kanban.e2e.ts:181 | ✓ |
-| KAN-E-07 | kanban.e2e.ts:195 | ✓ |
-| KAN-E-08 | kanban.e2e.ts:343 | ✓ |
-| KAN-E-09 | kanban.e2e.ts:206, kanban.e2e.ts:306 | ✓ |
-| KAN-E-10 | kanban.e2e.ts:221 | ✓ |
+| KAN-E-01 | kanban.e2e.ts:130, kanban.e2e.ts:250, kanban.e2e.ts:264 | ✓ |
+| KAN-E-02 | kanban.e2e.ts:144 | ✓ |
+| KAN-E-03 | kanban.e2e.ts:157 | ✓ |
+| KAN-E-04 | kanban.e2e.ts:170 | ✓ |
+| KAN-E-05 | kanban.e2e.ts:179 | ✓ |
+| KAN-E-06 | kanban.e2e.ts:194 | ✓ |
+| KAN-E-07 | kanban.e2e.ts:208 | ✓ |
+| KAN-E-08 | kanban.e2e.ts:362 | ✓ |
+| KAN-E-09 | kanban.e2e.ts:225, kanban.e2e.ts:325 | ✓ |
+| KAN-E-10 | kanban.e2e.ts:240 | ✓ |
 | KAN-B-01 | kanban-pipeline.spec.ts:455 | ✓ |
 | KAN-B-02 | kanban-pipeline.spec.ts:466 | ✓ |
 | KAN-B-03 | kanban-pipeline.spec.ts:480 | ✓ |
@@ -116,6 +118,24 @@ Mọi mã của SHARED-CONTRACT (trừ phần dưới "Bỏ qua có lý do") và
 | KAN-B-05 | kanban-pipeline.spec.ts:497 | ✓ |
 | KAN-B-06 | kanban.component.spec.ts:118 | ✓ |
 | KAN-B-07 | kanban.component.spec.ts:139 | ✓ |
+| KAN-B-08 | kanban.review.spec.ts:97 | ✓ |
+| KAN-B-09 | kanban.review.spec.ts:318, kanban.review.spec.ts:346 | ✓ |
+| KAN-B-10 | kanban.review.spec.ts:370 | ✓ |
+| KAN-B-11 | kanban.review.spec.ts:187 | ✓ |
+| KAN-B-12 | kanban.review.spec.ts:268, kanban.review.spec.ts:387 | ✓ |
+| KAN-B-13 | kanban.review.spec.ts:210 | ✓ |
+| KAN-B-14 | kanban.review.spec.ts:426 | ✓ |
+| KAN-B-15 | kanban.review.spec.ts:442 | ✓ |
+| KAN-B-16 | kanban.review.spec.ts:220 | ✓ |
+| KAN-B-17 | kanban.review.spec.ts:454 | ✓ |
+| KAN-B-18 | kanban.review.spec.ts:124 | ✓ |
+| KAN-B-19 | kanban.review.spec.ts:226 | ✓ |
+| KAN-B-20 | kanban.review.spec.ts:466 | ✓ |
+| KAN-B-21 | kanban.review.spec.ts:475 | ✓ |
+| KAN-B-22 | kanban.review.spec.ts:237, kanban.review.spec.ts:486 | ✓ |
+| KAN-T-01 | kanban.types.spec.ts:23 | ✓ |
+| KAN-T-02 | kanban.types.spec.ts:37 | ✓ |
+| KAN-T-03 | kanban.types.spec.ts:54 | ✓ |
 
 ## Spec cũ trên main → mã mới (TESTING §7.3)
 Theo kế hoạch Bước 0 mục E; mọi mã ở cột phải có trong bảng trên.
@@ -175,6 +195,10 @@ Theo kế hoạch Bước 0 mục E; mọi mã ở cột phải có trong bảng
 | KAN-E-09 | Công việc `reorder: true`: khe nét đứt, `beforeId: null` khi thả cuối cột, `"BE-023"` khi thả lên đầu; 4 × 200 thẻ (đo §10) | ✓ |
 | KAN-E-10 | Board trong cột 400 px của trang desktop: `data-compact` | ✓ |
 
+KAN-E-07 (sau R2): đi bằng `Tab` từ ô tìm kiếm qua vùng board và nút thu gọn làn đầu tới thẻ DH-1001, Enter mở drawer, focus vẫn trên thẻ, rồi `Alt` + `→`.
+
+Lỗi console: mỗi lần mở trang có 2 dòng `404`; E2E ghi URL từ sau R2: `GET /docs/versions.json`, registry docs của showcase (trên Pages lấy từ `published-docs/`), dev server không phục vụ. Không thuộc kanban.
+
 Chập chờn đã xử lý: KAN-E-09 đỏ khoảng 1/10 lần khi máy tải nặng. Nguyên nhân (đo bằng script lặp 60 lần với 3 tiến trình): test ghim board bằng `position: fixed`, còn trang docs tự cuộn (scroll anchoring khi các khối `@defer` render). CDK dời rect đã cache của danh sách theo lần cuộn đó, nên lúc thả `isPointerOverContainer` là `false`. Board thật không bị ghim nên cuộn theo trang, không có lỗi này. `frame()` trong E2E giờ tắt smooth scroll và `overflow-anchor`, rồi chờ trang đứng yên: 0/60 lỗi, E2E lặp 20/20.
 
 ## Hiệu năng (TESTING §10)
@@ -185,6 +209,7 @@ Kịch bản: ví dụ Công việc, nút "200 thẻ mỗi cột" (4 × 200 th�
 | Render 800 thẻ, dev server | 1208–1323 ms (trung vị 5 lần, hai project) | ≤ 150 ms — **vượt** |
 | Render 800 thẻ, production build (`ng build showcase --configuration production`, server tĩnh) | 1207–1403 ms (3 lần E2E); 830–880 ms đo riêng bằng CDP | ≤ 150 ms — **vượt** |
 | Long task khi kéo, production build | 6–8 task, đa số 50–65 ms; 105–135 ms lúc nhấc thẻ và lúc thả | không task > 50 ms — **vượt** |
+| Long task khi kéo, dev server, sau sửa R2 (chỗ cũ vẽ cả nội dung thẻ, KAN-B-18) | 5–6 task, 54–125 ms; lúc nhấc thẻ 168–174 ms | không task > 50 ms — **vượt** |
 | Long task khi kéo, trước tối ưu (dev server và production build) | 15–17 task 55–210 ms | |
 
 Đã làm (commit `ffdf5515`):

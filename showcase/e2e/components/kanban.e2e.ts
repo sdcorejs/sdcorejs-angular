@@ -104,12 +104,25 @@ async function shot(root: Locator, file: string): Promise<void> {
   await root.screenshot({ path: resolve(SHOTS, `${file}.png`), animations: 'disabled' });
 }
 
+/** A picture of `target` with a margin, so a focus ring drawn outside the element is in it. */
+async function shotAround(page: Page, target: Locator, file: string, margin = 8): Promise<void> {
+  if (test.info().project.name !== 'asia-bangkok') return;
+  mkdirSync(SHOTS, { recursive: true });
+  const box = (await target.boundingBox())!;
+  const clip = { x: box.x - margin, y: box.y - margin, width: box.width + 2 * margin, height: box.height + 2 * margin };
+  await page.screenshot({ path: resolve(SHOTS, `${file}.png`), animations: 'disabled', clip });
+}
+
 test.describe('sd-kanban', () => {
   // why: at 1280px the docs column leaves ~650px to an example; the board scrolls sideways but stays wide.
   test.beforeEach(async ({ page }) => {
     page.on('pageerror', error => console.log(`PAGEERROR ${error.message}`));
     page.on('console', message => {
       if (message.type() === 'error') console.log(`CONSOLEERROR ${message.text()}`);
+    });
+    // why: a "404" console line does not say which file; the response does.
+    page.on('response', response => {
+      if (response.status() >= 400) console.log(`HTTP ${response.status()} ${response.url()}`);
     });
     await page.setViewportSize({ width: 1920, height: 1000 });
   });
@@ -194,10 +207,16 @@ test.describe('sd-kanban', () => {
 
   test('[KAN-E-07] works with the keyboard only: Tab to a card, Enter, Alt + Right', async ({ page }) => {
     const root = await open(page, 'orders', 'orders');
-    await name(root, 'DH-1001').focus();
+    // Tab from the board search: the board region, the collapse button of the first lane, then the first card.
+    await root.locator('input[type="search"]').focus();
+    const first = name(root, 'DH-1001');
+    for (let step = 0; step < 6 && !(await first.evaluate(element => element === document.activeElement)); step++) {
+      await page.keyboard.press('Tab');
+    }
+    await expect(first).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('order-drawer')).toContainText('DH-1001');
-    await name(root, 'DH-1001').focus();
+    await expect(first).toBeFocused();
     await page.keyboard.press('Alt+ArrowRight');
     await expect.poll(() => ids(root, 'shipping')).toContain('DH-1001');
     await expect(name(root, 'DH-1001')).toBeFocused();
@@ -274,25 +293,25 @@ test.describe('sd-kanban', () => {
     await frame(root, 1200);
     const first = card(root, 'WEB-001');
     await page.mouse.move(0, 0);
-    await shot(first, 'card-default');
+    await shotAround(page, first, 'card-default');
     await first.hover();
-    await shot(first, 'card-hover');
+    await shotAround(page, first, 'card-hover');
     await name(root, 'WEB-001').click();
     await page.mouse.move(0, 0);
     await expect(first).toHaveAttribute('data-selected', 'true');
-    await shot(first, 'card-selected');
+    await shotAround(page, first, 'card-selected');
     // why: a key press first, so the programmatic focus counts as keyboard focus (:focus-visible).
     await page.keyboard.press('Shift');
     await name(root, 'BE-023').focus();
-    await shot(card(root, 'BE-023'), 'card-focus');
+    await shotAround(page, card(root, 'BE-023'), 'card-focus');
     await root.locator('[data-kanban-menu="DOC-004"]').click();
     await page.getByRole('menuitem', { name: 'Chuyển đến In progress' }).click();
     await expect(card(root, 'DOC-004')).toHaveAttribute('data-pending', 'true');
     await page.mouse.move(0, 0);
-    await shot(card(root, 'DOC-004'), 'card-saving');
+    await shotAround(page, card(root, 'DOC-004'), 'card-saving');
     await page.getByRole('button', { name: 'Reject' }).evaluate(button => (button as HTMLButtonElement).click());
     await expect(card(root, 'DOC-004').locator('.sd-kanban__card-status--error')).toBeVisible();
-    await shot(card(root, 'DOC-004'), 'card-failed');
+    await shotAround(page, card(root, 'DOC-004'), 'card-failed');
 
     // Dragging with reorder on: the dashed slot where the card lands.
     root = await open(page, 'tasks', 'tasks');
