@@ -1,5 +1,5 @@
 # sd-calendar · test
-Commit: e77967c2 (nhánh `feat/calendar`, sau các sửa của R2 và R2') · Node local v26.12.0 (PD chốt Q1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
+Commit: 6f8143cc (nhánh `feat/calendar`, sau các sửa của R2 và R2'; full suite đo ở e77967c2, sau đó chỉ đổi test CAL-B-17, CAL-B-19 — lệnh nhanh calendar 173/173 ở 6f8143cc) · Node local v26.12.0 (PD chốt Q1; CI Node 24.22.1 là cổng chuẩn) · Chrome Headless 156
 
 ## Lệnh (TESTING.md §1)
 | Lệnh | Kết quả |
@@ -69,7 +69,7 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | CAL-C-17 | calendar.component.spec.ts:408, calendar.interaction.spec.ts:571 | ✓ |
 | CAL-C-18 | calendar.compact.spec.ts:78, calendar.compact.spec.ts:109, calendar.compact.spec.ts:170, calendar.compact.spec.ts:191, calendar.compact.spec.ts:230 | ✓ |
 | CAL-C-19 | calendar.component.spec.ts:361, calendar.component.spec.ts:642, calendar.edges.spec.ts:171, calendar.interaction.spec.ts:762 | ✓ |
-| CAL-C-20 | calendar.component.spec.ts:425, calendar.component.spec.ts:435, calendar.component.spec.ts:463, calendar.component.spec.ts:472, calendar.component.spec.ts:480, calendar.edges.spec.ts:330, calendar.utils.spec.ts:577, calendar.utils.spec.ts:618 | ✓ |
+| CAL-C-20 | calendar.component.spec.ts:425, calendar.component.spec.ts:435, calendar.component.spec.ts:463, calendar.component.spec.ts:472, calendar.component.spec.ts:480, calendar.edges.spec.ts:335, calendar.utils.spec.ts:577, calendar.utils.spec.ts:618 | ✓ |
 | CAL-C-21 | calendar.component.spec.ts:490 | ✓ |
 | CAL-C-22 | calendar.component.spec.ts:752, calendar.component.spec.ts:764, calendar.types.spec.ts:45 | ✓ |
 | CAL-C-23 | calendar.exports.spec.ts:15 | ✓ |
@@ -140,8 +140,8 @@ Statements lấy từ báo cáo HTML của Istanbul, branches và lines từ `lc
 | CAL-B-15 | calendar.edges.spec.ts:231 | ✓ |
 | CAL-B-16 | calendar.edges.spec.ts:243 | ✓ |
 | CAL-B-17 | calendar.edges.spec.ts:250 | ✓ |
-| CAL-B-18 | calendar.edges.spec.ts:264 | ✓ |
-| CAL-B-19 | calendar.edges.spec.ts:305 | ✓ |
+| CAL-B-18 | calendar.edges.spec.ts:267 | ✓ |
+| CAL-B-19 | calendar.edges.spec.ts:308 | ✓ |
 | CAL-B-20 | calendar.interaction.spec.ts:641 | ✓ |
 
 Missing: CAL-SC-08, CAL-SC-25
@@ -172,7 +172,7 @@ Thư mục `reports/calendar-screens/`. Ảnh calendar chụp bằng Playwright 
 
 | Mục của HTML | Ảnh thiết kế | Ảnh calendar | Đối chiếu |
 | --- | --- | --- | --- |
-| 01 Giải phẫu (Tuần 960px) | `design-giai-phau.png` | `week-960-light.png`, `week-960-dark.png`, `week-960-rtl.png` | Khớp: thanh công cụ, cột giờ, hàng cả ngày, lưới 48px/giờ, nét giờ và nửa giờ, ngoài giờ và cuối tuần tô nền, ngày lễ dưới số ngày, chồng giờ chia cột và chừa phải, icon lặp. Khác do dữ liệu: showcase dùng ngày thật (09/11) nên 22/10 không tô "hôm nay" và không có đường giờ hiện tại (đã kiểm ở Karma); demo có thêm cụm sự kiện Thứ Ba. RTL: khối bám mép phải cột, chừa trái, mũi tên lật. |
+| 01 Giải phẫu (Tuần 960px) | `design-giai-phau.png` | `week-960-light.png`, `week-960-dark.png`, `week-960-rtl.png` | Khớp: thanh công cụ, cột giờ, hàng cả ngày, lưới 48px/giờ, nét giờ và nửa giờ, ngoài giờ và cuối tuần tô nền, ngày lễ dưới số ngày, chồng giờ chia cột và chừa phải, icon lặp. Khác do dữ liệu: showcase dùng ngày thật (09/11) nên 22/10 không tô "hôm nay" và không có đường giờ hiện tại (đã kiểm ở Karma); demo có thêm cụm sự kiện Thứ Ba. RTL: khối bám mép phải cột, chừa trái, chữ bắt đầu từ mép phải, khoảng đệm và thanh tiến trình lật, mũi tên lật (CAL-B-11, CAL-B-17). Thanh tiến trình và Danh sách ở RTL chỉ kiểm bằng test, không có ảnh riêng. |
 | 02 Chế độ xem | `design-che-do.png` | `month-960-light.png`, `day-960-light.png`, `agenda-960-light.png` | Tháng: ô, ngày ngoài tháng xám, thanh nhiều ngày, "+N khác" khớp (chấm lặp ở ô kéo dài đã sửa, CAL-B-16). Ngày và Danh sách khớp; cột địa điểm của Danh sách chỉ có khi consumer cấp template (§11). |
 | 03 Khối sự kiện | `design-su-kien.png` | `block-selected.png`, `block-pending.png`, `block-failed.png`, `block-past.png`, `interaction-drag.png`; màu và tầng nội dung trong `week-960-light.png` | Khớp: nền nhạt + chấm màu, chọn (viền + bóng), đang kéo (viền màu sự kiện, bóng lớn, chỗ cũ nét đứt), đang lưu (nét đứt + icon xoay), từ chối (viền đỏ), đã qua (nhạt). Hover và focus bàn phím không chụp (trạng thái con trỏ). |
 | 04 Tương tác | `design-tuong-tac.png` | `interaction-sweep.png`, `interaction-drag.png`, `interaction-resize.png`, `interaction-cursor.png`, `interaction-scope.png`, `block-failed.png` | Khớp sáu khung. Thanh hỏi phạm vi ở đáy component — lệch #3. |

@@ -77,3 +77,12 @@ Sửa ở `8684685e` (test RED) và `eb20d9dd` (code), rollout `e77967c2`. Kiể
 | N-8 | Ghi chú | Giữ: bảng hook E2E liệt kê hook dùng để kiểm; các hook phụ khác vẫn ổn định nhưng không hứa trong tài liệu. | — |
 
 E2E sau các sửa: 44 passed, 4 skipped; CAL-E-06 (focus sau Esc) xanh ở cả hai zone.
+
+## R2' lần 2 (`calendar-R2-recheck-2.md`): N-1…N-4 đã sửa đúng → "Được mở PR"
+| # | Mức | Xử lý |
+| --- | --- | --- |
+| M-1 | Nên sửa | `[CAL-B-17]` tự đặt `body { text-align: left }` như reboot của thư viện (Karma không nạp global style), nên phép kiểm `text-align` đỏ khi bỏ `text-align: start` khỏi `:host` — đã thử đột biến đó: `Expected 'left' to be 'start'`. Commit `test(calendar): CAL-B-17 sets the reboot text-align itself…`. |
+| M-2 | Ghi chú | Giữ: `[CAL-B-18]` so listener theo tham chiếu; các giai đoạn sau vẫn đỏ trên code cũ nhờ phép kiểm giờ và số listener của giai đoạn quét. |
+| M-3 | Ghi chú | `[CAL-B-19]` thêm phép kiểm vi/en không lặp "+2". |
+| M-4 | Ghi chú | Báo cáo test đã có `CAL-B-17`…`-20` và dòng RTL mới; thanh tiến trình và Danh sách ở RTL chỉ kiểm bằng test. |
+| M-5 | Ghi chú | Giữ: `pointercancel` của tay nắm nổi lên `onGridPointerCancel`, vô hại (không có phiên quét). |
