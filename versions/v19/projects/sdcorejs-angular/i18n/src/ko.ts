@@ -1378,7 +1378,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.moved': '{title}을(를) {column}의 {position}번째 위치로 이동했습니다',
   'core.component.kanban.rejected': '이동이 거부되었습니다. 다른 열을 선택하세요.',
   'core.component.kanban.error': '카드를 이동할 수 없습니다. 다시 시도하세요.',
-  'core.component.kanban.invalid-data': '데이터 매핑과 카드 및 열의 고유 ID를 확인하세요.',
+  'core.component.kanban.invalid-data': '카드와 열을 확인하세요. ID는 고유하고 비어 있지 않아야 하며, 모든 카드에 제목과 존재하는 열이 있어야 합니다.',
   'core.component.kanban.dismiss': '닫기',
   'core.component.kanban.instructions':
     'Enter로 선택합니다. Alt + 왼쪽/오른쪽 화살표로 열을 바꾸고, Alt + 위/아래 화살표로 위치를 바꿉니다.',

@@ -239,7 +239,7 @@
                   </button>
                 </div>
               } @else if (view.nextCursor !== null) {
-                <button type="button" class="sd-kanban__load-more" [attr.data-load-more]="view.column.id" (click)="loadMore(view.column.id)">
+                <button type="button" class="sd-kanban__load-more" [attr.data-load-more]="_columnToken" (click)="loadMore(view.column.id)">
                   {{ 'core.component.kanban.load-more' | sdTranslate: { count: view.moreCount } }}
                 </button>
               }

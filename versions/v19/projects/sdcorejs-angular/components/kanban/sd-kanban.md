@@ -1,103 +1,268 @@
-# sd-kanban
+# `<sd-kanban>`
 
-`SdKanban<T>` displays an ordered status board using consumer-owned data. It maps arbitrary domain fields through `option` and supports drag, movement menus, keyboard alternatives, custom templates, search/filter, counts, collapse, and asynchronous confirmation. It owns presentation and move proposals; the application owns persistence, permissions, and card content/actions.
+**Type**: Standalone component
+**Selector**: `sd-kanban`
+**Import path**: `@sdcorejs/angular/components/kanban` (or barrel: `@sdcorejs/angular/components`)
+**Classes**: `SdKanban`, `SdKanbanCardTemplateDirective`, `SdKanbanCardActionsTemplateDirective`, `SdKanbanColumnTemplateDirective`, `SdKanbanColumnActionsTemplateDirective`
+**Change detection**: `OnPush`
+
+## Purpose
+
+A status board: columns in a fixed order, cards in each column, and moving a card to another column (and, when you allow it, to another position). Cards are `SdKanbanCard<T>` objects: `id`, `columnId`, `title` and your own DTO in `data`. They come from `items` you already hold, or from `option.dataSource.onLoad`, which the board calls per column with a cursor.
+
+Moving is optional. Without `option.move` there is no drag, no movement menu and no `Alt` + arrow keys. With it, the board calls your `onMove`, waits, and changes its own data only when you accept. It never writes to your backend.
+
+## Import
 
 ```ts
-import { SdKanban, SdKanbanColumn, SdKanbanOption } from '@sdcorejs/angular/components/kanban';
+import { SdKanban } from '@sdcorejs/angular/components/kanban';
+```
+
+## Quick start
+
+```ts
+import { SdKanban, type SdKanbanCard, type SdKanbanColumn, type SdKanbanOption } from '@sdcorejs/angular/components/kanban';
 
 interface Ticket { key: string; state: string; subject: string; }
-readonly columns: readonly SdKanbanColumn[] = [
-  { id: 'open', label: 'Open', color: 'info' },
-  { id: 'doing', label: 'In progress', color: 'warning' },
-  { id: 'done', label: 'Done', color: 'success' },
-];
-readonly option: SdKanbanOption<Ticket> = {
-  getId: item => item.key,
-  getColumnId: item => item.state,
-  getTitle: item => item.subject,
-  withColumn: (item, columnId) => ({ ...item, state: String(columnId) }),
-};
+
+@Component({
+  imports: [SdKanban],
+  template: `<sd-kanban ariaLabel="Tickets" [columns]="columns" [items]="cards()" [option]="option" (sdSelect)="open($event)" />`,
+})
+export class TicketBoard {
+  readonly columns: readonly SdKanbanColumn[] = [
+    { id: 'open', label: 'Open', color: 'info' },
+    { id: 'doing', label: 'In progress', color: 'warning' },
+    { id: 'done', label: 'Done', color: 'success' },
+  ];
+  // Map once, outside the template: a new array reference replaces the board's data (see Items).
+  readonly cards = computed<readonly SdKanbanCard<Ticket>[]>(() =>
+    this.tickets().map(ticket => ({ id: ticket.key, columnId: ticket.state, title: ticket.subject, data: ticket })),
+  );
+  readonly option: SdKanbanOption<Ticket> = {
+    move: {
+      droppable: ({ from, to }) => this.canTransition(from.id, to.id),
+      onMove: async request => {
+        await this.api.moveTicket(request.card.id, request.to.columnId, request.signal);
+        return true;
+      },
+    },
+  };
+}
 ```
 
-```html
-<sd-kanban ariaLabel="Tickets" [columns]="columns" [option]="option" [(model)]="tickets" />
-```
+A board that only shows cards passes `option: {}`.
 
-The order of `columns` is displayed unchanged. Within each column, the order of `model` is the card order. IDs are stable strings or finite numbers, unique in their respective card and column collections; `1` and `'1'` differ. Indexes are never used as identities. Card titles and column labels must be non-empty accessible strings. Unknown column IDs, duplicate IDs, invalid IDs, or failed mapping display a configuration error and block moves. Inputs, option callbacks, and arrays must be immutable; `withColumn` returns a new item with the same ID and the target column.
+## API
 
-| Input              | Type                        | Default            | Purpose                                                            |
-| ------------------ | --------------------------- | ------------------ | ------------------------------------------------------------------ |
-| `model`            | `readonly T[]`              | `[]`               | Complete dataset, including cards hidden by search/filter.         |
-| `columns`          | `readonly SdKanbanColumn[]` | `[]`               | ID, label, semantic `color`, optional `prefixIcon` and `disabled`. |
-| `option`           | `SdKanbanOption<T>`         | required           | Domain mapping, optional filter and move persistence.              |
-| `keyword`          | `string`                    | `''`               | Two-way search state.                                              |
-| `collapsedColumns` | `readonly SdKanbanId[]`     | `[]`               | Two-way collapsed column IDs.                                      |
-| `disabled`         | `boolean`                   | `false`            | Blocks moves, search, and collapse.                                |
-| `readonly`         | `boolean`                   | `false`            | Blocks moves while preserving browsing/search/collapse.            |
-| `loading`          | `boolean`                   | `false`            | Loading state; blocks moves.                                       |
-| `error`            | `string`                    | —                  | Consumer load error with retry output.                             |
-| `ariaLabel`        | `string`                    | localized fallback | Accessible board name.                                             |
-| `autoId`           | `string`                    | —                  | Stable automation prefix.                                          |
+### Inputs
 
-`option.searchable` and `option.collapsible` default to `true`. `getSearchText` defaults to `getTitle`. `filter(item)` is an additional consumer predicate; it does not remove items from the model. Headers show the complete count and, when filtered, the visible count. Clearing search restores the complete order. The board search is the shared internal search field at size sm: 32px high, 280px wide (shrinking with the board), control border and focus ring.
+| Input | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `columns` | `readonly SdKanbanColumn[]` | required | `id`, `label`, semantic `color` (default `secondary`), `prefixIcon`, `disabled`, `summary` (second line under the label). Shown in this order. |
+| `option` | `SdKanbanOption<T>` | required | `dataSource`, `pageSize` (20), `loadMore` (`'button'`), `move`. A new object reloads every column (data source) and cancels a pending move. |
+| `items` | `readonly SdKanbanCard<T>[] \| undefined` | `undefined` | Cards on the client. Ignored, with a dev-mode warning, while `option.dataSource` is set. |
+| `selectedId` | `string \| null` | `null` | Two-way. Back to `null` when that card is no longer in the data. |
+| `keyword` | `string` | `''` | Two-way search text. Works without `searchable` (your own search box). |
+| `searchable` | `boolean` | `false` | Shows the board search (shared `sd-search-field`, size sm, 280px). |
+| `collapsible` | `boolean` | `true` | Collapse buttons in the column headers. |
+| `collapsedColumns` | `readonly string[]` | `[]` | Two-way ids of collapsed columns. A collapsed column keeps its cards. |
+| `disabled` | `boolean` | `false` | No move, selection, search or collapse; the card name buttons are disabled. |
+| `readonly` | `boolean` | `false` | No move. Selection, search, collapse and "Show more" work. |
+| `ariaLabel` | `string` | "Board" | Name of the board region. |
+| `autoId` | `string` | — | E2E scope, see E2E hooks. |
 
-## Move contract
+### Outputs
 
-All movement paths call `move(itemId, toColumnId, toIndex?, source?)`, returning `Promise<boolean>`. Omitting `toIndex` appends. A move into a disabled column, a no-op, malformed index, locked state, or failed `canMove` returns `false` without persistence/events. The entire board serializes moves while one confirmation is pending.
+| Output | Payload | When |
+| --- | --- | --- |
+| `sdSelect` | `SdKanbanCard<T>` | Click (the pointer moved less than 5px), tap, `Enter` or `Space` on a card. Also sets `selectedId`. Selecting the selected card emits again. |
+| `sdMove` | `SdKanbanMoveRequest<T>` | `onMove` accepted and the board's data changed. |
+| `sdMoveError` | `SdKanbanMoveError<T>` | `onMove` returned `false` (`reason: 'rejected'`) or threw (`reason: 'error'`). Never for `'cancel'`. |
+| `sdLoadError` | `SdKanbanLoadError` | `onLoad` threw or rejected, for the first page or a later one (`{ columnId, error }`). Never for an aborted load. |
 
-`SdKanbanMoveRequest<T>` carries `item`, stable `itemId`, `fromColumnId`, `toColumnId`, `fromIndex`, `toIndex`, `previousItems`, `nextItems`, `source`, and an `AbortSignal`. Both indexes refer to the **complete column**; `toIndex` is the insertion index after removing the source card. Search/filter drag uses a stable visible anchor to resolve the full-data insertion position, preserving hidden cards. Dropping back into the same visible slot in the same column is a no-op, including when hidden cards surround that slot; it does not call persistence or emit changes.
+### Methods and read-only state
 
-Local mode omits `option.move` and commits the proposal immediately. Async mode is pessimistic:
+| Member | Notes |
+| --- | --- |
+| `move(cardId, { columnId, beforeId? }, source = 'api'): Promise<boolean>` | Runs the move pipeline below. `beforeId` is ignored while `reorder` is off. Resolves `false` when the move is blocked or not accepted. Undo: `move(request.card.id, { columnId: request.from.columnId })`. |
+| `reload(columnId?)` | Data source only: aborts the column's (or every column's) load and calls `onLoad` again from `cursor: null`. The cards on screen stay until the result arrives. |
+| `loadMore(columnId)` | Data source only: the next page of that column. Ignored while it loads or when `nextCursor` is `null`. |
+| `pendingId` | `Signal<string \| null>`: id of the card whose move waits for `onMove`. |
+
+## Items
+
+- The board keeps its own copy of `items`. **A new array reference replaces that copy** and cancels a pending move, so build the array once (a `computed`, a store selector) and never with a method or `.map()` in the template: each change detection would hand the board a new reference.
+- The order of the array is the order inside each column.
+- `keyword` filters by `searchText ?? title`, lower-cased in the locale, "contains". The header shows `visible/total` while cards are hidden.
+- An accepted move replaces the card with `{ ...card, columnId }` (same `data` reference). With `reorder` off the card keeps its place in the array; with `reorder` on it goes before `beforeId`, or after the last card of the target column.
+- Invalid data shows an error state and blocks moves: an empty or duplicate card id, an unknown `columnId`, an empty `title`, a duplicate column id or an empty `label`.
+
+## Data source
 
 ```ts
-readonly option: SdKanbanOption<Ticket> = {
-  getId: item => item.key,
-  getColumnId: item => item.state,
-  getTitle: item => item.subject,
-  withColumn: (item, columnId) => ({ ...item, state: String(columnId) }),
-  canMove: request => this.canTransition(request.fromColumnId, request.toColumnId),
-  move: async request => {
-    await this.api.moveTicket({
-      id: request.itemId,
-      state: request.toColumnId,
-      index: request.toIndex,
-    }, request.signal);
-    return true;
+readonly option: SdKanbanOption<Order> = {
+  pageSize: 20,
+  dataSource: {
+    onLoad: async ({ columnId, cursor, pageSize, keyword, signal }) => {
+      const page = await this.api.orders({ status: columnId, cursor, pageSize, q: keyword }, signal);
+      return {
+        items: page.rows.map(order => ({ id: order.code, columnId, title: order.code, data: order })),
+        nextCursor: page.next, // null when there is no next page
+        total: page.total, // read from the first page only
+        summary: this.money(page.sum), // overrides column.summary; first page only
+      };
+    },
   },
 };
 ```
 
-The board stays in its previous order until the callback resolves `true` or `undefined`. While it waits, the affected card shows a saving status and a highlighted border. Resolving `false` rejects the move. Throwing or rejecting also keeps the old order. In both cases the affected card shows a localized failure message with a Dismiss button, and the move handle references that message. The board-level alert appears only when the card is not rendered: filtered out, in a collapsed column, or a configuration failure with no card. `sdMoveError` carries `{ request, reason: 'rejected' | 'error', error? }`. Raw exception text is not displayed. Nothing is retried or reordered automatically. The user can dismiss the failure and repeat the move by drag, menu or keyboard.
+- Every column has its own state: cards, cursor, `total`, `summary`, status (`idle`, `loading`, `loading-more`, `error`).
+- On init every column that is not collapsed loads in parallel. A collapsed column loads when it is expanded the first time; until then its count is "–".
+- A new `columns` reference loads the new columns, aborts the removed ones and keeps the state of columns with the same id.
+- `keyword` changes wait 300ms, abort every load and reload every loaded column from `cursor: null`. The server filters; the board does not.
+- A new `option` reference reloads every column. Results of an aborted load are dropped.
+- A card whose `columnId` differs from `args.columnId`, or with an empty `title`, is dropped with a dev-mode warning. A card id already loaded (another page or another column) keeps the first one, with a warning.
+- The count is `total` when known, otherwise the loaded cards with "+" while there is a next page.
+- First load: three skeleton blocks and `aria-busy` on the list. First-page error: a message and Retry in place of the cards. Later-page error: a message and Retry in place of "Show more".
+- "Show more {count}" closes each loaded list; `count` is `min(pageSize, total − loaded)`, or `pageSize` without `total`. `loadMore: 'auto'` loads the next page when the button comes within 200px of the lane's view (`IntersectionObserver`; without it the button stays).
+- An accepted move removes the card from the source column (`total` − 1) and adds it to the target column (`total` + 1): at the top with `reorder` off, before `beforeId` with `reorder` on. `onLoad` is not called again.
 
-On acceptance, the component emits `modelChange`, `sdChange` with the complete array, then `sdMove` with the accepted request. `sdRetry` asks the consumer to reload after a load error. No model/change/success event occurs while pending or on rejection/cancellation.
+## Moving
 
-Replacing `model`, `option`, or `columns`, locking the board, or destroying it aborts the request and invalidates its result. A callback that ignores abort still cannot overwrite newer data. A consumer that replaces data inside its callback must supply the authoritative updated array itself; the board discards that callback's now-stale proposal. Abort cannot undo a backend operation that already committed: the consumer must reconcile server data and enforce permissions on the server.
+```ts
+move: {
+  movable: card => card.data?.locked !== true, // default true
+  droppable: ({ card, from, to }) => this.flow[from.id].includes(to.id), // default true; synchronous
+  reorder: false, // default: only change column
+  onMove: request => this.save(request), // see the results below
+}
+```
 
-## Templates and accessibility
+- `movable` decides whether a card can be dragged and whether its menu entries are enabled. It runs when the board renders and again before `onMove`.
+- `droppable` runs when a drag starts (lanes that refuse get `data-blocked`, fade, and refuse the drop), when the movement menu opens, for `Alt` + `←` `→`, and again before `onMove`. It is skipped when the card stays in its column. Do not call your API from `movable` or `droppable`.
+- With `reorder` off the request has `to.index: null` and `to.beforeId: null`, a drop into the source column does nothing, there is no dashed slot (the old place fades instead), and there are no "Move up"/"Move down" entries.
+- With `reorder` on, `to.index` is the index in the loaded cards of the target column without the moved card, and `to.beforeId` is the card right after the drop point. **`beforeId: null` means after the last loaded card**: the end of the column when every page is loaded; otherwise the server decides where the card goes.
+- One move waits at a time for the whole board (`pendingId`). The card shows "Saving move…".
 
-Import the relevant standalone directives:
+| `onMove` result | Data | Screen | Output | Announced |
+| --- | --- | --- | --- | --- |
+| `true` or nothing | changed (Items / Data source above) | card in its new place, focus follows it | `sdMove(request)` after the change | moved |
+| `false` | unchanged | back in place, error on the card with Dismiss | `sdMoveError({ request, reason: 'rejected' })` | rejected |
+| `'cancel'` | unchanged | back in place, no error | — | cancelled |
+| throw / reject | unchanged | as `false` | `sdMoveError({ request, reason: 'error', error })` | error |
 
-- `SdKanbanCardTemplateDirective` / `sdKanbanCardTemplate`: `$implicit` and `item`, `column`, full-data `index`, `pending`.
-- `SdKanbanCardActionsTemplateDirective` / `sdKanbanCardActionsTemplate`: the same context, outside the built-in movement controls.
-- `SdKanbanColumnTemplateDirective` / `sdKanbanColumnTemplate`: `$implicit` and `column`, `count`, `visibleCount`, `collapsed`.
-- `SdKanbanColumnActionsTemplateDirective` / `sdKanbanColumnActionsTemplate`: the same header context, outside the collapse button.
+Return `'cancel'` when the user stops your own flow, for example closes the dialog that asks for a reason. The error band of the board shows only when the failed card is not on screen (filtered out, collapsed).
+
+`request.signal` aborts, and the result is ignored, when `items`, `option` or `columns` get a new reference, when the source or target column reloads (data source; "Show more" does not count), when the board becomes `disabled` or `readonly`, and on destroy. Abort cannot undo a write your backend already made: reconcile your data and enforce permissions on the server.
+
+## Selection
+
+Click, tap, `Enter` or `Space` on a card selects it (`selectedId`, `sdSelect`). A press that moves 5px or more starts a drag and does not select. `Esc` inside a card clears the selection. The selected card has a primary outline and `aria-current="true"`. Use `sdSelect` to open a drawer; set `selectedId` back to `null` when the drawer closes if you do not want the card to stay marked.
+
+## Keyboard
+
+The card's name button is its tab stop.
+
+| Keys | Action |
+| --- | --- |
+| `Enter`, `Space` | Select. |
+| `Esc` | Clear the selection. |
+| `Alt` + `←` `→` | Move to the next column that accepts the card: skips disabled, collapsed and `droppable`-refused columns. Reversed in RTL. |
+| `Alt` + `↑` `↓` | With `reorder` on only: one place up or down in the loaded cards. |
+
+Every card also has a "⋯" movement menu ("Move up", "Move down" with `reorder`, then "Move to {column}" for each other column), the touch and keyboard alternative to dragging. On touch, a 400ms press starts a drag; a tap selects; a horizontal swipe scrolls the board.
+
+## Templates
+
+| Directive | Context | Replaces |
+| --- | --- | --- |
+| `ng-template[sdKanbanCardTemplate]="option"` | `$implicit`/`card`, `column`, `index`, `pending`, `selected` | The content of the card's name button (default: the bold title). |
+| `ng-template[sdKanbanCardActionsTemplate]="option"` | same | An end-aligned row of actions under the card body. |
+| `ng-template[sdKanbanColumnTemplate]` | `$implicit`/`column`, `total` (`null` while unknown), `visibleCount`, `summary`, `collapsed` | The column label. |
+| `ng-template[sdKanbanColumnActionsTemplate]` | same | Extra header controls before the collapse button. |
+
+Pass `option` to the card directives so `card.data` is typed. **The card template is rendered inside a `<button>`**: no buttons, links, inputs, selects, textareas or `[tabindex]` there (dev mode warns once when it finds one). Put controls in `sdKanbanCardActionsTemplate`; honour `pending` and your permissions there. Card metadata (codes, dates, badges, avatars) belongs in the card template, with existing components such as `sd-badge` and `sd-avatar`.
 
 ```html
-<sd-kanban [columns]="columns" [option]="option" [(model)]="tickets">
-  <ng-template [sdKanbanCardTemplate]="option" let-ticket>
-    <strong>{{ ticket.subject }}</strong>
-    <p>{{ ticket.key }}</p>
+<sd-kanban [columns]="columns" [items]="cards()" [option]="option">
+  <ng-template [sdKanbanCardTemplate]="option" let-card>
+    <strong>{{ card.title }}</strong>
+    <span>{{ card.data?.key }}</span>
   </ng-template>
-  <ng-template [sdKanbanCardActionsTemplate]="option" let-ticket let-pending="pending">
-    <sd-button type="text" size="sm" title="Details" [disabled]="pending" (click)="open(ticket)" />
+  <ng-template [sdKanbanCardActionsTemplate]="option" let-card let-pending="pending">
+    <sd-button type="text" size="sm" title="Details" [disabled]="pending" (click)="open(card)" />
   </ng-template>
 </sd-kanban>
 ```
 
-Every lane has the same neutral background (`--sd-kanban-lane-bg`). The column's semantic `color` (default `secondary`) marks it with an 8px dot before the label, or tints the `prefixIcon` when there is one; in a collapsed lane the dot sits between the expand button and the count. The count is plain 13px secondary text with tabular figures, `visible/total` while search or a filter hides cards. Cards use `--sd-surface` with a `--sd-kanban-card-border` outline and no shadow; hovering darkens the outline (`--sd-kanban-card-hover-border`), and a pending or failed card keeps its primary or error outline. The card body comes first; the drag handle and movement menu sit quietly at its top-end corner. With a mouse (`hover: hover` and `pointer: fine`) they are transparent until the card is hovered or holds focus, while it is pending or failed, or while its menu is open; they stay in the tab order. On touch they are always shown. While dragging, only the lane under the pointer is highlighted (`--sd-kanban-lane-target-bg` and `--sd-kanban-lane-target-border`) and the drop position is a dashed slot (`--sd-kanban-drop-slot-border`) as tall as the card. Under forced colors each lane has a `CanvasText` border. The six `--sd-kanban-*` tokens are listed in `assets/THEME.md`. The actions template renders on its own end-aligned row below the body. Card metadata such as badges, avatars, codes or dates belongs in the card template, using existing components like `sd-badge` and `sd-avatar`. The board has no domain-specific fields.
+Card content is clipped to the card (`contain: paint`, which keeps hit testing and repaints cheap while dragging a large board). Menus, tooltips and popovers must render in an overlay, as Core UI ones do.
 
-Custom card content/actions may contain consumer controls; they are kept separate from the drag handle and movement menu. Do not assume a custom button's click moves a card. Consumer actions must honor the provided `pending` state and the application's permissions.
+## Layout
 
-The board scrolls horizontally within its container at every width; narrow screens keep compact horizontally scrolling columns rather than switching to a single-column mode. Every card has a movement menu with Move up/down and named destination columns, providing a touch and keyboard alternative to drag. Focus the drag handle and use Alt+Up/Down to reorder or Alt+Left/Right to move to adjacent enabled columns; horizontal keys respect RTL. Success, failure and pending states are announced through one polite live region. Pending and failure are also shown on the affected card. Collapsing a column retains its card data. Focus follows the moved card while its initiating interaction still owns focus, including temporary focus loss when a pending control is disabled or removed. Moving focus to another control or board during confirmation preserves that focus on completion. An API move in another board cannot take focus merely because card IDs match. Loading, empty columns, filtered-empty results, errors, disabled and readonly states use existing Core UI tokens and data-state UI.
+The board scrolls horizontally inside its container. Lanes are 280px (`flex: 1 0 280px`). Under 600px of **host** width (`ResizeObserver`, so a board in a narrow column of a desktop page counts) the board is compact: lanes of 260px (collapsed 64px); the root gets `data-compact`. There is no single-column mode. With a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 40px high.
 
-The MVP does not include swimlanes, realtime transport, workflow design, or card CRUD. Applications compose those behaviors around the board. No additional runtime dependency is required; dragging uses the existing Angular CDK.
+Each lane has the neutral `--sd-kanban-lane-bg`; the column `color` marks an 8px dot before the label, or tints `prefixIcon`. The header shows the label, the `summary` line under it (12px, secondary, cut with an ellipsis) and the count. While dragging, only the lane under the pointer is highlighted, and lanes refused by `droppable` fade to 45% with a not-allowed cursor. Cards use `--sd-surface` with a `--sd-kanban-card-border` outline and no shadow. The "⋯" button is transparent with a mouse until the card is hovered or focused, pending, failed or its menu is open; on touch it is always shown. The six `--sd-kanban-*` tokens are listed in `assets/THEME.md`.
+
+## Accessibility
+
+- A region named by `ariaLabel`; one polite status region announces selection, pending, moved, rejected, errors, cancelled and refused drops. The board's error band is plain text read through that region.
+- Lanes are labelled by their heading. A refused lane's list has `aria-disabled="true"` while dragging; a list loading its first page has `aria-busy="true"`.
+- The card name button is described by the hidden instructions (which depend on `reorder`) and, after a failure, by the error on the card.
+- `forced-colors`: lanes get a `CanvasText` border and the selected card a `Highlight` outline. `prefers-reduced-motion` stops transitions.
+
+## E2E hooks
+
+With `autoId` the root has `data-autoid="components-kanban-{autoId}"`, a lane `…-column-{token}` and a card `…-card-{token}`, where `token` is `encodeURIComponent(id)`.
+
+Always present (with or without `autoId`):
+
+| Element | Attributes |
+| --- | --- |
+| Root | `data-compact` |
+| Lane (`section`) | `data-column-id` (token), `data-color`, `data-status` (data source: `idle`, `loading`, `loading-more`, `error`), `data-blocked` (refused while dragging) |
+| Lane header | `data-summary` on the summary line |
+| Card (`article`) | `data-card-id` (token), `data-selected`, `data-pending`, `data-movable` |
+| Card name button | `data-kanban-card-main` (token): the element to click, focus or drag |
+| Movement menu button | `data-kanban-menu` (token) |
+| Lists | `data-skeleton` (first load), `data-load-error` (first page or a later page), `data-load-more` (token of the column) |
+| Buttons | `data-action="retry"` |
+| While dragging | `data-origin`: the faded old place with `reorder` off |
+
+## Migration from the previous API
+
+The new API is a breaking change without aliases.
+
+| Before | Now |
+| --- | --- |
+| `[(model)]="tickets"` with `option.getId`, `getColumnId`, `getTitle`, `withColumn` | `[items]="cards"`: map once to `SdKanbanCard<T>` (`{ id, columnId, title, data: ticket }`). Update your own array from `sdMove` when you need it. |
+| `SdKanbanId` (`string \| number`; `1` and `'1'` differ) | `string` |
+| `option.getSearchText` | `card.searchText` (default `title`) |
+| `option.filter` | Filter the `items` you pass, or on the server with `dataSource`. |
+| `option.searchable` (default `true`) | Input `searchable` (default `false`). |
+| `option.collapsible` | Input `collapsible`. |
+| No `option.move`: local moves, committed at once | No `option.move`: no moving. Accept locally with `onMove: () => true`. |
+| `option.canMove(request)` | `option.move.movable(card)` and `option.move.droppable({ card, from, to })` |
+| `option.move(request)` | `option.move.onMove(request)`, which may also return `'cancel'` |
+| Reordering inside a column always on | `option.move.reorder` (default `false`: column change only) |
+| Request `item`, `itemId`, `fromColumnId`, `toColumnId`, `fromIndex`, `toIndex`, `previousItems`, `nextItems` | `card`, `card.id`, `from.columnId`, `to.columnId`, `from.index`, `to.index` (`null` without `reorder`), `to.beforeId`; no data arrays |
+| `move(itemId, toColumnId, toIndex?, source?)` | `move(cardId, { columnId, beforeId? }, source?)` |
+| `[loading]`, `[error]`, `(sdRetry)` | Per column with `option.dataSource`: skeleton, error with Retry, `sdLoadError` |
+| `modelChange`, `sdChange` | `sdMove`, emitted after the data changed |
+| Card template context `item` | `card` (`$implicit` is the card; your object is `card.data`), plus `selected` |
+| Column template context `count` | `total` (`null` while unknown) |
+| Drag handle on the card | The whole card is dragged; the name button is the tab stop and the keyboard target. |
+| autoId token `` `${typeof id}-${encodeURIComponent(id)}` `` | `encodeURIComponent(id)` |
+| Narrow layout under 600px of viewport (`@media`) | Under 600px of host width (`data-compact`) |
+
+## Limits (this release)
+
+- No swimlanes, realtime transport, WIP limits, card CRUD or sorting by a field of `data`.
+- No virtual scrolling. Rendering grows with the number of cards and the weight of the card template; page long columns with `dataSource` and `pageSize`.
+
+## Anti-patterns
+
+- Do NOT pass `items` from a method call or a `.map()` in the template: every change detection is a new reference, which replaces the data and cancels a pending move.
+- Do NOT mutate `items`, the cards, or what `onLoad` returned; pass a new array, a new `option`, or call `reload()`.
+- Do NOT call your API from `movable` or `droppable`: they run while rendering and dragging. Decide in `onMove`.
+- Do NOT put controls in the card template; use the actions template.

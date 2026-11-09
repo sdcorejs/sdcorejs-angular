@@ -1384,7 +1384,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.moved': 'Đã chuyển {title} đến {column}, vị trí {position}',
   'core.component.kanban.rejected': 'Thao tác chuyển bị từ chối. Hãy chọn cột khác.',
   'core.component.kanban.error': 'Không thể chuyển thẻ. Vui lòng thử lại.',
-  'core.component.kanban.invalid-data': 'Kiểm tra ánh xạ dữ liệu và ID duy nhất của thẻ/cột.',
+  'core.component.kanban.invalid-data': 'Kiểm tra thẻ và cột: ID phải duy nhất, không rỗng; thẻ nào cũng cần tên và thuộc một cột có trong danh sách.',
   'core.component.kanban.dismiss': 'Đóng',
   'core.component.kanban.instructions': 'Enter để chọn. Alt + mũi tên trái, phải để chuyển cột; Alt + mũi tên lên, xuống để đổi vị trí.',
   'core.component.kanban.instructions-column': 'Enter để chọn. Alt + mũi tên trái, phải để chuyển cột.',
