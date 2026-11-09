@@ -1,5 +1,12 @@
 import type { SdKanbanCard, SdKanbanColumn } from './kanban.model';
-import { kanbanApplyMove, kanbanDataInvalid, kanbanDropTarget, kanbanNextColumn, kanbanResolveMove, kanbanStepTarget } from './kanban.utils';
+import {
+  kanbanApplyMove,
+  kanbanDataInvalid,
+  kanbanDropTarget,
+  kanbanNextColumn,
+  kanbanResolveMove,
+  kanbanStepTarget,
+} from './kanban.utils';
 
 interface Dto {
   readonly owner: string;
@@ -8,10 +15,7 @@ interface Dto {
 const dto: Dto = Object.freeze({ owner: 'Lan' });
 const card = (id: string, columnId: string, extra: Partial<SdKanbanCard<Dto>> = {}): SdKanbanCard<Dto> =>
   Object.freeze({ id, columnId, title: id.toUpperCase(), ...extra });
-const columns: readonly SdKanbanColumn[] = Object.freeze([
-  Object.freeze({ id: 'a', label: 'A' }),
-  Object.freeze({ id: 'b', label: 'B' }),
-]);
+const columns: readonly SdKanbanColumn[] = Object.freeze([Object.freeze({ id: 'a', label: 'A' }), Object.freeze({ id: 'b', label: 'B' })]);
 // Interleaved columns, frozen deep (SC-03).
 const cards: readonly SdKanbanCard<Dto>[] = Object.freeze([
   card('x', 'a', { data: dto }),
@@ -60,22 +64,32 @@ describe('sd-kanban utils', () => {
     it('[KAN-U-02] reorder on: index of beforeId in the target column without the card; null is the end', () => {
       expect(kanbanResolveMove(cards, 'x', { columnId: 'b', beforeId: 'z' }, true)).toEqual({ fromIndex: 0, index: 1, beforeId: 'z' });
       expect(kanbanResolveMove(cards, 'x', { columnId: 'b', beforeId: null }, true)).toEqual({ fromIndex: 0, index: 2, beforeId: null });
-      expect(kanbanResolveMove(cards, 'x', { columnId: 'b' }, true)).withContext('beforeId left out').toEqual({
-        fromIndex: 0,
-        index: 2,
-        beforeId: null,
-      });
+      expect(kanbanResolveMove(cards, 'x', { columnId: 'b' }, true))
+        .withContext('beforeId left out')
+        .toEqual({
+          fromIndex: 0,
+          index: 2,
+          beforeId: null,
+        });
     });
 
     it('[KAN-U-03] moves up and down in one column; the same place is a no-op', () => {
       expect(kanbanResolveMove(cards, 'x', { columnId: 'a', beforeId: null }, true)).toEqual({ fromIndex: 0, index: 1, beforeId: null });
       expect(kanbanResolveMove(cards, 'y', { columnId: 'a', beforeId: 'x' }, true)).toEqual({ fromIndex: 1, index: 0, beforeId: 'x' });
-      expect(kanbanResolveMove(cards, 'x', { columnId: 'a', beforeId: 'y' }, true)).withContext('before its own next card').toBeUndefined();
-      expect(kanbanResolveMove(cards, 'y', { columnId: 'a', beforeId: null }, true)).withContext('already last').toBeUndefined();
+      expect(kanbanResolveMove(cards, 'x', { columnId: 'a', beforeId: 'y' }, true))
+        .withContext('before its own next card')
+        .toBeUndefined();
+      expect(kanbanResolveMove(cards, 'y', { columnId: 'a', beforeId: null }, true))
+        .withContext('already last')
+        .toBeUndefined();
       expect(kanbanStepTarget(cards, 'x', 1)).toBe(null);
       expect(kanbanStepTarget(cards, 'y', -1)).toBe('x');
-      expect(kanbanStepTarget(cards, 'x', -1)).withContext('first card up').toBeUndefined();
-      expect(kanbanStepTarget(cards, 'y', 1)).withContext('last card down').toBeUndefined();
+      expect(kanbanStepTarget(cards, 'x', -1))
+        .withContext('first card up')
+        .toBeUndefined();
+      expect(kanbanStepTarget(cards, 'y', 1))
+        .withContext('last card down')
+        .toBeUndefined();
       const three: readonly SdKanbanCard<Dto>[] = [card('p', 'a'), card('q', 'a'), card('r', 'a')];
       expect(kanbanStepTarget(three, 'p', 1)).toBe('r');
     });
@@ -104,13 +118,27 @@ describe('sd-kanban utils', () => {
   describe('invalid data (§8)', () => {
     it('[KAN-U-04] fails on duplicate or empty ids, unknown columns, empty titles, duplicate column ids and empty labels', () => {
       expect(kanbanDataInvalid(cards, columns)).toBeFalse();
-      expect(kanbanDataInvalid([...cards, card('x', 'b')], columns)).withContext('duplicate id').toBeTrue();
-      expect(kanbanDataInvalid([card('', 'a')], columns)).withContext('empty id').toBeTrue();
-      expect(kanbanDataInvalid([card('x', 'missing')], columns)).withContext('unknown column').toBeTrue();
-      expect(kanbanDataInvalid([card('x', 'a', { title: '  ' })], columns)).withContext('empty title').toBeTrue();
-      expect(kanbanDataInvalid(cards, [...columns, { id: 'a', label: 'Again' }])).withContext('duplicate column').toBeTrue();
-      expect(kanbanDataInvalid([], [{ id: 'a', label: ' ' }])).withContext('empty label').toBeTrue();
-      expect(kanbanDataInvalid([], [{ id: '', label: 'A' }])).withContext('empty column id').toBeTrue();
+      expect(kanbanDataInvalid([...cards, card('x', 'b')], columns))
+        .withContext('duplicate id')
+        .toBeTrue();
+      expect(kanbanDataInvalid([card('', 'a')], columns))
+        .withContext('empty id')
+        .toBeTrue();
+      expect(kanbanDataInvalid([card('x', 'missing')], columns))
+        .withContext('unknown column')
+        .toBeTrue();
+      expect(kanbanDataInvalid([card('x', 'a', { title: '  ' })], columns))
+        .withContext('empty title')
+        .toBeTrue();
+      expect(kanbanDataInvalid(cards, [...columns, { id: 'a', label: 'Again' }]))
+        .withContext('duplicate column')
+        .toBeTrue();
+      expect(kanbanDataInvalid([], [{ id: 'a', label: ' ' }]))
+        .withContext('empty label')
+        .toBeTrue();
+      expect(kanbanDataInvalid([], [{ id: '', label: 'A' }]))
+        .withContext('empty column id')
+        .toBeTrue();
     });
   });
 
@@ -126,9 +154,15 @@ describe('sd-kanban utils', () => {
     it('[KAN-U-05] goes to the next column that is not disabled, collapsed or refused; reversed in RTL', () => {
       expect(kanbanNextColumn(board, 'a', 'ArrowRight', false, none)?.id).toBe('b');
       expect(kanbanNextColumn(board, 'b', 'ArrowLeft', false, none)?.id).toBe('a');
-      expect(kanbanNextColumn(board, 'a', 'ArrowRight', false, column => column.id === 'b')?.id).withContext('skipped').toBe('c');
-      expect(kanbanNextColumn(board, 'b', 'ArrowLeft', true, none)?.id).withContext('RTL').toBe('c');
-      expect(kanbanNextColumn(board, 'c', 'ArrowRight', false, none)).withContext('no column after the last').toBeUndefined();
+      expect(kanbanNextColumn(board, 'a', 'ArrowRight', false, column => column.id === 'b')?.id)
+        .withContext('skipped')
+        .toBe('c');
+      expect(kanbanNextColumn(board, 'b', 'ArrowLeft', true, none)?.id)
+        .withContext('RTL')
+        .toBe('c');
+      expect(kanbanNextColumn(board, 'c', 'ArrowRight', false, none))
+        .withContext('no column after the last')
+        .toBeUndefined();
       expect(kanbanNextColumn(board, 'a', 'ArrowLeft', false, none)).toBeUndefined();
       expect(kanbanNextColumn(board, 'missing', 'ArrowRight', false, none)).toBeUndefined();
     });

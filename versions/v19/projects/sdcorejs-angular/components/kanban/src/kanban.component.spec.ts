@@ -167,7 +167,9 @@ describe('SdKanban', () => {
     fixture.componentInstance.sdMove.subscribe(moved);
     expect(await fixture.componentInstance.move('x', { columnId: 'done', beforeId: null })).toBeTrue();
     expect(cards().find(item => item.id === 'x')?.columnId).toBe('done');
-    expect(cards().find(item => item.id === 'x')?.data).withContext('SC-02').toBe(dto);
+    expect(cards().find(item => item.id === 'x')?.data)
+      .withContext('SC-02')
+      .toBe(dto);
     expect(fixture.componentInstance.items()).withContext('the input is not changed').toBe(data);
     expect(moved).toHaveBeenCalledTimes(1);
     expect(lastRequest(moved).to).toEqual({ columnId: 'done', index: 1, beforeId: null });
@@ -327,7 +329,11 @@ describe('SdKanban', () => {
       event: new MouseEvent('mouseup'),
     });
     return fixture.whenStable().then(() => {
-      expect(cards().filter(item => item.columnId === 'done').map(item => item.id)).toEqual(['hidden', 'x', 'z']);
+      expect(
+        cards()
+          .filter(item => item.columnId === 'done')
+          .map(item => item.id)
+      ).toEqual(['hidden', 'x', 'z']);
       expect(lastRequest(moved).to).toEqual({ columnId: 'done', index: 1, beforeId: 'z' });
       expect(lastRequest(moved).source).toBe('drag');
     });
@@ -339,7 +345,11 @@ describe('SdKanban', () => {
     handle('x').focus();
     handle('x').dispatchEvent(new KeyboardEvent('keydown', { altKey: true, key: 'ArrowDown' }));
     await fixture.whenStable();
-    expect(cards().filter(item => item.columnId === 'open').map(item => item.id)).toEqual(['y', 'x']);
+    expect(
+      cards()
+        .filter(item => item.columnId === 'open')
+        .map(item => item.id)
+    ).toEqual(['y', 'x']);
     expect(lastRequest(moved).source).toBe('keyboard');
   });
 

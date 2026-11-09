@@ -40,7 +40,14 @@ import {
   SdKanbanColumnActionsTemplateDirective,
   SdKanbanColumnTemplateDirective,
 } from './kanban.templates';
-import { kanbanApplyMove, kanbanDataInvalid, kanbanDropTarget, kanbanNextColumn, kanbanResolveMove, kanbanStepTarget } from './kanban.utils';
+import {
+  kanbanApplyMove,
+  kanbanDataInvalid,
+  kanbanDropTarget,
+  kanbanNextColumn,
+  kanbanResolveMove,
+  kanbanStepTarget,
+} from './kanban.utils';
 
 interface CardView<T> {
   readonly card: SdKanbanCard<T>;
@@ -341,9 +348,7 @@ export class SdKanban<T = unknown> {
   }
 
   #rendered(id: string | null): boolean {
-    return (
-      id !== null && this.boardColumns().some(view => !this.collapsed(view.column.id) && view.cards.some(card => card.card.id === id))
-    );
+    return id !== null && this.boardColumns().some(view => !this.collapsed(view.column.id) && view.cards.some(card => card.card.id === id));
   }
   #current(operation: MoveOperation<T>): boolean {
     const current =
