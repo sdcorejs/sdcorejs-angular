@@ -204,6 +204,8 @@
     [showSavedFilters]="resolvedShowSavedFilters()"
     [savedFiltersKey]="resolvedSavedFiltersKey()"
     [query]="currentQuery()"
+    [canSaveFilter]="canSaveFilter()"
+    [autoId]="resolvedAutoId()"
     (applyFilter)="onApplyFilter($event)"
     [showClearAll]="resolvedShowClearAll()"
     [canSearch]="canSearch()"

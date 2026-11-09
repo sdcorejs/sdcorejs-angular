@@ -1596,6 +1596,78 @@ describe('SdQueryBar (host options)', () => {
       expect(component.chipValueText(component.filters()[0])).toBe('7');
     });
   });
+
+  describe('QB-S saved filters on the bar', () => {
+    const STORAGE = 'sd-query-bar:savedFilters:qb-spec';
+    const joined = { key: 'joined', label: 'Ngày vào', type: 'date', operators: ['EQUAL'] } as unknown as SdQueryField;
+    const region = { key: 'region', label: 'Vùng', type: 'string', required: true, pinned: true } as SdQueryField;
+    const saveButton = (): HTMLButtonElement => overlay().querySelector<HTMLButtonElement>('.c-sf-save')!;
+    const openSaved = (): void => {
+      (fixture.nativeElement.querySelector('.c-saved-filters') as HTMLButtonElement).click();
+      fixture.detectChanges();
+    };
+
+    beforeEach(() => {
+      localStorage.removeItem(STORAGE);
+      setOption({ fields: [name, joined, region], showSavedFilters: true, savedFiltersKey: 'qb-spec', showSearch: true, autoId: 'qb1' });
+    });
+
+    afterEach(() => localStorage.removeItem(STORAGE));
+
+    it('QB-S-05 locks "Save current filter" until a chip has a value or the search box has text', () => {
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: '' } as any]);
+      fixture.detectChanges();
+      openSaved();
+      expect(saveButton().disabled).toBeTrue();
+
+      component.setSearch('  ');
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeTrue();
+      component.setSearch('đơn');
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeFalse();
+
+      component.setSearch('');
+      component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'An' } as any]);
+      fixture.detectChanges();
+      expect(saveButton().disabled).toBeFalse();
+    });
+
+    it('QB-S-05 a value on a required chip alone is enough to save (Bước 0, decision 2)', () => {
+      component.filters.set([{ field: 'region', operator: 'CONTAIN', data: 'Bắc' } as any]);
+      fixture.detectChanges();
+      expect(component.canSaveFilter()).toBeTrue();
+    });
+
+    it('QB-S-08 a date saved earlier comes back as a Date and the chip shows that day', () => {
+      const day = new Date('2026-11-09T05:00:00.000Z');
+      localStorage.setItem(
+        STORAGE,
+        JSON.stringify([{ id: 'd', name: 'Hôm đó', query: { filters: [{ field: 'joined', operator: 'EQUAL', data: day }], logic: 'AND' } }])
+      );
+      // A new bar reads the list again, as after a page reload.
+      fixture.destroy();
+      fixture = TestBed.createComponent(SdQueryBar);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      setOption({ fields: [name, joined, region], showSavedFilters: true, savedFiltersKey: 'qb-spec', showSearch: true });
+      openSaved();
+      overlay().querySelector<HTMLButtonElement>('.c-sf-apply')!.click();
+      fixture.detectChanges();
+
+      const restored = component.filters().find(filter => (filter as any).field === 'joined') as any;
+      expect(restored.data instanceof Date).toBeTrue();
+      expect(restored.data.getTime()).toBe(day.getTime());
+      const text = component.chipValueText({ field: 'joined', operator: 'EQUAL', data: day } as any);
+      const host = fixture.nativeElement as HTMLElement;
+      const chip = Array.from(host.querySelectorAll<HTMLElement>('.c-chip')).find(el => el.dataset['field'] === 'joined')!;
+      expect(chip.querySelector('.c-chip-value')!.textContent!.trim()).toBe(text);
+    });
+
+    it('QB-S-10 passes the bar autoId to the saved-filters trigger', () => {
+      expect(fixture.nativeElement.querySelector('.c-saved-filters').getAttribute('data-autoid')).toBe('qb1-saved-filters');
+    });
+  });
 });
 
 @Component({

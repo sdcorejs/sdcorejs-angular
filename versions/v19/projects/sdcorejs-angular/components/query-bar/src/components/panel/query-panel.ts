@@ -252,7 +252,8 @@ export class ɵSdQueryPanelDirective {
     });
     const pane = ref.overlayElement;
     const onKeydown = (event: KeyboardEvent): void => {
-      if (event.key === 'Tab' && this.#leavesByTab(event)) this.close('tab');
+      // why: nội dung đã dùng Tab (bộ lọc đã lưu: nút áp → nút xoá của cùng hàng) thì không đóng.
+      if (event.key === 'Tab' && !event.defaultPrevented && this.#leavesByTab(event)) this.close('tab');
     };
     const onFocusOut = (event: FocusEvent): void => {
       const next = event.relatedTarget as Element | null;

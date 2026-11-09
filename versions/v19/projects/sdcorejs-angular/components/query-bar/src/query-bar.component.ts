@@ -32,6 +32,7 @@ import { SdQueryFieldPicker } from './components/field-picker/field-picker.compo
 import { SdQueryInlineChip } from './components/inline-chip/inline-chip.component';
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
 import { SdQueryPopoverChip } from './components/popover-chip/popover-chip.component';
+import { ɵSdQueryPanelGroup } from './components/panel/query-panel';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { ɵSdQueryChipLabels, ɵsdQueryChipValueText } from './query-bar-chip-text';
 import {
@@ -66,6 +67,9 @@ const hasValue = (value: unknown): boolean => value !== null && value !== undefi
   styleUrls: ['./query-bar.component.scss', './query-bar.controls.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // why: ba panel của thanh (field picker, chip popover, bộ lọc đã lưu) dùng chung một nhóm — mở panel này thì panel kia
+  // đóng (handoff mục 2.2).
+  providers: [ɵSdQueryPanelGroup],
   imports: [
     SdIcon,
     CommonModule,
@@ -324,6 +328,14 @@ export class SdQueryBar {
 
   /** Render the global AND/OR connector text between chips when `logic === 'OR'`. */
   readonly showOrConnector = computed(() => this.resolvedShowLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2);
+
+  /**
+   * "Save current filter" needs something to save: a chip with a value (required chips included — Bước 0, decision 2)
+   * or text in the search box.
+   */
+  readonly canSaveFilter = computed(
+    () => this.filters().some(filter => this.isFilterActive(filter)) || (this.resolvedShowSearch() && this.search().trim().length > 0)
+  );
 
   /** Search button is actionable only when there is something to apply and no required field is empty. */
   readonly canSearch = computed(() => (this.filters().length > 0 || this.search().trim().length > 0) && this.invalidFields().length === 0);

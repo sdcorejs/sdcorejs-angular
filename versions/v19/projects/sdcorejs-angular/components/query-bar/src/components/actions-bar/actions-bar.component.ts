@@ -36,6 +36,10 @@ export class SdQueryActionsBar {
   readonly showSavedFilters = input(false, { transform: booleanAttribute });
   readonly savedFiltersKey = input<string | undefined>(undefined);
   readonly query = input<SdQuery>({ filters: [], logic: 'AND' });
+  /** `false` disables "Save current filter" (nothing to save). */
+  readonly canSaveFilter = input(true);
+  /** Prefix of `data-autoid` for the saved-filters controls. */
+  readonly autoId = input<string | undefined>(undefined);
   readonly applyFilter = output<SdSavedFilter>();
 
   // Clear-all —

@@ -42,6 +42,8 @@
     <sd-query-saved-filters-menu
       [key]="savedFiltersKey()"
       [query]="query()"
+      [canSave]="canSaveFilter()"
+      [autoId]="autoId()"
       (apply)="applyFilter.emit($event)" />
   }
 
