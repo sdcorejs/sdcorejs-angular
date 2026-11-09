@@ -4,6 +4,7 @@ import { CdkDrag, CdkDragStart, CdkDropList } from '@angular/cdk/drag-drop';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { I18nService, type I18nParams } from '@sdcorejs/angular/i18n';
+import { findCssRule } from '../../../testing';
 import { deferred } from '../../../testing/schedule-testing';
 import { SdKanban } from './kanban.component';
 import type { SdKanbanCard, SdKanbanColumn, SdKanbanDropContext, SdKanbanMoveRequest, SdKanbanOption } from './kanban.model';
@@ -30,8 +31,15 @@ describe('SdKanban · move pipeline', () => {
   let fixture: ComponentFixture<SdKanban<Dto>>;
   const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const kanban = (): SdKanban<Dto> => fixture.componentInstance;
-  const cards = (): readonly Card[] => kanban()['cards']();
-  const columnOf = (id: string): string | undefined => cards().find(card => card.id === id)?.columnId;
+  /** Read through the DOM (TESTING §0.3); the board is rendered first. */
+  const columnOf = (id: string): string | null | undefined => {
+    fixture.detectChanges();
+    return host().querySelector(`article[data-card-id="${id}"]`)?.closest('[data-column-id]')?.getAttribute('data-column-id');
+  };
+  const order = (): (string | null)[] => {
+    fixture.detectChanges();
+    return Array.from(host().querySelectorAll('article')).map(card => card.getAttribute('data-card-id'));
+  };
   const live = (): string => host().querySelector('[aria-live="polite"]')?.textContent?.trim() ?? '';
   const t = (key: string, params?: I18nParams): string => TestBed.inject(I18nService).t(`core.component.kanban.${key}`, params);
   const article = (id: string): HTMLElement => host().querySelector<HTMLElement>(`[data-card-id="${id}"]`)!;
@@ -202,9 +210,8 @@ describe('SdKanban · move pipeline', () => {
       expect(lists().every(candidate => candidate.sortingDisabled)).toBeTrue();
       expect(await kanban().move('x', { columnId: 'done', beforeId: 'd' })).toBeTrue();
       expect((onMove.calls.mostRecent().args[0] as SdKanbanMoveRequest<Dto>).to).toEqual({ columnId: 'done', index: null, beforeId: null });
-      expect(cards().map(card => card.id))
-        .withContext('keeps the place in the array')
-        .toEqual(['x', 'y', 'd']);
+      // x comes before d in the items array, so it stays above d in Done.
+      expect(order()).withContext('keeps the place in the array').toEqual(['y', 'x', 'd']);
       expect(await kanban().move('y', { columnId: 'open', beforeId: 'x' }))
         .withContext('same column')
         .toBeFalse();
@@ -230,6 +237,8 @@ describe('SdKanban · move pipeline', () => {
       expect(host().querySelector('[data-origin]')!.closest('[data-column-id]')!.getAttribute('data-column-id')).toBe('open');
       endDrag('x');
       expect(host().querySelector('[data-origin]')).toBeNull();
+      // No drop slot: the CDK placeholder of a card is an element that is not displayed.
+      expect(findCssRule(/sd-kanban__no-slot/)?.getPropertyValue('display')).toBe('none');
     });
 
     it('[KAN-C-12] reorder on: sorting, Up/Down in the menu and Alt + Up/Down', async () => {
@@ -356,7 +365,9 @@ describe('SdKanban · move pipeline', () => {
       },
     });
     expect(await kanban().move('x', { columnId: 'done' })).toBeFalse();
-    expect(cards()).toBe(replacement);
+    fixture.detectChanges();
+    expect(article('x').textContent).toContain('Reloaded');
+    expect(columnOf('x')).toBe('open');
   });
 
   it('[KAN-SC-16] never shows the text of an error', async () => {
@@ -420,6 +431,53 @@ describe('SdKanban · move pipeline', () => {
     expect(await kanban().move('x', { columnId: 'open' }))
       .withContext('locked board')
       .toBeFalse();
+  });
+
+  describe('R1 fixes', () => {
+    it('[KAN-B-01] does not bring back its old copy when an earlier items reference comes back (A, B, A)', async () => {
+      mount({ onMove: () => true });
+      expect(await kanban().move('x', { columnId: 'done' })).toBeTrue();
+      expect(columnOf('x')).toBe('done');
+      fixture.componentRef.setInput('items', [...data]);
+      fixture.detectChanges();
+      fixture.componentRef.setInput('items', data);
+      fixture.detectChanges();
+      expect(columnOf('x')).withContext('the consumer gave A again').toBe('open');
+    });
+
+    it('[KAN-B-02] does not ask droppable about a move inside the same column', async () => {
+      const droppable = jasmine.createSpy('droppable').and.callFake((context: SdKanbanDropContext<Dto>) => context.from.id !== context.to.id);
+      const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+      mount({ reorder: true, droppable, onMove });
+      press('x', 'ArrowDown');
+      await settle();
+      expect(onMove).toHaveBeenCalledTimes(1);
+      expect(order()).toEqual(['y', 'x', 'd']);
+      expect(droppable.calls.allArgs().some(args => (args[0] as SdKanbanDropContext<Dto>).to.id === 'open')).toBeFalse();
+      expect(await kanban().move('x', { columnId: 'open', beforeId: 'y' })).toBeTrue();
+    });
+
+    it('[KAN-B-03] sizes the old place from the card before the CDK takes it out of the lane', () => {
+      mount({ onMove: () => true });
+      const card = article('x');
+      const height = card.getBoundingClientRect().height;
+      card.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      // What the CDK does when the drag starts: the card leaves the lane, hidden and fixed.
+      card.style.display = 'none';
+      startDrag('x');
+      expect(lane('open').querySelector<HTMLElement>('[data-origin]')!.getBoundingClientRect().height).toBe(height);
+    });
+
+    it('[KAN-B-04] exposes pendingId read-only', () => {
+      mount({ onMove: () => true });
+      expect('set' in kanban().pendingId).toBeFalse();
+      expect(kanban().pendingId()).toBeNull();
+    });
+
+    it('[KAN-B-05] has no member named after the removed canMove option', () => {
+      mount({ onMove: () => true });
+      expect('canMove' in kanban()).toBeFalse();
+    });
   });
 
   it('[KAN-SC-18] undoes an accepted move with move(…, "api") without taking the focus', async () => {
