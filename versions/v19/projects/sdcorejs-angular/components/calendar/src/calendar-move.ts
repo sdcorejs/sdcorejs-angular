@@ -1,4 +1,4 @@
-import { computed, signal } from '@angular/core';
+import { afterNextRender, computed, signal, untracked, type Injector } from '@angular/core';
 import type { SdCalendarState } from './calendar.model';
 
 // Pieces of the move pipeline (calendar.md §9.5, SHARED-CONTRACT §3) that do not depend on the calendar's layout, so
@@ -66,5 +66,59 @@ export class SdCalendarOperation<K extends string> {
     current.controller.abort();
     this.#current.set(null);
     return true;
+  }
+}
+
+/** Text of the one live region of a component (SC-33). */
+export class SdCalendarAnnouncer {
+  readonly #text = signal('');
+  readonly text = this.#text.asReadonly();
+
+  /** Writes the live region; the same text twice in a row gets a trailing no-break space so it is read again (R1-G9). */
+  announce(message: string): void {
+    const current = untracked(this.#text);
+    this.#text.set(current === message ? `${message}\xa0` : message);
+  }
+}
+
+/**
+ * Puts the focus back on an item after a move that started from the keyboard or the scope bar (SC-29, SC-30). The
+ * item may first need the next range to load, so `pending()` runs again after every load.
+ */
+export class SdCalendarFocusKeeper {
+  #target: string | null = null;
+
+  constructor(
+    private readonly host: HTMLElement,
+    private readonly injector: Injector,
+    /** The focusable element of an item, from its id. */
+    private readonly selector: (id: string) => string,
+    /** The scope bar: a focus inside it is the component's own, the bar is about to be removed (R2 A-18). */
+    private readonly scopeSelector: string
+  ) {}
+
+  /** Focuses `id` unless the user moved the focus somewhere else while waiting (`origin` is where it started). */
+  restore(id: string, origin: Element | null): void {
+    const active = document.activeElement;
+    const inScopeBar = !!active && !!this.host.querySelector(this.scopeSelector)?.contains(active);
+    if (active && active !== document.body && active !== origin && active.isConnected && !inScopeBar) return;
+    this.#target = id;
+    this.pending();
+  }
+
+  /** Focuses the waiting item once it is rendered. */
+  pending(): void {
+    if (!this.#target) return;
+    afterNextRender(
+      () => {
+        const id = this.#target;
+        if (!id) return;
+        const element = this.host.querySelector<HTMLElement>(this.selector(id));
+        if (!element) return;
+        this.#target = null;
+        element.focus();
+      },
+      { injector: this.injector }
+    );
   }
 }

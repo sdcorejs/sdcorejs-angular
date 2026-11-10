@@ -40,6 +40,22 @@ describe('sd-calendar entry point', () => {
       calendar.ɵsdCalendarRangeOf,
       calendar.ɵsdCalendarReadDay,
       calendar.ɵsdCalendarWorkingRanges,
+      calendar.ɵsdCalendarFormats,
+      calendar.ɵsdCalendarTitle,
+      calendar.ɵsdCalendarDateText,
+      calendar.ɵsdCalendarWeekdayLong,
+      calendar.ɵsdCalendarResolveStep,
+      calendar.ɵsdCalendarResolveFirstDayOfWeek,
+      calendar.ɵsdCalendarResolveWorkingHours,
+      calendar.ɵsdCalendarHolidayMap,
+      calendar.ɵsdCalendarBoundDay,
+      calendar.ɵsdCalendarTargetOf,
+      calendar.ɵsdCalendarLastDayOf,
+      calendar.ɵsdCalendarDaysBetween,
+      calendar.ɵsdCalendarRangeKey,
+      calendar.ɵSdCalendarAnnouncer,
+      calendar.ɵSdCalendarFocusKeeper,
+      calendar.ɵSdCalendarEdgeScroller,
     ]) {
       expect(typeof helper).toBe('function');
     }
