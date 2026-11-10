@@ -146,6 +146,8 @@ describe('SdScheduler · rendering and data source', () => {
     it(
       '[SCH-C-02] loads again for a new resources array, without a range output, and not for no resources',
       run(() => {
+        // The events of the rooms left out warn once each (SCH-C-03); that is not what this test is about.
+        spyOn(console, 'warn');
         const { option, onLoad } = spyOption();
         const { fixture, host, ranges, settle } = renderScheduler({ option });
         expect(ranges.length).toBe(1);
@@ -458,7 +460,7 @@ describe('SdScheduler · rendering and data source', () => {
     );
 
     it(
-      '[SCH-C-13] shades the days before minDate and after maxDate, as sd-calendar',
+      '[SCH-B-32] [SCH-C-13] shades the days before minDate and after maxDate, as sd-calendar',
       run(() => {
         const { host, fixture, settle } = renderScheduler({ view: 'week', minDate: '2026/11/11' });
         const hue = (): HTMLElement[] => qa(host, '[role="row"][data-resource-id="hue"] [data-off-hours]');

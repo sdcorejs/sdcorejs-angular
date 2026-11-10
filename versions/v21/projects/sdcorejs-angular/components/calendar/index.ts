@@ -39,9 +39,13 @@ export {
 export { SdCalendarLoader as ɵSdCalendarLoader, type SdCalendarLoadPhase as ɵSdCalendarLoadPhase } from './src/calendar-loader';
 export {
   SdCalendarAnnouncer as ɵSdCalendarAnnouncer,
+  SdCalendarCreateRunner as ɵSdCalendarCreateRunner,
   SdCalendarFocusKeeper as ɵSdCalendarFocusKeeper,
   SdCalendarMoveRunner as ɵSdCalendarMoveRunner,
   SdCalendarOperation as ɵSdCalendarOperation,
+  SdCalendarScopeBar as ɵSdCalendarScopeBar,
+  type SdCalendarCreateHost as ɵSdCalendarCreateHost,
+  type SdCalendarCreatePlan as ɵSdCalendarCreatePlan,
   type SdCalendarMoveHost as ɵSdCalendarMoveHost,
   type SdCalendarMovePlan as ɵSdCalendarMovePlan,
   sdCalendarAllows as ɵsdCalendarAllows,
@@ -57,6 +61,7 @@ export {
   sdCalendarIsOffDay as ɵsdCalendarIsOffDay,
   sdCalendarSelectionGone as ɵsdCalendarSelectionGone,
   sdCalendarMoveTarget as ɵsdCalendarMoveTarget,
+  sdCalendarOutOfRange as ɵsdCalendarOutOfRange,
   sdCalendarShiftDays as ɵsdCalendarShiftDays,
   sdCalendarCssEscape as ɵsdCalendarCssEscape,
   sdCalendarDaysBetween as ɵsdCalendarDaysBetween,

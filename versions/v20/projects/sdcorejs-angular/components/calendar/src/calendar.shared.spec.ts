@@ -1,4 +1,4 @@
-import { Component, Injector, NgZone } from '@angular/core';
+import { ApplicationRef, Component, Injector, NgZone } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { clockFor } from '../../../testing/schedule-testing';
 import { SdCalendarEdgeScroller, sdCalendarEdgeSpeed } from './calendar-edge-scroll';
@@ -11,7 +11,14 @@ import {
   sdCalendarWeekdayLong,
 } from './calendar-format';
 import { SdCalendarHostWidth, SdCalendarMinuteTimer, SdCalendarReporter, sdCalendarIsRtl } from './calendar-host';
-import { SdCalendarAnnouncer, SdCalendarFocusKeeper, SdCalendarMoveRunner, SdCalendarOperation } from './calendar-move';
+import {
+  SdCalendarAnnouncer,
+  SdCalendarCreateRunner,
+  SdCalendarFocusKeeper,
+  SdCalendarMoveRunner,
+  SdCalendarOperation,
+  SdCalendarScopeBar,
+} from './calendar-move';
 import {
   sdCalendarBoundDay,
   sdCalendarBrokenWeekdays,
@@ -23,6 +30,7 @@ import {
   sdCalendarInvalidItems,
   sdCalendarIsOffDay,
   sdCalendarLastDayOf,
+  sdCalendarOutOfRange,
   sdCalendarPointOf,
   sdCalendarRangeKey,
   sdCalendarResolveFirstDayOfWeek,
@@ -295,6 +303,124 @@ describe('sd-calendar shared pieces', () => {
       expect(result).toBeFalse();
       expect(onMove).not.toHaveBeenCalled();
       expect(show).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('create runner', () => {
+    function creator(operation = new SdCalendarOperation<'create' | 'move'>()) {
+      const announcer = new SdCalendarAnnouncer();
+      const band = jasmine.createSpy('band');
+      const runner = new SdCalendarCreateRunner({ operation, announcer, t: key => key, band });
+      return { runner, operation, announcer, band };
+    }
+
+    it('[CAL-SC-19] shows the waiting block, passes the args with a signal, then inserts the answer', async () => {
+      const { runner, operation, band } = creator();
+      const shown: boolean[] = [];
+      const accept = jasmine.createSpy('accept');
+      const onCreate = jasmine.createSpy('onCreate').and.callFake(() => {
+        expect(operation.busy()).withContext('one waiting operation').toBeTrue();
+        return Promise.resolve({ id: 'new' });
+      });
+      await runner.run({ args: { start: 'a' }, onCreate, show: waiting => shown.push(waiting), accept });
+      expect(onCreate.calls.mostRecent().args[0].start).toBe('a');
+      expect(onCreate.calls.mostRecent().args[0].signal.aborted).toBeFalse();
+      expect(shown).toEqual([true, false]);
+      expect(band.calls.allArgs()).toEqual([[null]]);
+      expect(accept).toHaveBeenCalledWith({ id: 'new' });
+      expect(operation.busy()).toBeFalse();
+    });
+
+    it('[CAL-SC-20] removes the block without inserting when onCreate returns nothing', async () => {
+      const { runner } = creator();
+      const accept = jasmine.createSpy('accept');
+      const show = jasmine.createSpy('show');
+      await runner.run({ args: {}, onCreate: () => undefined, show, accept });
+      expect(show.calls.allArgs()).toEqual([[true], [false]]);
+      expect(accept).not.toHaveBeenCalled();
+    });
+
+    it('[CAL-SC-21] shows the create error without its text when onCreate throws', async () => {
+      const { runner, announcer, band, operation } = creator();
+      await runner.run({
+        args: {},
+        onCreate: () => Promise.reject(new Error('SECRET')),
+        show: () => undefined,
+        accept: () => undefined,
+      });
+      expect(band).toHaveBeenCalledWith({ id: null, message: 'core.component.calendar.create-error' });
+      expect(announcer.text()).toBe('core.component.calendar.create-error');
+      expect(operation.busy()).toBeFalse();
+    });
+
+    it('[CAL-SC-15] drops the late answer or error of an aborted create; [CAL-SC-14] refuses a second one', async () => {
+      const { runner, operation, band } = creator();
+      for (const answer of [() => Promise.resolve({ id: 'late' }), () => Promise.reject(new Error('late'))]) {
+        band.calls.reset();
+        const accept = jasmine.createSpy('accept');
+        const show = jasmine.createSpy('show');
+        const done = runner.run({
+          args: {},
+          onCreate: () => {
+            operation.abort(['create']);
+            return answer();
+          },
+          show,
+          accept,
+        });
+        await done;
+        expect(accept).not.toHaveBeenCalled();
+        expect(show.calls.allArgs())
+          .withContext('the block is left to the abort')
+          .toEqual([[true]]);
+        expect(band.calls.allArgs()).toEqual([[null]]);
+      }
+      operation.begin('move');
+      const onCreate = jasmine.createSpy('onCreate');
+      await runner.run({ args: {}, onCreate, show: () => undefined, accept: () => undefined });
+      expect(onCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('scope bar', () => {
+    it('[CAL-C-13] asks, focuses the first answer, answers once, and closes on Escape', async () => {
+      @Component({
+        standalone: true,
+        template: '<div role="alertdialog"><button data-scope="this">This</button></div>',
+      })
+      class Host {}
+      const fixture = TestBed.createComponent(Host);
+      const host = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(host);
+      const bar = new SdCalendarScopeBar(host, TestBed.inject(Injector));
+      bar.answer('this');
+      expect(bar.asking()).withContext('nothing to answer').toBeNull();
+      const first = bar.ask('Stand-up');
+      expect(bar.asking()?.title).toBe('Stand-up');
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+      expect(document.activeElement?.getAttribute('data-scope')).toBe('this');
+      bar.answer('all');
+      bar.answer('this');
+      expect(await first).toBe('all');
+      expect(bar.asking()).toBeNull();
+
+      const second = bar.ask('Stand-up');
+      const other = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+      bar.onKeydown(other);
+      expect(other.defaultPrevented).toBeFalse();
+      const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      bar.onKeydown(escape);
+      expect(escape.defaultPrevented).toBeTrue();
+      expect(await second).toBeNull();
+      host.remove();
+    });
+
+    it('[CAL-C-23] sdCalendarOutOfRange compares with each bound that is set', () => {
+      expect(sdCalendarOutOfRange('2026/11/09', null, null)).toBeFalse();
+      expect(sdCalendarOutOfRange('2026/11/09', '2026/11/10', null)).toBeTrue();
+      expect(sdCalendarOutOfRange('2026/11/10', '2026/11/10', '2026/11/10')).toBeFalse();
+      expect(sdCalendarOutOfRange('2026/11/11', null, '2026/11/10')).toBeTrue();
     });
   });
 

@@ -531,6 +531,9 @@ $hour: var(--sd-scheduler-hour-width);
 
 .sd-scheduler__track {
   position: relative;
+  // why: the blocks, the dashed blocks, the proposal and the cursor stack inside their row, under the sticky resource
+  // column and axis (§7) whatever their own z-index.
+  isolation: isolate;
   flex: none;
   box-sizing: border-box;
   width: var(--sd-scheduler-track);
@@ -930,14 +933,12 @@ $hour: var(--sd-scheduler-hour-width);
   opacity: 0.55;
 }
 
-.sd-scheduler__proposal {
-  position: absolute;
+// The block at its proposed place (calendar §8.3): the colours of the event, its border in the event colour, a large
+// shadow; it also carries the floating label, so it does not clip.
+.sd-scheduler__event.sd-scheduler__proposal {
   z-index: 4;
-  box-sizing: border-box;
-  height: var(--sd-scheduler-lane-height);
-  border: 1px solid tok(primary);
-  border-radius: var(--sd-scheduler-event-radius);
-  background: color-mix(in srgb, #{tok(primary-light)} 80%, transparent);
+  overflow: visible;
+  border-color: var(--sd-scheduler-event-color);
   box-shadow: var(--sd-shadow-lg);
   pointer-events: none;
 
@@ -1109,6 +1110,27 @@ $hour: var(--sd-scheduler-hour-width);
 
 // ---- compact (§11) ----
 .sd-scheduler--compact {
+  // §11: the title may take two lines rather than lose the date.
+  .sd-scheduler__title {
+    white-space: normal;
+  }
+
+  // §11, SC-36: 44px touch targets for the band and scope buttons, and around the day numbers of the week.
+  .sd-scheduler__band-button,
+  .sd-scheduler__scope-button {
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
+  &[data-view='week'] .sd-scheduler__day-number {
+    position: relative;
+
+    &::after {
+      position: absolute;
+      inset: -8px;
+      content: '';
+    }
+  }
+
   --sd-scheduler-resource-width: 120px;
   --sd-scheduler-hour-width: 64px;
   --sd-scheduler-day-min-width: 96px;
@@ -1186,6 +1208,15 @@ $hour: var(--sd-scheduler-hour-width);
 }
 
 @media (forced-colors: active) {
+  // Backgrounds are dropped: the colour dot and the marker of today keep a frame.
+  .sd-scheduler__dot {
+    border: 1px solid CanvasText;
+  }
+
+  .sd-scheduler__axis-day[data-today] .sd-scheduler__day-number {
+    outline: 2px solid Highlight;
+  }
+
   .sd-scheduler,
   .sd-scheduler__event {
     border-color: CanvasText;

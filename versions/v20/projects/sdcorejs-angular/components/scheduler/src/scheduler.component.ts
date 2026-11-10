@@ -24,6 +24,7 @@ import {
   SD_CALENDAR_CONFIGURATION,
   ɵSD_CALENDAR_DEFAULTS,
   ɵSdCalendarAnnouncer,
+  ɵSdCalendarCreateRunner,
   ɵSdCalendarEdgeScroller,
   ɵSdCalendarFocusKeeper,
   ɵSdCalendarHostWidth,
@@ -32,6 +33,7 @@ import {
   ɵSdCalendarMoveRunner,
   ɵSdCalendarOperation,
   ɵSdCalendarReporter,
+  ɵSdCalendarScopeBar,
   ɵsdCalendarAllows,
   ɵsdCalendarBoundDay,
   ɵsdCalendarBrokenWeekdays,
@@ -46,6 +48,7 @@ import {
   ɵsdCalendarMoveStep,
   ɵsdCalendarMoveTarget,
   ɵsdCalendarMovedText,
+  ɵsdCalendarOutOfRange,
   ɵsdCalendarResizeEnd,
   ɵsdCalendarSelectionGone,
   ɵsdCalendarShiftDays,
@@ -77,7 +80,6 @@ import {
   ɵsdCalendarWorkingRanges,
   type SdCalendarDateInput,
   type SdCalendarHoliday,
-  type SdCalendarMoveScope,
   type SdCalendarMoveSource,
   type SdCalendarWorkingHours,
   type ɵSdCalendarPlacement,
@@ -271,6 +273,11 @@ interface SdSchedulerDragProposal {
   readonly label: string;
   /** No room for the label after the block: it goes before it (§8.3). */
   readonly flip: boolean;
+  /** The dragged block's look, drawn at the proposed place (calendar §8.3). */
+  readonly title: string;
+  readonly color: string;
+  readonly customColor: string | null;
+  readonly tier: 'lg' | 'md' | 'sm';
 }
 
 /** @internal What a drag measured when it started (Step 0 D.2). */
@@ -286,6 +293,8 @@ interface SdSchedulerDragSession<T> {
   /** Width of one column (week, month) or one hour (day view), px. */
   readonly unit: number;
   readonly axis: SdSchedulerMoveAxis;
+  /** Content tier of the dragged block, kept for the proposal. */
+  readonly tier: 'lg' | 'md' | 'sm';
   /** `droppable` results by `resourceId|start` during this drag (§9.3). */
   readonly memo: Map<string, boolean>;
   lastResource: string;
@@ -421,7 +430,7 @@ export class SdScheduler<T = unknown, R = unknown> {
   /** Live end of a resize (§9.4): minutes (day view) or the last day (week, month). */
   readonly #resize = signal<{ readonly id: string; readonly endMinutes: number; readonly lastDay: string } | null>(null);
   /** Scope bar of a recurring event (§9.6); it holds the one waiting operation until answered. */
-  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
+  protected readonly scopeBar = new ɵSdCalendarScopeBar(this.#host.nativeElement, this.#injector);
   readonly #focus = new ɵSdCalendarFocusKeeper(
     this.#host.nativeElement,
     this.#injector,
@@ -435,9 +444,15 @@ export class SdScheduler<T = unknown, R = unknown> {
     announcer: this.#announcer,
     focus: this.#focus,
     t: this.#t,
-    ask: title => new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title, answer })),
+    ask: title => this.scopeBar.ask(title),
     band: failure => this.#failure.set(failure),
     reload: () => this.reload(),
+  });
+  readonly #creator = new ɵSdCalendarCreateRunner({
+    operation: this.#operation,
+    announcer: this.#announcer,
+    t: this.#t,
+    band: failure => this.#failure.set(failure),
   });
   #dragSession: SdSchedulerDragSession<T> | null = null;
   #dragPointer: { readonly x: number; readonly y: number } | null = null;
@@ -731,16 +746,6 @@ export class SdScheduler<T = unknown, R = unknown> {
       document.removeEventListener('keydown', this.#onDocumentKeydown, true);
       document.removeEventListener('keydown', this.#onDragKeydown, true);
     });
-
-    // §9.6: the scope bar takes the focus on its first answer when it opens.
-    effect(() => {
-      if (!this.#asking()) return;
-      untracked(() =>
-        afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), {
-          injector: this.#injector,
-        })
-      );
-    });
   }
 
   /** Aborts a running load and a waiting move, then calls `onLoad` again for the range on screen. */
@@ -878,8 +883,9 @@ export class SdScheduler<T = unknown, R = unknown> {
       const same = ɵsdCalendarTargetOf(placement);
       const next = sdSchedulerNextResource(ids, event.resourceId, direction, id => this.#droppable(event, { ...same, resourceId: id }));
       if (!next) {
+        // Nothing to name at the first or the last resource: the key does nothing there.
         const neighbour = ids[ids.indexOf(event.resourceId) + direction];
-        this.#announceBlocked(neighbour ?? event.resourceId);
+        if (neighbour) this.#announceBlocked(neighbour);
         return;
       }
       void this.#runMove(event.id, { ...same, resourceId: next }, 'keyboard', true);
@@ -1252,35 +1258,19 @@ export class SdScheduler<T = unknown, R = unknown> {
     }
     const context = this.#createContext(resource, this.#createTarget(span));
     if (!ɵsdCalendarAllows(create.creatable, context)) return;
-    const signal = this.#operation.begin('create');
-    if (!signal) return;
-    this.#failure.set(null);
-    this.#ghost.set({ resourceId, ...span, pending: true, blocked: false });
-    let created: SdSchedulerEvent<T> | void;
-    try {
-      created = await create.onCreate({ ...context, signal });
-    } catch {
-      if (signal.aborted) return;
-      this.#operation.end(signal);
-      this.#ghost.set(null);
-      const message = this.#i18n.t('core.component.calendar.create-error');
-      this.#failure.set({ id: null, message });
-      this.#announcer.announce(message);
-      return;
-    }
-    if (signal.aborted) return;
-    this.#operation.end(signal);
-    this.#ghost.set(null);
-    if (!created) return;
-    const event = created;
-    this.#loader.items.update(items => [...items, event]);
-    this.selectedId.set(event.id);
+    await this.#creator.run<SdSchedulerCreateContext<R>, SdSchedulerEvent<T>>({
+      args: context,
+      onCreate: create.onCreate,
+      show: waiting => this.#ghost.set(waiting ? { resourceId, ...span, pending: true, blocked: false } : null),
+      accept: event => {
+        this.#loader.items.update(items => [...items, event]);
+        this.selectedId.set(event.id);
+      },
+    });
   }
 
   #outOfRange(day: string): boolean {
-    const min = untracked(this.#minDay);
-    const max = untracked(this.#maxDay);
-    return (!!min && day < min) || (!!max && day > max);
+    return ɵsdCalendarOutOfRange(day, untracked(this.#minDay), untracked(this.#maxDay));
   }
 
   // ---- drag on two axes (§9.3) ----
@@ -1332,6 +1322,7 @@ export class SdScheduler<T = unknown, R = unknown> {
       pickup: this.#inlineOffset(pickup.x, area, scroller, rtl, sizes.resource),
       unit: this.activeView() === 'day' ? sizes.hour : trackWidth / this.columns().length,
       axis: untracked(this.option).move?.axis ?? 'both',
+      tier: block.tier,
       memo: new Map(),
       lastResource: placed.event.resourceId,
       lastShift: 0,
@@ -1423,7 +1414,9 @@ export class SdScheduler<T = unknown, R = unknown> {
     }
     const label = this.#proposalLabel(target, resourceId !== event.resourceId);
     const flip = this.#labelFlips(target);
-    this.#zone.run(() => this.#drag.set({ id: event.id, target, onGroup, blocked, outside, label, flip }));
+    const { color, customColor } = ɵsdCalendarColor(event.color);
+    const look = { title: event.title, color, customColor, tier: session.tier };
+    this.#zone.run(() => this.#drag.set({ id: event.id, target, onGroup, blocked, outside, label, flip, ...look }));
   }
 
   /**
@@ -1616,23 +1609,7 @@ export class SdScheduler<T = unknown, R = unknown> {
 
   // ---- move pipeline (§9.5) ----
 
-  protected readonly asking = this.#asking.asReadonly();
   protected readonly scopeMessageId = `${this.baseId}-scope`;
-
-  /** Answer of the scope bar; `null` is Cancel (Esc too). */
-  protected answerScope(scope: SdCalendarMoveScope | null): void {
-    const asking = this.#asking();
-    if (!asking) return;
-    this.#asking.set(null);
-    asking.answer(scope);
-  }
-
-  protected onScopeKeydown(domEvent: KeyboardEvent): void {
-    if (domEvent.key !== 'Escape') return;
-    domEvent.preventDefault();
-    domEvent.stopPropagation();
-    this.answerScope(null);
-  }
 
   #droppable(event: SdSchedulerEvent<T>, target: SdSchedulerTarget): boolean {
     const resource = untracked(this.#resourceById).get(target.resourceId);
@@ -1750,9 +1727,7 @@ export class SdScheduler<T = unknown, R = unknown> {
   #abortMove(): void {
     if (!this.#operation.abort(['move'])) return;
     this.#moving.set(null);
-    const asking = this.#asking();
-    this.#asking.set(null);
-    asking?.answer(null);
+    this.scopeBar.answer(null);
   }
 
   #pruneGroups(resources: readonly SdSchedulerResource<R>[]): void {
@@ -1816,7 +1791,7 @@ export class SdScheduler<T = unknown, R = unknown> {
         if (span) {
           laid.push({
             item,
-            lane: { start: span.from, end: span.to + 1, allDay: item.placement.allDay },
+            lane: { start: span.from, end: span.to + 1, allDay: item.placement.allDay, at: item.placement.startInstant },
             start: span.from,
             end: span.to,
             clippedStart: span.clippedStart,
@@ -1880,7 +1855,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     const columns = this.columns();
     const min = this.#minDay();
     const max = this.#maxDay();
-    const shaded = (day: string): boolean => this.#offDay(day, hours) || (!!min && day < min) || (!!max && day > max);
+    const shaded = (day: string): boolean => this.#offDay(day, hours) || ɵsdCalendarOutOfRange(day, min, max);
     if (this.activeView() === 'day') {
       const day = columns[0];
       const off: ɵSdCalendarSpan[] = shaded(day)
@@ -2010,6 +1985,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     const sizes = this.#sizes();
     const count = this.columns().length;
     const minimum = count * (this.activeView() === 'month' ? sizes.month : sizes.day);
+    // why: 2px are the left and right borders of the scheduler frame.
     return Math.max(minimum, (this.#width() ?? 0) - sizes.resource - 2);
   }
 
@@ -2018,6 +1994,8 @@ export class SdScheduler<T = unknown, R = unknown> {
   #scrollToTime(): void {
     const scroller = this.scroller()?.nativeElement;
     if (!scroller) return;
+    // why: this can run before the measuring hook of the first render; the compact sizes must already apply.
+    this.#measureSizes();
     const minutes = ɵsdCalendarTimeToMinutes(this.scrollTime() ?? this.#configuration?.scrollTime) ?? this.#earliestWorkingMinute();
     const offset = (minutes / 60) * this.#sizes().hour;
     scroller.scrollLeft = this.#rtl() ? -offset : offset;
@@ -2028,6 +2006,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     const scroller = this.scroller()?.nativeElement;
     const cell = scroller?.querySelector<HTMLElement>('[data-axis-day][data-today]');
     if (!scroller || !cell) return;
+    this.#measureSizes();
     const area = scroller.getBoundingClientRect();
     const box = cell.getBoundingClientRect();
     const sticky = this.#sizes().resource;
@@ -2046,8 +2025,6 @@ export class SdScheduler<T = unknown, R = unknown> {
       .filter((start): start is number => start !== undefined);
     return starts.length ? Math.min(...starts) : ɵsdCalendarTimeToMinutes(ɵSD_CALENDAR_DEFAULTS.scrollTime)!;
   }
-
-  /** Width of the host before the first ResizeObserver callback, so the first render already fits a narrow host. */
 
   #measureSizes(): void {
     const element = this.root()?.nativeElement;

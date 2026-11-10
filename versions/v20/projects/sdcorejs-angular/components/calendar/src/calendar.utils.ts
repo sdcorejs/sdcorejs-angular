@@ -634,6 +634,11 @@ export function sdCalendarBoundDay(
   return value === 'TODAY' ? today : sdCalendarReadDay(value, clock);
 }
 
+/** `day` is before `minDay` or after `maxDay` (a `null` bound does not limit). */
+export function sdCalendarOutOfRange(day: string, minDay: string | null, maxDay: string | null): boolean {
+  return (!!minDay && day < minDay) || (!!maxDay && day > maxDay);
+}
+
 /** `'yyyy/MM/dd'` of a carrier (a local `Date` whose fields are a wall clock of the zone). */
 export function sdCalendarCarrierDay(carrier: Date): string {
   return sdCalendarDay(carrier.getFullYear(), carrier.getMonth() + 1, carrier.getDate());
