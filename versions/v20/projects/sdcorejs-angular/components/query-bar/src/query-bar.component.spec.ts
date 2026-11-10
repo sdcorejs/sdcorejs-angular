@@ -1061,7 +1061,8 @@ describe('SdQueryBar (host options)', () => {
     it('renders a pinned chip without the remove button, even with a value', () => {
       component.filters.set([{ field: 'status', operator: 'IN', data: ['a'] } as any]);
       fixture.detectChanges();
-      expect(chips()[0].querySelector('.c-chip-remove')).toBeNull();
+      // why: nút × nằm cạnh trigger `.c-chip` (QB-B-11), tìm trong cả chip.
+      expect(chips()[0].closest('sd-query-popover-chip')!.querySelector('.c-chip-remove')).toBeNull();
     });
 
     it('ignores removeFilter for a pinned chip', () => {
@@ -1828,7 +1829,7 @@ describe('SdQueryBar (host options)', () => {
       fixture.componentRef.setInput('fields', [tenant, name]);
       component.filters.set([{ field: 'tenant', operator: 'IN', data: ['a'] } as any]);
       fixture.detectChanges();
-      expect(chipOf('tenant').querySelector('.c-chip-remove')).toBeNull();
+      expect(chipOf('tenant').closest('sd-query-popover-chip')!.querySelector('.c-chip-remove')).toBeNull();
       component.removeFilter(0);
       expect(fieldsOf()).toEqual(['tenant']);
       expect(component.pickerFields().map(f => f.key)).toEqual(['name']);

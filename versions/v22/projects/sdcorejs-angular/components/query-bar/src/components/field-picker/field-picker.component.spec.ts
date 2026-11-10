@@ -83,6 +83,26 @@ describe('SdQueryFieldPicker', () => {
     trigger().click();
     fixture.detectChanges();
   };
+  // Tương phản WCAG 2.x của màu chữ đã tính so với nền đặc gần nhất (không có nền thì coi là trắng).
+  const channels = (value: string): number[] => (value.match(/[\d.]+/g) ?? []).map(Number);
+  const luminance = ([r, g, b]: number[]): number => {
+    const [R, G, B] = [r, g, b].map(c => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  };
+  const backgroundOf = (el: Element): number[] => {
+    for (let node: Element | null = el; node; node = node.parentElement) {
+      const [r, g, b, a = 1] = channels(getComputedStyle(node).backgroundColor);
+      if (a > 0) return [r, g, b];
+    }
+    return [255, 255, 255];
+  };
+  const contrast = (el: Element): number => {
+    const [high, low] = [luminance(channels(getComputedStyle(el).color)), luminance(backgroundOf(el))].sort((a, b) => b - a);
+    return (high + 0.05) / (low + 0.05);
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [Host, NoopAnimationsModule] }).compileComponents();
@@ -122,6 +142,27 @@ describe('SdQueryFieldPicker', () => {
   });
 
   // R1 · N-2: the trigger controls the listbox itself, not the panel frame around it.
+  // axe trên showcase (PR #143): nhãn kiểu 11px dùng token muted, 4.29:1 trên nền panel sáng — dưới mức AA 4.5:1.
+  it('QB-B-12 the type label of a field reaches 4.5:1 on the panel, light and dark', () => {
+    open();
+    const label = option('B').querySelector('.c-field-item-type')!;
+    expect(label.textContent!.trim()).toBe('number');
+    expect(contrast(label)).withContext('light').toBeGreaterThanOrEqual(4.5);
+
+    // Giá trị token của theme tối (themes/default.scss, _component-tokens.scss).
+    const dark: Record<string, string> = {
+      '--sd-surface': '#121316',
+      '--sd-query-bar-text-secondary': '#c4c6d0',
+      '--sd-query-bar-text-muted': '#a4a6b0',
+    };
+    Object.entries(dark).forEach(([name, value]) => overlay().style.setProperty(name, value));
+    try {
+      expect(contrast(label)).withContext('dark').toBeGreaterThanOrEqual(4.5);
+    } finally {
+      Object.keys(dark).forEach(name => overlay().style.removeProperty(name));
+    }
+  });
+
   it('QB-B-02 the trigger aria-controls points at the listbox, with and without the find box', () => {
     open();
     expect(document.getElementById(trigger().getAttribute('aria-controls')!)!.getAttribute('role')).toBe('listbox');

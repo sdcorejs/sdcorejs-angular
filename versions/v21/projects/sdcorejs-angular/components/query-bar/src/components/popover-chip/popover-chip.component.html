@@ -5,40 +5,52 @@
 @let _filterOperator = filterOperator();
 @let _emptyText = emptyText();
 @let _invalid = invalid();
+@let _removable = _active && !pinned();
 
-@if (disabled()) {
-  <!-- why: chip chỉ đọc không gắn trigger của panel — không có cách nào mở popover, kể cả openMenu() của parent. -->
-  <div
-    role="button"
-    tabindex="0"
-    aria-disabled="true"
-    class="c-chip c-chip-disabled"
-    [class.c-chip-active]="_active"
-    [class.c-chip-inactive]="!_active"
-    [attr.data-field]="_filterField"
-    [matTooltip]="_field?.label || _filterField">
-    <ng-container [ngTemplateOutlet]="face" />
-  </div>
-} @else {
-  <div
-    #chipTrigger
-    role="button"
-    tabindex="0"
-    class="c-chip"
-    [class.c-chip-active]="_active"
-    [class.c-chip-inactive]="!_active"
-    [class.c-chip-pinned]="pinned()"
-    [class.c-chip-invalid]="_invalid"
-    [attr.aria-required]="required() ? 'true' : null"
-    [attr.aria-invalid]="_invalid ? 'true' : null"
-    [attr.aria-describedby]="describedBy() ?? null"
-    [attr.data-field]="_filterField"
-    [matTooltip]="_field?.label || _filterField"
-    [sdQueryPanelTrigger]="panel()"
-    (panelOpened)="open.emit()">
-    <ng-container [ngTemplateOutlet]="face" />
-  </div>
-}
+<!-- why: nút × là anh em của trigger, không nằm trong nó (nút lồng nút — R1 G-4). Vỏ `.c-chip-shell` đặt × đè lên đuôi
+     viên chip, nên chip giữ nguyên kích thước và hình dạng. -->
+<div class="c-chip-shell">
+  @if (disabled()) {
+    <!-- why: chip chỉ đọc không gắn trigger của panel — không có cách nào mở popover, kể cả openMenu() của parent. -->
+    <div
+      role="button"
+      tabindex="0"
+      aria-disabled="true"
+      class="c-chip c-chip-disabled"
+      [class.c-chip-active]="_active"
+      [class.c-chip-inactive]="!_active"
+      [attr.data-field]="_filterField"
+      [matTooltip]="_field?.label || _filterField">
+      <ng-container [ngTemplateOutlet]="face" />
+    </div>
+  } @else {
+    <div
+      #chipTrigger
+      role="button"
+      tabindex="0"
+      class="c-chip"
+      [class.c-chip-active]="_active"
+      [class.c-chip-inactive]="!_active"
+      [class.c-chip-pinned]="pinned()"
+      [class.c-chip-removable]="_removable"
+      [class.c-chip-invalid]="_invalid"
+      [attr.aria-required]="required() ? 'true' : null"
+      [attr.aria-invalid]="_invalid ? 'true' : null"
+      [attr.aria-describedby]="describedBy() ?? null"
+      [attr.data-field]="_filterField"
+      [matTooltip]="_field?.label || _filterField"
+      [sdQueryPanelTrigger]="panel()"
+      (panelOpened)="open.emit()">
+      <ng-container [ngTemplateOutlet]="face" />
+    </div>
+
+    @if (_removable) {
+      <button type="button" class="c-chip-remove" [attr.aria-label]="removeLabel()" (click)="$event.stopPropagation(); remove.emit()">
+        <sd-icon name="close"></sd-icon>
+      </button>
+    }
+  }
+</div>
 
 <ng-template #face>
   <sd-icon class="c-chip-icon" [name]="_field ? iconFor(_field) : 'tune'"></sd-icon>
@@ -57,16 +69,4 @@
   }
 
   <sd-icon class="c-chip-chevron" name="arrow_drop_down"></sd-icon>
-
-  @if (_active && !pinned() && !disabled()) {
-    <span
-      role="button"
-      tabindex="0"
-      class="c-chip-remove"
-      aria-label="Remove filter"
-      (click)="$event.stopPropagation(); remove.emit()"
-      (keydown.enter)="$event.stopPropagation(); remove.emit()">
-      <sd-icon name="close"></sd-icon>
-    </span>
-  }
 </ng-template>

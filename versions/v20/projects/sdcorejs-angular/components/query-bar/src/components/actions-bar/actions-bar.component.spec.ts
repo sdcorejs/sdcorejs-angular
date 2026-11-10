@@ -131,6 +131,17 @@ describe('SdQueryActionsBar', () => {
       expect(component.searchLabel()).toBe('Search');
     });
 
+    // axe trên showcase (PR #143): nút Tìm kiếm chỉ có icon và tooltip, nên tên đọc ra là chữ ligature "search".
+    it('QB-B-10 names the icon-only search button with the search label, not its icon ligature', () => {
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.c-search-trigger') as HTMLButtonElement;
+      expect(button.getAttribute('aria-label')).toBe('Tìm kiếm');
+
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(button.getAttribute('aria-label')).toBe('Search');
+    });
+
     it('puts the translated aria-label on the rendered AND/OR group', () => {
       fixture.componentRef.setInput('showLogicToggle', true);
       fixture.componentRef.setInput('filtersCount', 2);
