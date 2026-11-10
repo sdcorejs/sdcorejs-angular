@@ -64,7 +64,10 @@ interface CardView<T> {
   /** `beforeId` of one step up / down in the loaded cards; `undefined` at the edge. */
   readonly up: string | null | undefined;
   readonly down: string | null | undefined;
-  /** `option.move.movable` when the board renders (SC-06); `#move` evaluates it again right before `onMove`. */
+  /**
+   * `option.move.movable` when the board renders (SC-06), and with a data source the column has its first page and is
+   * not loading it again; `#move` evaluates both again right before `onMove`.
+   */
   readonly movable: boolean;
   /** `encodeURIComponent(id)` for the data attributes. */
   readonly token: string;
@@ -223,13 +226,15 @@ export class SdKanban<T = unknown> {
     const move = this.option().move;
     return this.columns().map(column => {
       const all = cards.filter(card => card.columnId === column.id);
+      // R2' #1: while a column (re)loads its first page its cards stay on screen (SC-23) but cannot move yet.
+      const settled = !dataMode || this.#ready(column.id);
       const views = all
         .map((card, index) => ({
           card,
           index,
           up: index > 0 ? all[index - 1].id : undefined,
           down: index < all.length - 1 ? (all[index + 2]?.id ?? null) : undefined,
-          movable: !!move && allows(move.movable, card),
+          movable: settled && !!move && allows(move.movable, card),
           token: encodeURIComponent(card.id),
         }))
         // why: with a data source the server filters by keyword; the board shows what it gets.
@@ -547,12 +552,6 @@ export class SdKanban<T = unknown> {
     return this.#blocked().has(columnId);
   }
 
-  /** `option.move.movable` at every render (SC-06); `#move` evaluates it again right before `onMove`. */
-  protected isMovable(card: SdKanbanCard<T>): boolean {
-    const move = this.option().move;
-    return !!move && allows(move.movable, card);
-  }
-
   /** `option.move.droppable` for the menu, Alt + arrow and the start of a drag (SC-08). */
   protected canDrop(view: CardView<T>, from: ColumnView<T>, to: SdKanbanColumn): boolean {
     // R2 A-3: with a data source, a column without its first page (collapsed and never opened, loading, failed) is
@@ -584,8 +583,7 @@ export class SdKanban<T = unknown> {
   }
 
   protected keydown(event: KeyboardEvent, view: CardView<T>, column: ColumnView<T>): void {
-    if (this.moveBlocked() || column.column.disabled || !this.isMovable(view.card) || !event.altKey || event.ctrlKey || event.metaKey)
-      return;
+    if (this.moveBlocked() || column.column.disabled || !view.movable || !event.altKey || event.ctrlKey || event.metaKey) return;
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     // §7.4: Alt + Up / Down only reorders; with reorder off the keys are left to the page.
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && !this.reorder()) return;

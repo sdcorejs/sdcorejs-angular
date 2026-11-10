@@ -124,7 +124,7 @@ readonly option: SdKanbanOption<Order> = {
 - A new `option` reference reloads every column. Results of an aborted load are dropped.
 - A card whose `columnId` differs from `args.columnId`, or with an empty `title`, is dropped with a dev-mode warning. A card id already loaded (another page or another column) keeps the first one, with a warning.
 - The count is `total` when known, otherwise the loaded cards with "+" while there is a next page. Screen readers hear "{n} cards" only when `total` is known; "–" and "n+" are read as shown.
-- A column without its first page (collapsed and never opened, loading it, or failed it) is not a move destination yet: its "Move to" entry is disabled, `Alt` + `←` `→` skips it, a drag fades it, and `move()` resolves `false`. Open or retry it first.
+- A column without its first page (collapsed and never opened, loading it, or failed it) is not a move destination yet: its "Move to" entry is disabled, `Alt` + `←` `→` skips it, a drag fades it, and `move()` resolves `false`. Open or retry it first. While a column loads its first page again (`reload`, a new `keyword` or `option`), its cards stay on screen but cannot move: no drag, the movement menu button is disabled and `Alt` + arrows do nothing.
 - First load: three skeleton blocks and `aria-busy` on the list. First-page error: a message and Retry in place of the cards (the count goes back to "–" and the summary of the server is dropped). Later-page error: a message and Retry in place of "Show more".
 - An empty column says "No matching cards" while `keyword` is set, "No cards" otherwise.
 - A `selectedId` given with the board (a link to one card) is kept until the first pages of the open columns are in; it goes back to `null` only if the card is not there.
@@ -230,7 +230,7 @@ Always present (with or without `autoId`):
 | Movement menu button | `data-kanban-menu` (token) |
 | Lists | `data-skeleton` (first load), `data-load-error` (first page or a later page), `data-load-more` (token of the column) |
 | Buttons | `data-action="retry"` |
-| While dragging | `data-origin`: the faded old place with `reorder` off |
+| While dragging | `data-dragging` on the board (`.sd-kanban__board`); `data-origin`: the faded old place with `reorder` off |
 
 ## Migration from the previous API
 

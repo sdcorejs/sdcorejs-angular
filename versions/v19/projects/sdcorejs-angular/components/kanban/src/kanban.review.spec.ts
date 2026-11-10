@@ -239,7 +239,9 @@ describe('SdKanban · review R2 regressions', () => {
       startDrag('x');
       expect(getComputedStyle(article('d')).cursor).toBe('not-allowed');
       expect(getComputedStyle(name('d')).cursor).toBe('not-allowed');
-      expect(getComputedStyle(article('y')).cursor).withContext('a card of a lane that takes it').toBe('grabbing');
+      expect(getComputedStyle(article('y')).cursor)
+        .withContext('a card of a lane that takes it')
+        .toBe('grabbing');
       endDrag('x');
     });
 
