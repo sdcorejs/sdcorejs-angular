@@ -40,3 +40,21 @@ Spec sửa vì selector mat-menu: `query-bar.component.spec.ts`, `chip-popover.c
 - `applyOn: 'commit'`: mỗi lần đóng là một lần apply → commit đúng một lần cho Esc, bấm ngoài, Tab ra, `closeMenu`, đổi panel, destroy; đổi chip A → B: A commit trước khi seed B.
 - Overlay con trong chip popover (`sd-operator` mat-menu, panel `sd-select`, mat-datepicker): click và focus trong đó không được coi là ra ngoài.
 - Không còn backdrop trong suốt của mat-menu: click ra ngoài đi thẳng tới phần tử bên dưới (đúng spec 2.2) — ghi CHANGELOG.
+
+## Quyết định sau review (10/11/2026)
+
+Người dùng chốt các mục "Cần PD chốt" của R1 và R2 ("từ 10 trường trở lên mới hiển thị ô tìm kiếm, còn lại áp dụng theo đề xuất").
+
+| Mục | Quyết định | Làm ở |
+| --- | --- | --- |
+| R1 G-2 ngưỡng ô tìm của field picker | Từ 10 field trở lên (trước: hơn 8) | PR này, `QB-B-04` |
+| R1 G-8 tên listbox / placeholder ô tìm | Ô tìm ghi "Tìm kiếm" (giá trị mới của key `find-field` ở 5 locale, không đổi tên key); listbox lấy tên của phần tử mở nó: `add-filter` (popover), `add-condition` (inline) | PR này, `QB-B-05` |
+| R1 G-9 chip popover trên màn hình thấp | Khung giữ `overflow: hidden`, thân cuộn, header đứng yên | PR này, `QB-B-06` |
+| R2 G-4 viền focus trên mục đang trỏ | Giữ nền 8% cộng viền 2px | Không đổi |
+| R1 G-1 nút bộ lọc đã lưu ở comfortable | Giữ 28×28 như `main` | Không đổi |
+| R2 N-2 `aria-describedby` của dòng `required-min-one` | Chấp nhận gắn lên nhóm giá trị (popover) / chip (inline) | Không đổi |
+| R1 G-3 con của `role="menu"` | Chạy axe trên panel trước, chỉ đổi cấu trúc khi axe báo | Kết quả ở mô tả PR |
+| R1 G-4 nút × lồng trong chip popover-mode | Có từ `main`, để việc riêng | Ngoài PR |
+| R2 G-10 `clearAll()` không phát `apply` ở `applyOn: 'commit'` | Sửa ở PR riêng (đổi hành vi ngoài spec) | Ngoài PR |
+| R2 G-5 QB-E-04 | Đi bằng phím Tab thật | PR này |
+| R2 G-6 dữ liệu demo popover | Filter khởi tạo dùng `data` | PR này |
