@@ -1,0 +1,15 @@
+<div class="calendar-layout">
+  <div class="calendar-box">
+    <sd-calendar autoId="drawer" date="2026/10/22" [option]="option" />
+  </div>
+  @if (drawer(); as _drawer) {
+    <aside class="calendar-drawer" role="dialog" aria-modal="false" aria-label="Tạo cuộc họp">
+      <h4>Tạo cuộc họp</h4>
+      <p>{{ _drawer.args.start }} → {{ _drawer.args.end }}</p>
+      <div class="calendar-controls">
+        <sd-button type="fill" color="primary" title="Lưu" autoId="drawer-save" (click)="save()" />
+        <sd-button type="outline" title="Đóng" autoId="drawer-close" (click)="close()" />
+      </div>
+    </aside>
+  }
+</div>

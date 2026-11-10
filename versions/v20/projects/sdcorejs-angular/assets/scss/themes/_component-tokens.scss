@@ -65,6 +65,13 @@ $component-tokens: (
   'avatar-color-17': (#c0392b, #c0392b),
   'avatar-color-18': (#bdc3c7, #bdc3c7),
   'avatar-color-19': (#7f8c8d, #7f8c8d),
+  // calendar (sd-calendar, shared by sd-scheduler) — grid lines, off hours, the now line and the today marker.
+  // Every value mixes from the palette of its own scope, so one expression serves both modes and every preset.
+  'calendar-line': (color-mix(in srgb, var(--sd-border) 55%, var(--sd-surface)), color-mix(in srgb, var(--sd-border) 55%, var(--sd-surface))),
+  'calendar-line-half': (color-mix(in srgb, var(--sd-border) 25%, var(--sd-surface)), color-mix(in srgb, var(--sd-border) 25%, var(--sd-surface))),
+  'calendar-off-hours': (color-mix(in srgb, var(--sd-surface-muted) 45%, var(--sd-surface)), color-mix(in srgb, var(--sd-surface-muted) 45%, var(--sd-surface))),
+  'calendar-now': (var(--sd-error), var(--sd-error)),
+  'calendar-today': (var(--sd-primary), var(--sd-primary)),
   // code-editor — always dark
   'code-editor-bg': (#1e1e1e, #1e1e1e),
   'code-editor-header-bg': (#2d2d2d, #2d2d2d),

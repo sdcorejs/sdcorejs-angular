@@ -72,6 +72,11 @@ export type ShowcaseExampleSourceKey =
   | "components/button/example-tac-vu-nghiep-vu"
   | "components/button/example-toggle-icon-set-bang-alias"
   | "components/button/example-trang-thai"
+  | "components/calendar/example-bang-cham-cong-mot-nguoi"
+  | "components/calendar/example-cot-hep-va-dong-bo-url"
+  | "components/calendar/example-lich-hop-nguon-client"
+  | "components/calendar/example-nguon-server"
+  | "components/calendar/example-tao-bang-drawer-doi-co-hoan-tac"
   | "components/card/example-behavior"
   | "components/card/example-count-card-de-loc"
   | "components/card/example-disabled-va-color"
@@ -1013,6 +1018,41 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-dang-luu-loi-thu-lai",
     title: "Đang lưu / lỗi / thử lại",
     description: "Đang lưu… disabled chống gửi lặp; lỗi giữ input và có Thử lại.",
+  },
+  {
+    sourceKey: "components/calendar/example-lich-hop-nguon-client",
+    pageKey: "components/calendar",
+    sectionId: "example-lich-hop-nguon-client",
+    title: "Lịch họp, nguồn client",
+    description: "Công tắc phía trên đổi input; hộp thoại demo trả sự kiện hoặc huỷ; onMove chấp nhận, từ chối, ném lỗi, chậm 2 giây hoặc mở hộp lý do ('cancel' khi đóng). Họp giao ban là sự kiện lặp: dời sẽ hỏi phạm vi.",
+  },
+  {
+    sourceKey: "components/calendar/example-nguon-server",
+    pageKey: "components/calendar",
+    sectionId: "example-nguon-server",
+    title: "Nguồn server",
+    description: "Trễ 600ms mỗi lần tải; đổi khoảng nhanh thì lần cũ bị huỷ. Bật lỗi để thấy dải lỗi, Thử lại và sdLoadError.",
+  },
+  {
+    sourceKey: "components/calendar/example-tao-bang-drawer-doi-co-hoan-tac",
+    pageKey: "components/calendar",
+    sectionId: "example-tao-bang-drawer-doi-co-hoan-tac",
+    title: "Tạo bằng drawer, dời có hoàn tác",
+    description: "onCreate mở drawer không route; khối nét đứt giữ nguyên tới khi Lưu hoặc Đóng. Sau khi dời, toast có nút Hoàn tác gọi move(id, request.from, 'api').",
+  },
+  {
+    sourceKey: "components/calendar/example-bang-cham-cong-mot-nguoi",
+    pageKey: "components/calendar",
+    sectionId: "example-bang-cham-cong-mot-nguoi",
+    title: "Bảng chấm công một người",
+    description: "Template ô Tháng thay phần dưới số ngày bằng mã công đọc từ event.data.",
+  },
+  {
+    sourceKey: "components/calendar/example-cot-hep-va-dong-bo-url",
+    pageKey: "components/calendar",
+    sectionId: "example-cot-hep-va-dong-bo-url",
+    title: "Cột hẹp và đồng bộ URL",
+    description: "Cột 400px trên desktop vẫn chuyển giao diện hẹp vì đo bề rộng của component. URL lấy view từ viewChange và ngày từ dateChange.",
   },
   {
     sourceKey: "components/card/example-behavior",
