@@ -10639,7 +10639,7 @@ export class QueryBarDemoComponent {
   ];
 
   readonly filters = signal<Filter<Employee>[]>([
-    { field: 'department', operator: 'IN', value: ['TECH', 'SALES'], data: null } as unknown as Filter<Employee>,
+    { field: 'department', operator: 'IN', data: ['TECH', 'SALES'] } as unknown as Filter<Employee>,
   ]);
   /** Inline demo: Phòng ban is required — its chip is always on the bar and its value cannot be emptied. */
   readonly inlineFields: SdQueryField<Employee>[] = this.fields.map(field =>

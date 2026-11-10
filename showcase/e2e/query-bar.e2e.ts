@@ -170,23 +170,37 @@ test('QB-E-03 table with a required quick filter: Clear keeps it; a saved filter
   await expect(bar.locator('.c-clear-all')).toBeDisabled();
 });
 
-test('QB-E-04 keyboard only through the bar and its three panels', async ({ page }) => {
+test('QB-E-04 keyboard only: Tab through the bar and its three panels', async ({ page }) => {
   const example = await openExample(page, 'query-bar', 'example-che-do-popover');
   const bar = example.locator('sd-query-bar');
+  const chips = bar.locator('sd-query-popover-chip .c-chip');
+  const add = bar.locator('.c-add-filter');
+  const clear = bar.locator('.c-clear-all');
+  const savedButton = bar.locator('[data-autoid="query-bar-popover-saved-filters"]');
+  const searchButton = bar.locator('.c-search-trigger');
+
+  // The search box is the first stop of the bar: Escape with text empties it.
   const search = bar.locator('sd-search-field input');
   await search.focus();
   await page.keyboard.type('nguyen');
   await page.keyboard.press('Escape');
   await expect(search).toHaveValue('');
 
+  // Tab: the chip, its remove button, then +.
+  await page.keyboard.press('Tab');
+  await expect(chips.first()).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(chips.first().locator('.c-chip-remove')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(add).toBeFocused();
+
   // + opens the field picker on its first option; arrows move, Enter picks and the chip popover takes focus.
-  const add = bar.locator('.c-add-filter');
-  await add.focus();
   await page.keyboard.press('Enter');
   const picker = panel(page, 'query-bar-popover-panel-field-picker');
   await expect(picker.getByRole('option').first()).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
+  await expect(picker).toBeHidden();
   const chipPanel = panel(page, 'query-bar-popover-panel-chip');
   await expect(chipPanel).toBeVisible();
   await expect.poll(() => chipPanel.evaluate(el => el.contains(document.activeElement))).toBeTruthy();
@@ -194,15 +208,37 @@ test('QB-E-04 keyboard only through the bar and its three panels', async ({ page
   await page.keyboard.press('Escape');
   await expect(chipPanel).toBeHidden();
 
+  // Escape gives focus back to the new chip; Tab goes on through its remove button, +, the AND / OR toggle (two chips
+  // now) and Clear to saved filters.
+  await expect(chips).toHaveCount(2);
+  await expect(chips.nth(1)).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(chips.nth(1).locator('.c-chip-remove')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(add).toBeFocused();
+  const logic = bar.locator('.c-logic-toggle .c-logic-segment');
+  await page.keyboard.press('Tab');
+  await expect(logic.first()).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(logic.nth(1)).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(clear).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(savedButton).toBeFocused();
+
   // Saved filters: Enter opens the menu on its first item, Escape gives focus back to the button.
-  const savedButton = bar.locator('[data-autoid="query-bar-popover-saved-filters"]');
-  await savedButton.focus();
   await page.keyboard.press('Enter');
   const saved = panel(page, 'query-bar-popover-panel-saved-filters');
   await expect(saved.locator('[data-autoid="query-bar-popover-saved-filters-save"]')).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(saved).toBeHidden();
   await expect(savedButton).toBeFocused();
+
+  // The last stop is Search; the next Tab leaves the bar.
+  await page.keyboard.press('Tab');
+  await expect(searchButton).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect.poll(() => bar.evaluate(el => el.contains(document.activeElement))).toBeFalsy();
 });
 
 test('QB-E-05 a narrow 700px table: the panel flips above when the bar is at the bottom of the page', async ({ page }) => {
