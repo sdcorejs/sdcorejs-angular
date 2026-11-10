@@ -56,6 +56,8 @@ export {
   sdCalendarInvalidItems as ɵsdCalendarInvalidItems,
   sdCalendarIsOffDay as ɵsdCalendarIsOffDay,
   sdCalendarSelectionGone as ɵsdCalendarSelectionGone,
+  sdCalendarMoveTarget as ɵsdCalendarMoveTarget,
+  sdCalendarShiftDays as ɵsdCalendarShiftDays,
   sdCalendarCssEscape as ɵsdCalendarCssEscape,
   sdCalendarDaysBetween as ɵsdCalendarDaysBetween,
   sdCalendarHolidayMap as ɵsdCalendarHolidayMap,

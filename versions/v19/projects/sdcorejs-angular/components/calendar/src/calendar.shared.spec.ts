@@ -29,7 +29,9 @@ import {
   sdCalendarResolveStep,
   sdCalendarResolveWorkingHours,
   sdCalendarSameList,
+  sdCalendarMoveTarget,
   sdCalendarSelectionGone,
+  sdCalendarShiftDays,
   sdCalendarTargetOf,
 } from './calendar.utils';
 
@@ -186,6 +188,43 @@ describe('sd-calendar shared pieces', () => {
       expect(sdCalendarSelectionGone('a', 'idle', [{ id: 'a' }])).toBeFalse();
       expect(sdCalendarSelectionGone('a', 'loading', [])).toBeFalse();
       expect(sdCalendarSelectionGone(null, 'idle', [])).toBeFalse();
+    });
+  });
+
+  describe('move targets', () => {
+    it('[CAL-C-23] reads the target of move() and shifts by whole days', () => {
+      const clock = clockFor('Asia/Ho_Chi_Minh');
+      const timed = { firstDay: '2026/11/09', lastDay: '2026/11/09', startInstant: 0, endInstant: 90 * 60_000 };
+      expect(sdCalendarMoveTarget(timed, { start: '2026/11/10 23:00:00' }, false, clock)).toEqual({
+        allDay: false,
+        startDay: '2026/11/10',
+        startMinutes: 1380,
+        endDay: '2026/11/11',
+        endMinutes: 30,
+      });
+      expect(sdCalendarMoveTarget(timed, { start: '2026/11/10 09:00:00', end: '2026/11/10 10:00:00' }, false, clock)?.endMinutes).toBe(600);
+      expect(sdCalendarMoveTarget(timed, { start: '2026/11/10 09:00:00', end: '2026/11/10 08:00:00' }, false, clock)).toBeNull();
+      expect(sdCalendarMoveTarget(timed, { start: 'nope' }, false, clock)).toBeNull();
+      const days = { firstDay: '2026/11/09', lastDay: '2026/11/10', startInstant: 0, endInstant: 0 };
+      expect(sdCalendarMoveTarget(days, { start: '2026/11/12' }, true, clock)).toEqual({
+        allDay: true,
+        startDay: '2026/11/12',
+        startMinutes: 0,
+        endDay: '2026/11/13',
+        endMinutes: 1440,
+      });
+      expect(sdCalendarMoveTarget(days, { start: '2026/11/12', end: '2026/11/12', allDay: true }, false, clock)?.endDay).toBe('2026/11/12');
+      expect(sdCalendarMoveTarget(days, { start: '2026/11/12', end: '2026/11/11' }, true, clock)).toBeNull();
+      expect(sdCalendarMoveTarget(days, { start: 'nope' }, true, clock)).toBeNull();
+      expect(
+        sdCalendarShiftDays({ allDay: true, startDay: '2026/11/09', startMinutes: 0, endDay: '2026/11/10', endMinutes: 1440 }, 3)
+      ).toEqual({
+        allDay: true,
+        startDay: '2026/11/12',
+        startMinutes: 0,
+        endDay: '2026/11/13',
+        endMinutes: 1440,
+      });
     });
   });
 

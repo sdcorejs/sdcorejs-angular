@@ -65,7 +65,6 @@ import {
   sdCalendarClampAgendaDays,
   sdCalendarClockText,
   sdCalendarCssEscape,
-  sdCalendarDayDiff,
   sdCalendarDayParts,
   sdCalendarHolidayMap,
   sdCalendarInitialScroll,
@@ -81,14 +80,15 @@ import {
   sdCalendarRangeKey,
   sdCalendarRangeOf,
   sdCalendarReadDay,
-  sdCalendarReadWallClock,
   sdCalendarResizeEnd,
   sdCalendarResolveFirstDayOfWeek,
   sdCalendarResolveStep,
   sdCalendarResolveWorkingHours,
   sdCalendarSameList,
+  sdCalendarMoveTarget,
   sdCalendarSelectionGone,
   sdCalendarShiftDate,
+  sdCalendarShiftDays,
   sdCalendarSlot,
   sdCalendarSnapMove,
   sdCalendarStack,
@@ -1278,30 +1278,7 @@ export class SdCalendar<T = unknown> {
     placed: SdCalendarPlaced<T>,
     to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean }
   ): SdCalendarTarget | null {
-    const allDay = to.allDay ?? !!placed.event.allDay;
-    if (allDay) {
-      const startDay = sdCalendarReadDay(to.start, this.#clock);
-      if (!startDay) return null;
-      const endDay = to.end
-        ? sdCalendarReadDay(to.end, this.#clock)
-        : sdCalendarAddDays(startDay, sdCalendarDayDiff(placed.placement.firstDay, placed.placement.lastDay));
-      return endDay && endDay >= startDay ? { allDay: true, startDay, startMinutes: 0, endDay, endMinutes: 1440 } : null;
-    }
-    if (to.end !== null && to.end !== undefined) {
-      const placement = sdCalendarPlace({ id: placed.event.id, title: placed.event.title, start: to.start, end: to.end }, this.#clock);
-      return placement ? sdCalendarTargetOf(placement) : null;
-    }
-    const start = sdCalendarReadWallClock(to.start, this.#clock);
-    if (!start) return null;
-    const total = start.minutes + Math.round((placed.placement.endInstant - placed.placement.startInstant) / MINUTE);
-    const days = Math.floor((total - 1) / 1440);
-    return {
-      allDay: false,
-      startDay: start.day,
-      startMinutes: start.minutes,
-      endDay: sdCalendarAddDays(start.day, days),
-      endMinutes: total - days * 1440,
-    };
+    return sdCalendarMoveTarget(placed.placement, to, !!placed.event.allDay, this.#clock);
   }
 
   #shifted(placement: SdCalendarPlacement, days: number, minutes: number): SdCalendarTarget {
@@ -1313,13 +1290,7 @@ export class SdCalendar<T = unknown> {
       const day = sdCalendarAddDays(placement.startDay, days);
       return { allDay: false, startDay: day, startMinutes: start, endDay: day, endMinutes: start + duration };
     }
-    return {
-      allDay: placement.allDay,
-      startDay: sdCalendarAddDays(placement.startDay, days),
-      startMinutes: placement.startMinutes,
-      endDay: sdCalendarAddDays(placement.endDay, days),
-      endMinutes: placement.endMinutes,
-    };
+    return sdCalendarShiftDays(placement, days);
   }
 
   #updateDragProposal(): void {

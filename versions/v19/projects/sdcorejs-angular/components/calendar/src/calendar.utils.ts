@@ -536,6 +536,53 @@ export function sdCalendarTargetOf(placement: SdCalendarTarget): SdCalendarTarge
   };
 }
 
+/** The target of a placement moved by whole days, its times and kind kept. */
+export function sdCalendarShiftDays(placement: SdCalendarTarget, days: number): SdCalendarTarget {
+  return {
+    allDay: placement.allDay,
+    startDay: sdCalendarAddDays(placement.startDay, days),
+    startMinutes: placement.startMinutes,
+    endDay: sdCalendarAddDays(placement.endDay, days),
+    endMinutes: placement.endMinutes,
+  };
+}
+
+/**
+ * Target of `move(id, to)` (calendar.md §4.3): `to.allDay` (default `allDay`) picks the kind. All-day: the days of
+ * `to`, the duration in days kept without `to.end`. Timed: the span of `to`, or its start with the duration kept.
+ * `null` when a value cannot be read or the end is before the start.
+ */
+export function sdCalendarMoveTarget(
+  placement: Pick<SdCalendarPlacement, 'firstDay' | 'lastDay' | 'startInstant' | 'endInstant'>,
+  to: { readonly start: SdCalendarDateInput; readonly end?: SdCalendarDateInput | null; readonly allDay?: boolean },
+  allDay: boolean,
+  clock: SdCalendarClock
+): SdCalendarTarget | null {
+  if (to.allDay ?? allDay) {
+    const startDay = sdCalendarReadDay(to.start, clock);
+    if (!startDay) return null;
+    const endDay = to.end
+      ? sdCalendarReadDay(to.end, clock)
+      : sdCalendarAddDays(startDay, sdCalendarDayDiff(placement.firstDay, placement.lastDay));
+    return endDay && endDay >= startDay ? { allDay: true, startDay, startMinutes: 0, endDay, endMinutes: 1440 } : null;
+  }
+  if (to.end !== null && to.end !== undefined) {
+    const next = sdCalendarPlace({ id: 'move', title: 'move', start: to.start, end: to.end }, clock);
+    return next ? sdCalendarTargetOf(next) : null;
+  }
+  const start = sdCalendarReadWallClock(to.start, clock);
+  if (!start) return null;
+  const total = start.minutes + Math.round((placement.endInstant - placement.startInstant) / 60_000);
+  const days = Math.floor((total - 1) / MINUTES_PER_DAY);
+  return {
+    allDay: false,
+    startDay: start.day,
+    startMinutes: start.minutes,
+    endDay: sdCalendarAddDays(start.day, days),
+    endMinutes: total - days * MINUTES_PER_DAY,
+  };
+}
+
 /** Last calendar day a target covers (an end at 00:00 belongs to the day before). */
 export function sdCalendarLastDayOf(target: SdCalendarTarget): string {
   if (target.allDay || target.endDay === target.startDay || target.endMinutes > 0) return target.endDay;
