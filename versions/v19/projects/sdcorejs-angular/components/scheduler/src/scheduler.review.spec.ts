@@ -258,6 +258,9 @@ describe('SdScheduler · R2 fixes', () => {
     '[SCH-B-03] keeps a selected block under the sticky resource column while scrolling, R2 #3',
     run(() => {
       const { host, settle } = renderScheduler({ selectedId: 'client', scrollTime: '00:00' });
+      // why: elementFromPoint only sees the viewport; in the full suite the reporter above pushes an in-flow host below
+      // it (R2 recheck B-1), so the host is pinned to the top of the viewport as in kanban.interaction.spec.ts.
+      Object.assign(host.style, { position: 'fixed', top: '0px', left: '0px' });
       settle();
       expect(block(host, 'client')!.dataset['selected']).toBe('true');
       const scroller = q(host, '[data-region="scroller"]')!;
