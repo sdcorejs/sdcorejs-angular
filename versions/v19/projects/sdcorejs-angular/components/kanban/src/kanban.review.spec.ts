@@ -234,6 +234,15 @@ describe('SdKanban · review R2 regressions', () => {
       expect(getComputedStyle(article('y')).cursor).toBe('grab');
     });
 
+    it('[KAN-B-24] shows not-allowed over the cards of a refused lane while a card is dragged', () => {
+      mount({ move: { droppable: ({ to }) => to.id !== 'done', onMove: () => true } });
+      startDrag('x');
+      expect(getComputedStyle(article('d')).cursor).toBe('not-allowed');
+      expect(getComputedStyle(name('d')).cursor).toBe('not-allowed');
+      expect(getComputedStyle(article('y')).cursor).withContext('a card of a lane that takes it').toBe('grabbing');
+      endDrag('x');
+    });
+
     it('[KAN-B-22] keeps a selectedId given before the items arrive', () => {
       fixture = TestBed.createComponent(SdKanban<Dto>);
       fixture.componentRef.setInput('columns', columns.slice(0, 2));
@@ -420,6 +429,44 @@ describe('SdKanban · review R2 regressions', () => {
       settle();
       expect(result).withContext('open is loading again').toBeFalse();
       expect(onMove).not.toHaveBeenCalled();
+      flush();
+    }));
+
+    it('[KAN-B-23] keeps the cards of a column that loads its first page again from moving', fakeAsync(() => {
+      const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+      mount({ move: { onMove } });
+      answer('open', page('open', ['a']));
+      answer('done', page('done', ['d']));
+      answer('later', page('later', []));
+      const trigger = (): HTMLButtonElement => host().querySelector<HTMLButtonElement>('[data-kanban-menu="a"]')!;
+      const dragOf = (id: string): CdkDrag =>
+        fixture.debugElement
+          .queryAll(By.directive(CdkDrag))
+          .map(element => element.injector.get(CdkDrag))
+          .find(candidate => candidate.data.card.id === id)!;
+      expect(trigger().disabled).withContext('loaded').toBeFalse();
+      kanban().reload('open');
+      settle();
+      expect(ids('open')).withContext('the cards stay on screen (SC-23)').toEqual(['a']);
+      expect(trigger().disabled).withContext('the move menu').toBeTrue();
+      expect(dragOf('a').disabled).withContext('the drag').toBeTrue();
+      expect(lane('open').querySelector('article[data-card-id="a"]')!.hasAttribute('data-movable')).toBeFalse();
+      const event = new KeyboardEvent('keydown', { altKey: true, key: 'ArrowRight', bubbles: true, cancelable: true });
+      name('a').focus();
+      name('a').dispatchEvent(event);
+      settle();
+      expect(event.defaultPrevented).withContext('Alt + Right is left to the page').toBeFalse();
+      let result: boolean | undefined;
+      void kanban()
+        .move('a', { columnId: 'done' })
+        .then(value => (result = value));
+      settle();
+      expect(result).toBeFalse();
+      expect(onMove).not.toHaveBeenCalled();
+      // The first page arrives again: the card moves again.
+      answer('open', page('open', ['a']));
+      expect(trigger().disabled).toBeFalse();
+      expect(dragOf('a').disabled).toBeFalse();
       flush();
     }));
 
