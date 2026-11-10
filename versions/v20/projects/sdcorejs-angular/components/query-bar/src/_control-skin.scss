@@ -1,0 +1,20 @@
+// query-bar — control skin
+// Re-skins the Core UI form controls (sd-input / sd-select / sd-date / sd-datetime / sd-input-number) used inside the
+// query-bar. ONLY icon colours are touched — never size, height, padding, or font-size (those stay owned by the Core UI
+// components). The outline comes from the shared control tokens (`--sd-control-*`, design handoff wave 2 · D).
+//
+// Used by the bar (inline-mode controls) and by the chip popover panel. Include it inside `::ng-deep`: the controls'
+// inner Material elements belong to their own views.
+
+@mixin skin {
+  .mat-mdc-form-field {
+    // Trailing chevron / clear icons → neutral, primary on focus
+    .mat-mdc-select-arrow,
+    .mat-mdc-form-field-icon-suffix sd-icon {
+      color: var(--sd-query-bar-text-secondary, #5f6368);
+    }
+    &.mat-focused .mat-mdc-select-arrow {
+      color: var(--sd-primary);
+    }
+  }
+}

@@ -36,12 +36,14 @@
 
   <!-- why: saved-filters dropdown đặt sát ngay trước Search — gom toàn bộ
        hành động về bộ lọc (apply view cũ / lưu view hiện tại) cạnh nút submit,
-       user thấy 1 cụm. Footer "Lưu bộ lọc hiện tại" sống trong mat-menu của
+       user thấy 1 cụm. Footer "Lưu bộ lọc hiện tại" sống trong panel của
        saved-filters-menu, không tách ra nút riêng nữa. -->
   @if (showSavedFilters()) {
     <sd-query-saved-filters-menu
       [key]="savedFiltersKey()"
       [query]="query()"
+      [canSave]="canSaveFilter()"
+      [autoId]="autoId()"
       (apply)="applyFilter.emit($event)" />
   }
 

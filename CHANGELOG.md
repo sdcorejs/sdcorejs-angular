@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`.
 
 **Highlights**
 
@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`
 - `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`): month, week, day and agenda views with `dataSource.onLoad`, create by click/sweep/Enter and move by drag, edge or `Alt` + arrows through `onMove` (which can also answer `'cancel'`)
+- `sd-query-bar`: one panel frame (the `sd-button` Action Popover) for the field picker, the chip popover and saved filters instead of `mat-menu`; saved filters with Undo and empty / error states; required fields always keep a chip and a value; an **Add condition** box in inline mode; `sd-table` saves its query-bar filters with `filter.queryBar.savedFilters`
 
 ### Changed (BREAKING for consumers)
 
@@ -78,6 +79,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     - <sd-history [items]="history" />
     + <sd-timeline groupBy="none" [items]="timeline" />
     ```
+
+#### Query bar
+
+- The field picker, the chip popover and saved filters are no longer `mat-menu` panels: they open in a CDK Overlay with the frame of the `sd-button` Action Popover (`assets/scss/core/_popover-panel.scss`, shared with it pixel for pixel). Selectors such as `.mat-mdc-menu-panel`, `button[mat-menu-item]` or `[matMenuTriggerFor]` no longer match anything in the bar.
+  - **Migration:** use the panel classes `sd-query-panel` (`--list` / `--form`) with `c-field-picker-menu`, `c-chip-popover`, `c-saved-filters-menu`, or the new `data-autoid` values (see Added).
+
+    ```diff
+    - page.locator('.mat-mdc-menu-panel button[mat-menu-item]', { hasText: 'Trạng thái' })
+    + page.locator('[data-autoid="orders-panel-field-picker"] [role="option"]', { hasText: 'Trạng thái' })
+    ```
+
+- `required` now implies `pinned`: the bar adds the chip of a required field when it is missing, the chip has no × and is left out of the field picker, its value cannot be emptied once set, and `clearAll()` keeps it. A host no longer needs to add required chips itself; a field that must stay removable cannot be `required`.
+- The i18n key `core.component.query-bar.swap-field` is removed from the five locales (the bar never offered changing the field of a chip).
+  - **Migration:** custom catalogs typed as `I18nCatalog` must drop the key.
+
+#### Table
+
+- Query-bar mode with `queryBar.editor: 'popover'`: the header filter icon announces `aria-haspopup="dialog"` (was `menu`), since the chip popover is a dialog.
+  - **Migration:** E2E selectors that match `aria-haspopup="menu"` on the header icon must match `dialog`.
 
 #### Tab router
 
@@ -132,6 +152,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).
 - i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.
 
+#### Query bar
+
+- Inline mode: an **Add condition** box (`core.component.query-bar.add-condition`, `role="combobox"`) at the end of the chips replaces the **+** button and drives the field list (`aria-expanded`, `aria-controls`, `aria-activedescendant`). It opens on a click in the box or on the empty part of the chip row, on typing, ↓ or Alt+↓ — not when Tab only focuses it. Typing filters (accents ignored) and points at the first match; Enter picks it and empties the box; Enter on an empty box with the list closed applies like Search; Escape closes and empties; Backspace on an empty box focuses the last chip, a second Backspace removes it (never a required or pinned chip); a finished chip sends focus back to the box. Disabled when every field is used. Popover mode keeps **+**. `data-autoid` `<autoId>-add-condition`.
+- `data-autoid` for the search box (`<autoId>-search`, `-search-clear`), the panels (`-panel-field-picker`, `-panel-chip`, `-panel-saved-filters`) and saved filters (`-saved-filters`, `-saved-filter-<i>`, `-saved-filter-<i>-delete`, `-saved-filters-save`).
+- `SdQueryBar.canSaveFilter()` and `isLocked(field)`.
+- i18n keys `core.component.query-bar.{saved-filters.heading,saved-filters.deleted,saved-filters.undo,saved-filters.read-error,saved-filters.write-error,search-clear,add-condition,required-min-one}` in the five locales.
+
+#### Search field
+
+- The internal search primitive (`sd-search-field`, `ɵSdSearchField`) gets size `xs`: 28px high, padding `0 4px 0 8px`, 6px gap, 13px text, 16px icon, 20px clear button; touch sizes as the other sizes. Used by `sd-query-bar` at `density: 'compact'`.
+
 #### Tab
 
 - `sd-tab-group` `syncQueryParams` (`booleanAttribute`, default `false`): writes the selected tab index to the query param `tab-<autoId>` and selects it again when the link is opened or the param changes. The tab selected when the group opened removes the param; an index on a disabled tab is ignored, and an index past the last tab waits for that tab to render. Needs `autoId`.
@@ -141,6 +172,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes quick search, column filters and operators, external filters, sort, page and page size to the query param `table-<autoId>` as compact JSON (`{"q","c","o","e","s","p","z"}`, only what differs from the default; the default state removes the param), and reads them back. Needs `autoId`.
   - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.
   - `paginate.total: 'unknown'` restores the page size only.
+- `filter.queryBar.savedFilters: { key }` (query-bar mode, desktop): turns on the saved filters of the bar, stored in this browser under `sd-query-bar:savedFilters:sd-table:<key>`. A saved filter holds the chips, the AND/OR logic and the search term (not sort, columns or page size); applying one reads once and drops fields the table no longer has. Read from the table option only — `SD_TABLE_CONFIGURATION.filter.queryBar` cannot set it.
 
 #### Timeline
 
@@ -169,6 +201,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The approval column of the order detail (`approval-steps`) uses `sd-timeline groupBy="none" size="sm"`: "created" with an `add` icon, submit (`send`, primary), approve (`check`, success, "Đã duyệt" badge) and reject (`close`, error, "Từ chối" badge, the reason as the note). It takes the new inputs `createdAt` and `creator`; the `.approval-steps*` styles are gone.
 - Decision E14 in the pattern README: a screen that reads a query param of its own subscribes to `ActivatedRoute.queryParamMap` instead of reading the snapshot once (the tab router keeps the component when only the query changes), and table / tab / anchor state shared through links uses `syncQueryParams`. The order create and update pages follow it: they react to `?lines=sd-table` changing without being reopened.
 
+#### Query bar
+
+- The panels (see Changed (BREAKING)) open below the trigger, 4px away, flipping above without room; saved filters end-aligned. Escape, a click outside, Tab out and picking an item close them; focus returns to the trigger or to the `returnFocusTo` of `openField()` (a click on another focusable element keeps focus there). The chip popover commits its value on every way out. Opening a panel closes the other one. No backdrop: a click outside reaches the element under it.
+  - Roles: field picker `listbox` (used fields `aria-disabled`), chip popover `dialog` named by the field label, saved filters `menu` (apply, delete and save buttons are `menuitem`). Triggers carry `aria-haspopup`, `aria-expanded`, `aria-controls`.
+  - Field picker rows are 40px with 14px text (were 36px / 13px); group headings are 12px, not uppercase. Its find box (popover mode) appears from ten fields (was above eight) and is `sd-search-field` sm, a combobox: the arrows move `aria-activedescendant` while focus stays in it.
+  - The find box reads "Tìm kiếm" / "Search" (`core.component.query-bar.find-field`, was "Tìm trường" / "Find field"). The listbox is named by what opens it — `core.component.query-bar.add-filter` in popover mode, `.add-condition` inline — instead of the find box label.
+  - `openField()` called again for the chip whose popover is open closes it, as the menu backdrop did.
+  - On a screen too short for the chip popover, its body scrolls and the header stays (the frame used to cut the content off).
+- Saved filters: rows are an apply button and, beside it, a delete button (shown on hover or focus, always on a coarse pointer), with a heading, a divider and "Lưu bộ lọc hiện tại". Arrow keys move over the apply buttons and Save; → / Tab reach the delete button; Delete deletes. Deleting asks nothing and offers Undo in an `info` toast (back at its old index). Save is disabled when no chip has a value and the search box is empty. Empty, read-error (broken list; bad entries dropped one by one) and write-error states (the list is kept, an `error` toast, no exception text). Dates are read back as `Date`. The storage key is unchanged.
+  - `core.component.query-bar.saved-filters.delete` takes `{name}` ("Xoá {name}").
+- Required and pinned chips (see Changed (BREAKING)): a missing one is added empty (default operator), first and in field order, without emitting `(apply)`. A required chip with a value cannot be emptied: its operators drop `NULL` / `NOT_NULL` (`sdQueryAllowedOperators` too), a single select is required and not clearable, a multi select keeps its last values with a `required-min-one` line, and cleared text, number, date, date-time and `BETWEEN` values come back when the editor closes, in popover and inline mode. Required chips carry `aria-required="true"`.
+- `clearAll()` keeps required chips as they are (pinned chips are emptied, others removed); the clear label does not count them, and with the built-in `clearAll()` the button is disabled when nothing is left to clear.
+- `onApplyFilter()` drops entries of unknown or disabled fields and keeps the current chip of a required or pinned field unless the saved filter has a value for it.
+- The search box is `sd-search-field` (`xs` at compact density, `sm` at comfortable) with a clear button: clear or Escape with text empties it and applies once. The input is named by `searchPlaceholder`, else `core.component.query-bar.search`.
+
+#### Table
+
+- Query-bar mode: the clear button keeps the values of `required` quick filters and external filters (hidden ones included), like `SdQueryBar.clearAll()`, and is no longer enabled by required values alone. The search box of the bar is `sd-search-field`.
+
 #### Theme
 
 - The rest outline of box controls is lighter: `--sd-control-border` mixes 60% of `--sd-border-strong` into `--sd-surface` (was 82%). It applies to the outlined form fields (`sd-input`, `sd-select`, `sd-date`, `sd-datetime`, `sd-textarea`, `sd-autocomplete`, …), `sd-entity-picker` and the internal search fields (`sd-select` panel, `sd-table` quick search, `sd-kanban`).
@@ -180,6 +231,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
       --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));
     }
     ```
+
+### Removed
+
+#### Query bar
+
+- The internal chip popover drops its `switchPickerMenu` input and `swapField` output, and the internal field picker its `currentKey` input: changing the field of a chip was not offered by the bar (remove the chip and add another). Its i18n key is listed under Changed (BREAKING).
 
 ## [3.5] - 2026-11-05
 

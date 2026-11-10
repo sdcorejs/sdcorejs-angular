@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal, viewChild } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
@@ -7,10 +7,13 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 
+import { ɵsdQueryFilterActive } from '../../query-bar-filter';
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+let nextHintId = 0;
 
 type Density = 'compact' | 'comfortable';
 
@@ -77,6 +80,9 @@ export class SdQueryInlineChip {
   /** Pinned chip — no × button. */
   readonly pinned = input(false);
 
+  /** Required field: `aria-required`, no empty selection (handoff B3). */
+  readonly required = input(false);
+
   /** Required chip without a value — error look, `aria-invalid`. */
   readonly invalid = input(false);
 
@@ -123,6 +129,26 @@ export class SdQueryInlineChip {
   /** Data payload — convenience accessor for template. */
   readonly data = computed<unknown>(() => (this.filter() as any).data);
 
+  /**
+   * Model handed to the select. Follows `data`, and is reset to a copy of it when a required chip refuses an empty
+   * selection — the new reference makes sd-select drop the deselection it already shows.
+   */
+  readonly selectModel = linkedSignal<unknown>(() => this.data());
+
+  /** "Choose at least one value." under a required multi-value chip that was just refused an empty selection. */
+  readonly minOneHint = signal(false);
+  readonly minOneLabel = computed(() => this.#i18n.t('core.component.query-bar.required-min-one'));
+  readonly hintId = `sd-query-inline-chip-hint-${nextHintId++}`;
+  /** `aria-describedby` of the chip: the host's required hint and, while shown, the min-one line. */
+  readonly describedByIds = computed(
+    () => [this.describedBy(), this.minOneHint() ? this.hintId : undefined].filter(Boolean).join(' ') || null
+  );
+
+  /** Date, date-time and date-range controls — a refused empty value is written back into them (B3). */
+  private readonly dateControl = viewChild(SdDate);
+  private readonly datetimeControl = viewChild(SdDatetime);
+  private readonly dateRangeControl = viewChild(SdDateRange);
+
   // ---------------------------------------------------------------------------
   // Edit lifecycle
   // ---------------------------------------------------------------------------
@@ -143,16 +169,42 @@ export class SdQueryInlineChip {
    * forwards the value; it no longer toggles `#editing` (that's boolean-only now).
    */
   emitSingleCommit(v: unknown): void {
+    if (this.#keepsRequired(v)) return;
     this.commit.emit(v);
   }
 
   /** BETWEEN commit — sd-date-range (viewed='inline') emits `{from, to}`; chip just forwards it. */
   emitRangeCommit(ev: { from: unknown; to: unknown } | null): void {
+    if (this.#keepsRequired(ev ?? { from: null, to: null })) return;
     this.commitRange.emit(ev ?? null);
+  }
+
+  /**
+   * B3: a required chip that has a value refuses an empty date, date-time or range — nothing is emitted and the control
+   * shows the previous value again. `true` when refused.
+   */
+  #keepsRequired(next: unknown): boolean {
+    const filter = this.filter();
+    if (!this.required() || !ɵsdQueryFilterActive(filter) || ɵsdQueryFilterActive({ ...filter, data: next } as Filter)) return false;
+    // why: `[model]="data"` không đổi nên Angular không đẩy lại input, trong khi model của control đã bị chính nó ghi rỗng —
+    // ghi thẳng giá trị trước vào model của control.
+    const previous = this.data() as never;
+    this.dateControl()?.valueModel.set(previous);
+    this.datetimeControl()?.valueModel.set(previous);
+    this.dateRangeControl()?.valueModel.set(previous);
+    return true;
   }
 
   /** Multi-select live emit (sd-select inline). */
   emitLive(v: unknown): void {
+    if (this.required() && Array.isArray(v) && v.length === 0) {
+      // B3: keep the previous values of a required chip and say why.
+      const previous = this.data();
+      this.selectModel.set(Array.isArray(previous) ? [...previous] : previous);
+      this.minOneHint.set(true);
+      return;
+    }
+    this.minOneHint.set(false);
     this.liveChange.emit(v);
   }
 

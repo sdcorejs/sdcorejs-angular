@@ -1,38 +1,33 @@
-import { Component, viewChild } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { Component, reflectComponentType, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Subject, throwError } from 'rxjs';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdQueryChipPopover } from './chip-popover.component';
 import { Filter } from '@sdcorejs/utils/models';
 import { SdQueryField } from '../../query-bar.model';
+import { ɵSdQueryPanelTriggerDirective } from '../panel/query-panel';
 
 /**
- * Host wrapper — declares a switchPicker mat-menu + a button trigger that opens the
- * chip popover so its `<ng-template matMenuContent>` is actually instantiated.
- *
- * why: ChipPopover's body lives inside an mat-menu `<ng-template matMenuContent>` —
- * only renders after the menu opens. Tests need to open the menu via a real trigger.
+ * Host wrapper — a button trigger that opens the chip popover panel so its template is actually instantiated (the
+ * body only renders while the panel is open).
  */
 @Component({
   standalone: true,
-  imports: [SdQueryChipPopover, MatMenuModule],
+  imports: [SdQueryChipPopover, ɵSdQueryPanelTriggerDirective],
   template: `
-    <mat-menu #switch="matMenu">
-      <button mat-menu-item>x</button>
-    </mat-menu>
-    <button #t="matMenuTrigger" [matMenuTriggerFor]="cp.menu()!">open</button>
+    <button #t type="button" [sdQueryPanelTrigger]="cp.panel()">open</button>
+    <button id="outside" type="button">outside</button>
     <sd-query-chip-popover
       #cp
       [field]="field"
       [filter]="filter"
       [chipIndex]="chipIndex"
       [autoIdBase]="autoIdBase"
-      [switchPickerMenu]="switchMenu()!"
-      (commit)="committed = $event; commitCount = commitCount + 1"
-      (swapField)="swapped = $event" />
+      (commit)="committed = $event; commitCount = commitCount + 1" />
   `,
 })
 class Host {
@@ -43,10 +38,8 @@ class Host {
 
   committed: any = undefined;
   commitCount = 0;
-  swapped: any = undefined;
 
-  switchMenu = viewChild<MatMenu>('switch');
-  trigger = viewChild<MatMenuTrigger>('t');
+  trigger = viewChild('t', { read: ɵSdQueryPanelTriggerDirective });
   child = viewChild(SdQueryChipPopover);
 }
 
@@ -67,6 +60,11 @@ describe('SdQueryChipPopover', () => {
     host.trigger()!.openMenu();
     fixture.detectChanges();
   }
+
+  const panel = (): HTMLElement | null =>
+    TestBed.inject(OverlayContainer).getContainerElement().querySelector<HTMLElement>('.c-chip-popover');
+
+  afterEach(() => fixture.destroy());
 
   beforeEach(async () => {
     await build();
@@ -270,18 +268,105 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.isEditingMultiSelected('z')).toBe(false);
   });
 
-  // ---- 13: field switcher button has matMenuTriggerFor pointed at parent menu
-  it('field switcher button uses [matMenuTriggerFor] of the provided switchPickerMenu', () => {
+  // ---- 13: M7 — the nested field switcher is gone; the header names the field as plain text
+  it('QB-FP-05 has no switchPickerMenu input or field switcher; the header label names the dialog', () => {
+    const inputs = reflectComponentType(SdQueryChipPopover)!.inputs.map(entry => entry.propName);
+    expect(inputs).not.toContain('switchPickerMenu');
+    const outputs = reflectComponentType(SdQueryChipPopover)!.outputs.map(entry => entry.propName);
+    expect(outputs).not.toContain('swapField');
+    // @ts-expect-error switchPickerMenu was removed (handoff M7)
+    expect(host.child()!.switchPickerMenu).toBeUndefined();
+
     host.child()!.seed(host.filter, host.field!);
-    fixture.detectChanges();
     openPopover();
-    // Field switch button is rendered with `[matMenuTriggerFor]` — query for the
-    // directive instance instead of the raw attribute (Angular doesn't reflect it).
-    const switchBtn = document.querySelector('.c-pop-header-field') as HTMLElement | null;
-    expect(switchBtn).not.toBeNull();
+    const dialog = panel()!;
+    const label = dialog.querySelector('.c-pop-header-field')!;
+    expect(label.tagName).toBe('SPAN');
+    expect(label.textContent!.trim()).toBe('Name');
+    expect(dialog.querySelector('button.c-pop-header-field, [role="button"].c-pop-header-field')).toBeNull();
+    expect(dialog.getAttribute('aria-labelledby')).toBe(label.id);
   });
 
-  // ---- 14: mat-menu (closed) emits commit with current staging
+  it('QB-P-07 renders a dialog panel (form kind) with the autoId of the chip panel', () => {
+    host.child()!.seed(host.filter, host.field!);
+    openPopover();
+    const dialog = panel()!;
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.classList).toContain('sd-query-panel');
+    expect(dialog.classList).toContain('sd-query-panel--form');
+    expect(dialog.getAttribute('data-autoid')).toBe('qb-panel-chip');
+    expect(host.trigger()!.panel()!.role()).toBe('dialog');
+  });
+
+  it('QB-P-05 lands in the first value control, not the operator', () => {
+    host.child()!.seed(host.filter, host.field!);
+    openPopover();
+    expect(panel()!.querySelector('sd-input')!.contains(document.activeElement)).toBeTrue();
+  });
+
+  // PD after R1 (G-9): on a short screen the frame keeps its rounded clip and the body scrolls instead of being cut off.
+  it('QB-B-06 the body scrolls when the panel is shorter than its content; the header stays', () => {
+    host.field = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
+    host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2026-01-01', to: '2026-01-31' } } as any;
+    fixture.detectChanges();
+    host.child()!.seed(host.filter, host.field);
+    fixture.detectChanges();
+    openPopover();
+
+    const frame = panel()!;
+    const header = frame.querySelector<HTMLElement>('.c-pop-header')!;
+    const body = frame.querySelector<HTMLElement>('.c-pop-body')!;
+    frame.style.maxHeight = `${header.offsetHeight + 24}px`;
+
+    expect(getComputedStyle(frame).overflow).toBe('hidden');
+    expect(getComputedStyle(body).overflowY).toBe('auto');
+    expect(body.scrollHeight).withContext('body content taller than its box').toBeGreaterThan(body.clientHeight);
+    expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(frame.getBoundingClientRect().bottom + 0.5);
+    expect(header.getBoundingClientRect().top).toBeGreaterThanOrEqual(frame.getBoundingClientRect().top);
+  });
+
+  describe('QB-P-04 commits the staged value on every way out', () => {
+    const stage = (): void => {
+      host.child()!.seed(host.filter, host.field!);
+      openPopover();
+      host.child()!.editingValue.set('xyz');
+      fixture.detectChanges();
+    };
+
+    it('QB-P-04 Escape', () => {
+      stage();
+      document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+
+    it('QB-P-04 click outside', () => {
+      stage();
+      const outside = fixture.nativeElement.querySelector('#outside') as HTMLElement;
+      outside.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      outside.click();
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+
+    it('QB-P-04 Tab out of the last control', () => {
+      stage();
+      // The value input (focused on open) is the last control of a string chip: the operator is disabled.
+      const value = panel()!.querySelector<HTMLInputElement>('sd-input input')!;
+      expect(document.activeElement).toBe(value);
+      value.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(host.commitCount).toBe(1);
+      expect(host.committed).toEqual(jasmine.objectContaining({ data: 'xyz' }));
+    });
+  });
+
+  // ---- 14: panel close emits commit with current staging
   it('menu close emits (commit) with { field, operator, data } from staging', () => {
     host.child()!.seed(host.filter, host.field!);
     fixture.detectChanges();
@@ -308,5 +393,147 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.editingValue()).toEqual({ from: 9, to: 5 });
     host.child()!.onEditingRangeTo(10);
     expect(host.child()!.editingValue()).toEqual({ from: 9, to: 10 });
+  });
+
+  describe('staging edge paths', () => {
+    const child = (): SdQueryChipPopover => host.child()!;
+    const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve));
+
+    it('reshapes the staged value between single, list and range operators', () => {
+      child().seed({ field: 'name', operator: 'EQUAL', data: 5 } as any, host.field!);
+      child().onEditingOperatorChange('BETWEEN');
+      expect(child().editingValue()).toEqual({ from: null, to: null });
+      child().onEditingValueInput({ from: 1, to: 2 });
+      child().onEditingOperatorChange('BETWEEN');
+      expect(child().editingValue()).withContext('a range stays').toEqual({ from: 1, to: 2 });
+
+      child().seed({ field: 'name', operator: 'EQUAL', data: null } as any, host.field!);
+      child().onEditingOperatorChange('IN');
+      expect(child().editingValue()).toEqual([]);
+      child().onEditingValueInput(['a', 'b']);
+      child().onEditingOperatorChange('EQUAL');
+      expect(child().editingValue()).withContext('a list keeps its first value').toBe('a');
+      child().onEditingOperatorChange('IN');
+      child().onEditingValueInput([]);
+      child().onEditingOperatorChange('NOT_EQUAL');
+      expect(child().editingValue()).withContext('an empty list').toBeNull();
+      child().onEditingOperatorChange('CONTAIN');
+      expect(child().editingValue()).toBeNull();
+    });
+
+    it('a required field keeps a staged value that is not a list when the selection empties', () => {
+      const tenant = {
+        key: 'tenant',
+        label: 'Kho',
+        type: 'values',
+        required: true,
+        option: { items: [], valueField: 'id', displayField: 'name' },
+      } as unknown as SdQueryField;
+      child().seed({ field: 'tenant', operator: 'IN', data: null } as any, tenant);
+      child().onEditingValueInput([]);
+      expect(child().editingValue()).toBeNull();
+      expect(child().minOneHint()).toBeTrue();
+    });
+
+    it('range ends and list toggles start from an empty staged value', () => {
+      child().seed(undefined, undefined);
+      child().onEditingRangeFrom(1);
+      expect(child().editingValue()).toEqual({ from: 1 });
+      child().editingValue.set(null);
+      child().onEditingRangeTo(2);
+      expect(child().editingValue()).toEqual({ to: 2 });
+      child().editingValue.set(null);
+      child().toggleEditingMultiValue('a');
+      expect(child().editingValue()).toEqual(['a']);
+    });
+
+    it('uses the [field], [filter] and [chipIndex] inputs before any seed', () => {
+      expect(child().currentField()).toBe(host.field);
+      expect(child().chipAutoId('value')).toBe('qb-chip0-value');
+      host.chipIndex = null;
+      fixture.detectChanges();
+      expect(child().chipAutoId('value')).toBe('qb-chipx-value');
+      child().editingOperator.set('EQUAL');
+      child().editingValue.set('z');
+      child().onMenuClosed('escape');
+      expect(host.committed).toEqual({ field: 'name', operator: 'EQUAL', data: 'z' });
+    });
+
+    it('has no operators without a field and commits nothing without a filter', () => {
+      host.field = undefined;
+      host.filter = undefined as unknown as Filter;
+      fixture.detectChanges();
+      expect(child().allowedOperators()).toEqual([]);
+      expect(child().showOperatorSelector()).toBeFalse();
+      child().onMenuClosed('escape');
+      expect(host.commitCount).toBe(0);
+    });
+
+    it('reads the options of a values field from a signal or from a function', async () => {
+      const values = (items: unknown): SdQueryField =>
+        ({ key: 's', label: 'S', type: 'values', option: { items, valueField: 'id', displayField: 'name' } }) as unknown as SdQueryField;
+      const filter = { field: 's', operator: 'IN', data: [] } as any;
+
+      child().seed(filter, values(signal([{ id: 1, name: 'A' }])));
+      expect(child().editingOptions()).toEqual([{ id: 1, name: 'A' }]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        values(() => Promise.resolve([{ id: 2, name: 'B' }]))
+      );
+      expect(child().editingOptionsLoading()).toBeTrue();
+      await flush();
+      expect(child().editingOptions()).toEqual([{ id: 2, name: 'B' }]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        values(() => null)
+      );
+      await flush();
+      expect(child().editingOptions()).toEqual([]);
+    });
+
+    it('loads lazy options from an observable or a promise and stops loading on error', async () => {
+      const lazy = (search?: unknown): SdQueryField =>
+        ({
+          key: 'lz',
+          label: 'LZ',
+          type: 'lazy-values',
+          option: { search, valueField: 'id', displayField: 'name' },
+        }) as unknown as SdQueryField;
+      const filter = { field: 'lz', operator: 'IN', data: [] } as any;
+
+      child().seed(filter, lazy());
+      expect(child().editingOptionsLoading()).withContext('no search').toBeFalse();
+
+      const results = new Subject<unknown[] | null>();
+      child().seed(
+        filter,
+        lazy(() => results)
+      );
+      expect(child().editingOptionsLoading()).toBeTrue();
+      results.next([{ id: 'x' }]);
+      expect(child().editingOptions()).toEqual([{ id: 'x' }]);
+      results.next(null);
+      expect(child().editingOptions()).toEqual([]);
+      results.complete();
+      expect(child().editingOptionsLoading()).toBeFalse();
+
+      child().seed(
+        filter,
+        lazy(() => throwError(() => new Error('down')))
+      );
+      expect(child().editingOptionsLoading()).withContext('error').toBeFalse();
+
+      child().seed(
+        filter,
+        lazy(() => Promise.resolve(null))
+      );
+      await flush();
+      expect(child().editingOptions()).toEqual([]);
+      expect(child().editingOptionsLoading()).toBeFalse();
+    });
   });
 });

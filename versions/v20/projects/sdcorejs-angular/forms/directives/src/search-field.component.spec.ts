@@ -111,6 +111,40 @@ describe('ɵSdSearchField', () => {
     it('uses 14px text and inherits it into the input', () => {
       expect(getComputedStyle(input()).fontSize).toBe('14px');
     });
+
+    // Query bar handoff, section 7.1: compact density needs a 28px box to match its chips.
+    it('QB-F-01 is 28px high at xs with a 16px icon, 0 4px 0 8px padding, a 6px gap and 13px text', () => {
+      host.size.set('xs');
+      fixture.detectChanges();
+      const css = getComputedStyle(field());
+      expect(field().classList).toContain('sd-xs');
+      expect(field().classList).not.toContain('sd-md');
+      expect(field().classList).not.toContain('sd-sm');
+      expect(field().getBoundingClientRect().height).toBe(28);
+      expect(searchIcon().getBoundingClientRect().width).toBe(16);
+      expect(css.paddingLeft).toBe('8px');
+      expect(css.paddingRight).toBe('4px');
+      expect(css.columnGap).toBe('6px');
+      expect(getComputedStyle(input()).fontSize).toBe('13px');
+    });
+
+    it('QB-F-01 keeps sm unchanged next to xs: 32px, 8px padding on both sides, 14px text', () => {
+      host.size.set('sm');
+      fixture.detectChanges();
+      const css = getComputedStyle(field());
+      expect(field().classList).not.toContain('sd-xs');
+      expect(field().getBoundingClientRect().height).toBe(32);
+      expect(css.paddingRight).toBe('8px');
+      expect(getComputedStyle(input()).fontSize).toBe('14px');
+    });
+
+    it('QB-F-01 keeps the control radius and border at xs', () => {
+      host.size.set('xs');
+      fixture.detectChanges();
+      const css = getComputedStyle(field());
+      expect(css.borderTopWidth).toBe('1px');
+      expect(css.borderTopLeftRadius).toBe(resolve('border-top-left-radius', 'var(--sd-control-radius, 8px)'));
+    });
   });
 
   describe('control box (wave 2 · D)', () => {
@@ -241,6 +275,16 @@ describe('ɵSdSearchField', () => {
       expect(clearButton()!.getBoundingClientRect().width).toBe(24);
       expect(clearButton()!.getBoundingClientRect().height).toBe(24);
       expect(icon().getBoundingClientRect().width).toBe(16);
+    });
+
+    it('QB-F-01 is 20px with a 14px icon at xs', () => {
+      host.clearable.set(true);
+      host.value.set('đơn hàng');
+      host.size.set('xs');
+      fixture.detectChanges();
+      expect(clearButton()!.getBoundingClientRect().width).toBe(20);
+      expect(clearButton()!.getBoundingClientRect().height).toBe(20);
+      expect((clearButton()!.querySelector('sd-icon') as HTMLElement).getBoundingClientRect().width).toBe(14);
     });
 
     it('takes its size from --sd-search-field-clear-size when a context sets it', () => {

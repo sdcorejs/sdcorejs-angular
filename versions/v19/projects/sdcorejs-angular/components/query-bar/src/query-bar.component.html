@@ -1,8 +1,7 @@
 ﻿<!--
   sd-query-bar — unified filter chip row (Jira/Linear/Notion style).
-  Visual spec: refs/design_handoff_sd_query_bar/README.md
-  TODO(next-iter): replace inline placeholders for field-picker + chip-popover
-  with extracted sub-components driven by CDK overlay.
+  Panels (field picker, chip popover, saved filters) share one CDK Overlay frame — handoff
+  design_handoff_sd_query_bar_panels.
 -->
 @let _filters = filters();
 @let _resolvedFields = resolvedFields();
@@ -15,6 +14,7 @@
 @let _addFilterLabel = addFilterLabel();
 @let _addDisabled = addDisabled();
 @let _invalidHintId = resolvedInvalidHintId();
+@let _autoId = resolvedAutoId();
 
 <div
   class="c-query-bar"
@@ -28,30 +28,40 @@
 
   <!-- Free-text search (left, optional) -->
   @if (resolvedShowSearch()) {
-    <div class="c-search">
-      <sd-icon class="c-search-icon" name="search"></sd-icon>
+    <!-- Handoff mục 7: primitive tìm kiếm dùng chung — cỡ xs (28px) ở density compact, sm (32px) ở comfortable. -->
+    <sd-search-field
+      class="c-search"
+      clearable
+      [size]="_resolvedDensity === 'compact' ? 'xs' : 'sm'"
+      [clearLabel]="searchClearLabel()"
+      [autoId]="_autoId ? _autoId + '-search' : undefined"
+      (cleared)="clearSearch()">
       <input
-        class="c-search-input"
+        sdSearchFieldInput
         type="text"
-        [ngModel]="search()"
-        (ngModelChange)="setSearch($event)"
+        enterkeyhint="search"
+        autocomplete="off"
+        [attr.aria-label]="searchLabel()"
+        [attr.data-autoid]="_autoId ? _autoId + '-search' : null"
+        [placeholder]="searchPlaceholder()"
+        [value]="search()"
+        (input)="setSearch($any($event.target).value)"
         (keydown.enter)="applySearch()"
-        [placeholder]="searchPlaceholder()" />
-    </div>
+        (keydown.escape)="onSearchEscape($event)" />
+    </sd-search-field>
     <span class="c-divider" aria-hidden="true"></span>
   }
 
   <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
-       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`.
-       why: mở popover để EDIT chỉ cho chỉnh operator + value — KHÔNG đổi field.
-       Bỏ [switchPickerMenu] → header render nhãn field tĩnh (read-only). Muốn đổi
-       field thì xoá chip rồi thêm lại. -->
+       so the popover-mode @for chips can bind their [panel] to `chipPopover.panel()`.
+       why: mở popover để EDIT chỉ cho chỉnh operator + value — KHÔNG đổi field (handoff M7):
+       header render nhãn field tĩnh (read-only). Muốn đổi field thì xoá chip rồi thêm lại. -->
   <sd-query-chip-popover
     #chipPopover
     [field]="editingField() ?? undefined"
     [filter]="_editingIndex !== null ? $any(_filters[_editingIndex!]) : undefined"
     [chipIndex]="_editingIndex"
-    [autoIdBase]="resolvedAutoId() ?? 'qb'"
+    [autoIdBase]="resolvedAutoId()"
     (commit)="onChipPopoverCommit($event)" />
 
   @if (_resolvedMode === 'inline') {
@@ -79,11 +89,12 @@
             [showOperator]="showOperatorFor(_field, $any(filter.operator))"
             [valueText]="chipValueText(filter)"
             [emptyText]="emptyTextFor(_field)"
-            [pinned]="!!_field.pinned"
+            [pinned]="isLocked(_field)"
+            [required]="!!_field.required"
             [disabled]="true"
             [invalid]="_invalid"
             [describedBy]="_invalid ? _invalidHintId : undefined"
-            [menu]="chipPopover.menu()!"
+            [panel]="chipPopover.panel()"
             (open)="openChipPopover(i)"
             (remove)="removeFilter(i)" />
         } @else if (_field.type === 'string' || _field.type === 'number') {
@@ -94,7 +105,8 @@
             [value]="_data"
             [density]="_resolvedDensity"
             [showOperator]="showOperatorFor(_field, _op)"
-            [pinned]="!!_field.pinned"
+            [pinned]="isLocked(_field)"
+            [required]="!!_field.required"
             [invalid]="_invalid"
             [describedBy]="_invalid ? _invalidHintId : undefined"
             [autoId]="inlineAutoId(i, 'value')"
@@ -107,7 +119,8 @@
             [density]="_resolvedDensity"
             [multiple]="multiple(_op)"
             [showOperator]="showOperatorFor(_field, _op)"
-            [pinned]="!!_field.pinned"
+            [pinned]="isLocked(_field)"
+            [required]="!!_field.required"
             [invalid]="_invalid"
             [describedBy]="_invalid ? _invalidHintId : undefined"
             [autoId]="inlineAutoId(i, 'value')"
@@ -135,18 +148,34 @@
         (seamlessCommit)="onBuildSeamlessCommit($event)" />
     }
 
-    <!-- Add filter -->
-    <button
-      type="button"
-      class="c-add-filter"
-      [matMenuTriggerFor]="addPicker.menu()"
-      [disabled]="_addDisabled"
-      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
-      (menuOpened)="addPicker.focusFind()">
-      <sd-icon name="add"></sd-icon>
-    </button>
+    <!-- Thêm điều kiện (handoff mục 8): ô combobox điều khiển listbox của field picker, focus thật ở lại trong ô.
+         Không tự mở khi chỉ Tab tới. Hết field thì ô khoá, tooltip nói lý do như nút + trước đây. -->
+    <div
+      class="c-add-condition"
+      [class.c-add-condition--disabled]="_addDisabled"
+      [matTooltip]="_addDisabled ? (_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel) : ''">
+      <sd-icon class="c-add-condition-icon" name="add" size="16px" aria-hidden="true"></sd-icon>
+      <input
+        #addInput
+        class="c-add-condition-input"
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        aria-autocomplete="list"
+        [attr.aria-expanded]="addPicker.panel().isOpen()"
+        [attr.aria-controls]="addPicker.listId"
+        [attr.aria-activedescendant]="addPicker.panel().isOpen() ? addPicker.activeId() : null"
+        [attr.aria-label]="addConditionLabel()"
+        [attr.data-autoid]="_autoId ? _autoId + '-add-condition' : null"
+        [placeholder]="addConditionLabel()"
+        [disabled]="_addDisabled"
+        [value]="addQuery()"
+        (input)="onAddInput($any($event.target).value)"
+        (click)="openAddList()"
+        (keydown)="onAddKeydown($event)" />
+    </div>
   } @else {
-    <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
+    <!-- ===== POPOVER MODE (default) — compact chips edited in the chip popover panel ===== -->
     <!-- why: track theo rowId(filter) — xem ghi chú ở nhánh inline. -->
     @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
@@ -164,11 +193,12 @@
         [showOperator]="showOperatorFor(_field, $any(filter.operator))"
         [valueText]="chipValueText(filter)"
         [emptyText]="emptyTextFor(_field)"
-        [pinned]="!!_field?.pinned"
+        [pinned]="isLocked(_field)"
+        [required]="!!_field?.required"
         [disabled]="!!_field?.disabled"
         [invalid]="_invalid"
         [describedBy]="_invalid ? _invalidHintId : undefined"
-        [menu]="chipPopover.menu()!"
+        [panel]="chipPopover.panel()"
         (open)="openChipPopover(i)"
         (remove)="removeFilter(i)" />
     }
@@ -177,10 +207,10 @@
     <button
       type="button"
       class="c-add-filter"
-      [matMenuTriggerFor]="addPicker.menu()"
+      [sdQueryPanelTrigger]="addPicker.panel()"
       [disabled]="_addDisabled"
       [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel"
-      (menuOpened)="addPicker.focusFind()">
+      [attr.aria-label]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   }
@@ -193,7 +223,10 @@
     #addPicker
     [fields]="pickerFields()"
     [usedKeys]="_usedFieldKeys"
-    (pick)="_resolvedMode === 'inline' ? beginBuild($event) : addFilter($event)" />
+    [autoId]="resolvedAutoId()"
+    [findBox]="_resolvedMode !== 'inline'"
+    (pick)="onPick($event)"
+    (closed)="addQuery.set('')" />
 
   <sd-query-actions-bar
     [showLogicToggle]="resolvedShowLogicToggle()"
@@ -204,6 +237,8 @@
     [showSavedFilters]="resolvedShowSavedFilters()"
     [savedFiltersKey]="resolvedSavedFiltersKey()"
     [query]="currentQuery()"
+    [canSaveFilter]="canSaveFilter()"
+    [autoId]="resolvedAutoId()"
     (applyFilter)="onApplyFilter($event)"
     [showClearAll]="resolvedShowClearAll()"
     [canSearch]="canSearch()"

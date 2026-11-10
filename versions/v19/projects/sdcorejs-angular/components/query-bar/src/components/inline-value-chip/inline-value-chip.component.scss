@@ -16,6 +16,12 @@ $danger:         var(--sd-query-bar-chip-danger, #d23535);
   display: inline-flex;
 }
 
+// Backspace trên ô Thêm điều kiện trỏ tới chip cuối (focus bằng script, tabindex -1) — hiện vòng focus như mọi control.
+.c-seamless:focus-visible {
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+  outline-offset: 2px;
+}
+
 .c-seamless {
   display: inline-flex;
   align-items: stretch;

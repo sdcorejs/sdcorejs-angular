@@ -16,7 +16,8 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { Size } from '@sdcorejs/utils/models';
 
-export type ɵSdSearchFieldSize = Extract<Size, 'sm' | 'md'>;
+// why: `Size` của @sdcorejs/utils chưa có 'xs'; cỡ 28px chỉ cần cho density compact của sd-query-bar (handoff mục 7.1).
+export type ɵSdSearchFieldSize = Extract<Size, 'sm' | 'md'> | 'xs';
 
 /**
  * Gắn lên `<input>` thật được chiếu vào `<sd-search-field>`. Chỉ đọc trạng thái của input (có giá trị,
@@ -68,8 +69,9 @@ export class ɵSdSearchFieldInputDirective implements DoCheck {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'sd-search-field',
+    '[class.sd-xs]': "size() === 'xs'",
     '[class.sd-sm]': "size() === 'sm'",
-    '[class.sd-md]': "size() !== 'sm'",
+    '[class.sd-md]': "size() === 'md'",
     '[class.sd-disabled]': 'disabled()',
     '(click)': 'focusInput($event)',
   },

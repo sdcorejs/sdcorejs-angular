@@ -374,4 +374,13 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('sd-operator.c-token-op')).toBeNull();
     expect(fixture.nativeElement.querySelector('.c-token-remove')).not.toBeNull();
   });
+
+  it('boolean: entering edit mode again while editing keeps it open', () => {
+    host.field = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
+    host.filter = { field: 'on', operator: 'EQUAL', data: true };
+    fixture.detectChanges();
+    host.child()!.enterEdit();
+    host.child()!.enterEdit();
+    expect(host.child()!.editing()).toBeTrue();
+  });
 });

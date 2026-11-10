@@ -105,7 +105,8 @@ export class TableQueryBarExampleComponent {
     filter: {
       // why: kiểu lọc là mặc định của ứng dụng; người dùng đổi trong Thiết lập › Bộ lọc và lựa chọn đó được lưu theo `key`.
       mode: 'query-bar',
-      queryBar: { editor: this.editor() },
+      // Bộ lọc đã lưu của thanh (nút bookmark), lưu trên trình duyệt theo key riêng của bảng.
+      queryBar: { editor: this.editor(), savedFilters: { key: 'showcase-table-query-bar' } },
       manualFilter: this.manualFilter(),
       key: 'showcase-table-query-bar',
       cacheable: true,

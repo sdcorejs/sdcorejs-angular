@@ -1,19 +1,17 @@
 import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { NgTemplateOutlet } from '@angular/common';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { Filter, Operator } from '@sdcorejs/utils/models';
-import { take } from 'rxjs/operators';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { ɵSdQueryPanelDirective, ɵSdQueryPanelTriggerDirective } from '../panel/query-panel';
 
 /**
- * Compact popover-mode chip face. Click → opens the parent-supplied [menu] (mat-menu
- * containing the chip editor). Inert div[role=button] so the nested <sd-operator>
- * doesn't end up as a button-in-button (invalid HTML).
+ * Compact popover-mode chip face. Click, Enter or Space → opens the parent-supplied [panel] (the chip popover dialog).
+ * Inert div[role=button] so the nested <sd-operator> doesn't end up as a button-in-button (invalid HTML).
  */
 @Component({
   selector: 'sd-query-popover-chip',
@@ -21,7 +19,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   styleUrl: './popover-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, MatTooltipModule, SdOperator, NgTemplateOutlet],
+  imports: [SdIcon, MatTooltipModule, SdOperator, NgTemplateOutlet, ɵSdQueryPanelTriggerDirective],
 })
 export class SdQueryPopoverChip {
   /** Resolved field (from the bar's `fieldByKey()` map). `undefined` → render raw key. */
@@ -48,16 +46,19 @@ export class SdQueryPopoverChip {
   /** Read-only chip — does not open its popover. */
   readonly disabled = input(false);
 
+  /** Chip of a required field — `aria-required`. */
+  readonly required = input(false);
+
   /** Required chip without a value — error look, `aria-invalid`. */
   readonly invalid = input(false);
 
   /** Id set as `aria-describedby` (the host's required hint). */
   readonly describedBy = input<string | undefined>(undefined);
 
-  /** Chip popover mat-menu instance supplied by the parent. */
-  readonly menu = input.required<MatMenu>();
+  /** Chip popover panel supplied by the parent. */
+  readonly panel = input.required<ɵSdQueryPanelDirective>();
 
-  /** Fired when the chip popover opens (parent seeds its editing state). */
+  /** Fired when the chip popover opens, before it renders (parent seeds its editing state). */
   readonly open = output<void>();
   /** Fired when the user clicks the × removal icon. */
   readonly remove = output<void>();
@@ -71,25 +72,21 @@ export class SdQueryPopoverChip {
     return (this.filter() as any).operator as Operator;
   }
 
-  // why: parent's add/swap flow auto-opens the chip popover after render, and removeFilter
-  // closes the open one — expose open/close so the parent doesn't need a ViewChild on the
-  // internal MatMenuTrigger directive.
-  private readonly trigger = viewChild('chipTrigger', { read: MatMenuTrigger });
+  // why: parent's add flow auto-opens the chip popover after render, and removeFilter closes the open one — expose
+  // open/close so the parent doesn't need a ViewChild on the internal panel trigger.
+  private readonly trigger = viewChild('chipTrigger', { read: ɵSdQueryPanelTriggerDirective });
+
+  /** The chip popover is open for this chip. */
+  isOpen(): boolean {
+    return !!this.trigger()?.expanded();
+  }
+
   /**
    * Opens the chip popover. With `returnFocusTo`, that element (e.g. the host control that asked
    * for the chip) gets focus back when the popover closes, instead of the chip.
    */
   openMenu(returnFocusTo?: HTMLElement): void {
-    const trigger = this.trigger();
-    if (!trigger) return;
-    if (returnFocusTo) {
-      trigger.restoreFocus = false;
-      trigger.menuClosed.pipe(take(1)).subscribe(() => {
-        trigger.restoreFocus = true;
-        returnFocusTo.focus();
-      });
-    }
-    trigger.openMenu();
+    this.trigger()?.openMenu(returnFocusTo);
   }
   closeMenu(): void {
     this.trigger()?.closeMenu();

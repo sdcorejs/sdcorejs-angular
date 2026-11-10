@@ -46,6 +46,20 @@ $qb-radius-chip:    999px;
   }
 }
 
+// Backspace trên ô Thêm điều kiện trỏ tới chip cuối (focus bằng script, tabindex -1).
+.c-token:focus-visible {
+  outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+  outline-offset: 2px;
+}
+
+// B3: dòng "Chọn ít nhất một giá trị." khi chip bắt buộc nhiều giá trị bị từ chối bỏ chọn hết.
+.c-token-required-hint {
+  align-self: center;
+  font-size: var(--sd-font-size-12, 12px);
+  color: var(--sd-text-secondary, #555);
+  white-space: nowrap;
+}
+
 .c-token-icon {
   font-size: var(--sd-font-size-14, 14px);
   width: 14px;

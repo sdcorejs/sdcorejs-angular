@@ -155,7 +155,7 @@ const valuesField = (
 
 /**
  * `aria-haspopup` of the header filter icon: what `SdQueryBar.openField` shows for `field` (same steps as `beginBuild`).
- * The popover editor opens the chip menu. The inline editor only focuses an existing chip; for a field without a chip it
+ * The popover editor opens the chip popover (a dialog panel). The inline editor only focuses an existing chip; for a field without a chip it
  * builds one, which opens the operator menu, or the value picker of a values / date field (a date skips the operator
  * step when its default operator is allowed).
  */
@@ -164,7 +164,7 @@ export const sdTableQueryTriggerPopup = (
   editor: 'popover' | 'inline',
   hasChip: boolean
 ): 'menu' | 'listbox' | 'dialog' | null => {
-  if (editor === 'popover') return 'menu';
+  if (editor === 'popover') return 'dialog';
   if (hasChip) return null;
   const allowed = sdQueryAllowedOperators(field);
   const date = field.type === 'date' || field.type === 'datetime';
