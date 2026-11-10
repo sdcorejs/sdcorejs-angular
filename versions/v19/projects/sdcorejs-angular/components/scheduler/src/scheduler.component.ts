@@ -108,6 +108,7 @@ import {
   SdSchedulerEmptyTemplateDirective,
   SdSchedulerEventTemplateDirective,
   SdSchedulerResourceTemplateDirective,
+  type SdSchedulerCellTemplateContext,
   type SdSchedulerEventTemplateContext,
   type SdSchedulerResourceTemplateContext,
 } from './scheduler.templates';
@@ -120,6 +121,7 @@ import {
   sdSchedulerGroups,
   sdSchedulerLanes,
   sdSchedulerLaneTop,
+  sdSchedulerNextResource,
   sdSchedulerResizeDays,
   sdSchedulerRowAt,
   sdSchedulerRowHeight,
@@ -214,17 +216,32 @@ interface SdSchedulerResourceRow<T, R> {
   readonly group: string | null;
   readonly height: number;
   readonly headerId: string;
+  /** Id of the time area: what `aria-activedescendant` points at while the cursor is on this row (§9.7). */
+  readonly trackId: string;
   readonly autoId: string | null;
   readonly token: string;
   readonly blocks: readonly SdSchedulerBlockView<T, R>[];
   readonly shades: readonly SdSchedulerShade[];
+  /** Cells of a cell template on the week and month views (§8.5); `null` when blocks are drawn. */
+  readonly cells: readonly SdSchedulerCell<T, R>[] | null;
   readonly context: SdSchedulerResourceTemplateContext<R>;
+}
+
+/** @internal One cell of a cell template. */
+interface SdSchedulerCell<T, R> {
+  readonly day: string;
+  readonly label: string;
+  readonly events: readonly SdSchedulerEvent<T>[];
+  readonly off: boolean;
+  readonly today: boolean;
+  readonly context: SdSchedulerCellTemplateContext<T, R>;
 }
 
 /** @internal A group row. */
 interface SdSchedulerGroupRow {
   readonly kind: 'group';
   readonly key: string;
+  readonly headerId: string;
   readonly name: string;
   readonly count: number;
   readonly collapsed: boolean;
@@ -379,6 +396,8 @@ export class SdScheduler<T = unknown, R = unknown> {
   readonly #failure = signal<{ readonly id: string | null; readonly message: string } | null>(null);
   /** Dashed block of a create (§9.2): minutes (day view) or column indexes, both inclusive (week, month). */
   readonly #ghost = signal<SdSchedulerGhost | null>(null);
+  /** Keyboard cursor of the grid (§9.7): a row (`r:<id>` or `g:<group>`), a day and minutes of the day view. */
+  readonly #cursor = signal<{ readonly rowKey: string; readonly day: string; readonly minutes: number } | null>(null);
   /** A drag just ended: the click that follows its mouseup must not select. Reset on the next press. */
   #justDragged = false;
   /** Where the press that may start a drag happened (CDK's start event is the move that crossed the threshold). */
@@ -561,12 +580,13 @@ export class SdScheduler<T = unknown, R = unknown> {
     const { ungrouped, groups } = sdSchedulerGroups(this.resources());
     const collapsed = this.#collapsed();
     const rows: SdSchedulerRowView<T, R>[] = ungrouped.map(resource => this.#resourceRow(resource, null));
-    for (const group of groups) {
+    groups.forEach((group, index) => {
       const closed = collapsed.has(group.name);
       const countText = this.#i18n.t('core.component.scheduler.group-count', { count: group.resources.length });
       rows.push({
         kind: 'group',
         key: `g:${group.name}`,
+        headerId: `${this.baseId}-group-${index}`,
         name: group.name,
         count: group.resources.length,
         collapsed: closed,
@@ -575,7 +595,7 @@ export class SdScheduler<T = unknown, R = unknown> {
         countText,
       });
       if (!closed) rows.push(...group.resources.map(resource => this.#resourceRow(resource, group.name)));
-    }
+    });
     return rows;
   });
   /** First three resource rows: where the skeleton draws (§12). */
@@ -820,7 +840,10 @@ export class SdScheduler<T = unknown, R = unknown> {
     if (block) this.onItemKeydown(domEvent, block);
   }
 
-  /** Keys on a block (§9.7): Enter and Space select, Esc clears the selection and goes back to the grid. */
+  /**
+   * Keys on a block (§9.7): Enter and Space select, Esc clears the selection and goes back to the grid, Alt + ← →
+   * moves the time, Alt + Shift + ← → the end, Alt + ↑ ↓ the resource.
+   */
   protected onItemKeydown(domEvent: KeyboardEvent, block: SdSchedulerBlockView<T, R>): void {
     const key = domEvent.key;
     if (key === 'Enter' || key === ' ') {
@@ -833,7 +856,244 @@ export class SdScheduler<T = unknown, R = unknown> {
       domEvent.stopPropagation();
       this.selectedId.set(null);
       this.gridElement()?.nativeElement.focus();
+      return;
     }
+    if (!domEvent.altKey || !key.startsWith('Arrow')) return;
+    domEvent.preventDefault();
+    domEvent.stopPropagation();
+    const move = this.option().move;
+    if (!move) return;
+    const axis = move.axis ?? 'both';
+    const { placement, event } = block;
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      // §9.7: Alt + ↑ ↓ moves to the nearest resource droppable allows, collapsed groups included (Step 0 H4).
+      if (axis === 'time') return;
+      const ids = this.#resourceOrder();
+      const direction = key === 'ArrowDown' ? 1 : -1;
+      const same = ɵsdCalendarTargetOf(placement);
+      const next = sdSchedulerNextResource(ids, event.resourceId, direction, id => this.#droppable(event, { ...same, resourceId: id }));
+      if (!next) {
+        const neighbour = ids[ids.indexOf(event.resourceId) + direction];
+        this.#announceBlocked(neighbour ?? event.resourceId);
+        return;
+      }
+      void this.#runMove(event.id, { ...same, resourceId: next }, 'keyboard', true);
+      return;
+    }
+    if (axis === 'resource') return;
+    const forward = (key === 'ArrowRight') !== this.#rtl() ? 1 : -1;
+    const day = this.activeView() === 'day';
+    const step = this.stepValue();
+    let target: SdSchedulerTarget | null = null;
+    if (domEvent.shiftKey) {
+      // Alt + Shift + ← →: the end (§9.4), where the end handle is.
+      if (day && placement.inGrid) {
+        const end = ɵsdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, ɵsdCalendarMoveStep(step) * forward, step);
+        target = { ...ɵsdCalendarTargetOf(placement), endMinutes: end, resourceId: event.resourceId };
+      } else if (!day && placement.allDay) {
+        const lastDay = sdSchedulerResizeDays(placement.firstDay, placement.lastDay, forward, this.visible().to);
+        target = { ...ɵsdCalendarTargetOf(placement), endDay: lastDay, resourceId: event.resourceId };
+      }
+    } else if (day && placement.inGrid) {
+      target = this.#shiftTarget(placement, (forward * ɵsdCalendarMoveStep(step)) / 60, event.resourceId);
+    } else {
+      target = { ...ɵsdCalendarShiftDays(placement, forward), resourceId: event.resourceId };
+    }
+    if (target) void this.#runMove(event.id, target, domEvent.shiftKey ? 'resize' : 'keyboard', true);
+  }
+
+  // ---- grid keyboard (§9.7) ----
+
+  protected readonly cursor = this.#cursor.asReadonly();
+  /** `aria-activedescendant` of the grid: the track of the cursor row, its cell, or the header of a collapsed group. */
+  protected readonly cursorTarget = computed(() => {
+    const cursor = this.#cursor();
+    const row = cursor ? this.rows().find(item => item.key === cursor.rowKey) : null;
+    if (!cursor || !row) return null;
+    if (row.kind === 'group') return row.headerId;
+    return row.cells ? `${row.trackId}-${cursor.day}` : row.trackId;
+  });
+  protected readonly cursorLabel = computed(() => {
+    const cursor = this.#cursor();
+    const row = cursor ? this.rows().find(item => item.key === cursor.rowKey) : null;
+    if (!cursor || !row) return '';
+    if (row.kind === 'group') return row.label;
+    const formats = this.#formats();
+    const params = {
+      resource: row.resource.title,
+      weekday: ɵsdCalendarWeekdayLong(formats, cursor.day),
+      date: ɵsdCalendarDateText(formats, cursor.day, false),
+    };
+    return this.activeView() === 'day'
+      ? this.#i18n.t('core.component.scheduler.cursor-time', { ...params, time: ɵsdCalendarClockText(cursor.minutes) })
+      : this.#i18n.t('core.component.scheduler.cursor-day', params);
+  });
+  /** Inline start and size of the cursor in its row: one step (day view) or one column. */
+  protected readonly cursorBox = computed(() => {
+    const cursor = this.#cursor();
+    if (!cursor) return null;
+    if (this.activeView() === 'day') {
+      return {
+        start: `calc(var(--sd-scheduler-hour-width) * ${cursor.minutes / 60})`,
+        size: `calc(var(--sd-scheduler-hour-width) * ${this.stepValue() / 60})`,
+        text: ɵsdCalendarClockText(cursor.minutes),
+      };
+    }
+    const columns = this.columns();
+    const column = Math.max(0, columns.indexOf(cursor.day));
+    const box = sdSchedulerColumnBox({ from: column, to: column }, columns.length);
+    return { start: `${box.start * 100}%`, size: `${box.size * 100}%`, text: '' };
+  });
+
+  /** The cursor starts on the first resource, on the anchor day (or the first column), at its working hour. */
+  protected onGridFocus(): void {
+    const cursor = this.#cursor();
+    const rows = this.#cursorRows();
+    const columns = this.columns();
+    if (cursor && rows.some(row => row.key === cursor.rowKey) && columns.includes(cursor.day)) return;
+    const first = rows.find(row => row.kind === 'resource') ?? rows[0];
+    if (!first) return;
+    const day = columns.includes(this.#anchor()) ? this.#anchor() : columns[0];
+    this.#cursor.set({ rowKey: first.key, day, minutes: this.#workStart(first, day) });
+  }
+
+  protected onGridKeydown(domEvent: KeyboardEvent): void {
+    if (domEvent.target !== domEvent.currentTarget) return;
+    this.onGridFocus();
+    const cursor = this.#cursor();
+    if (!cursor) return;
+    const rows = this.#cursorRows();
+    const index = Math.max(
+      0,
+      rows.findIndex(row => row.key === cursor.rowKey)
+    );
+    const row = rows[index];
+    const step = this.stepValue();
+    const day = this.activeView() === 'day';
+    const columns = this.columns();
+    const key = domEvent.key;
+    let next = { ...cursor };
+    switch (key) {
+      case 'ArrowLeft':
+      case 'ArrowRight': {
+        const forward = (key === 'ArrowRight') !== this.#rtl() ? 1 : -1;
+        if (day) {
+          const minutes = cursor.minutes + forward * step;
+          if (minutes >= 0 && minutes <= 1440 - step) next.minutes = minutes;
+          else {
+            // Past the edge of the day: the next or previous day, at its first or last slot.
+            this.shift(forward);
+            next = { ...next, day: this.columns()[0], minutes: forward > 0 ? 0 : 1440 - step };
+          }
+        } else {
+          const column = columns.indexOf(cursor.day) + forward;
+          if (column >= 0 && column < columns.length) next.day = columns[column];
+          else {
+            this.shift(forward);
+            const shifted = this.columns();
+            next.day = forward > 0 ? shifted[0] : shifted[shifted.length - 1];
+          }
+        }
+        break;
+      }
+      case 'ArrowUp':
+      case 'ArrowDown':
+        next.rowKey = rows[Math.min(rows.length - 1, Math.max(0, index + (key === 'ArrowDown' ? 1 : -1)))].key;
+        break;
+      case 'Home':
+      case 'End': {
+        if (domEvent.ctrlKey || domEvent.metaKey) {
+          const resources = rows.filter(item => item.kind === 'resource');
+          next.rowKey = (key === 'Home' ? resources[0] : resources[resources.length - 1])?.key ?? next.rowKey;
+        } else if (day) {
+          next.minutes = key === 'Home' ? this.#workStart(row, cursor.day) : this.#workEnd(row, cursor.day);
+        } else {
+          next.day = key === 'Home' ? columns[0] : columns[columns.length - 1];
+        }
+        break;
+      }
+      case 'PageUp':
+      case 'PageDown': {
+        this.shift(key === 'PageDown' ? 1 : -1);
+        const shifted = this.columns();
+        next.day = day ? shifted[0] : (shifted[columns.indexOf(cursor.day)] ?? shifted[0]);
+        break;
+      }
+      case 't':
+      case 'T':
+        this.goToday();
+        next.day = this.today();
+        break;
+      case 'Enter':
+      case ' ':
+        domEvent.preventDefault();
+        if (domEvent.altKey && key === 'Enter') {
+          // Alt + Enter: collapse the group of the resource under the cursor, or open the collapsed group.
+          const group = row.kind === 'group' ? row.name : row.group;
+          if (!group) return;
+          this.toggleGroup(group);
+          this.#cursor.set({ ...cursor, rowKey: `g:${group}` });
+          return;
+        }
+        if (row.kind === 'resource') this.#activateSlot(row, cursor);
+        return;
+      default:
+        return;
+    }
+    domEvent.preventDefault();
+    this.#cursor.set(next);
+    afterNextRender(() => this.#revealCursor(), { injector: this.#injector });
+    this.#announcer.announce(untracked(this.cursorLabel));
+  }
+
+  protected onCellClick(row: SdSchedulerResourceRow<T, R>, cell: SdSchedulerCell<T, R>): void {
+    this.#activateSlot(row, { day: cell.day, minutes: 0 });
+  }
+
+  /** Rows the cursor stops at: resources on screen and collapsed group rows (§9.7). */
+  #cursorRows(): readonly SdSchedulerRowView<T, R>[] {
+    return this.rows().filter(row => row.kind === 'resource' || row.collapsed);
+  }
+
+  /** Start of the working day of the row's resource, on a slot; 08:00 without working hours. */
+  #workStart(row: SdSchedulerRowView<T, R>, day: string): number {
+    const hours = row.kind === 'resource' ? this.#hoursOf(row.resource) : this.#workingHours();
+    const start =
+      ɵsdCalendarWorkingRanges(hours, ɵsdCalendarWeekday(day))?.[0]?.start ?? ɵsdCalendarTimeToMinutes(ɵSD_CALENDAR_DEFAULTS.scrollTime)!;
+    return ɵsdCalendarSlot(start, this.stepValue()).start;
+  }
+
+  /** Last slot before the end of the working day of the row's resource (§9.7, SCH-C-13). */
+  #workEnd(row: SdSchedulerRowView<T, R>, day: string): number {
+    const hours = row.kind === 'resource' ? this.#hoursOf(row.resource) : this.#workingHours();
+    const working = ɵsdCalendarWorkingRanges(hours, ɵsdCalendarWeekday(day)) ?? [];
+    const end = working[working.length - 1]?.end ?? 1440;
+    return ɵsdCalendarSlot(end - this.stepValue(), this.stepValue()).start;
+  }
+
+  /** Enter or Space on a slot: a cell with events emits `sdCellSelect`; otherwise one step or one day is created. */
+  #activateSlot(row: SdSchedulerResourceRow<T, R>, cursor: { readonly day: string; readonly minutes: number }): void {
+    const cell = row.cells?.find(item => item.day === cursor.day);
+    if (cell?.events.length) {
+      this.sdCellSelect.emit({ resource: row.resource, date: cell.day, events: cell.events });
+      return;
+    }
+    if (this.activeView() === 'day') {
+      void this.#create(row.resource.id, { start: cursor.minutes, end: Math.min(1440, cursor.minutes + this.stepValue()) });
+      return;
+    }
+    const column = this.columns().indexOf(cursor.day);
+    void this.#create(row.resource.id, { start: column, end: column });
+  }
+
+  #revealCursor(): void {
+    this.#host.nativeElement.querySelector<HTMLElement>('[data-cursor]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
+
+  /** Every resource in row order, those of collapsed groups included. */
+  #resourceOrder(): string[] {
+    const { ungrouped, groups } = sdSchedulerGroups(this.resources());
+    return [...ungrouped, ...groups.flatMap(group => group.resources)].map(resource => resource.id);
   }
 
   #blockAt(target: EventTarget | null, row: SdSchedulerResourceRow<T, R>): SdSchedulerBlockView<T, R> | null {
@@ -845,7 +1105,8 @@ export class SdScheduler<T = unknown, R = unknown> {
   // ---- create (§9.2) ----
 
   protected onTrackPointerDown(domEvent: PointerEvent, resourceId: string): void {
-    if (!domEvent.isPrimary || domEvent.button !== 0) return;
+    // §8.5: with a cell template the cells take the click (onCellClick).
+    if (!domEvent.isPrimary || domEvent.button !== 0 || this.cellTemplateActive()) return;
     const target = domEvent.target as Element;
     if (target.closest('[data-event-id], [data-resize-handle]')) return;
     const track = domEvent.currentTarget as HTMLElement;
@@ -1519,19 +1780,47 @@ export class SdScheduler<T = unknown, R = unknown> {
     for (const entry of laid) if (entry.item.pending) blocks.push(this.#blockView(entry, resource, 0, layout.count));
     const token = encodeURIComponent(resource.id);
     const root = this.rootAutoId();
+    const cells = this.cellTemplateActive() ? this.#cells(resource, placed) : null;
     return {
       kind: 'resource',
       key: `r:${resource.id}`,
       resource,
       group,
-      height: sdSchedulerRowHeight(layout.count),
+      height: sdSchedulerRowHeight(cells ? 1 : layout.count),
       headerId: `${this.baseId}-resource-${token}`,
+      trackId: `${this.baseId}-track-${token}`,
       autoId: root ? `${root}-resource-${token}` : null,
       token,
-      blocks,
+      // §8.5: a cell template draws cells; no blocks, no drag, no resize.
+      blocks: cells ? [] : blocks,
       shades: this.#shades(resource),
+      cells,
       context: { $implicit: resource, resource, group, compact: this.compact() },
     };
+  }
+
+  /** Cells of a cell template: one per resource and day on screen, with the events that touch that day. */
+  #cells(resource: SdSchedulerResource<R>, placed: readonly SdSchedulerPlaced<T>[]): readonly SdSchedulerCell<T, R>[] {
+    const hours = this.#hoursOf(resource);
+    const formats = this.#formats();
+    return this.columns().map(day => {
+      const events = placed.filter(({ placement }) => placement.firstDay <= day && placement.lastDay >= day).map(({ event }) => event);
+      const holiday = this.#holidays().get(day) ?? null;
+      const today = day === this.today();
+      const off = this.#offDay(day, hours);
+      return {
+        day,
+        label: this.#i18n.t('core.component.scheduler.cursor-day', {
+          resource: resource.title,
+          weekday: ɵsdCalendarWeekdayLong(formats, day),
+          date: ɵsdCalendarDateText(formats, day, false),
+        }),
+        events,
+        off,
+        today,
+        context: { $implicit: day, date: day, resource, events, holiday, today, off },
+      };
+    });
   }
 
   /** Off hours (day view) or days off (week, month) of a resource, merged into spans (§7). */

@@ -7,6 +7,7 @@
 @let _canCreate = canCreate();
 @let _proposal = dragProposal();
 @let _lockAxis = lockAxis();
+@let _cursor = cursor();
 <section
   #root
   class="sd-scheduler"
@@ -135,8 +136,11 @@
         data-region="grid"
         [attr.aria-label]="regionLabel() + ', ' + title()"
         [attr.aria-describedby]="gridHelpId"
+        [attr.aria-activedescendant]="cursorTarget()"
         [attr.aria-busy]="busy() || null"
-        [attr.aria-disabled]="_disabled || null">
+        [attr.aria-disabled]="_disabled || null"
+        (focus)="onGridFocus()"
+        (keydown)="onGridKeydown($event)">
         <div class="sd-scheduler__head" role="rowgroup">
           <div class="sd-scheduler__head-row" role="row">
             <div class="sd-scheduler__corner" role="columnheader" data-corner>
@@ -187,7 +191,11 @@
             @for (row of rows(); track row.key) {
               @if (row.kind === 'group') {
                 <div class="sd-scheduler__group" role="row" [attr.data-group]="row.name" [attr.data-collapsed]="row.collapsed || null">
-                  <div class="sd-scheduler__group-cell" role="rowheader">
+                  <div
+                    class="sd-scheduler__group-cell"
+                    role="rowheader"
+                    [id]="row.headerId"
+                    [attr.data-cursor-row]="_cursor?.rowKey === row.key || null">
                     <button
                       type="button"
                       class="sd-scheduler__group-button"
@@ -235,8 +243,11 @@
                   <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
                   <div
                     class="sd-scheduler__track"
-                    role="gridcell"
                     data-track
+                    [id]="row.trackId"
+                    [attr.role]="row.cells ? 'presentation' : 'gridcell'"
+                    [attr.aria-label]="!row.cells && _cursor?.rowKey === row.key ? cursorLabel() : null"
+                    [class.sd-scheduler__track--cells]="!!row.cells"
                     [class.sd-scheduler__track--create]="_canCreate"
                     [class.sd-scheduler__track--blocked]="!!_ghost?.blocked && _ghost?.resourceId === row.resource.id"
                     [attr.data-resource-id]="row.resource.id"
@@ -250,6 +261,30 @@
                     (keydown)="onTrackKeydown($event, row)">
                     @for (shade of row.shades; track shade.key) {
                       <div class="sd-scheduler__off" data-off-hours aria-hidden="true" [style.inset-inline-start]="shade.start" [style.inline-size]="shade.size"></div>
+                    }
+                    @if (row.cells) {
+                      @for (cell of row.cells; track cell.day) {
+                        <!-- why: a cell is reached with the grid cursor (aria-activedescendant + Enter), not with Tab. -->
+                        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                        <div
+                          class="sd-scheduler__cell"
+                          role="gridcell"
+                          [id]="row.trackId + '-' + cell.day"
+                          [attr.aria-label]="cell.label"
+                          [attr.data-date]="cell.day"
+                          [attr.data-resource-id]="row.resource.id"
+                          [attr.data-off]="cell.off || null"
+                          [attr.data-today]="cell.today || null"
+                          [attr.data-cursor-cell]="(_cursor?.rowKey === row.key && _cursor?.day === cell.day) || null"
+                          (click)="onCellClick(row, cell)">
+                          <ng-container [ngTemplateOutlet]="cellTemplate()!.template" [ngTemplateOutletContext]="cell.context" />
+                        </div>
+                      }
+                    }
+                    @if (_cursor?.rowKey === row.key && cursorBox(); as _cursorBox) {
+                      <div class="sd-scheduler__cursor" data-cursor aria-hidden="true" [style.inset-inline-start]="_cursorBox.start" [style.inline-size]="_cursorBox.size">
+                        {{ _cursorBox.text }}
+                      </div>
                     }
                     @if (skeleton() && skeletonRows().has(row.key)) {
                       @let _shape = skeletonShapes[skeletonRows().get(row.key)!];

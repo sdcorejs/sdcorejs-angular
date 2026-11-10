@@ -819,6 +819,67 @@ $hour: var(--sd-scheduler-hour-width);
   }
 }
 
+// ---- keyboard cursor (§9.7) and cell template (§8.5) ----
+.sd-scheduler__cursor {
+  position: absolute;
+  inset-block: 6px;
+  z-index: 5;
+  display: none;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 2px solid tok(focus-ring-color);
+  border-radius: radius(4);
+  background: color-mix(in srgb, #{tok(primary)} 8%, transparent);
+  font-size: fs(10);
+  line-height: lh(12);
+  font-weight: $medium;
+  pointer-events: none;
+
+  .sd-scheduler__grid:focus-visible & {
+    display: block;
+  }
+}
+
+.sd-scheduler__grid:focus-visible [data-cursor-row] {
+  outline: 2px solid tok(focus-ring-color);
+  outline-offset: -2px;
+}
+
+.sd-scheduler__scroller {
+  // Keyboard scrolling keeps the cursor out from under the sticky axis and resource column.
+  scroll-padding-block-start: 48px;
+  scroll-padding-inline-start: var(--sd-scheduler-resource-width);
+}
+
+.sd-scheduler__track--cells {
+  display: grid;
+  grid-template-columns: repeat(var(--sd-scheduler-columns), minmax(0, 1fr));
+}
+
+.sd-scheduler__cell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  cursor: pointer;
+
+  &[data-cursor-cell] {
+    .sd-scheduler__grid:focus-visible & {
+      outline: 2px solid tok(focus-ring-color);
+      outline-offset: -3px;
+    }
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__cell:hover {
+    background: color-mix(in srgb, #{tok(text)} 4%, transparent);
+  }
+}
+
 // ---- create (§9.2) ----
 .sd-scheduler__track--create {
   cursor: cell;
