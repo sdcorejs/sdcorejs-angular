@@ -461,10 +461,6 @@ $hour: var(--sd-scheduler-hour-width);
   height: 4px;
   border-radius: radius(999);
   background: tok(text-secondary);
-
-  .sd-scheduler__scroller:not([data-view='month']) & {
-    display: none;
-  }
 }
 
 // ---- rows ----
@@ -820,6 +816,40 @@ $hour: var(--sd-scheduler-hour-width);
 @keyframes sd-scheduler-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+// ---- create (§9.2) ----
+.sd-scheduler__track--create {
+  cursor: cell;
+}
+
+// A sweep that creatable refuses shows the not-allowed cursor.
+.sd-scheduler__track--blocked {
+  cursor: not-allowed;
+}
+
+.sd-scheduler__ghost {
+  position: absolute;
+  top: 10px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: var(--sd-scheduler-lane-height);
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px dashed tok(primary);
+  border-radius: var(--sd-scheduler-event-radius);
+  background: color-mix(in srgb, #{tok(primary-light)} 92%, transparent);
+  font-size: fs(12);
+  line-height: lh(16);
+  white-space: nowrap;
+  pointer-events: none;
+
+  &[data-blocked] {
+    border-color: tok(border-strong);
   }
 }
 

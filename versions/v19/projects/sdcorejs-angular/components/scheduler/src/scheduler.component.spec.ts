@@ -276,7 +276,10 @@ describe('SdScheduler · rendering and data source', () => {
     it(
       '[SCH-SC-16] never shows the text of a load error',
       run(() => {
-        const { host } = renderScheduler({ option: { dataSource: { onLoad: () => Promise.reject('SECRET') } } });
+        const { host, loadErrors } = renderScheduler({ option: { dataSource: { onLoad: () => Promise.reject('SECRET') } } });
+        // R1 #3: the error branch ran, and still shows nothing of the error.
+        expect(q(host, '[data-band="load-error"]')).withContext('the load error band').not.toBeNull();
+        expect(loadErrors).toEqual(['SECRET']);
         expect(host.textContent).not.toContain('SECRET');
         expect(host.innerHTML).not.toContain('SECRET');
       })
@@ -289,9 +292,7 @@ describe('SdScheduler · rendering and data source', () => {
       run(() => {
         const { host } = renderScheduler();
         expect(groupRows(host)).toEqual(['Tầng 3', 'Tầng 5']);
-        const order = qa(host, '[role="rowgroup"].sd-scheduler__body > [role="row"]').map(
-          row => row.dataset['group'] ?? row.dataset['resourceId']
-        );
+        const order = qa(host, '[data-rows] > [role="row"]').map(row => row.dataset['group'] ?? row.dataset['resourceId']);
         expect(order).toEqual(['hall', 'Tầng 3', 'hue', 'hoi-an', 'Tầng 5', 'can-tho', 'da-lat']);
         const group = q<HTMLButtonElement>(host, '[data-group="Tầng 3"] button')!;
         expect(text(group)).toContain('2 tài nguyên');
@@ -347,6 +348,46 @@ describe('SdScheduler · rendering and data source', () => {
         );
         settle();
         expect(invalid()).withContext('duplicate event id').toBeTrue();
+      })
+    );
+
+    it(
+      '[SCH-SC-01] leaves out an event with an unreadable date and warns once (R1 #4)',
+      run(() => {
+        const warn = spyOn(console, 'warn');
+        const events = (): Events => [
+          ...bookings(),
+          { id: 'broken', title: 'Hỏng', resourceId: 'hue', start: 'not a date', end: '2026/11/09 10:00:00' },
+        ];
+        const { host, scheduler, settle } = renderScheduler({ option: clientOption(events) });
+        expect(block(host, 'broken')).toBeNull();
+        expect(q(host, 'sd-data-state')).withContext('not invalid data').toBeNull();
+        scheduler.reload();
+        settle();
+        expect(warn.calls.allArgs().filter(args => String(args[0]).includes('"broken" has an unreadable date')).length).toBe(1);
+      })
+    );
+
+    it(
+      '[SCH-C-13] warns once for a step that is not a divisor of 60 and for broken working hours (R1 #4)',
+      run(() => {
+        const warn = spyOn(console, 'warn');
+        const resources: SdSchedulerResource<Room>[] = [
+          ...rooms(),
+          { id: 'odd', title: 'Lệch', workingHours: { 2: [{ from: '18:00', to: '09:00' }] } },
+        ];
+        const { host } = renderScheduler({ step: 7, workingHours: { 1: [{ from: '08:00' } as never] }, resources });
+        const messages = warn.calls.allArgs().map(args => String(args[0]));
+        expect(messages.filter(message => message.includes('step 7'))).toEqual([
+          '[sd-scheduler] step 7 is not one of 5, 10, 15, 20, 30, 60; 30 is used.',
+        ]);
+        expect(messages.filter(message => message.startsWith('[sd-scheduler] workingHours[1] has')))
+          .withContext('component')
+          .toHaveSize(1);
+        expect(messages.filter(message => message.includes('workingHours[2] of resource "odd"')))
+          .withContext('resource')
+          .toHaveSize(1);
+        expect(qa(host, '[data-axis-hour]').length).withContext('still renders').toBe(24);
       })
     );
 

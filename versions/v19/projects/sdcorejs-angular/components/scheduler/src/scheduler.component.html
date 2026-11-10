@@ -3,6 +3,8 @@
 @let _selected = selectedId();
 @let _failure = failure();
 @let _days = dayViews();
+@let _ghost = ghost();
+@let _canCreate = canCreate();
 <section
   #root
   class="sd-scheduler"
@@ -93,6 +95,7 @@
       [attr.data-view]="_view"
       [style.--sd-scheduler-columns]="_days.length">
       <div
+        #grid
         class="sd-scheduler__grid"
         role="grid"
         tabindex="0"
@@ -126,7 +129,7 @@
                     <button type="button" class="sd-scheduler__day-number" tabindex="-1" [attr.aria-label]="day.openLabel" (click)="openDay(day.day)">
                       {{ day.dayNumber }}
                     </button>
-                    @if (day.holiday?.type === 'observance') {
+                    @if (_view === 'month' && day.holiday?.type === 'observance') {
                       <span class="sd-scheduler__holiday-dot" data-holiday-dot aria-hidden="true"></span>
                     }
                   </div>
@@ -135,7 +138,7 @@
             </div>
           </div>
         </div>
-        <div class="sd-scheduler__body" role="rowgroup">
+        <div class="sd-scheduler__body" role="rowgroup" data-rows>
           @if (empty()) {
             <div class="sd-scheduler__empty-row" role="row">
               <div class="sd-scheduler__empty" role="gridcell" data-empty>
@@ -192,7 +195,24 @@
                       </span>
                     }
                   </div>
-                  <div class="sd-scheduler__track" role="gridcell" data-track [attr.data-resource-id]="row.resource.id">
+                  <!-- why: one set of listeners per row instead of per block (Step 0 H6, way 2); blocks are found by data-event-id.
+                       The row itself is not a tab stop: the grid is (aria-activedescendant), and blocks are buttons. -->
+                  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+                  <div
+                    class="sd-scheduler__track"
+                    role="gridcell"
+                    data-track
+                    [class.sd-scheduler__track--create]="_canCreate"
+                    [class.sd-scheduler__track--blocked]="!!_ghost?.blocked && _ghost?.resourceId === row.resource.id"
+                    [attr.data-resource-id]="row.resource.id"
+                    (pointerdown)="onTrackPointerDown($event, row.resource.id)"
+                    (pointermove)="onTrackPointerMove($event)"
+                    (pointerup)="onTrackPointerUp()"
+                    (pointercancel)="onTrackPointerCancel()"
+                    (mousedown)="onTrackPress($event)"
+                    (touchstart)="onTrackPress($event)"
+                    (click)="onTrackClick($event, row)"
+                    (keydown)="onTrackKeydown($event, row)">
                     @for (shade of row.shades; track shade.key) {
                       <div class="sd-scheduler__off" data-off-hours aria-hidden="true" [style.inset-inline-start]="shade.start" [style.inline-size]="shade.size"></div>
                     }
@@ -252,6 +272,25 @@
                           }
                         }
                         @if (block.saving) {
+                          <sd-icon class="sd-scheduler__sync" name="sync" size="14px" aria-hidden="true" />
+                        }
+                      </div>
+                    }
+                    @if (_ghost && _ghost.resourceId === row.resource.id) {
+                      @let _box = ghostBox(_ghost);
+                      <div
+                        class="sd-scheduler__ghost"
+                        data-create-ghost
+                        aria-hidden="true"
+                        [attr.data-pending]="_ghost.pending || null"
+                        [attr.data-blocked]="_ghost.blocked || null"
+                        [style.inset-inline-start]="_box.start"
+                        [style.inline-size]="_box.size">
+                        <span class="sd-scheduler__event-title">{{ 'core.component.calendar.new-event' | sdTranslate }}</span>
+                        @if (_box.time) {
+                          <span class="sd-scheduler__event-time">{{ _box.time }}</span>
+                        }
+                        @if (_ghost.pending) {
                           <sd-icon class="sd-scheduler__sync" name="sync" size="14px" aria-hidden="true" />
                         }
                       </div>

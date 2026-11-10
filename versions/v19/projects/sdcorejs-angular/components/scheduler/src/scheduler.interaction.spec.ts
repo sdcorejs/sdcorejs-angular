@@ -200,7 +200,13 @@ describe('SdScheduler · selection and create', () => {
     it(
       '[SCH-SC-19] inserts the created event and selects it without sdSelect',
       run(() => {
-        const created: SdSchedulerEvent<Booking> = { id: 'new', title: 'Mới', resourceId: 'hall', start: '2026/11/09 13:00:00', end: '2026/11/09 13:30:00' };
+        const created: SdSchedulerEvent<Booking> = {
+          id: 'new',
+          title: 'Mới',
+          resourceId: 'hall',
+          start: '2026/11/09 13:00:00',
+          end: '2026/11/09 13:30:00',
+        };
         const rendered = renderScheduler({ option: creating(async () => created) });
         const { host, scheduler, settle } = rendered;
         const selected = jasmine.createSpy('sdSelect');

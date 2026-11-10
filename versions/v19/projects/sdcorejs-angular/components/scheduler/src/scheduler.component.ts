@@ -13,7 +13,6 @@ import {
   effect,
   inject,
   input,
-  isDevMode,
   model,
   output,
   signal,
@@ -24,11 +23,20 @@ import {
   SD_CALENDAR_CONFIGURATION,
   ɵSD_CALENDAR_DEFAULTS,
   ɵSdCalendarAnnouncer,
+  ɵSdCalendarHostWidth,
   ɵSdCalendarLoader,
+  ɵSdCalendarMinuteTimer,
   ɵSdCalendarOperation,
+  ɵSdCalendarReporter,
   ɵsdCalendarAllows,
   ɵsdCalendarBoundDay,
+  ɵsdCalendarBrokenWeekdays,
   ɵsdCalendarCarrierDay,
+  ɵsdCalendarColor,
+  ɵsdCalendarInvalidItems,
+  ɵsdCalendarIsOffDay,
+  ɵsdCalendarIsRtl,
+  ɵsdCalendarSelectionGone,
   ɵsdCalendarClockText,
   ɵsdCalendarDateText,
   ɵsdCalendarDayParts,
@@ -37,6 +45,7 @@ import {
   ɵsdCalendarNormalizeStep,
   ɵsdCalendarOffSegments,
   ɵsdCalendarPlace,
+  ɵsdCalendarPointOf,
   ɵsdCalendarRangeKey,
   ɵsdCalendarRangeOf,
   ɵsdCalendarReadDay,
@@ -45,6 +54,8 @@ import {
   ɵsdCalendarResolveWorkingHours,
   ɵsdCalendarSameList,
   ɵsdCalendarShiftDate,
+  ɵsdCalendarSlot,
+  ɵsdCalendarSweep,
   ɵsdCalendarTimeToMinutes,
   ɵsdCalendarTitle,
   ɵsdCalendarWeekday,
@@ -55,6 +66,7 @@ import {
   type SdCalendarWorkingHours,
   type ɵSdCalendarPlacement,
   type ɵSdCalendarSpan,
+  type ɵSdCalendarTarget,
 } from '@sdcorejs/angular/components/calendar';
 import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 import { SdDataState } from '@sdcorejs/angular/components/data-state';
@@ -64,6 +76,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type {
   SdSchedulerCellSelect,
+  SdSchedulerCreateContext,
   SdSchedulerEvent,
   SdSchedulerMoveError,
   SdSchedulerMoveRequest,
@@ -97,8 +110,9 @@ import {
 } from './scheduler.utils';
 
 const ALL_VIEWS: readonly SdSchedulerView[] = ['day', 'week', 'month'];
-const PALETTE = new Set(['primary', 'secondary', 'info', 'success', 'warning', 'error']);
 const MINUTE = 60_000;
+/** Pointer travel (px) under which a press is a click (§9.1). */
+const CLICK_SLOP = 5;
 /** Sizes of §7 and §11, used until the real ones are measured on the rendered element. */
 const SIZES = { hour: 80, resource: 240, day: 120, month: 28 } as const;
 const COMPACT_SIZES = { hour: 64, resource: 120, day: 96, month: 28 } as const;
@@ -199,6 +213,15 @@ interface SdSchedulerGroupRow {
 
 type SdSchedulerRowView<T, R> = SdSchedulerResourceRow<T, R> | SdSchedulerGroupRow;
 
+/** @internal The dashed block of a create: `[start, end)` minutes on the day view, `[start, end]` columns otherwise. */
+interface SdSchedulerGhost {
+  readonly resourceId: string;
+  readonly start: number;
+  readonly end: number;
+  readonly pending: boolean;
+  readonly blocked: boolean;
+}
+
 @Component({
   selector: 'sd-scheduler',
   standalone: true,
@@ -215,7 +238,7 @@ export class SdScheduler<T = unknown, R = unknown> {
   readonly #zone = inject(NgZone);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
-  readonly #reported = new Set<string>();
+  readonly #reporter = new ɵSdCalendarReporter('[sd-scheduler]');
   protected readonly baseId = `sd-scheduler-${nextSchedulerId++}`;
 
   /** Data source and capabilities. A new object is the signal to load again. */
@@ -279,19 +302,37 @@ export class SdScheduler<T = unknown, R = unknown> {
   protected readonly cellTemplate = contentChild<SdSchedulerCellTemplateDirective<T, R>>(SdSchedulerCellTemplateDirective);
   protected readonly emptyTemplate = contentChild(SdSchedulerEmptyTemplateDirective);
   protected readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
+  protected readonly gridElement = viewChild<ElementRef<HTMLElement>>('grid');
   protected readonly root = viewChild<ElementRef<HTMLElement>>('root');
 
   readonly #loader = new ɵSdCalendarLoader<SdSchedulerEvent<T>>();
   readonly #operation = new ɵSdCalendarOperation<'create' | 'move'>();
   readonly #announcer = new ɵSdCalendarAnnouncer();
   readonly #now = signal<Date>(this.#clock.now());
-  readonly #width = signal<number | null>(null);
+  readonly #hostWidth = new ɵSdCalendarHostWidth(this.#host.nativeElement, this.#zone);
+  readonly #width = this.#hostWidth.width;
+  readonly #timer = new ɵSdCalendarMinuteTimer(this.#zone, () => this.#now.set(this.#clock.now()));
   readonly #sizes = signal<{ readonly hour: number; readonly resource: number; readonly day: number; readonly month: number }>(SIZES);
   /** Collapsed groups (§10): kept across ranges and views, pruned when `resources` drops a group. */
   readonly #collapsed = signal<ReadonlySet<string>>(new Set());
   /** Move waiting for `onMove`: the event is drawn at its target. */
   readonly #moving = signal<{ readonly id: string; readonly event: SdSchedulerEvent<T>; readonly saving: boolean } | null>(null);
   readonly #failure = signal<{ readonly id: string | null; readonly message: string } | null>(null);
+  /** Dashed block of a create (§9.2): minutes (day view) or column indexes, both inclusive (week, month). */
+  readonly #ghost = signal<SdSchedulerGhost | null>(null);
+  /** A drag just ended: the click that follows its mouseup must not select. Reset on the next press. */
+  #justDragged = false;
+  /** Where the press that may start a drag happened (CDK's start event is the move that crossed the threshold). */
+  #pickup: { readonly x: number; readonly y: number } | null = null;
+  #press: {
+    readonly resourceId: string;
+    readonly anchor: number;
+    readonly x: number;
+    readonly y: number;
+    readonly touch: boolean;
+    readonly track: HTMLElement;
+    moved: boolean;
+  } | null = null;
   #emittedKey: string | null = null;
   #lastOption: SdSchedulerOption<T, R> | null = null;
   #lastResources: readonly SdSchedulerResource<R>[] | null = null;
@@ -366,32 +407,22 @@ export class SdScheduler<T = unknown, R = unknown> {
   });
 
   /** Duplicate or empty ids, or an empty title, in `resources` or in the loaded events: nothing is shown (§12). */
-  protected readonly invalid = computed(() => {
-    const ids = new Set<string>();
-    for (const resource of this.resources()) {
-      if (
-        typeof resource.id !== 'string' ||
-        !resource.id ||
-        ids.has(resource.id) ||
-        typeof resource.title !== 'string' ||
-        !resource.title.trim()
-      )
-        return true;
-      ids.add(resource.id);
-    }
-    const seen = new Set<string>();
-    for (const event of this.#loader.items()) {
-      if (typeof event.id !== 'string' || !event.id || seen.has(event.id) || typeof event.title !== 'string' || !event.title.trim())
-        return true;
-      seen.add(event.id);
-    }
-    return false;
-  });
+  protected readonly invalid = computed(() => ɵsdCalendarInvalidItems(this.resources()) || ɵsdCalendarInvalidItems(this.#loader.items()));
   protected readonly empty = computed(() => !this.resources().length);
   /** No create and no move: disabled, readonly, loading, load error, invalid data or no resources (§4.1). */
   protected readonly locked = computed(
     () => this.disabled() || this.readonly() || this.busy() || this.#loader.phase() === 'error' || this.invalid() || this.empty()
   );
+
+  /** A cell template applies to the view on screen: cells instead of blocks, no drag (§8.5). */
+  protected readonly cellTemplateActive = computed(() => {
+    const template = this.cellTemplate();
+    const view = this.activeView();
+    return !!template && view !== 'day' && template.views().includes(view);
+  });
+  /** Create is on: `option.create` and not locked. */
+  protected readonly canCreate = computed(() => !!this.option().create && !this.locked());
+  protected readonly ghost = this.#ghost.asReadonly();
 
   readonly #resourceById = computed(() => new Map(this.resources().map(resource => [resource.id, resource])));
   /** Effective working hours of a resource: its own (even `null`) when it declares them, otherwise the component's. */
@@ -479,7 +510,7 @@ export class SdScheduler<T = unknown, R = unknown> {
 
     // why: one effect owns loading and the range output, so a range emits once and only together with its load.
     effect(() => {
-      untracked(() => this.#measureOnce());
+      untracked(() => this.#hostWidth.measureOnce());
       const option = this.option();
       const resources = this.resources();
       const range = this.visible();
@@ -496,7 +527,7 @@ export class SdScheduler<T = unknown, R = unknown> {
           this.#pruneGroups(resources);
         }
         // SC-15: a new source also aborts a waiting create; a range change or a reload aborts a waiting move only.
-        if (changedSource) this.#operation.abort(['create']);
+        if (changedSource && this.#operation.abort(['create'])) this.#ghost.set(null);
         this.#lastOption = option;
         this.#lastResources = resources;
         this.#startLoad(option, resources, range);
@@ -518,20 +549,17 @@ export class SdScheduler<T = unknown, R = unknown> {
       }
     });
 
+    // The working hours of the component, then those of each resource that has its own.
     effect(() => {
-      const checks: [string, SdCalendarWorkingHours | null][] = [['', this.#workingHours()]];
-      for (const resource of this.resources()) if (resource.workingHours) checks.push([`${resource.id}:`, resource.workingHours]);
-      for (const [scope, hours] of checks) {
-        if (!hours) continue;
-        for (const [weekday, ranges] of Object.entries(hours)) {
-          const kept = ɵsdCalendarWorkingRanges(hours, Number(weekday))?.length ?? 0;
-          if (kept !== (ranges ?? []).length) {
-            this.#report(
-              'warn',
-              `hours:${scope}${weekday}`,
-              `workingHours[${weekday}]${scope ? ` of resource "${scope.slice(0, -1)}"` : ''} has a range without both ends or that does not end after it starts; it is ignored.`
-            );
-          }
+      const scopes: [string, SdCalendarWorkingHours | null | undefined][] = [['', this.#workingHours()]];
+      for (const resource of this.resources()) scopes.push([resource.id, resource.workingHours]);
+      for (const [resourceId, hours] of scopes) {
+        for (const weekday of ɵsdCalendarBrokenWeekdays(hours)) {
+          this.#report(
+            'warn',
+            `hours:${resourceId}:${weekday}`,
+            `workingHours[${weekday}]${resourceId ? ` of resource "${resourceId}"` : ''} has a range without both ends or that does not end after it starts; it is ignored.`
+          );
         }
       }
     });
@@ -542,16 +570,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     });
 
     // why: the timer only runs while today is on the day view, and outside the zone so it does not tick change detection.
-    let timer: ReturnType<typeof setInterval> | null = null;
-    const stopTimer = (): void => {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
-    };
-    effect(() => {
-      if (this.nowOffset() === null) return stopTimer();
-      if (timer !== null) return;
-      timer = this.#zone.runOutsideAngular(() => setInterval(() => this.#zone.run(() => this.#now.set(this.#clock.now())), MINUTE));
-    });
+    effect(() => this.#timer.run(this.nowOffset() !== null));
 
     // §6: the day view scrolls to scrollTime when it opens (init or from another view), not when only the day changes;
     // the week and month views bring today's column into view when it is hidden. The vertical scroll is kept.
@@ -583,25 +602,16 @@ export class SdScheduler<T = unknown, R = unknown> {
     });
 
     effect(() => {
-      const selected = this.selectedId();
-      if (selected === null || this.#loader.phase() !== 'idle') return;
-      if (!this.#loader.items().some(event => event.id === selected)) untracked(() => this.selectedId.set(null));
+      if (ɵsdCalendarSelectionGone(this.selectedId(), this.#loader.phase(), this.#loader.items()))
+        untracked(() => this.selectedId.set(null));
     });
-
-    const observer =
-      typeof ResizeObserver === 'undefined'
-        ? null
-        : new ResizeObserver(entries => {
-            const width = entries[entries.length - 1]?.contentRect.width;
-            if (width !== undefined && width !== untracked(this.#width)) this.#zone.run(() => this.#width.set(width));
-          });
-    observer?.observe(this.#host.nativeElement);
 
     destroyRef.onDestroy(() => {
       this.#loader.abort();
       this.#operation.abort();
-      observer?.disconnect();
-      stopTimer();
+      this.#hostWidth.disconnect();
+      this.#timer.stop();
+      document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     });
   }
 
@@ -658,6 +668,232 @@ export class SdScheduler<T = unknown, R = unknown> {
 
   protected isFailed(id: string): boolean {
     return this.#failure()?.id === id;
+  }
+
+  // ---- selection (§9.1) ----
+
+  protected selectItem(event: SdSchedulerEvent<T>, domEvent?: Event): void {
+    domEvent?.stopPropagation();
+    if (this.#justDragged) {
+      this.#justDragged = false;
+      return;
+    }
+    if (this.disabled()) return;
+    this.selectedId.set(event.id);
+    this.sdSelect.emit(event);
+  }
+
+  /** Press inside a row: on a block it starts a new gesture and records the pickup point of a possible drag. */
+  protected onTrackPress(domEvent: MouseEvent | TouchEvent): void {
+    if (!(domEvent.target as Element | null)?.closest?.('[data-event-id]')) return;
+    this.#justDragged = false;
+    this.#pickup = ɵsdCalendarPointOf(domEvent);
+  }
+
+  protected onTrackClick(domEvent: MouseEvent, row: SdSchedulerResourceRow<T, R>): void {
+    const block = this.#blockAt(domEvent.target, row);
+    if (block) this.selectItem(block.event, domEvent);
+  }
+
+  protected onTrackKeydown(domEvent: KeyboardEvent, row: SdSchedulerResourceRow<T, R>): void {
+    const block = this.#blockAt(domEvent.target, row);
+    if (block) this.onItemKeydown(domEvent, block);
+  }
+
+  /** Keys on a block (§9.7): Enter and Space select, Esc clears the selection and goes back to the grid. */
+  protected onItemKeydown(domEvent: KeyboardEvent, block: SdSchedulerBlockView<T, R>): void {
+    const key = domEvent.key;
+    if (key === 'Enter' || key === ' ') {
+      domEvent.preventDefault();
+      this.selectItem(block.event, domEvent);
+      return;
+    }
+    if (key === 'Escape') {
+      domEvent.preventDefault();
+      domEvent.stopPropagation();
+      this.selectedId.set(null);
+      this.gridElement()?.nativeElement.focus();
+    }
+  }
+
+  #blockAt(target: EventTarget | null, row: SdSchedulerResourceRow<T, R>): SdSchedulerBlockView<T, R> | null {
+    const element = (target as Element | null)?.closest?.('[data-event-id]');
+    const id = element?.getAttribute('data-event-id');
+    return id ? (row.blocks.find(block => block.key === id) ?? null) : null;
+  }
+
+  // ---- create (§9.2) ----
+
+  protected onTrackPointerDown(domEvent: PointerEvent, resourceId: string): void {
+    if (!domEvent.isPrimary || domEvent.button !== 0) return;
+    const target = domEvent.target as Element;
+    if (target.closest('[data-event-id], [data-resize-handle]')) return;
+    const track = domEvent.currentTarget as HTMLElement;
+    this.#press = {
+      resourceId,
+      anchor: this.#valueAt(domEvent.clientX, track),
+      x: domEvent.clientX,
+      y: domEvent.clientY,
+      touch: domEvent.pointerType === 'touch',
+      track,
+      moved: false,
+    };
+    // why: on touch the browser scrolls the grid; capturing would keep the pointer from the scroll.
+    if (!this.#press.touch) {
+      try {
+        track.setPointerCapture(domEvent.pointerId);
+      } catch {
+        // why: a synthetic or already released pointer cannot be captured; the press still works without capture.
+      }
+    }
+    document.addEventListener('keydown', this.#onDocumentKeydown, true);
+  }
+
+  protected onTrackPointerMove(domEvent: PointerEvent): void {
+    const press = this.#press;
+    if (!press) return;
+    if (!press.moved && Math.hypot(domEvent.clientX - press.x, domEvent.clientY - press.y) < CLICK_SLOP) return;
+    press.moved = true;
+    // §11: on touch a move scrolls; there is no sweep.
+    if (press.touch || !this.canCreate() || this.#operation.busy()) return;
+    // §9.2: the sweep follows the inline axis only; the row stays the one pressed.
+    const span = this.#sweep(press.anchor, this.#valueAt(domEvent.clientX, press.track));
+    const blocked = this.#outOfRangeSpan(span) || !this.#creatable(press.resourceId, span);
+    this.#ghost.set({ resourceId: press.resourceId, ...span, pending: false, blocked });
+  }
+
+  protected onTrackPointerUp(): void {
+    const press = this.#press;
+    if (!press) return;
+    this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    const ghost = this.#ghost();
+    if (!this.#operation.busy()) this.#ghost.set(null);
+    // §9.1: a press on an empty slot clears the selection; with option.create it also creates there.
+    this.selectedId.set(null);
+    if (press.moved && (press.touch || !ghost)) return;
+    void this.#create(press.resourceId, press.moved && ghost ? { start: ghost.start, end: ghost.end } : this.#slot(press.anchor));
+  }
+
+  protected onTrackPointerCancel(): void {
+    this.#press = null;
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+    if (!this.#operation.busy()) this.#ghost.set(null);
+  }
+
+  /** Esc cancels a sweep. */
+  readonly #onDocumentKeydown = (domEvent: KeyboardEvent): void => {
+    if (domEvent.key !== 'Escape') return;
+    this.#zone.run(() => {
+      if (this.#press) {
+        this.#press = null;
+        if (!this.#operation.busy()) this.#ghost.set(null);
+      }
+    });
+    document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+  };
+
+  /** Inline start and size of the dashed block (as the blocks of §8.2). */
+  protected ghostBox(ghost: SdSchedulerGhost): { start: string; size: string; time: string } {
+    if (this.activeView() === 'day') {
+      return {
+        start: `calc(var(--sd-scheduler-hour-width) * ${ghost.start / 60} + ${DAY_GAP.before}px)`,
+        size: `max(12px, calc(var(--sd-scheduler-hour-width) * ${(ghost.end - ghost.start) / 60} - ${DAY_GAP.before + DAY_GAP.after}px))`,
+        time: `${ɵsdCalendarClockText(ghost.start)}–${ɵsdCalendarClockText(ghost.end)}`,
+      };
+    }
+    const box = sdSchedulerColumnBox({ from: ghost.start, to: ghost.end }, this.columns().length);
+    return {
+      start: `calc(${box.start * 100}% + ${COLUMN_GAP.before}px)`,
+      size: `calc(${box.size * 100}% - ${COLUMN_GAP.before + COLUMN_GAP.after}px)`,
+      time: '',
+    };
+  }
+
+  /** Minutes (day view) or the column index (week, month) under `clientX` on a track. */
+  #valueAt(clientX: number, track: HTMLElement): number {
+    const rect = track.getBoundingClientRect();
+    const offset = this.#rtl() ? rect.right - clientX : clientX - rect.left;
+    if (this.activeView() === 'day') return Math.min(1439, Math.max(0, (offset / this.#sizes().hour) * 60));
+    const count = this.columns().length;
+    return Math.min(count - 1, Math.max(0, Math.floor((offset / (rect.width || 1)) * count)));
+  }
+
+  /** One slot of `step` minutes, or one day. */
+  #slot(value: number): { start: number; end: number } {
+    if (this.activeView() === 'day') return ɵsdCalendarSlot(value, this.stepValue());
+    return { start: value, end: value };
+  }
+
+  #sweep(anchor: number, current: number): { start: number; end: number } {
+    if (this.activeView() === 'day') return ɵsdCalendarSweep(anchor, current, this.stepValue());
+    return { start: Math.min(anchor, current), end: Math.max(anchor, current) };
+  }
+
+  /** Wall clock of a create span: a timed span of the day on screen, or all-day columns (§9.2). */
+  #createTarget(span: { start: number; end: number }): ɵSdCalendarTarget {
+    const columns = this.columns();
+    if (this.activeView() === 'day') {
+      return { allDay: false, startDay: columns[0], startMinutes: span.start, endDay: columns[0], endMinutes: span.end };
+    }
+    return { allDay: true, startDay: columns[span.start], startMinutes: 0, endDay: columns[span.end], endMinutes: 1440 };
+  }
+
+  #createContext(resource: SdSchedulerResource<R>, target: ɵSdCalendarTarget): SdSchedulerCreateContext<R> {
+    const range = ɵsdCalendarRangeOf(target, this.#clock, untracked(this.transform));
+    return { ...range, resourceId: resource.id, resource };
+  }
+
+  #creatable(resourceId: string, span: { start: number; end: number }): boolean {
+    const resource = untracked(this.#resourceById).get(resourceId);
+    if (!resource) return false;
+    return ɵsdCalendarAllows(untracked(this.option).create?.creatable, this.#createContext(resource, this.#createTarget(span)));
+  }
+
+  #outOfRangeSpan(span: { start: number; end: number }): boolean {
+    const target = this.#createTarget(span);
+    return this.#outOfRange(target.startDay) || this.#outOfRange(target.endDay);
+  }
+
+  async #create(resourceId: string, span: { start: number; end: number }): Promise<void> {
+    const create = untracked(this.option).create;
+    const resource = untracked(this.#resourceById).get(resourceId);
+    if (!create || !resource || untracked(this.locked) || untracked(this.#operation.busy)) return;
+    if (this.#outOfRangeSpan(span)) {
+      this.#announcer.announce(this.#i18n.t('core.component.calendar.out-of-range'));
+      return;
+    }
+    const context = this.#createContext(resource, this.#createTarget(span));
+    if (!ɵsdCalendarAllows(create.creatable, context)) return;
+    const signal = this.#operation.begin('create');
+    if (!signal) return;
+    this.#failure.set(null);
+    this.#ghost.set({ resourceId, ...span, pending: true, blocked: false });
+    let created: SdSchedulerEvent<T> | void;
+    try {
+      created = await create.onCreate({ ...context, signal });
+    } catch {
+      if (signal.aborted) return;
+      this.#operation.end(signal);
+      this.#ghost.set(null);
+      const message = this.#i18n.t('core.component.calendar.create-error');
+      this.#failure.set({ id: null, message });
+      this.#announcer.announce(message);
+      return;
+    }
+    if (signal.aborted) return;
+    this.#operation.end(signal);
+    this.#ghost.set(null);
+    if (!created) return;
+    const event = created;
+    this.#loader.items.update(items => [...items, event]);
+    this.selectedId.set(event.id);
+  }
+
+  #outOfRange(day: string): boolean {
+    const min = untracked(this.#minDay);
+    const max = untracked(this.#maxDay);
+    return (!!min && day < min) || (!!max && day > max);
   }
 
   // ---- loading ----
@@ -723,9 +959,7 @@ export class SdScheduler<T = unknown, R = unknown> {
 
   /** A day is off for a resource: an `off` holiday, or a weekday without working hours (not with `null` hours). */
   #offDay(day: string, hours: SdCalendarWorkingHours | null): boolean {
-    if (this.#holidays().get(day)?.type === 'off') return true;
-    const working = ɵsdCalendarWorkingRanges(hours, ɵsdCalendarWeekday(day));
-    return working !== null && working.length === 0;
+    return ɵsdCalendarIsOffDay(day, this.#holidays().get(day), hours);
   }
 
   #resourceRow(resource: SdSchedulerResource<R>, group: string | null): SdSchedulerResourceRow<T, R> {
@@ -822,8 +1056,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     const { event, placement } = item;
     const view = this.activeView();
     const sizes = this.#sizes();
-    const color = event.color ?? 'primary';
-    const palette = PALETTE.has(color);
+    const { color, customColor } = ɵsdCalendarColor(event.color);
     const recurring = !!event.occurrence;
     const startText = ɵsdCalendarClockText(placement.startMinutes);
     const endText = ɵsdCalendarClockText(placement.endMinutes);
@@ -855,8 +1088,8 @@ export class SdScheduler<T = unknown, R = unknown> {
       label,
       title: label,
       autoId: root ? `${root}-event-${encodeURIComponent(event.id)}` : null,
-      color: palette ? color : 'custom',
-      customColor: palette ? null : color,
+      color,
+      customColor,
       recurring,
       past: this.dimPast() && placement.endInstant <= this.#nowInstant(),
       pending: item.pending,
@@ -949,11 +1182,6 @@ export class SdScheduler<T = unknown, R = unknown> {
   }
 
   /** Width of the host before the first ResizeObserver callback, so the first render already fits a narrow host. */
-  #measureOnce(): void {
-    if (this.#width() !== null || typeof ResizeObserver === 'undefined') return;
-    const width = this.#host.nativeElement.getBoundingClientRect().width;
-    if (width > 0) this.#width.set(width);
-  }
 
   #measureSizes(): void {
     const element = this.root()?.nativeElement;
@@ -972,7 +1200,7 @@ export class SdScheduler<T = unknown, R = unknown> {
   }
 
   #rtl(): boolean {
-    return getComputedStyle(this.#host.nativeElement).direction === 'rtl';
+    return ɵsdCalendarIsRtl(this.#host.nativeElement);
   }
 
   #announceTitle(): void {
@@ -981,8 +1209,6 @@ export class SdScheduler<T = unknown, R = unknown> {
 
   /** Logs a dev-mode diagnostic once per instance and key. */
   #report(level: 'error' | 'warn', key: string, message: string): void {
-    if (!isDevMode() || this.#reported.has(key)) return;
-    this.#reported.add(key);
-    console[level](`[sd-scheduler] ${message}`);
+    this.#reporter.report(level, key, message);
   }
 }
