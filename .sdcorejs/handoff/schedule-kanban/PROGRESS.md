@@ -6,7 +6,7 @@ Gói `schedule-kanban` có ba PR. Không PR nào được tag, publish hay bump 
 | --- | --- | --- | --- |
 | 1 · sd-calendar | `feat/calendar` | [#141](https://github.com/sdcorejs/sdcorejs-angular/pull/141) đã merge vào `main`. | Các mục còn chờ ở `reviews/calendar-R2-author.md`. |
 | 2 · sd-kanban API mới (breaking) | `feat/kanban-api` | [#142](https://github.com/sdcorejs/sdcorejs-angular/pull/142) đã merge vào `main`. | Các mục "Kanban: cần PD chốt" dưới đây. |
-| 3 · sd-scheduler | `feat/scheduler` (cắt lại từ `main` sau #141) | Draft PR `feat(scheduler): thêm sd-scheduler`. Qua G0, CP1–CP6, R1, G-final, R2 (2 reviewer), R2' và xác nhận R2'': cả hai reviewer "Được mở PR". | Review PR; chốt các mục "Scheduler: cần PD chốt"; merge khi đồng ý. |
+| 3 · sd-scheduler | `feat/sd-scheduler` (nhánh local `feat/scheduler`, cắt lại từ `main`) | Draft PR `feat(scheduler): thêm sd-scheduler`. Qua G0, CP1–CP6, R1, G-final, R2 (2 reviewer), R2' và xác nhận R2'': cả hai reviewer "Được mở PR". | Review PR; chốt các mục "Scheduler: cần PD chốt"; merge khi đồng ý. |
 
 Còn cổng RX (review chéo ba component, `REVIEW.md` mục 4): chưa làm. Ghi chú cho RX: vùng chạm 44px của calendar khi hẹp, fallback `--sd-shadow-*` (SC-43), helper E2E chung (`schedule.support.ts` theo Bước 0 H9 chưa tạo).
 
@@ -34,7 +34,7 @@ Còn cổng RX (review chéo ba component, `REVIEW.md` mục 4): chưa làm. Ghi
 | A-16 | Kiểm tay trình đọc màn hình, zoom 200% | Chưa làm (máy không có trình đọc màn hình). |
 
 ## Mở lại máy
-- Worktree scheduler: `.claude/worktrees/scheduler`, khớp `origin/feat/scheduler`.
+- Worktree scheduler: `.claude/worktrees/scheduler`, nhánh local `feat/scheduler`, push lên `origin/feat/sd-scheduler`. `origin/feat/scheduler` cũ chỉ có commit Bước 0 (`52a79638`, cắt từ `feat/calendar`); phiên tác giả không được ghi đè (force push bị chặn), PD có thể xoá nhánh đó.
 - Cổng 4321 của config Playwright repo đang bị app khác chiếm trên máy này; E2E local dùng config tạm cổng khác (không commit), import `showcase/playwright.config.ts` và đổi `baseURL`, `webServer`. Bộ lọc Playwright khớp cả đường dẫn worktree: lọc bằng `components[\\/]scheduler`.
 - Sau `npm run sync`, khôi phục các file v22 chỉ đổi CRLF (memory `sync-v22-phantom-eol`).
 
