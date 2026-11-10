@@ -67,3 +67,22 @@ Các Ghi chú R2 khác (13, 14, 17, 18, 19, 20, 22, 24): tác giả giữ, có l
 
 ## Thử phá
 Không làm ở phần này (thuộc reviewer test).
+
+## R2'' xác nhận
+Commit: 59a4c674c (sửa ở cb3060092, test ổn định ở 5f97e4d74, sync ở 0b9288e35) · Ngày: 2026-11-11 · Node local v26.12.0 · Bản sao `C:\tmp\r2-spec-scheduler` detached ở 59a4c674c, sạch sau khi kiểm.
+
+### Kết luận
+Chặn: 0 · Nên sửa: 0 · Ghi chú: 5 (G1, G3, G4, G5, G6; không bắt buộc) · Chờ PD: 6 mục (5 dạng tiêu đề, 7 ô Tháng, 9, 10, 11, 12), không chặn phía reviewer.
+
+**Được mở PR** (về phần spec và code).
+
+| Mục | Kết quả | Bằng chứng |
+| --- | --- | --- |
+| M1 (Nên sửa): quét bôi đen chữ | ✓ đã sửa | scheduler.component.scss:537–538 `user-select: none` trên `.sd-scheduler__track`, có `why:` như calendar. Rãnh chứa khối, khối nét đứt, khối đề xuất và nhãn, nên quét và kéo trên hàng không còn bôi chữ. `[SCH-B-47]` xanh. |
+| G2 (Ghi chú): khoảng giờ bị đảo trong RTL | ✓ đã sửa | scheduler.component.scss:815–819 `direction: ltr; unicode-bidi: isolate` cho `.sd-scheduler__lead-time`, `.sd-scheduler__event-time`; scheduler.component.html:286, 377, 398 dùng `<bdi>` cho chữ con trỏ, nhãn kéo mép, nhãn kéo. `[SCH-B-48]` xanh. Harness tạm của tôi (đã xoá) đo vị trí chữ thật trong Chrome Headless 156, dưới cha `dir="rtl"`: không isolate thì "10:00 – 11:30" bị **đảo**; với `<bdi>` chỉ có giờ, `<bdi>` có tên tài nguyên, và `direction: ltr; unicode-bidi: isolate` thì đều **đúng thứ tự đọc**. |
+| G1, G3, G4, G5, G6 | Giữ (Ghi chú) | `reports/scheduler-tests.md`, mục "Lệch có chủ đích" chỉ ghi G6 (ví dụ Chấm công không có avatar). G1 (ảnh hover, focus, đã qua), G3 (vạch giờ đè nhãn nổi), G4 (bậc nội dung khi kéo mép) và G5 (trạng thái trống lệch trái ở 1122px) **chưa có trong mục đó**. Vì là Ghi chú nên không chặn. Đề nghị thêm bốn dòng này vào bảng lệch của PR. |
+
+Lệnh:
+- `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI "--include=projects/sdcorejs-angular/components/scheduler/**/*.spec.ts"` → **159 SUCCESS**, 0 FAILED, 1.73 s, seed 613958.
+- `npm run check:sync` → xanh. `npm run check:scss-hex` → 0 finding.
+- Diff `06fc39714..59a4c674c` trong `components/scheduler/src` chỉ có ba file: `.html` (3 `<bdi>`), `.scss` (`user-select`, isolate giờ), `scheduler.review.spec.ts` (`SCH-B-47`, `SCH-B-48`, ghim host của `SCH-B-03`). v20/v21/v22 chỉ đổi qua sync.

@@ -210,3 +210,7 @@ Lệch có chủ đích (ghi trong PR):
 - Số đếm hàng nhóm “3 tài nguyên” thay vì “3 phòng”: chỉ đổi qua key i18n `group-count` (R1 #7, chờ PD).
 - Tiêu đề hẹp xuống dòng thay vì “09/11/2026” (R2 #5, chờ PD).
 - Ví dụ Chấm công không có avatar như HTML (template tài nguyên của ví dụ chỉ có tên và cột tổng).
+- Vạch giờ hiện tại vẽ trên nhãn nổi khi kéo qua nó (vạch nằm trên khối, dưới phần dính, §7).
+- Trạng thái trống (`resources` rỗng) căn giữa theo vùng lưới cuộn được, nên lệch trái ở khung 1122px.
+- Chưa có ảnh hover, focus và đã qua (`dimPast`); Karma kiểm các rule (`SCH-SC-34…36`, `SCH-C-01`).
+- Bậc nội dung của khối (lg/md/sm) giữ nguyên trong lúc kéo mép; đổi sau khi `onMove` chấp nhận.

@@ -90,3 +90,27 @@ Mỗi dòng: sửa tạm trên bản sao ở `06fc39714`, chạy lệnh nhanh sc
 | 2 | `calendar-move.ts:37` `'cancel'` → `{ kind: 'rejected' }` | 2 đỏ (seed 850812): `[SCH-SC-12]` ×2 (như R2) |
 | 4 | `scheduler.utils.ts:109` `end <= item.start` → `end < item.start` | 3 đỏ (seed 396805): `[SCH-U-02]`, `[SCH-U-04]`, `[SCH-U-05]` (như R2) |
 | 5 | `calendar-move.ts:51` bỏ `if (this.#current()) return null;`, cộng bỏ `|| untracked(this.#operation.busy)` ở `scheduler.component.ts:1635` | 2 đỏ (seed 800300): `[SCH-SC-14]` ×2 (như R2) |
+
+## R2'' xác nhận
+Commit: 59a4c674c (thêm `cb3060092` có `[SCH-B-47]`, `[SCH-B-48]`; `5f97e4d74` sửa `[SCH-B-03]`; `0b9288e35` sync) · Ngày: 2026-11-11 · Bản sao `C:\tmp\r1-scheduler` (`git checkout --detach 59a4c674c`), sạch trước và sau. Không sửa code, không commit.
+
+### Kết luận
+Chặn: 0 · Nên sửa: 0 · Ghi chú: 4 (Ghi chú mới #2–#5 ở trên, không đổi), cộng 3 mục chờ PD (#7 phần `en` / `graphite`, #9, #10)
+Được mở PR (phần test; các mục chờ PD do PD chốt khi review PR)
+
+### Lệnh đã chạy
+| Lệnh (versions/v19) | Kết quả thật | Thời gian |
+| --- | --- | --- |
+| `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage` (lệnh đầy đủ TESTING §1) | exit 0 · **`TOTAL: 9780 SUCCESS`** · seed 343329 · Statements 88.93% (43082/48443), Branches 80.7% (20500/25400), Functions 88.16%, Lines 91.2%. Từng file: `scheduler.component.ts` lines 99.34%, branches 86.99% (508/584); `scheduler.utils.ts` 100/100. | 6 phút 27 giây |
+| Scheduler + calendar, `JASMINE_SEED=475754` (seed từng đỏ `[SCH-B-03]`) | exit 0 · **`TOTAL: 351 SUCCESS`** | ~1 phút |
+| Lệnh nhanh scheduler | exit 0 · `TOTAL: 159 SUCCESS` (seed 849909): 157 test của R2' cộng `[SCH-B-47]`, `[SCH-B-48]` | ~35 giây |
+
+### Các mục
+| Mục | Kết quả | Bằng chứng |
+| --- | --- | --- |
+| Chặn mới #1 (`[SCH-B-03]` phụ thuộc viewport) | ✓ | `5f97e4d74` ghim host `position: fixed; top: 0; left: 0` trong test (`scheduler.review.spec.ts:261–263`), giống `kanban.interaction.spec.ts:71–75`. Xanh trong lệnh đầy đủ và trong lần scheduler + calendar seed 475754. |
+| Nên sửa #8 (báo cáo thiếu Hiệu năng) | ✓ | `reports/scheduler-tests.md` (giờ đã track ở 59a4c674c) có mục "Hiệu năng (TESTING §10)" (dòng 182–192) và số sau R2'. Đối chiếu với số đo của reviewer: dev server, E2E 2 worker "300–405 ms" khớp cỡ số reviewer đo (283–365 ms ở R2 và R2'); không có long task khi kéo, khớp. Coverage (`1042/1077`, `508/584`), số test E2E (35 passed / 5 skipped), bảng thử phá (2 `[SCH-B-40]`, `[SCH-B-41]`, `[SCH-B-42]`, …) và câu về zone (138/138 ở `eb32766d2`) đều khớp báo cáo của reviewer. Hai số production build (đo trong trang: trung vị 101 ms; E2E: 256–280 ms) reviewer **không đo lại**, ghi nhận theo tác giả. |
+| `[SCH-B-47]`, `[SCH-B-48]` (mới) | ✓ | Có trong lần chạy (159 = 157 + 2), xanh trong cả ba lệnh trên. |
+| #7 (`en`, `graphite`), #9, #10 | PD | Không đổi so với R2'. Hiệu năng render ở dev server vẫn vượt 250 ms; production theo tác giả đạt. |
+
+Bản sao làm việc: HEAD `59a4c674c`, `git status` rỗng.
