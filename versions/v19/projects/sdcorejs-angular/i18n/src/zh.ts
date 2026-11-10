@@ -1377,7 +1377,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.rejected': '移动被拒绝。请选择其他列。',
   'core.component.kanban.error': '无法移动卡片。请重试。',
   'core.component.kanban.invalid-data': '请检查卡片和列：ID 必须唯一且不能为空，每张卡片都需要标题和已有的列。',
-  'core.component.kanban.dismiss': '关闭',
+  'core.component.kanban.dismiss': '忽略',
   'core.component.kanban.instructions': '按 Enter 选择。按 Alt + 左右方向键切换列，按 Alt + 上下方向键调整位置。',
   'core.component.kanban.instructions-column': '按 Enter 选择。按 Alt + 左右方向键切换列。',
   'core.component.kanban.selected': '已选择 {title}',
