@@ -37,9 +37,9 @@ Pick via `[mode]`:
 | `applyOn` | Fires `(apply)` | Search button |
 |---|---|---|
 | `'search'` (default) | Search button, Enter in the search box, a saved filter. Chip edits stay a draft. | shown |
-| `'commit'` | Also: a popover that closes with a changed operator or value, an inline chip commit that changes it, a completed inline build chip with a value, removing a chip that had a value. A popover that closes unchanged, or removing an empty chip, does not apply. | hidden |
+| `'commit'` | Also: a popover that closes with a changed operator or value, an inline chip commit that changes it, a completed inline build chip with a value, removing a chip that had a value, the built-in clear button when it empties a chip that had a value. A popover that closes unchanged, or removing an empty chip, does not apply. | hidden |
 
-With `'commit'`, an added (unpinned) chip whose popover closes empty is dropped; it applies only when the chip had a value before. A chip change applies the search text applied last: the text still being typed is applied by Enter, like the quick search of sd-table. Enter in the search box applies, also with an unchanged term, unless a `required` field is empty (like the disabled Search button).
+With `'commit'`, an added (unpinned) chip whose popover closes empty is dropped; it applies only when the chip had a value before. A chip change applies the search text applied last: the text still being typed is applied by Enter, like the quick search of sd-table. The clear button applies once after `clearAll()`, the same way; with `onClearAll` the bar applies nothing and the host reloads itself (`sd-table` does). `clearAll()` called from code never applies. Enter in the search box applies, also with an unchanged term, unless a `required` field is empty (like the disabled Search button).
 
 ## Models
 
@@ -168,7 +168,7 @@ Options without a split input (set them in `[option]`):
 |---|---|---|---|
 | `applyOn` | `'search' \| 'commit'` | `'search'` | See [When edits apply](#when-edits-apply-optionapplyon). |
 | `appearance` | `'default' \| 'flush'` | `'default'` | `'flush'` drops the bar's border, radius, shadow and background (padding `8px 12px`) to sit inside a host card. |
-| `onClearAll` | `() => void` | `undefined` | Replaces the built-in `clearAll()` on the clear button. The host should keep required values like `clearAll()` does (`sd-table` does). |
+| `onClearAll` | `() => void` | `undefined` | Replaces the built-in `clearAll()` on the clear button. The host should keep required values like `clearAll()` does (`sd-table` does). The bar emits no `(apply)` after it, also with `applyOn: 'commit'`. |
 | `clearDisabled` | `boolean` | `false` | Disables the clear button. |
 | `searchPlaceholder` | `string` | i18n | Overrides `core.component.query-bar.search-placeholder`, and is the `aria-label` of the search input (else `core.component.query-bar.search`). |
 | `invalidHintId` | `string` | `undefined` | Id set as `aria-describedby` on empty required chips. |
@@ -207,7 +207,7 @@ Content projection: `<ng-content select="[sdQueryBarEnd]">` renders after the ac
 | `changeFilterField(index, field)` | Swap the field of an existing chip (resets operator + value to new defaults). |
 | `updateFilter(index, patch)` | Replace chip at index. |
 | `removeFilter(index)` | Drop chip at index. No-op for a pinned or required chip. With `applyOn: 'commit'`, applies when the chip had a value. |
-| `clearAll()` | Required chips stay as they are (operator and value), pinned chips stay with no value, the rest go. |
+| `clearAll()` | Required chips stay as they are (operator and value), pinned chips stay with no value, the rest go. Never emits `(apply)`; with `applyOn: 'commit'` the clear button applies after it. |
 | `openField(key, returnFocusTo?)` | Open the editor of a field from outside the bar (e.g. a table header icon). Popover mode opens the chip's popover, adding the chip first; called again while that popover is open, it closes it. Inline mode focuses the chip or starts building one. `returnFocusTo` gets focus when the popover closes. |
 | `invalidFields()` | Signal — required fields without a value. |
 | `onInlineCommit(index, data)` / `onInlineRange(index, range)` | Template handlers of completed inline chips: `updateFilterData` / `setFilterRange` plus the `applyOn: 'commit'` check. |
