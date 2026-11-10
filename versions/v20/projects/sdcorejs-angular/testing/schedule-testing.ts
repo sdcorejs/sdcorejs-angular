@@ -85,6 +85,8 @@ export class FakeIntersectionObserver implements IntersectionObserver {
   static readonly instances: FakeIntersectionObserver[] = [];
   readonly root = null;
   readonly rootMargin = '0px';
+  // why: the DOM lib of TypeScript in the Angular 22 line requires it; the older lines accept the extra member.
+  readonly scrollMargin = '0px';
   readonly thresholds = [0];
   readonly targets = new Set<Element>();
   disconnected = false;
