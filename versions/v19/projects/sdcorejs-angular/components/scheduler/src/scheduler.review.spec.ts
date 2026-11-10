@@ -333,6 +333,26 @@ describe('SdScheduler · R2 fixes', () => {
   );
 
   it(
+    '[SCH-B-47] does not select text while sweeping or dragging on a row, R2 recheck M1',
+    run(() => {
+      const { host } = renderScheduler();
+      expect(getComputedStyle(q(host, '[data-track]')!).userSelect).toBe('none');
+    })
+  );
+
+  it(
+    '[SCH-B-48] keeps "13:30–15:30" in reading order in right-to-left, R2 recheck notes',
+    run(() => {
+      const { host } = renderScheduler();
+      host.setAttribute('dir', 'rtl');
+      const time = q(block(host, 'workshop')!, '.sd-scheduler__event-time');
+      expect(time).withContext('a block wide enough for its time').not.toBeNull();
+      const style = getComputedStyle(time!);
+      expect([style.direction, style.unicodeBidi]).toEqual(['ltr', 'isolate']);
+    })
+  );
+
+  it(
     '[SCH-B-23] frames the colour dot and today in forced colors, R2 #23',
     run(() => {
       renderScheduler();

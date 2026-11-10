@@ -534,6 +534,8 @@ $hour: var(--sd-scheduler-hour-width);
   // why: the blocks, the dashed blocks, the proposal and the cursor stack inside their row, under the sticky resource
   // column and axis (§7) whatever their own z-index.
   isolation: isolate;
+  // why: sweeping and dragging must not select the titles under the pointer (as sd-calendar).
+  user-select: none;
   flex: none;
   box-sizing: border-box;
   width: var(--sd-scheduler-track);
@@ -807,6 +809,13 @@ $hour: var(--sd-scheduler-hour-width);
 .sd-scheduler__event-time {
   flex: none;
   color: tok(text-secondary);
+}
+
+// why: "13:30–15:30" has no strong character; in right-to-left the bidi algorithm would show it as "15:30–13:30".
+.sd-scheduler__lead-time,
+.sd-scheduler__event-time {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .sd-scheduler__sync {
