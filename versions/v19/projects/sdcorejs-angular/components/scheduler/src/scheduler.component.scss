@@ -853,6 +853,175 @@ $hour: var(--sd-scheduler-hour-width);
   }
 }
 
+// ---- move (§8.3, §9.3, §9.4) ----
+.sd-scheduler__event[data-movable] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.sd-scheduler__event[data-dragging] {
+  // The original position while dragging: a dashed frame in the old lane, the proposal is drawn on the target row.
+  border: 1px dashed var(--sd-scheduler-event-border);
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+.sd-scheduler__proposal {
+  position: absolute;
+  z-index: 4;
+  box-sizing: border-box;
+  height: var(--sd-scheduler-lane-height);
+  border: 1px solid tok(primary);
+  border-radius: var(--sd-scheduler-event-radius);
+  background: color-mix(in srgb, #{tok(primary-light)} 80%, transparent);
+  box-shadow: var(--sd-shadow-lg);
+  pointer-events: none;
+
+  &[data-blocked] {
+    border-style: dashed;
+    border-color: tok(border-strong);
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+// §8.3: the floating label beside the block, inverse surface, aria-hidden.
+.sd-scheduler__label {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: calc(100% + 6px);
+  padding: 2px 6px;
+  border-radius: radius(4);
+  background: tok(surface-inverse);
+  color: tok(surface);
+  font-size: fs(11);
+  line-height: lh(14);
+  font-weight: $medium;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+// A valid target row is tinted; a refused one is striped, its resource cell faded (§8.3).
+.sd-scheduler__row[data-drop] .sd-scheduler__track::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+}
+
+.sd-scheduler__row[data-drop='ok'] .sd-scheduler__track::before {
+  background: color-mix(in srgb, #{tok(primary)} 6%, transparent);
+}
+
+.sd-scheduler__row[data-drop='blocked'] {
+  cursor: not-allowed;
+
+  .sd-scheduler__track::before {
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, #{tok(text)} 5%, transparent) 0 6px,
+      transparent 6px 12px
+    );
+  }
+
+  .sd-scheduler__resource {
+    opacity: 0.5;
+  }
+}
+
+.sd-scheduler__resize {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 8px;
+  cursor: ew-resize;
+  touch-action: none;
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 3px;
+    width: 3px;
+    height: 12px;
+    margin-top: -6px;
+    border-radius: radius(2);
+    background: var(--sd-scheduler-event-color);
+    content: '';
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__event:hover .sd-scheduler__resize::after {
+    opacity: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  // §9.4: on touch only the selected block resizes, with a 24px target and a 6×24px handle.
+  .sd-scheduler__event:not([data-selected]) .sd-scheduler__resize {
+    display: none;
+  }
+
+  .sd-scheduler__event[data-selected] .sd-scheduler__resize {
+    width: 24px;
+
+    &::after {
+      width: 6px;
+      height: 24px;
+      margin-top: -12px;
+      opacity: 1;
+    }
+  }
+}
+
+// ---- scope bar (§9.6, as sd-calendar) ----
+.sd-scheduler__scope {
+  position: absolute;
+  inset-inline-end: 12px;
+  bottom: 12px;
+  inset-inline-start: 12px;
+  z-index: 10;
+  padding: 12px 14px;
+  border-radius: radius(10);
+  background: tok(surface-inverse);
+  box-shadow: var(--sd-shadow-lg);
+  color: tok(surface);
+  font-size: fs(14);
+}
+
+.sd-scheduler__scope-message {
+  margin: 0 0 10px;
+}
+
+.sd-scheduler__scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sd-scheduler__scope-button {
+  @include bare-button;
+
+  height: 36px;
+  padding: 0 10px;
+  border-radius: radius(6);
+  color: tok(primary-light);
+  font-size: fs(14);
+  font-weight: $medium;
+
+  &--cancel {
+    color: tok(surface);
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__scope-button:hover {
+    background: color-mix(in srgb, #{tok(surface)} 12%, transparent);
+  }
+}
 // Direction icons and the running progress bar go the other way in right-to-left.
 .sd-scheduler__icon-button sd-icon:dir(rtl),
 .sd-scheduler__progress:dir(rtl) {

@@ -1,3 +1,4 @@
+import { CdkDrag, type CdkDragEnd, type CdkDragStart } from '@angular/cdk/drag-drop';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -23,9 +24,12 @@ import {
   SD_CALENDAR_CONFIGURATION,
   ɵSD_CALENDAR_DEFAULTS,
   ɵSdCalendarAnnouncer,
+  ɵSdCalendarEdgeScroller,
+  ɵSdCalendarFocusKeeper,
   ɵSdCalendarHostWidth,
   ɵSdCalendarLoader,
   ɵSdCalendarMinuteTimer,
+  ɵSdCalendarMoveRunner,
   ɵSdCalendarOperation,
   ɵSdCalendarReporter,
   ɵsdCalendarAllows,
@@ -33,10 +37,20 @@ import {
   ɵsdCalendarBrokenWeekdays,
   ɵsdCalendarCarrierDay,
   ɵsdCalendarColor,
+  ɵsdCalendarCssEscape,
+  ɵsdCalendarDayDiff,
   ɵsdCalendarInvalidItems,
   ɵsdCalendarIsOffDay,
   ɵsdCalendarIsRtl,
+  ɵsdCalendarLastDayOf,
+  ɵsdCalendarMoveStep,
+  ɵsdCalendarMoveTarget,
+  ɵsdCalendarMovedText,
+  ɵsdCalendarResizeEnd,
   ɵsdCalendarSelectionGone,
+  ɵsdCalendarShiftDays,
+  ɵsdCalendarSnapMove,
+  ɵsdCalendarTargetOf,
   ɵsdCalendarClockText,
   ɵsdCalendarDateText,
   ɵsdCalendarDayParts,
@@ -63,6 +77,8 @@ import {
   ɵsdCalendarWorkingRanges,
   type SdCalendarDateInput,
   type SdCalendarHoliday,
+  type SdCalendarMoveScope,
+  type SdCalendarMoveSource,
   type SdCalendarWorkingHours,
   type ɵSdCalendarPlacement,
   type ɵSdCalendarSpan,
@@ -78,6 +94,7 @@ import type {
   SdSchedulerCellSelect,
   SdSchedulerCreateContext,
   SdSchedulerEvent,
+  SdSchedulerMoveAxis,
   SdSchedulerMoveError,
   SdSchedulerMoveRequest,
   SdSchedulerOption,
@@ -103,9 +120,12 @@ import {
   sdSchedulerGroups,
   sdSchedulerLanes,
   sdSchedulerLaneTop,
+  sdSchedulerResizeDays,
+  sdSchedulerRowAt,
   sdSchedulerRowHeight,
   sdSchedulerVisibleDays,
   sdSchedulerVisibleRange,
+  type SdSchedulerHitRow,
   type SdSchedulerLaneItem,
 } from './scheduler.utils';
 
@@ -164,6 +184,8 @@ interface SdSchedulerBlockView<T, R> {
   readonly pending: boolean;
   readonly saving: boolean;
   readonly movable: boolean;
+  /** The end handle is drawn: movable, not `axis: 'resource'`, a timed event of the day (day view) or an all-day one. */
+  readonly resizable: boolean;
   readonly start: string;
   readonly size: string;
   readonly top: string;
@@ -213,6 +235,43 @@ interface SdSchedulerGroupRow {
 
 type SdSchedulerRowView<T, R> = SdSchedulerResourceRow<T, R> | SdSchedulerGroupRow;
 
+/** Where an event should go: its wall clock and its resource. */
+type SdSchedulerTarget = ɵSdCalendarTarget & { readonly resourceId: string };
+
+/** @internal Where a dragged block would land (§9.3). */
+interface SdSchedulerDragProposal {
+  readonly id: string;
+  readonly target: SdSchedulerTarget;
+  /** The pointer is over a group row: dropping there cancels. */
+  readonly onGroup: boolean;
+  /** `droppable` refused the target row and slot. */
+  readonly blocked: boolean;
+  readonly outside: boolean;
+  /** Floating label: "{resource} · 10:00 – 11:30" across rows, "10:00 – 11:30" in the same row (§8.3). */
+  readonly label: string;
+}
+
+/** @internal What a drag measured when it started (Step 0 D.2). */
+interface SdSchedulerDragSession<T> {
+  readonly placed: SdSchedulerPlaced<T>;
+  /** Rows of the hit test, in content coordinates of the scroll area. */
+  readonly rows: readonly SdSchedulerHitRow[];
+  readonly stickyBlock: number;
+  readonly stickyInline: number;
+  readonly rtl: boolean;
+  /** Inline position of the press in the time area, at the scroll of the start. */
+  readonly pickup: number;
+  /** Width of one column (week, month) or one hour (day view), px. */
+  readonly unit: number;
+  readonly axis: SdSchedulerMoveAxis;
+  /** `droppable` results by `resourceId|start` during this drag (§9.3). */
+  readonly memo: Map<string, boolean>;
+  lastResource: string;
+  lastShift: number;
+  lastKey: string | null;
+  cancelled: boolean;
+}
+
 /** @internal The dashed block of a create: `[start, end)` minutes on the day view, `[start, end]` columns otherwise. */
 interface SdSchedulerGhost {
   readonly resourceId: string;
@@ -225,7 +284,7 @@ interface SdSchedulerGhost {
 @Component({
   selector: 'sd-scheduler',
   standalone: true,
-  imports: [NgTemplateOutlet, SdAvatar, SdDataState, SdIcon, SdTranslatePipe],
+  imports: [CdkDrag, NgTemplateOutlet, SdAvatar, SdDataState, SdIcon, SdTranslatePipe],
   templateUrl: './scheduler.component.html',
   styleUrl: './scheduler.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -332,6 +391,38 @@ export class SdScheduler<T = unknown, R = unknown> {
     readonly touch: boolean;
     readonly track: HTMLElement;
     moved: boolean;
+  } | null = null;
+  /** Where a dragged block would land (§9.3); `null` while nothing is dragged. */
+  readonly #drag = signal<SdSchedulerDragProposal | null>(null);
+  /** Live end of a resize (§9.4): minutes (day view) or the last day (week, month). */
+  readonly #resize = signal<{ readonly id: string; readonly endMinutes: number; readonly lastDay: string } | null>(null);
+  /** Scope bar of a recurring event (§9.6); it holds the one waiting operation until answered. */
+  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
+  readonly #focus = new ɵSdCalendarFocusKeeper(
+    this.#host.nativeElement,
+    this.#injector,
+    id => `[data-event-id="${ɵsdCalendarCssEscape(id)}"][tabindex]`,
+    '.sd-scheduler__scope'
+  );
+  readonly #edge = new ɵSdCalendarEdgeScroller(this.#zone);
+  readonly #t = (key: string, params?: Record<string, string | number>): string => this.#i18n.t(key, params);
+  readonly #runner = new ɵSdCalendarMoveRunner({
+    operation: this.#operation,
+    announcer: this.#announcer,
+    focus: this.#focus,
+    t: this.#t,
+    ask: title => new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title, answer })),
+    band: failure => this.#failure.set(failure),
+    reload: () => this.reload(),
+  });
+  #dragSession: SdSchedulerDragSession<T> | null = null;
+  #dragPointer: { readonly x: number; readonly y: number } | null = null;
+  #resizeSession: {
+    readonly id: string;
+    readonly placement: ɵSdCalendarPlacement;
+    readonly x: number;
+    readonly columnWidth: number;
+    readonly rtl: boolean;
   } | null = null;
   #emittedKey: string | null = null;
   #lastOption: SdSchedulerOption<T, R> | null = null;
@@ -611,7 +702,19 @@ export class SdScheduler<T = unknown, R = unknown> {
       this.#operation.abort();
       this.#hostWidth.disconnect();
       this.#timer.stop();
+      this.#edge.stop();
       document.removeEventListener('keydown', this.#onDocumentKeydown, true);
+      document.removeEventListener('keydown', this.#onDragKeydown, true);
+    });
+
+    // §9.6: the scope bar takes the focus on its first answer when it opens.
+    effect(() => {
+      if (!this.#asking()) return;
+      untracked(() =>
+        afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), {
+          injector: this.#injector,
+        })
+      );
     });
   }
 
@@ -620,13 +723,21 @@ export class SdScheduler<T = unknown, R = unknown> {
     this.#startLoad(untracked(this.option), untracked(this.resources), untracked(this.visible));
   }
 
-  /** RED stub of checkpoint 4: the move pipeline is not there yet. */
+  /**
+   * Moves an event through the pipeline of `sd-scheduler.md` ("Moving"): `onMove` decides. Resolves `true` only when
+   * accepted; `false` without `option.move`, while locked or another operation waits, for an unknown id or resource, a
+   * move against `axis`, a refused `movable` or `droppable`, the same position, a position outside `minDate` /
+   * `maxDate`, a rejection, `'cancel'` or an error. Without `resourceId` the event keeps its resource.
+   */
   move(
-    _eventId: string,
-    _to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean; resourceId?: string },
-    _source: 'drag' | 'resize' | 'keyboard' | 'api' = 'api'
+    eventId: string,
+    to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean; resourceId?: string },
+    source: SdCalendarMoveSource = 'api'
   ): Promise<boolean> {
-    return Promise.resolve(false);
+    const placed = untracked(this.#reading).placed.find(item => item.event.id === eventId);
+    const target = placed ? ɵsdCalendarMoveTarget(placed.placement, to, !!placed.event.allDay, this.#clock) : null;
+    if (!placed || !target) return Promise.resolve(false);
+    return this.#runMove(eventId, { ...target, resourceId: to.resourceId ?? placed.event.resourceId }, source, false);
   }
 
   // ---- toolbar ----
@@ -905,6 +1016,400 @@ export class SdScheduler<T = unknown, R = unknown> {
     return (!!min && day < min) || (!!max && day > max);
   }
 
+  // ---- drag on two axes (§9.3) ----
+
+  /** `cdkDragLockAxis` of `move.axis` (§9.3); the real lock is in the target computation (Step 0 D.6). */
+  protected readonly lockAxis = computed<'x' | 'y' | null>(() => {
+    const axis = this.option().move?.axis ?? 'both';
+    return axis === 'time' ? 'x' : axis === 'resource' ? 'y' : null;
+  });
+  protected readonly dragProposal = this.#drag.asReadonly();
+  protected readonly dragDelay = { touch: 400, mouse: 0 };
+
+  /**
+   * Keeps the dragged element in place (the proposal is drawn instead) and computes the target from the real pointer.
+   * CDK runs this outside the zone on every pointer move; the zone is entered only when the target changes.
+   */
+  protected readonly constrainDrag = (point: { x: number; y: number }, _ref: unknown, rect: DOMRect): { x: number; y: number } => {
+    this.#dragPointer = point;
+    this.#updateDrag();
+    this.#edgeScroll();
+    return { x: rect.left, y: rect.top };
+  };
+
+  protected onDragStarted(start: CdkDragStart, block: SdSchedulerBlockView<T, R>): void {
+    const scroller = this.scroller()?.nativeElement;
+    const placed = untracked(this.#reading).placed.find(item => item.event.id === block.key);
+    if (!scroller || !placed) return;
+    const area = scroller.getBoundingClientRect();
+    const rows = Array.from(scroller.querySelectorAll<HTMLElement>('.sd-scheduler__body > [role="row"]')).map(row => {
+      const box = row.getBoundingClientRect();
+      const top = box.top - area.top + scroller.scrollTop;
+      return {
+        key: row.dataset['group'] ?? row.dataset['resourceId'] ?? '',
+        resourceId: row.dataset['resourceId'] ?? null,
+        top,
+        bottom: top + box.height,
+      };
+    });
+    const rtl = this.#rtl();
+    const sizes = this.#sizes();
+    const pickup = this.#pickup ?? ɵsdCalendarPointOf(start.event as MouseEvent | TouchEvent) ?? { x: 0, y: 0 };
+    const trackWidth = (scroller.querySelector<HTMLElement>('[data-track]')?.getBoundingClientRect().width ?? this.#trackWidth()) || 1;
+    this.#dragSession = {
+      placed,
+      rows,
+      stickyBlock: scroller.querySelector<HTMLElement>('.sd-scheduler__head')?.offsetHeight ?? 0,
+      stickyInline: sizes.resource,
+      rtl,
+      pickup: this.#inlineOffset(pickup.x, area, scroller, rtl, sizes.resource),
+      unit: this.activeView() === 'day' ? sizes.hour : trackWidth / this.columns().length,
+      axis: untracked(this.option).move?.axis ?? 'both',
+      memo: new Map(),
+      lastResource: placed.event.resourceId,
+      lastShift: 0,
+      lastKey: null,
+      cancelled: false,
+    };
+    this.#failure.set(null);
+    if (typeof TouchEvent !== 'undefined' && start.event instanceof TouchEvent) navigator.vibrate?.(10);
+    document.addEventListener('keydown', this.#onDragKeydown, true);
+  }
+
+  protected onDragEnded(end: CdkDragEnd): void {
+    end.source.reset();
+    this.#edge.stop();
+    document.removeEventListener('keydown', this.#onDragKeydown, true);
+    const session = this.#dragSession;
+    const proposal = this.#drag();
+    this.#dragSession = null;
+    this.#dragPointer = null;
+    this.#drag.set(null);
+    this.#justDragged = true;
+    if (!session || !proposal || session.cancelled || proposal.outside || proposal.onGroup) return;
+    if (proposal.blocked) {
+      this.#announceBlocked(proposal.target.resourceId);
+      return;
+    }
+    void this.#runMove(proposal.id, proposal.target, 'drag', false);
+  }
+
+  protected isDragging(id: string): boolean {
+    return this.#drag()?.id === id;
+  }
+
+  /** Esc cancels a drag or a resize. */
+  readonly #onDragKeydown = (domEvent: KeyboardEvent): void => {
+    if (domEvent.key !== 'Escape') return;
+    this.#zone.run(() => {
+      if (this.#dragSession) {
+        this.#dragSession.cancelled = true;
+        this.#drag.set(null);
+      }
+      if (this.#resizeSession) {
+        this.#resizeSession = null;
+        this.#resize.set(null);
+        document.removeEventListener('keydown', this.#onDragKeydown, true);
+      }
+    });
+  };
+
+  /** Inline distance of `clientX` from the start of the time area, in content coordinates (RTL measured from the right). */
+  #inlineOffset(clientX: number, area: DOMRect, scroller: HTMLElement, rtl: boolean, stickyInline: number): number {
+    const inArea = rtl ? area.right - clientX : clientX - area.left;
+    return inArea + Math.abs(scroller.scrollLeft) - stickyInline;
+  }
+
+  #updateDrag(): void {
+    const session = this.#dragSession;
+    const pointer = this.#dragPointer;
+    const scroller = this.scroller()?.nativeElement;
+    if (!session || !pointer || !scroller || session.cancelled) return;
+    const area = scroller.getBoundingClientRect();
+    const outside = pointer.x < area.left || pointer.x > area.right || pointer.y < area.top || pointer.y > area.bottom;
+    const { placement, event } = session.placed;
+    // Vertical: the row under the pointer; over the sticky axis, or with axis 'time', the row stays (Step 0 H10).
+    let resourceId = session.lastResource;
+    let onGroup = false;
+    if (session.axis === 'time') resourceId = event.resourceId;
+    else if (pointer.y >= area.top + session.stickyBlock) {
+      const row = sdSchedulerRowAt(session.rows, pointer.y - area.top + scroller.scrollTop);
+      if (row?.resourceId) resourceId = row.resourceId;
+      else if (row) onGroup = true;
+    }
+    if (!onGroup) session.lastResource = resourceId;
+    // Inline: a time shift; over the sticky resource column, or with axis 'resource', the time stays.
+    const inArea = session.rtl ? area.right - pointer.x : pointer.x - area.left;
+    if (session.axis !== 'resource' && inArea >= session.stickyInline) {
+      const offset = this.#inlineOffset(pointer.x, area, scroller, session.rtl, session.stickyInline);
+      session.lastShift = (offset - session.pickup) / session.unit;
+    }
+    const target = this.#shiftTarget(placement, session.axis === 'resource' ? 0 : session.lastShift, resourceId);
+    const key = `${resourceId}|${onGroup}|${target.startDay}|${target.startMinutes}|${outside}`;
+    if (key === session.lastKey) return;
+    session.lastKey = key;
+    const memoKey = `${resourceId}|${target.startDay} ${target.startMinutes}`;
+    let blocked = false;
+    if (!onGroup) {
+      if (!session.memo.has(memoKey)) session.memo.set(memoKey, !this.#droppable(event, target));
+      blocked = session.memo.get(memoKey)!;
+    }
+    const label = this.#proposalLabel(target, resourceId !== event.resourceId);
+    this.#zone.run(() => this.#drag.set({ id: event.id, target, onGroup, blocked, outside, label }));
+  }
+
+  /**
+   * Target of a drag by `shift` hours (day view: rounded to `moveStep`, kept in the day) or `shift` columns (week,
+   * month: whole days along the columns on screen, kept in the range, start time and duration kept).
+   */
+  #shiftTarget(placement: ɵSdCalendarPlacement, shift: number, resourceId: string): SdSchedulerTarget {
+    if (this.activeView() === 'day') {
+      if (!placement.inGrid) return { ...ɵsdCalendarTargetOf(placement), resourceId };
+      const day = this.columns()[0];
+      const duration = placement.endMinutes - placement.startMinutes;
+      const start = ɵsdCalendarSnapMove(placement.startMinutes, shift * 60, duration, ɵsdCalendarMoveStep(this.stepValue()));
+      return { allDay: false, startDay: day, startMinutes: start, endDay: day, endMinutes: start + duration, resourceId };
+    }
+    const columns = this.columns();
+    const span = sdSchedulerColumnSpan(placement, columns);
+    const from = span?.from ?? 0;
+    const width = span ? span.to - span.from : 0;
+    const next = Math.min(columns.length - 1 - width, Math.max(0, from + Math.round(shift)));
+    return { ...ɵsdCalendarShiftDays(placement, ɵsdCalendarDayDiff(columns[from], columns[next])), resourceId };
+  }
+
+  #proposalLabel(target: SdSchedulerTarget, otherRow: boolean): string {
+    const formats = this.#formats();
+    const time = target.allDay
+      ? `${ɵsdCalendarDateText(formats, target.startDay, false)} – ${ɵsdCalendarDateText(formats, target.endDay, false)}`
+      : `${ɵsdCalendarClockText(target.startMinutes)} – ${ɵsdCalendarClockText(target.endMinutes)}`;
+    const resource = untracked(this.#resourceById).get(target.resourceId);
+    return otherRow && resource ? `${resource.title} · ${time}` : time;
+  }
+
+  /** Scrolls both axes while the pointer is within 40px of the visible grid area (§9.3), sticky parts left out. */
+  #edgeScroll(): void {
+    const scroller = this.scroller()?.nativeElement;
+    const session = this.#dragSession;
+    if (!scroller || !session) return this.#edge.stop();
+    const box = scroller.getBoundingClientRect();
+    const area = {
+      top: box.top + session.stickyBlock,
+      bottom: box.bottom,
+      left: session.rtl ? box.left : box.left + session.stickyInline,
+      right: session.rtl ? box.right - session.stickyInline : box.right,
+    };
+    const axes = { x: session.axis !== 'resource', y: session.axis !== 'time' };
+    this.#edge.update(scroller, area, this.#dragPointer, axes, () => {
+      if (!this.#dragSession) return;
+      this.#dragSession.lastKey = null;
+      this.#updateDrag();
+      this.#edgeScroll();
+    });
+  }
+
+  /** Position of the proposal block of a row (lane 0, on top of the other blocks, §8.4 step 5). */
+  protected proposalBox(proposal: SdSchedulerDragProposal): { start: string; size: string } {
+    const { target } = proposal;
+    const lastDay = ɵsdCalendarLastDayOf(target);
+    const placement = { ...target, inGrid: !target.allDay && lastDay === target.startDay, firstDay: target.startDay, lastDay };
+    if (this.activeView() === 'day') {
+      const span = sdSchedulerDaySpan(placement, this.columns()[0]) ?? { start: 0, end: 1440 };
+      return {
+        start: `calc(var(--sd-scheduler-hour-width) * ${span.start / 60} + ${DAY_GAP.before}px)`,
+        size: `max(12px, calc(var(--sd-scheduler-hour-width) * ${(span.end - span.start) / 60} - ${DAY_GAP.before + DAY_GAP.after}px))`,
+      };
+    }
+    const columns = this.columns();
+    const box = sdSchedulerColumnBox(sdSchedulerColumnSpan(placement, columns) ?? { from: 0, to: 0 }, columns.length);
+    return {
+      start: `calc(${box.start * 100}% + ${COLUMN_GAP.before}px)`,
+      size: `calc(${box.size * 100}% - ${COLUMN_GAP.before + COLUMN_GAP.after}px)`,
+    };
+  }
+
+  // ---- resize the end (§9.4) ----
+
+  protected onResizeDown(domEvent: PointerEvent, block: SdSchedulerBlockView<T, R>): void {
+    domEvent.stopPropagation();
+    if (!domEvent.isPrimary || !block.resizable) return;
+    const track = (domEvent.currentTarget as Element).closest<HTMLElement>('[data-track]');
+    this.#resizeSession = {
+      id: block.key,
+      placement: block.placement,
+      x: domEvent.clientX,
+      columnWidth: (track?.getBoundingClientRect().width || 1) / this.columns().length,
+      rtl: this.#rtl(),
+    };
+    this.#failure.set(null);
+    try {
+      (domEvent.currentTarget as Element).setPointerCapture(domEvent.pointerId);
+    } catch {
+      // why: see onTrackPointerDown.
+    }
+    document.addEventListener('keydown', this.#onDragKeydown, true);
+  }
+
+  protected onResizeMove(domEvent: PointerEvent): void {
+    const session = this.#resizeSession;
+    if (!session) return;
+    const dx = (session.rtl ? -1 : 1) * (domEvent.clientX - session.x);
+    const { placement } = session;
+    if (this.activeView() === 'day') {
+      const end = ɵsdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, (dx / this.#sizes().hour) * 60, this.stepValue());
+      this.#resize.set({ id: session.id, endMinutes: end, lastDay: placement.lastDay });
+      return;
+    }
+    const days = Math.round(dx / session.columnWidth);
+    const lastDay = sdSchedulerResizeDays(placement.firstDay, placement.lastDay, days, untracked(this.visible).to);
+    this.#resize.set({ id: session.id, endMinutes: placement.endMinutes, lastDay });
+  }
+
+  protected onResizeUp(domEvent: PointerEvent): void {
+    domEvent.stopPropagation();
+    const session = this.#resizeSession;
+    const resize = this.#resize();
+    this.#resizeSession = null;
+    this.#resize.set(null);
+    document.removeEventListener('keydown', this.#onDragKeydown, true);
+    if (!session || !resize) return;
+    const { placement } = session;
+    const resourceId = untracked(this.#reading).placed.find(item => item.event.id === session.id)?.event.resourceId;
+    if (!resourceId) return;
+    const target: SdSchedulerTarget = placement.allDay
+      ? { ...ɵsdCalendarTargetOf(placement), endDay: resize.lastDay, resourceId }
+      : { ...ɵsdCalendarTargetOf(placement), endMinutes: resize.endMinutes, resourceId };
+    void this.#runMove(session.id, target, 'resize', false);
+  }
+
+  /** The browser took the pointer away (a scroll or a system gesture): the live resize is dropped. */
+  protected onResizeCancel(): void {
+    this.#resizeSession = null;
+    this.#resize.set(null);
+    document.removeEventListener('keydown', this.#onDragKeydown, true);
+  }
+
+  /** Inline size of a block, following a live resize. */
+  protected blockSize(block: SdSchedulerBlockView<T, R>): string {
+    const resize = this.#resize();
+    if (resize?.id !== block.key) return block.size;
+    if (this.activeView() === 'day') {
+      const start = block.placement.startDay < this.columns()[0] ? 0 : block.placement.startMinutes;
+      return `max(12px, calc(var(--sd-scheduler-hour-width) * ${(resize.endMinutes - start) / 60} - ${DAY_GAP.before + DAY_GAP.after}px))`;
+    }
+    const span = sdSchedulerColumnSpan({ ...block.placement, lastDay: resize.lastDay, endDay: resize.lastDay }, this.columns());
+    const box = sdSchedulerColumnBox(span ?? { from: 0, to: 0 }, this.columns().length);
+    return `calc(${box.size * 100}% - ${COLUMN_GAP.before + COLUMN_GAP.after}px)`;
+  }
+
+  // ---- move pipeline (§9.5) ----
+
+  protected readonly asking = this.#asking.asReadonly();
+  protected readonly scopeMessageId = `${this.baseId}-scope`;
+
+  /** Answer of the scope bar; `null` is Cancel (Esc too). */
+  protected answerScope(scope: SdCalendarMoveScope | null): void {
+    const asking = this.#asking();
+    if (!asking) return;
+    this.#asking.set(null);
+    asking.answer(scope);
+  }
+
+  protected onScopeKeydown(domEvent: KeyboardEvent): void {
+    if (domEvent.key !== 'Escape') return;
+    domEvent.preventDefault();
+    domEvent.stopPropagation();
+    this.answerScope(null);
+  }
+
+  #droppable(event: SdSchedulerEvent<T>, target: SdSchedulerTarget): boolean {
+    const resource = untracked(this.#resourceById).get(target.resourceId);
+    if (!resource) return false;
+    const to: SdSchedulerRange = { ...ɵsdCalendarRangeOf(target, this.#clock, untracked(this.transform)), resourceId: target.resourceId };
+    try {
+      return ɵsdCalendarAllows(untracked(this.option).move?.droppable, { event, to, resource });
+    } catch {
+      // Step 0 L11: droppable is synchronous by contract; a throw refuses, with a dev-mode warning.
+      this.#report('warn', `droppable:${event.id}`, `move.droppable threw for event "${event.id}"; the target is refused.`);
+      return false;
+    }
+  }
+
+  #announceBlocked(resourceId: string): void {
+    const resource = untracked(this.#resourceById).get(resourceId);
+    this.#announcer.announce(this.#t('core.component.scheduler.drop-blocked', { resource: resource?.title ?? resourceId }));
+  }
+
+  /** The checks of the scheduler (§9.5 steps 1–3), then the shared pipeline of `ɵSdCalendarMoveRunner`. */
+  async #runMove(id: string, target: SdSchedulerTarget, source: SdCalendarMoveSource, keyboard: boolean): Promise<boolean> {
+    const move = untracked(this.option).move;
+    if (!move || untracked(this.locked) || untracked(this.cellTemplateActive) || untracked(this.#operation.busy)) return false;
+    const placed = untracked(this.#reading).placed.find(item => item.event.id === id);
+    const resource = untracked(this.#resourceById).get(target.resourceId);
+    if (!placed || !resource || !ɵsdCalendarAllows(move.movable, placed.event)) return false;
+    const { event } = placed;
+    const transform = untracked(this.transform);
+    const from: SdSchedulerRange = { ...ɵsdCalendarRangeOf(placed.placement, this.#clock, transform), resourceId: event.resourceId };
+    const to: SdSchedulerRange = { ...ɵsdCalendarRangeOf(target, this.#clock, transform), resourceId: target.resourceId };
+    const sameTime = from.start === to.start && from.end === to.end && from.allDay === to.allDay;
+    // §4.3, §9.5: a move against axis is refused.
+    const axis = move.axis ?? 'both';
+    if ((axis === 'time' && to.resourceId !== from.resourceId) || (axis === 'resource' && !sameTime)) return false;
+    if (sameTime && to.resourceId === from.resourceId) return false;
+    if (this.#outOfRange(target.startDay) || this.#outOfRange(ɵsdCalendarLastDayOf(target))) {
+      this.#announcer.announce(this.#t('core.component.calendar.out-of-range'));
+      return false;
+    }
+    // SC-08, Step 0 H3: droppable is checked for every source, move() included.
+    if (!this.#droppable(event, target)) {
+      this.#announceBlocked(target.resourceId);
+      return false;
+    }
+    const moved: SdSchedulerEvent<T> = { ...event, start: to.start, end: to.end, allDay: to.allDay, resourceId: to.resourceId };
+    return this.#runner.run<SdSchedulerMoveRequest<T, R>>({
+      id,
+      title: event.title,
+      recurring: !!event.occurrence,
+      source,
+      keyboard,
+      // SC-06: both flags are evaluated once more right before the callback.
+      allowed: () => ɵsdCalendarAllows(move.movable, event) && this.#droppable(event, target),
+      request: (scope, signal) => ({ event, from, to, resource, source, scope, signal }),
+      onMove: move.onMove,
+      show: saving => this.#moving.set(saving === null ? null : { id, event: moved, saving }),
+      accept: request => {
+        this.#loader.items.update(items => items.map(item => (item.id === event.id ? moved : item)));
+        // §9.5 step 6: a target in a collapsed group opens it; a target outside the range moves the range.
+        if (resource.group && untracked(this.#collapsed).has(resource.group)) this.toggleGroup(resource.group);
+        const visible = untracked(this.visible);
+        if (target.startDay < visible.from || target.startDay > visible.to) this.date.set(target.startDay);
+        this.sdMove.emit(request);
+        return this.#movedMessage(event, target, resource, from, to, source);
+      },
+      fail: (request, outcome) =>
+        this.sdMoveError.emit(
+          outcome.kind === 'error' ? { request, reason: 'error', error: outcome.error } : { request, reason: 'rejected' }
+        ),
+    });
+  }
+
+  /** Live region text of an accepted move: "Moved to {resource}, {start}" across rows, otherwise as sd-calendar. */
+  #movedMessage(
+    event: SdSchedulerEvent<T>,
+    target: SdSchedulerTarget,
+    resource: SdSchedulerResource<R>,
+    from: SdSchedulerRange,
+    to: SdSchedulerRange,
+    source: SdCalendarMoveSource
+  ): string {
+    const formats = this.#formats();
+    if (to.resourceId === from.resourceId) return ɵsdCalendarMovedText(event.title, target, from, to, source, formats, this.#t);
+    const day = `${ɵsdCalendarWeekdayLong(formats, target.startDay)} ${ɵsdCalendarDateText(formats, target.startDay, false)}`;
+    const time = ɵsdCalendarClockText(target.startMinutes);
+    const start = target.allDay ? day : this.activeView() === 'day' ? time : `${day}, ${time}`;
+    return this.#t('core.component.scheduler.moved-resource', { resource: resource.title, start });
+  }
+
   // ---- loading ----
 
   #startLoad(option: SdSchedulerOption<T, R>, resources: readonly SdSchedulerResource<R>[], range: SdSchedulerVisibleRange): void {
@@ -918,18 +1423,24 @@ export class SdScheduler<T = unknown, R = unknown> {
       return;
     }
     const resourceIds = resources.map(resource => resource.id);
-    void this.#loader.load(
-      `${ɵsdCalendarRangeKey(range)}|${this.#generation}`,
-      signal => option.dataSource.onLoad({ from: range.from, to: range.to, view: range.view, resourceIds, signal }),
-      error => {
-        this.#announcer.announce(this.#i18n.t('core.component.calendar.load-error'));
-        this.sdLoadError.emit(error);
-      }
-    );
+    void this.#loader
+      .load(
+        `${ɵsdCalendarRangeKey(range)}|${this.#generation}`,
+        signal => option.dataSource.onLoad({ from: range.from, to: range.to, view: range.view, resourceIds, signal }),
+        error => {
+          this.#announcer.announce(this.#i18n.t('core.component.calendar.load-error'));
+          this.sdLoadError.emit(error);
+        }
+      )
+      .then(() => this.#focus.pending());
   }
 
   #abortMove(): void {
-    if (this.#operation.abort(['move'])) this.#moving.set(null);
+    if (!this.#operation.abort(['move'])) return;
+    this.#moving.set(null);
+    const asking = this.#asking();
+    this.#asking.set(null);
+    asking?.answer(null);
   }
 
   #pruneGroups(resources: readonly SdSchedulerResource<R>[]): void {
@@ -1089,6 +1600,8 @@ export class SdScheduler<T = unknown, R = unknown> {
     const root = this.rootAutoId();
     const move = this.option().move;
     const label = this.#eventLabel(event, placement, resource);
+    const movable = !!move && !this.locked() && !this.cellTemplateActive() && ɵsdCalendarAllows(move.movable, event);
+    const resizable = movable && (move?.axis ?? 'both') !== 'resource' && (view === 'day' ? placement.inGrid : placement.allDay);
     return {
       key: event.id,
       event,
@@ -1103,7 +1616,8 @@ export class SdScheduler<T = unknown, R = unknown> {
       past: this.dimPast() && placement.endInstant <= this.#nowInstant(),
       pending: item.pending,
       saving: item.saving,
-      movable: !!move && !this.locked() && ɵsdCalendarAllows(move.movable, event),
+      movable,
+      resizable,
       start,
       size,
       top: `${sdSchedulerLaneTop(item.pending ? 0 : lane, lanes)}px`,

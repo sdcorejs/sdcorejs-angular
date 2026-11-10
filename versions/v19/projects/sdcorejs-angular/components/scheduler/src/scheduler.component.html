@@ -5,6 +5,8 @@
 @let _days = dayViews();
 @let _ghost = ghost();
 @let _canCreate = canCreate();
+@let _proposal = dragProposal();
+@let _lockAxis = lockAxis();
 <section
   #root
   class="sd-scheduler"
@@ -84,6 +86,37 @@
   <div class="sd-scheduler__status" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</div>
   <span class="sd-scheduler__status" [id]="gridHelpId">{{ 'core.component.scheduler.grid-help' | sdTranslate }}</span>
   <span class="sd-scheduler__status" [id]="eventHelpId">{{ 'core.component.scheduler.event-help' | sdTranslate }}</span>
+  @if (asking(); as _ask) {
+    <div class="sd-scheduler__scope" role="alertdialog" [attr.aria-labelledby]="scopeMessageId" (keydown)="onScopeKeydown($event)">
+      <p class="sd-scheduler__scope-message" [id]="scopeMessageId">
+        {{ 'core.component.calendar.scope-message' | sdTranslate: { title: _ask.title } }}
+      </p>
+      <div class="sd-scheduler__scope-actions">
+        <button type="button" class="sd-scheduler__scope-button" data-scope="this" [attr.data-autoid]="childAutoId('scope-this')" (click)="answerScope('this')">
+          {{ 'core.component.calendar.scope-this' | sdTranslate }}
+        </button>
+        <button
+          type="button"
+          class="sd-scheduler__scope-button"
+          data-scope="following"
+          [attr.data-autoid]="childAutoId('scope-following')"
+          (click)="answerScope('following')">
+          {{ 'core.component.calendar.scope-following' | sdTranslate }}
+        </button>
+        <button type="button" class="sd-scheduler__scope-button" data-scope="all" [attr.data-autoid]="childAutoId('scope-all')" (click)="answerScope('all')">
+          {{ 'core.component.calendar.scope-all' | sdTranslate }}
+        </button>
+        <button
+          type="button"
+          class="sd-scheduler__scope-button sd-scheduler__scope-button--cancel"
+          data-scope="cancel"
+          [attr.data-autoid]="childAutoId('scope-cancel')"
+          (click)="answerScope(null)">
+          {{ 'core.common.cancel' | sdTranslate }}
+        </button>
+      </div>
+    </div>
+  }
 
   @if (invalid()) {
     <sd-data-state class="sd-scheduler__invalid" state="error" compact [title]="'core.component.calendar.invalid-data' | sdTranslate" />
@@ -175,6 +208,8 @@
                   role="row"
                   [attr.data-resource-id]="row.resource.id"
                   [attr.data-autoid]="row.autoId"
+                  [attr.data-drop]="_proposal && !_proposal.outside && _proposal.target.resourceId === row.resource.id ? (_proposal.blocked ? 'blocked' : 'ok') : null"
+                  [attr.data-blocked]="(_proposal?.blocked && !_proposal?.outside && _proposal?.target?.resourceId === row.resource.id) || null"
                   [style.height.px]="row.height">
                   <div class="sd-scheduler__resource" role="rowheader" [id]="row.headerId" [attr.title]="row.resource.title">
                     @if (resourceTemplate(); as _template) {
@@ -229,6 +264,13 @@
                       <div
                         class="sd-scheduler__event"
                         role="button"
+                        cdkDrag
+                        [cdkDragDisabled]="!block.movable"
+                        [cdkDragStartDelay]="dragDelay"
+                        [cdkDragConstrainPosition]="constrainDrag"
+                        [cdkDragLockAxis]="_lockAxis"
+                        (cdkDragStarted)="onDragStarted($event, block)"
+                        (cdkDragEnded)="onDragEnded($event)"
                         [attr.tabindex]="_disabled ? -1 : 0"
                         [attr.aria-label]="block.label"
                         [attr.aria-describedby]="row.headerId + ' ' + eventHelpId"
@@ -246,11 +288,12 @@
                         [attr.data-selected]="block.key === _selected || null"
                         [attr.data-failed]="isFailed(block.key) || null"
                         [attr.data-movable]="block.movable || null"
+                        [attr.data-dragging]="isDragging(block.key) || null"
                         [attr.data-clipped-start]="block.clippedStart || null"
                         [attr.data-clipped-end]="block.clippedEnd || null"
                         [style.--sd-scheduler-event-color]="block.customColor"
                         [style.inset-inline-start]="block.start"
-                        [style.inline-size]="block.size"
+                        [style.inline-size]="blockSize(block)"
                         [style.top]="block.top">
                         <span class="sd-scheduler__dot" aria-hidden="true"></span>
                         @if (eventTemplate(); as _template) {
@@ -274,6 +317,31 @@
                         @if (block.saving) {
                           <sd-icon class="sd-scheduler__sync" name="sync" size="14px" aria-hidden="true" />
                         }
+                        @if (block.resizable) {
+                          <div
+                            class="sd-scheduler__resize"
+                            data-resize-handle
+                            aria-hidden="true"
+                            (mousedown)="$event.stopPropagation()"
+                            (touchstart)="$event.stopPropagation()"
+                            (pointerdown)="onResizeDown($event, block)"
+                            (pointermove)="onResizeMove($event)"
+                            (pointerup)="onResizeUp($event)"
+                            (pointercancel)="onResizeCancel()"></div>
+                        }
+                      </div>
+                    }
+                    @if (_proposal && !_proposal.outside && !_proposal.onGroup && _proposal.target.resourceId === row.resource.id) {
+                      @let _drop = proposalBox(_proposal);
+                      <div
+                        class="sd-scheduler__proposal"
+                        data-drag-proposal
+                        aria-hidden="true"
+                        [attr.data-blocked]="_proposal.blocked || null"
+                        [style.inset-inline-start]="_drop.start"
+                        [style.inline-size]="_drop.size"
+                        [style.top.px]="row.height > 48 ? 6 : 10">
+                        <span class="sd-scheduler__label" data-drag-label>{{ _proposal.label }}</span>
                       </div>
                     }
                     @if (_ghost && _ghost.resourceId === row.resource.id) {
