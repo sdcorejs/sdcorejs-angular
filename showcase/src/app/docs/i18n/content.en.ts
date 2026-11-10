@@ -513,6 +513,10 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   },
   'components/inform/example-tip-trong-form-va-bang': { title: 'Tip in form and table' },
   'components/job-progress/example-details-va-error': { title: 'Details and error' },
+  'components/kanban/example-orders': {
+    description:
+      'Pattern P1. Drag an order out of the first column: the done column fades at once. Moving an order to the cancelled column asks for a reason; closing the dialog cancels the move. The toast undoes the move. Click an order to open its details.',
+  },
   'components/mini-editor/example-bieu-mau': { title: 'Form' },
   'components/mini-editor/example-dinh-dang-dau-ra-html': { title: 'HTML output format' },
   'components/mini-editor/example-dinh-dang-dau-ra-markdown': { title: 'Markdown output format' },

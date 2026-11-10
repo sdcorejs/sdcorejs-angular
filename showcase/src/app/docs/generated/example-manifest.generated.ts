@@ -154,7 +154,8 @@ export type ShowcaseExampleSourceKey =
   | "components/job-progress/example-registry-binding"
   | "components/kanban/example-async-confirmation"
   | "components/kanban/example-cms-mapping"
-  | "components/kanban/example-local-board"
+  | "components/kanban/example-orders"
+  | "components/kanban/example-tasks"
   | "components/mini-editor/example-bieu-mau"
   | "components/mini-editor/example-dinh-dang-dau-ra-html"
   | "components/mini-editor/example-dinh-dang-dau-ra-markdown"
@@ -1580,25 +1581,32 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Registry binding” scenario preserved from the showcase.",
   },
   {
-    sourceKey: "components/kanban/example-local-board",
+    sourceKey: "components/kanban/example-orders",
     pageKey: "components/kanban",
-    sectionId: "example-local-board",
-    title: "Local board",
-    description: "Drag by the handle, use the movement menu, or focus the handle and press Alt plus an arrow key. Search preserves hidden cards and counts. Card metadata comes from the card template.",
+    sectionId: "example-orders",
+    title: "Orders",
+    description: "Pattern P1. Drag an order from Chờ xác nhận: Hoàn tất fades at once. Moving to Đã huỷ asks for a reason; closing the dialog cancels. The toast undoes the move. Click an order to open its details.",
+  },
+  {
+    sourceKey: "components/kanban/example-tasks",
+    pageKey: "components/kanban",
+    sectionId: "example-tasks",
+    title: "Tasks",
+    description: "Drag a card to another place or column, use the move menu, or focus a card and press Alt with an arrow key. The card template holds no controls; the Details button lives in the actions template.",
   },
   {
     sourceKey: "components/kanban/example-cms-mapping",
     pageKey: "components/kanban",
     sectionId: "example-cms-mapping",
     title: "CMS mapping",
-    description: "Nested CMS fields map through option callbacks. Readonly prevents moves while search and column collapse remain available.",
+    description: "The consumer maps nested CMS fields to cards (articles only). Readonly keeps selection, search and collapse; there is no move.",
   },
   {
     sourceKey: "components/kanban/example-async-confirmation",
     pageKey: "components/kanban",
     sectionId: "example-async-confirmation",
     title: "Async confirmation",
-    description: "Start a move, then confirm, reject, or fail it. The card stays in its previous column until confirmation. Refreshing data cancels the pending proposal.",
+    description: "Start a move, then confirm, reject, fail or cancel it. The card stays in its column until the answer. Refreshing the data aborts the pending move.",
   },
   {
     sourceKey: "components/mini-editor/example-dinh-dang-dau-ra-html",
