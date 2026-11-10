@@ -38,7 +38,14 @@ describe('sd-scheduler types', () => {
     const option: SdSchedulerOption<Booking, Room> = {
       dataSource: {
         onLoad: args => [
-          { id: 'a', title: 'A', resourceId: args.resourceIds[0], start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00', data: { people: 4 } },
+          {
+            id: 'a',
+            title: 'A',
+            resourceId: args.resourceIds[0],
+            start: '2026/11/09 09:00:00',
+            end: '2026/11/09 10:00:00',
+            data: { people: 4 },
+          },
         ],
       },
       create: { creatable: context => (context.resource.data?.seats ?? 0) > 2, onCreate: () => undefined },

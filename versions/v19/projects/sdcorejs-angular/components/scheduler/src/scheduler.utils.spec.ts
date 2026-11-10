@@ -52,7 +52,9 @@ describe('sd-scheduler utils', () => {
     it('[SCH-U-03] puts an all-day event first on the same start, then the longer one', () => {
       const items = [timed(0, 60), { start: 0, end: 1440, allDay: true }, timed(0, 120)];
       const layout = sdSchedulerLanes(items);
-      expect(layout.order.map(entry => entry.index)).withContext('DOM order').toEqual([1, 2, 0]);
+      expect(layout.order.map(entry => entry.index))
+        .withContext('DOM order')
+        .toEqual([1, 2, 0]);
       expect(lanesOf(items)).toEqual([2, 0, 1]);
     });
 
@@ -101,19 +103,25 @@ describe('sd-scheduler utils', () => {
         clippedStart: false,
         clippedEnd: true,
       });
-      expect(sdSchedulerDaySpan(place('2026/11/08 22:00:00', '2026/11/10 06:00:00'), day)).withContext('across the whole day').toEqual({
-        start: 0,
-        end: 1440,
-        clippedStart: true,
-        clippedEnd: true,
-      });
-      expect(sdSchedulerDaySpan(place('2026/11/09 23:00:00', '2026/11/10 00:00:00'), day)).withContext('ends at 24:00').toEqual({
-        start: 1380,
-        end: 1440,
-        clippedStart: false,
-        clippedEnd: false,
-      });
-      expect(sdSchedulerDaySpan(place('2026/11/08 23:00:00', '2026/11/09 00:00:00'), day)).withContext('ended at 00:00').toBeNull();
+      expect(sdSchedulerDaySpan(place('2026/11/08 22:00:00', '2026/11/10 06:00:00'), day))
+        .withContext('across the whole day')
+        .toEqual({
+          start: 0,
+          end: 1440,
+          clippedStart: true,
+          clippedEnd: true,
+        });
+      expect(sdSchedulerDaySpan(place('2026/11/09 23:00:00', '2026/11/10 00:00:00'), day))
+        .withContext('ends at 24:00')
+        .toEqual({
+          start: 1380,
+          end: 1440,
+          clippedStart: false,
+          clippedEnd: false,
+        });
+      expect(sdSchedulerDaySpan(place('2026/11/08 23:00:00', '2026/11/09 00:00:00'), day))
+        .withContext('ended at 00:00')
+        .toBeNull();
       expect(sdSchedulerDaySpan(place('2026/11/10 09:00:00', '2026/11/10 10:00:00'), day)).toBeNull();
       expect(sdSchedulerDaySpan(place('2026/11/09', undefined, true), day)).toEqual({
         start: 0,
@@ -127,7 +135,9 @@ describe('sd-scheduler utils', () => {
         clippedStart: true,
         clippedEnd: true,
       });
-      expect(sdSchedulerDayBox({ start: 600, end: 605 }, 80)).withContext('at least 12px').toEqual({ left: 801, width: 12 });
+      expect(sdSchedulerDayBox({ start: 600, end: 605 }, 80))
+        .withContext('at least 12px')
+        .toEqual({ left: 801, width: 12 });
     });
 
     it('[SCH-U-10] keeps the hour axis on the wall clock on 23- and 25-hour days', () => {
@@ -149,7 +159,9 @@ describe('sd-scheduler utils', () => {
       const workdays = sdSchedulerColumns(week, 'week', true);
       expect(workdays.length).toBe(5);
       expect(sdSchedulerColumns(week, 'week', false).length).toBe(7);
-      expect(sdSchedulerColumns(['2026/11/14'], 'day', true)).withContext('the day view ignores hideWeekends').toEqual(['2026/11/14']);
+      expect(sdSchedulerColumns(['2026/11/14'], 'day', true))
+        .withContext('the day view ignores hideWeekends')
+        .toEqual(['2026/11/14']);
       expect(sdSchedulerVisibleRange('week', '2026/11/11', 1)).toEqual({ from: '2026/11/09', to: '2026/11/15', view: 'week' });
       expect(sdSchedulerVisibleRange('week', '2026/11/11', 0).from).toBe('2026/11/08');
       expect(sdSchedulerVisibleDays('month', '2026/02/14', 1).length).toBe(28);
@@ -172,13 +184,17 @@ describe('sd-scheduler utils', () => {
         clippedStart: true,
         clippedEnd: false,
       });
-      expect(sdSchedulerColumnSpan(place('2026/11/10 22:00:00', '2026/11/12 06:00:00'), workdays)).withContext('across midnight').toEqual({
-        from: 1,
-        to: 3,
-        clippedStart: false,
-        clippedEnd: false,
-      });
-      expect(sdSchedulerColumnSpan(place('2026/11/14', '2026/11/15', true), workdays)).withContext('only weekend days').toBeNull();
+      expect(sdSchedulerColumnSpan(place('2026/11/10 22:00:00', '2026/11/12 06:00:00'), workdays))
+        .withContext('across midnight')
+        .toEqual({
+          from: 1,
+          to: 3,
+          clippedStart: false,
+          clippedEnd: false,
+        });
+      expect(sdSchedulerColumnSpan(place('2026/11/14', '2026/11/15', true), workdays))
+        .withContext('only weekend days')
+        .toBeNull();
       expect(sdSchedulerColumnSpan(place('2026/12/01', undefined, true), workdays)).toBeNull();
       expect(sdSchedulerColumnSpan(place('2026/11/09', undefined, true), [])).toBeNull();
       expect(sdSchedulerColumnBox({ from: 1, to: 3 }, 5)).toEqual({ start: 0.2, size: 0.6 });
