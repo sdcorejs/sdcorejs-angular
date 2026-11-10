@@ -886,11 +886,22 @@ export class SdQueryBar {
     else chip?.openMenu(returnFocusTo ?? undefined);
   }
 
-  /** Clear-all button: the host's `onClearAll` when given, else the built-in clearAll(). */
+  /**
+   * Clear-all button: the host's `onClearAll` when given, else the built-in clearAll(). With `applyOn: 'commit'` the
+   * built-in path applies once when it emptied a chip that had a value (R2 G-10).
+   */
   onClearClick(): void {
     const onClearAll = this.option()?.onClearAll;
-    if (onClearAll) onClearAll();
-    else this.clearAll();
+    if (onClearAll) {
+      onClearAll();
+      return;
+    }
+    // why: activeCount đếm đúng các chip có giá trị mà clearAll sẽ làm rỗng hoặc bỏ (chip bắt buộc giữ nguyên) — bằng 0
+    // thì clearAll không đổi điều kiện lọc nào nên không áp dụng.
+    const changed = this.activeCount() > 0;
+    this.clearAll();
+    // why: ở applyOn 'commit' thanh không có nút Tìm kiếm; không áp dụng ở đây thì host vẫn lọc theo các chip vừa xoá.
+    if (changed && this.resolvedApplyOn() === 'commit') this.#applyChipChange();
   }
 
   /** Swap the field of an existing chip — reset operator + value to the new field's defaults. */

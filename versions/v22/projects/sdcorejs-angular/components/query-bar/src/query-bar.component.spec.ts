@@ -1520,6 +1520,73 @@ describe('SdQueryBar (host options)', () => {
       expect(button.disabled).toBe(true);
       expect(button.getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.clear'));
     });
+
+    describe("QB-B-07 the built-in Clear applies at once with applyOn: 'commit' (R2 G-10)", () => {
+      let apply: jasmine.Spy;
+      const clearButton = (): HTMLButtonElement => fixture.nativeElement.querySelector('.c-clear-all');
+
+      beforeEach(() => {
+        apply = jasmine.createSpy('apply');
+        component.apply.subscribe(apply);
+      });
+
+      it('QB-B-07 applies once with the cleared bar', () => {
+        setOption({ applyOn: 'commit' });
+        clearButton().click();
+        expect(apply).toHaveBeenCalledTimes(1);
+        expect(apply.calls.mostRecent().args[0].filters).toEqual([{ field: 'status', operator: 'IN', data: [] } as any]);
+      });
+
+      it('QB-B-07 keeps the required chip and the search text applied last', () => {
+        const tenant = { ...status, key: 'tenant', label: 'Kho', required: true } as SdQueryField;
+        fixture.componentRef.setInput('fields', [tenant, status, name]);
+        component.filters.set([
+          { field: 'tenant', operator: 'IN', data: ['a'] } as any,
+          { field: 'status', operator: 'IN', data: ['a'] } as any,
+          { field: 'name', operator: 'CONTAIN', data: 'x' } as any,
+        ]);
+        setOption({ applyOn: 'commit', showSearch: true });
+        component.setSearch('abc');
+        clearButton().click();
+        expect(apply).toHaveBeenCalledTimes(1);
+        const query = apply.calls.mostRecent().args[0];
+        expect(query.filters).toEqual([
+          { field: 'tenant', operator: 'IN', data: ['a'] } as any,
+          { field: 'status', operator: 'IN', data: [] } as any,
+        ]);
+        expect(query.search).withContext('the typed text is applied by Enter, as with a chip change').toBe('');
+      });
+
+      it('QB-B-07 does not apply when nothing is left to clear', () => {
+        setOption({ applyOn: 'commit' });
+        component.filters.set([{ field: 'status', operator: 'IN', data: [] } as any]);
+        fixture.detectChanges();
+        expect(clearButton().disabled).toBe(true);
+        component.onClearClick();
+        expect(apply).not.toHaveBeenCalled();
+      });
+
+      it("QB-B-07 does not apply with the default applyOn 'search'", () => {
+        clearButton().click();
+        expect(component.filters().length).toBe(1);
+        expect(apply).not.toHaveBeenCalled();
+      });
+
+      it('QB-B-07 leaves the apply to the host when it passes onClearAll', () => {
+        const onClearAll = jasmine.createSpy('onClearAll');
+        setOption({ applyOn: 'commit', onClearAll });
+        clearButton().click();
+        expect(onClearAll).toHaveBeenCalledTimes(1);
+        expect(apply).not.toHaveBeenCalled();
+      });
+
+      it('QB-B-07 clearAll() called from code still does not apply', () => {
+        setOption({ applyOn: 'commit' });
+        component.clearAll();
+        expect(component.filters().length).toBe(1);
+        expect(apply).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Q8 search placeholder and end slot', () => {
