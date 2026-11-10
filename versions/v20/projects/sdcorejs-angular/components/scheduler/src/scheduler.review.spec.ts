@@ -356,6 +356,25 @@ describe('SdScheduler · R2 fixes', () => {
   );
 
   it(
+    '[SCH-B-49] [SCH-SC-30] leaves the focus off the block when the user moved it away and it fell to body, RX #4',
+    run(() => {
+      const wait = deferred<boolean>();
+      const { host, settle } = renderScheduler({ option: { ...clientOption(), move: { onMove: () => wait.promise } } });
+      block(host, 'client')!.focus();
+      press(block(host, 'client')!, 'ArrowDown', { alt: true });
+      settle();
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      outside.focus();
+      outside.remove();
+      expect(document.activeElement).toBe(document.body);
+      wait.resolve(true);
+      settle();
+      expect(document.activeElement).toBe(document.body);
+    })
+  );
+
+  it(
     '[SCH-B-23] frames the colour dot and today in forced colors, R2 #23',
     run(() => {
       renderScheduler();

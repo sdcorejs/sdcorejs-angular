@@ -112,10 +112,25 @@ export class SdCalendarMoveRunner {
   constructor(private readonly host: SdCalendarMoveHost) {}
 
   async run<R extends { readonly signal: AbortSignal }>(plan: SdCalendarMovePlan<R>): Promise<boolean> {
-    const { operation, announcer, focus, t } = this.host;
+    const { operation, focus } = this.host;
     const signal = operation.begin('move');
     if (!signal) return false;
     const origin = plan.keyboard ? document.activeElement : null;
+    const watch = focus.track(origin);
+    try {
+      return await this.#run(plan, signal, origin, watch);
+    } finally {
+      watch.stop();
+    }
+  }
+
+  async #run<R extends { readonly signal: AbortSignal }>(
+    plan: SdCalendarMovePlan<R>,
+    signal: AbortSignal,
+    origin: Element | null,
+    watch: SdCalendarFocusWatch
+  ): Promise<boolean> {
+    const { operation, announcer, focus, t } = this.host;
     let restore = plan.keyboard;
     let scope: SdCalendarMoveScope | null = plan.recurring ? 'this' : null;
     if (plan.recurring && plan.source !== 'api') {
@@ -129,7 +144,7 @@ export class SdCalendarMoveRunner {
         operation.end(signal);
         plan.show(null);
         announcer.announce(t('core.component.calendar.cancelled'));
-        focus.restore(plan.id, origin);
+        focus.restore(plan.id, origin, watch);
         return false;
       }
     }
@@ -146,7 +161,7 @@ export class SdCalendarMoveRunner {
     if (outcome.kind === 'aborted') return false;
     operation.end(signal);
     plan.show(null);
-    if (restore) focus.restore(plan.id, origin);
+    if (restore) focus.restore(plan.id, origin, watch);
     if (outcome.kind === 'cancelled') {
       announcer.announce(t('core.component.calendar.cancelled'));
       return false;
@@ -272,6 +287,12 @@ export class SdCalendarAnnouncer {
   }
 }
 
+/** Whether the user put the focus somewhere else while a move waited (SC-30). */
+export interface SdCalendarFocusWatch {
+  readonly abandoned: () => boolean;
+  readonly stop: () => void;
+}
+
 /**
  * Puts the focus back on an item after a move that started from the keyboard or the scope bar (SC-29, SC-30). The
  * item may first need the next range to load, so `pending()` runs again after every load.
@@ -288,8 +309,27 @@ export class SdCalendarFocusKeeper {
     private readonly scopeSelector: string
   ) {}
 
+  /**
+   * Watches the focus while a move waits: a focus the user puts outside `origin` and the scope bar abandons the item
+   * (SC-30), even when that element loses the focus to `body` before the move ends (as sd-kanban, RX #4). A focus that
+   * falls back to `body` alone (the item re-rendered or disabled) does not.
+   */
+  track(origin: Element | null): SdCalendarFocusWatch {
+    let abandoned = false;
+    const listener = (event: FocusEvent): void => {
+      // why: focusin always targets an element (a window focus does not fire it).
+      const target = event.target as Element;
+      if (target === document.body || target === origin) return;
+      if (this.host.querySelector(this.scopeSelector)?.contains(target)) return;
+      abandoned = true;
+    };
+    document.addEventListener('focusin', listener, true);
+    return { abandoned: () => abandoned, stop: () => document.removeEventListener('focusin', listener, true) };
+  }
+
   /** Focuses `id` unless the user moved the focus somewhere else while waiting (`origin` is where it started). */
-  restore(id: string, origin: Element | null): void {
+  restore(id: string, origin: Element | null, watch?: SdCalendarFocusWatch): void {
+    if (watch?.abandoned()) return;
     const active = document.activeElement;
     const inScopeBar = !!active && !!this.host.querySelector(this.scopeSelector)?.contains(active);
     if (active && active !== document.body && active !== origin && active.isConnected && !inScopeBar) return;

@@ -1168,6 +1168,12 @@ $hour: var(--sd-calendar-hour-height);
   --sd-calendar-gutter-width: 48px;
   --sd-calendar-reserve: 16px;
 
+  // §12, SC-36: 44px touch targets for the band and scope buttons (RX #1, as sd-scheduler).
+  .sd-calendar__band-button,
+  .sd-calendar__scope-button {
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
   &[data-display='day'] {
     --sd-calendar-reserve: 16px;
   }

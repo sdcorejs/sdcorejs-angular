@@ -461,6 +461,49 @@ describe('sd-calendar shared pieces', () => {
     });
   });
 
+  describe('focus watch', () => {
+    it('[CAL-SC-30] keeps the focus the user moved elsewhere, even after it falls back to body', () => {
+      @Component({
+        standalone: true,
+        template: '<button data-id="a">A</button><div class="scope"><button data-scope>S</button></div>',
+      })
+      class Host {}
+      const fixture = TestBed.createComponent(Host);
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(host);
+      const keeper = new SdCalendarFocusKeeper(host, TestBed.inject(Injector), id => `[data-id="${id}"]`, '.scope');
+      const item = host.querySelector<HTMLElement>('[data-id="a"]')!;
+      const outside = document.createElement('input');
+      document.body.appendChild(outside);
+
+      item.focus();
+      const kept = keeper.track(item);
+      host.querySelector<HTMLElement>('[data-scope]')!.focus();
+      expect(kept.abandoned()).withContext('the scope bar belongs to the component').toBeFalse();
+      outside.focus();
+      outside.remove();
+      expect(document.activeElement).toBe(document.body);
+      expect(kept.abandoned()).toBeTrue();
+      keeper.restore('a', item, kept);
+      kept.stop();
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+      expect(document.activeElement).withContext('SC-30').toBe(document.body);
+
+      item.focus();
+      const fresh = keeper.track(item);
+      item.blur();
+      item.focus();
+      item.blur();
+      keeper.restore('a', item, fresh);
+      fresh.stop();
+      TestBed.inject(ApplicationRef).tick();
+      expect(document.activeElement).withContext('a fall back to body alone does not abandon').toBe(item);
+      host.remove();
+    });
+  });
+
   describe('edge scroll', () => {
     it('[CAL-C-23] scrolls faster closer to an edge, on the axes asked for', () => {
       expect(sdCalendarEdgeSpeed(100, 0, 500)).toBe(0);
