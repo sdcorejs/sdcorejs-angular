@@ -53,7 +53,7 @@ Người dùng chốt các mục "Cần PD chốt" của R1 và R2 ("từ 10 tr�
 | R2 G-4 viền focus trên mục đang trỏ | Giữ nền 8% cộng viền 2px | Không đổi |
 | R1 G-1 nút bộ lọc đã lưu ở comfortable | Giữ 28×28 như `main` | Không đổi |
 | R2 N-2 `aria-describedby` của dòng `required-min-one` | Chấp nhận gắn lên nhóm giá trị (popover) / chip (inline) | Không đổi |
-| R1 G-3 con của `role="menu"` | Chạy axe trên panel trước, chỉ đổi cấu trúc khi axe báo | Kết quả ở mô tả PR |
+| R1 G-3 con của `role="menu"` | axe báo `aria-required-children` khi có hàng (nút xoá là `button` thường) → nút xoá cũng là `menuitem`, vẫn ngoài vòng mũi tên (spec 2.3 ghi "button thường") | PR này, `QB-B-08` |
 | R1 G-4 nút × lồng trong chip popover-mode | Có từ `main`, để việc riêng | Ngoài PR |
 | R2 G-10 `clearAll()` không phát `apply` ở `applyOn: 'commit'` | Sửa ở PR riêng (đổi hành vi ngoài spec) | Ngoài PR |
 | R2 G-5 QB-E-04 | Đi bằng phím Tab thật | PR này |

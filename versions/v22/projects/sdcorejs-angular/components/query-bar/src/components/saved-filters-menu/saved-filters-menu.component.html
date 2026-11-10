@@ -41,8 +41,11 @@
           <sd-icon class="c-sf-lead" name="filter_alt" size="18px" aria-hidden="true"></sd-icon>
           <span class="c-sf-name">{{ f.name }}</span>
         </button>
+        <!-- why: menu chỉ được sở hữu menuitem (axe aria-required-children, PD sau R1 G-3) — nút xoá cũng là menuitem,
+             vẫn ngoài vòng mũi tên (→ / Tab tới nó). -->
         <button
           type="button"
+          role="menuitem"
           tabindex="-1"
           class="c-sf-del"
           [attr.aria-label]="deleteLabel(f.name)"

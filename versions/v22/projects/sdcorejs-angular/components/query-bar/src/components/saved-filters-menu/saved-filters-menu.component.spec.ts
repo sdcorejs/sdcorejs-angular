@@ -148,8 +148,27 @@ describe('SdQuerySavedFiltersMenu', () => {
       }
       expect(menu()!.querySelectorAll('button button, button [role="button"], button a, [role="menuitem"] button').length).toBe(0);
       expect(applyButtons().every(button => button.getAttribute('role') === 'menuitem')).toBeTrue();
-      expect(deleteButtons().every(button => !button.hasAttribute('role'))).toBeTrue();
       expect(deleteButtons()[0].getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.saved-filters.delete', { name: 'A' }));
+    });
+
+    // PD after R1 (G-3): axe aria-required-children — a menu owns menuitems only, so the delete buttons are menuitems
+    // too; the arrow keys still go over the apply buttons and Save only.
+    it('QB-B-08 every button of the menu is a menuitem; the arrows still skip the delete buttons', () => {
+      seed(filter('a'), filter('b'));
+      mount();
+      open();
+      const buttons = Array.from(menu()!.querySelectorAll('button'));
+      expect(buttons.length).toBe(5);
+      expect(buttons.filter(button => button.getAttribute('role') !== 'menuitem').map(button => button.className)).toEqual([]);
+      applyButtons()[0].focus();
+      key(applyButtons()[0], 'ArrowDown');
+      expect(document.activeElement).toBe(applyButtons()[1]);
+      key(document.activeElement!, 'ArrowDown');
+      expect(document.activeElement).toBe(saveButton());
+      key(document.activeElement!, 'ArrowUp');
+      expect(document.activeElement).toBe(applyButtons()[1]);
+      key(deleteButtons()[0], 'ArrowDown');
+      expect(document.activeElement).toBe(applyButtons()[1]);
     });
 
     it('QB-S-01 frames the list with the heading, a divider and the save item', () => {

@@ -192,7 +192,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Query bar
 
 - The panels (see Changed (BREAKING)) open below the trigger, 4px away, flipping above without room; saved filters end-aligned. Escape, a click outside, Tab out and picking an item close them; focus returns to the trigger or to the `returnFocusTo` of `openField()` (a click on another focusable element keeps focus there). The chip popover commits its value on every way out. Opening a panel closes the other one. No backdrop: a click outside reaches the element under it.
-  - Roles: field picker `listbox` (used fields `aria-disabled`), chip popover `dialog` named by the field label, saved filters `menu`. Triggers carry `aria-haspopup`, `aria-expanded`, `aria-controls`.
+  - Roles: field picker `listbox` (used fields `aria-disabled`), chip popover `dialog` named by the field label, saved filters `menu` (apply, delete and save buttons are `menuitem`). Triggers carry `aria-haspopup`, `aria-expanded`, `aria-controls`.
   - Field picker rows are 40px with 14px text (were 36px / 13px); group headings are 12px, not uppercase. Its find box (popover mode) appears from ten fields (was above eight) and is `sd-search-field` sm, a combobox: the arrows move `aria-activedescendant` while focus stays in it.
   - The find box reads "Tìm kiếm" / "Search" (`core.component.query-bar.find-field`, was "Tìm trường" / "Find field"). The listbox is named by what opens it — `core.component.query-bar.add-filter` in popover mode, `.add-condition` inline — instead of the find box label.
   - `openField()` called again for the chip whose popover is open closes it, as the menu backdrop did.

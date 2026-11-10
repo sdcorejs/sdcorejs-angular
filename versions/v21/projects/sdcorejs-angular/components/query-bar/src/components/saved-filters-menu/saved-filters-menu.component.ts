@@ -187,7 +187,8 @@ export class SdQuerySavedFiltersMenu {
     const root = this.panel().element();
     const target = event.target as HTMLElement;
     if (!root) return;
-    const items = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)'));
+    // why: nút xoá cũng là menuitem nhưng nằm ngoài vòng mũi tên — chọn theo class, không theo role.
+    const items = Array.from(root.querySelectorAll<HTMLButtonElement>('.c-sf-apply:not(:disabled), .c-sf-save:not(:disabled)'));
     const row = target.closest<HTMLElement>('.c-sf-row');
     const index = row ? Array.from(root.querySelectorAll('.c-sf-row')).indexOf(row) : -1;
     const onApply = target.classList.contains('c-sf-apply');
