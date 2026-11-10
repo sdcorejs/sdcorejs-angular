@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`.
 
 **Highlights**
 
@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`
 - `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`): month, week, day and agenda views with `dataSource.onLoad`, create by click/sweep/Enter and move by drag, edge or `Alt` + arrows through `onMove` (which can also answer `'cancel'`)
+- `sd-kanban` new API: cards as `SdKanbanCard<T>`, a data source per column with cursor paging, totals and summaries, `droppable` checked while dragging, card selection and dragging by the whole card
 - `sd-query-bar`: one panel frame (the `sd-button` Action Popover) for the field picker, the chip popover and saved filters instead of `mat-menu`; saved filters with Undo and empty / error states; required fields always keep a chip and a value; an **Add condition** box in inline mode; `sd-table` saves its query-bar filters with `filter.queryBar.savedFilters`
 
 ### Changed (BREAKING for consumers)
@@ -79,6 +80,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     - <sd-history [items]="history" />
     + <sd-timeline groupBy="none" [items]="timeline" />
     ```
+
+#### Kanban
+
+- Cards are `SdKanbanCard<T>` (`id: string`, `columnId`, `title`, `searchText?`, `data?: T`) passed through `items`, or loaded per column by `option.dataSource`. Removed: the `model` input and `modelChange`, `sdChange`, the `loading` and `error` inputs, `sdRetry`, the type `SdKanbanId` and `option.getId`, `getColumnId`, `getTitle`, `getSearchText`, `withColumn`, `filter`, `canMove`, `searchable`, `collapsible`.
+  - A new `items` reference replaces the board's copy and cancels a pending move: build the array once (a `computed`), never in the template.
+  - Ids are strings; `1` and `'1'` are no longer different cards.
+- `option.move` is `{ movable?, droppable?, reorder?, onMove }`. Without it nothing moves (the old local mode committed moves at once; accept locally with `onMove: () => true`). `reorder` defaults to `false`: a drop only changes the column.
+  - `SdKanbanMoveRequest<T>` is `{ card, from: { columnId, index }, to: { columnId, index, beforeId }, source, signal }`; `to.index` and `to.beforeId` are `null` without `reorder`, and `beforeId: null` means after the last loaded card. `previousItems` and `nextItems` are gone.
+  - `move(itemId, toColumnId, toIndex?, source?)` becomes `move(cardId, { columnId, beforeId? }, source?)`.
+- `sdMove` emits after the board's data changed; read the new place from the request.
+- `pendingId` is a read-only signal (it was a writable `signal`); the board alone sets it.
+- `searchable` is an input and defaults to `false` (the option defaulted to `true`); `collapsible` is an input.
+- The drag handle is gone: the whole card drags (400ms press on touch), and the card's name is a button that is the tab stop and the keyboard target. The card template renders inside that button, so controls belong in `sdKanbanCardActionsTemplate`. Card template context: `item` becomes `card` (your object is `card.data`); column template context: `count` becomes `total` (`null` while unknown).
+- The narrow layout follows the host width under 600px (`data-compact`) instead of `@media (max-width: 599px)`.
+- `data-autoid` tokens of cards and columns are `encodeURIComponent(id)` (was `` `${typeof id}-${encodeURIComponent(id)}` ``).
+- i18n: `core.component.kanban.move-card` is removed; `instructions` no longer mentions a handle; `invalid-data` no longer mentions mappings.
+  - **Migration:** map your domain objects once and replace the option. `portal-template` (`src/modules/component/features/kanban`, its e2e and `docs/core-demo-coverage.md`) uses the old API and needs this when it upgrades.
+
+    ```diff
+    - readonly option: SdKanbanOption<Ticket> = {
+    -   getId: item => item.key,
+    -   getColumnId: item => item.state,
+    -   getTitle: item => item.subject,
+    -   withColumn: (item, columnId) => ({ ...item, state: String(columnId) }),
+    -   canMove: request => this.canTransition(request.fromColumnId, request.toColumnId),
+    -   move: request => this.api.moveTicket(request.itemId, request.toColumnId, request.signal),
+    - };
+    + readonly cards = computed(() => this.tickets().map(t => ({ id: t.key, columnId: t.state, title: t.subject, data: t })));
+    + readonly option: SdKanbanOption<Ticket> = {
+    +   move: {
+    +     droppable: ({ from, to }) => this.canTransition(from.id, to.id),
+    +     onMove: request => this.api.moveTicket(request.card.id, request.to.columnId, request.signal),
+    +   },
+    + };
+    ```
+
+    ```diff
+    - <sd-kanban [columns]="columns" [option]="option" [(model)]="tickets" [loading]="loading()" [error]="error()" (sdRetry)="load()">
+    -   <ng-template [sdKanbanCardTemplate]="option" let-ticket>{{ ticket.subject }}</ng-template>
+    + <sd-kanban [columns]="columns" [option]="option" [items]="cards()" searchable (sdMove)="saved($event)">
+    +   <ng-template [sdKanbanCardTemplate]="option" let-card>{{ card.data?.subject }}</ng-template>
+      </sd-kanban>
+    ```
+
+    The full before/after table is in `sd-kanban.md` ("Migration from the previous API").
 
 #### Query bar
 
@@ -151,6 +197,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `SdCardActionsDirective` (`<ng-template sdCardActions>`): an action area for `entity` (md) and `file`, outside the anchor of a link card; clicks inside it never select or navigate.
 - Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).
 - i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.
+
+#### Kanban
+
+- `option.dataSource.onLoad({ columnId, cursor, pageSize, keyword, signal })` loads each column on its own, with `pageSize` (20) and `loadMore: 'button' | 'auto'`.
+  - Per column: three skeleton blocks on the first load, "Show {count} more" or an `IntersectionObserver` feed, first-page and later-page errors with Retry, `sdLoadError({ columnId, error })`, `reload(columnId?)` and `loadMore(columnId)`.
+  - `total` and `summary` of the first page set the header count and a summary line under the label (`SdKanbanColumn.summary` without a data source). The count shows "n+" while more pages exist and "–" before a collapsed column first loads; collapsed columns load when expanded.
+  - `keyword` reloads the loaded columns after 300ms; a new `option` reloads every column; a new `columns` loads only the new ones. Late results, cards of another column, cards without a title and duplicate ids are dropped (dev-mode warning).
+  - An accepted move updates both columns and their totals without calling `onLoad` again. A column without its first page (collapsed and never opened, loading, failed) is not a destination until it loads, and the cards of a column that loads its first page again cannot move until it is back.
+- `option.move.droppable({ card, from, to })` runs when a drag starts: refused lanes fade, get `data-blocked` and `aria-disabled`, and refuse the drop ("Can't move to {column}" is announced). The menu disables those destinations and `Alt` + `←` `→` skips them.
+- `option.move.onMove` may return `'cancel'`: the card goes back without an error or `sdMoveError`, and "Move of {title} cancelled" is announced.
+- Card selection: `selectedId` (two-way, back to `null` when the card leaves the data) and `sdSelect`, from a click, tap, `Enter` or `Space`; `Esc` clears it. The selected card has a primary outline and `aria-current="true"`; the card template context has `selected`.
+- With `reorder` off the old place of a dragged card stays drawn at 40% instead of a drop slot; the cursor is `grabbing` while dragging.
+- E2E hooks: `data-status`, `data-blocked`, `data-summary`, `data-selected`, `data-pending`, `data-movable`, `data-kanban-card-main`, `data-kanban-menu`, `data-skeleton`, `data-load-error`, `data-load-more`, `data-action="retry"`, `data-compact`, and a `data-autoid` on each column.
+- i18n keys `core.component.kanban.{load-more,loading,load-error,retry,drop-blocked,cancelled,instructions-column,selected}` in the five locales.
 
 #### Query bar
 

@@ -135,6 +135,61 @@
     border-color: var(--sd-border-danger, var(--sd-error));
   }
 }
+// §6: the name button covers the card; pointer to select, grab when the card can be moved.
+.sd-kanban__card {
+  position: relative;
+  // why: the card's positioned parts (name overlay, tools, actions) stay inside the card's own stacking context, so a
+  // hit test or a repaint while dragging skips the other cards (TESTING §10: 4 × 200 cards, hit test ~14ms → ~4ms).
+  // Card content is clipped to the card; popups belong in an overlay (sd-kanban.md).
+  contain: paint;
+  cursor: pointer;
+  &[data-movable] {
+    cursor: grab;
+  }
+  // Selected (§6): primary border and inset ring; pending and failed keep their border colour.
+  &[data-selected] {
+    border-color: var(--sd-primary);
+    box-shadow: inset 0 0 0 1px var(--sd-primary);
+    background: color-mix(in srgb, var(--sd-primary) 4%, var(--sd-surface));
+  }
+  &[data-selected].sd-kanban__card--pending {
+    border-color: var(--sd-primary);
+  }
+  &[data-selected].sd-kanban__card--failed {
+    border-color: var(--sd-border-danger, var(--sd-error));
+  }
+  &:has(.sd-kanban__card-main:focus-visible) {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+.cdk-drag-preview.sd-kanban__card {
+  cursor: grabbing;
+}
+.sd-kanban__card-main {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: inherit;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  &:disabled {
+    cursor: default;
+  }
+}
 .sd-kanban__card-body {
   grid-area: body;
   min-width: 0;
@@ -146,6 +201,8 @@
   font-weight: var(--sd-font-weight-semibold, 600);
 }
 .sd-kanban__card-tools {
+  position: relative;
+  z-index: 1;
   grid-area: tools;
   display: flex;
   align-items: flex-start;
@@ -174,6 +231,8 @@
   }
 }
 .sd-kanban__card-actions {
+  position: relative;
+  z-index: 1;
   grid-area: actions;
   display: flex;
   align-items: center;
@@ -183,6 +242,9 @@
   margin-top: 6px;
 }
 .sd-kanban__card-status {
+  // why: above the name's overlay (::after), so the Dismiss button of a failed card takes the click (R2 A-2).
+  position: relative;
+  z-index: 1;
   grid-area: status;
   display: flex;
   align-items: center;
@@ -250,10 +312,6 @@
     cursor: default;
   }
 }
-.sd-kanban__handle {
-  cursor: grab;
-  touch-action: none;
-}
 .sd-kanban__empty {
   padding: 24px 8px;
   text-align: center;
@@ -275,14 +333,25 @@
     .sd-kanban__count {
       order: 3;
     }
-    h3 {
+    // why: the label sits in the heading block (label + summary, §6), so the order goes on the block.
+    .sd-kanban__heading {
       order: 4;
+      flex: none;
+      align-items: center;
+    }
+    // A 64px lane has no room for the summary line.
+    .sd-kanban__summary {
+      display: none;
     }
   }
   h3 {
     writing-mode: vertical-rl;
     text-orientation: mixed;
     margin-top: 8px;
+    // why: with flex: 1 and overflow-wrap: anywhere the vertical label shrank to one letter per column.
+    flex: none;
+    overflow-wrap: normal;
+    white-space: nowrap;
   }
 }
 .sd-kanban__failure {
@@ -319,6 +388,133 @@
 .cdk-drag-preview {
   box-shadow: var(--sd-shadow-md);
 }
+// §6: label and summary in one column block; the summary is a secondary, tabular line cut with an ellipsis.
+.sd-kanban__heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  // why: the summary line follows the label in RTL, whatever alignment the page sets.
+  text-align: start;
+}
+.sd-kanban__summary {
+  overflow: hidden;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--sd-line-height-16, 16px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+// §6 data source states of a lane.
+.sd-kanban__skeleton {
+  height: 74px;
+  flex: none;
+  border-radius: var(--sd-radius-8, 8px);
+  background: var(--sd-surface-muted);
+}
+.sd-kanban__load-more {
+  min-height: 32px;
+  width: 100%;
+  border: 0;
+  border-radius: var(--sd-radius-6, 6px);
+  background: transparent;
+  color: var(--sd-primary);
+  font: inherit;
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-medium, 500);
+  cursor: pointer;
+  // SC-36: hover only adds visuals, and only where there is hover.
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--sd-primary) 8%, transparent);
+    }
+  }
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+.sd-kanban__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 32px;
+  margin: 0;
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-13, 13px);
+}
+.sd-kanban__load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 8px;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  text-align: center;
+  &--row {
+    flex-direction: row;
+    justify-content: center;
+    padding: 4px 0;
+  }
+}
+.sd-kanban__load-error-icon {
+  color: var(--sd-error);
+  font-size: 22px;
+}
+.sd-kanban__retry {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--sd-error);
+  border-radius: var(--sd-radius-6, 6px);
+  background: transparent;
+  color: var(--sd-error);
+  font: inherit;
+  cursor: pointer;
+  &:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+@media (pointer: coarse) {
+  .sd-kanban__load-more,
+  .sd-kanban__retry {
+    min-height: 40px;
+  }
+}
+// `reorder` off (kanban.md §6): no drop slot; the old place stays faded in the source lane.
+.sd-kanban__no-slot {
+  display: none;
+}
+.sd-kanban__origin {
+  opacity: 0.4;
+  pointer-events: none;
+}
+// A lane `droppable` refuses, from the start of the drag to its end.
+.sd-kanban__column[data-blocked] {
+  > .sd-kanban__header,
+  > .sd-kanban__cards {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+// §6: grabbing while a card is dragged. The CDK preview has pointer-events: none, so the cursor comes from what is
+// under it: the board, and not-allowed over a refused lane.
+.sd-kanban__board[data-dragging] {
+  cursor: grabbing;
+  .sd-kanban__card {
+    cursor: grabbing;
+  }
+  .sd-kanban__column[data-blocked] {
+    > .sd-kanban__header,
+    > .sd-kanban__cards,
+    .sd-kanban__card {
+      cursor: not-allowed;
+    }
+  }
+}
 // Chỗ thả: khe nét đứt cùng chiều cao thẻ; nội dung ẩn bằng visibility để giữ chiều cao.
 .sd-kanban__card.cdk-drag-placeholder {
   opacity: 1;
@@ -328,7 +524,8 @@
     visibility: hidden;
   }
 }
-@media (max-width: 599px) {
+// SC-32: narrow by the host width (ResizeObserver), not by a viewport media query.
+.sd-kanban--compact {
   .sd-kanban__column {
     flex-basis: 260px;
     width: 260px;
@@ -352,7 +549,8 @@
     border-color: CanvasText;
   }
   .sd-kanban__card--pending,
-  .sd-kanban__card--failed {
+  .sd-kanban__card--failed,
+  .sd-kanban__card[data-selected] {
     outline: 2px solid Highlight;
   }
 }

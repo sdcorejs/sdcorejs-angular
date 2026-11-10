@@ -299,7 +299,8 @@ scale. `npm run test:theme` checks header text on the header band and text on a 
 ## Kanban tokens
 
 `sd-kanban` lanes are neutral and its drop target and card outline derive from the palette, with one expression for
-light and dark. The column colour only marks the 8px dot or the prefix icon.
+light and dark. The column colour only marks the 8px dot or the prefix icon. The dashed drop slot shows only with
+`option.move.reorder`; the selected card and "Show more" mix `--sd-primary` and need no token of their own.
 
 | Token | Value |
 | --- | --- |
