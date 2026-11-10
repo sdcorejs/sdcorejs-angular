@@ -70,9 +70,15 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
     flushMicrotasks();
     fixture.detectChanges();
   };
+  // why: the CDK finds the drop list with elementFromPoint, which only sees the viewport. In the full suite other
+  // specs' leftovers push an in-flow host below it, so a drop lands nowhere (KAN-C-15 failed on CI that way).
+  const pin = (element: HTMLElement): void => {
+    Object.assign(element.style, { position: 'fixed', top: '0px', left: '0px', width: '100%' });
+  };
 
   function mount(option: SdKanbanOption<Dto> = { move: { onMove: () => true } }, inputs: Record<string, unknown> = {}): jasmine.Spy {
     fixture = TestBed.createComponent(SdKanban<Dto>);
+    pin(fixture.nativeElement as HTMLElement);
     fixture.componentRef.setInput('columns', columns);
     fixture.componentRef.setInput('items', data);
     fixture.componentRef.setInput('option', option);
@@ -181,6 +187,16 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       flush();
     }));
 
+    it('[KAN-B-25] announces a drop on a lane that droppable refuses in a real drag (cdkDragEnded comes first)', fakeAsync(() => {
+      const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+      mount({ move: { droppable: ({ to }) => to.id !== 'done', onMove } });
+      mouseDrag(name('x'), centerOf(lane('done')), { step: settle });
+      settle();
+      expect(onMove).not.toHaveBeenCalled();
+      expect(live()).toBe(TestBed.inject(I18nService).t('core.component.kanban.drop-blocked', { column: 'Done' }));
+      flush();
+    }));
+
     it('[KAN-C-14] does not select from the click that may follow a drag, but from the next press', fakeAsync(() => {
       const selected = mount({ move: { onMove: () => 'cancel' } });
       mouseDrag(name('x'), centerOf(lane('done')), { step: settle });
@@ -224,6 +240,7 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
   describe('the name button covers the card', () => {
     it('[KAN-C-16] is the Tab stop of a card; the move menu and the actions stay on top and do not start a drag', fakeAsync(() => {
       const hosted = TestBed.createComponent(HostComponent);
+      pin(hosted.nativeElement as HTMLElement);
       hosted.detectChanges();
       const root = hosted.nativeElement as HTMLElement;
       const card = root.querySelector<HTMLElement>('article[data-card-id="x"]')!;
@@ -233,8 +250,6 @@ describe('SdKanban · selection, whole-card drag and the name button', () => {
       const menu = card.querySelector<HTMLButtonElement>('[data-kanban-menu]') ?? document.createElement('button');
       const action = card.querySelector<HTMLButtonElement>('.test-action') ?? document.createElement('button');
       for (const control of [menu, action]) {
-        // why: elementFromPoint only sees the viewport; in the full suite other specs' leftovers push the host down.
-        control.scrollIntoView({ block: 'center', inline: 'center' });
         const point = centerOf(control);
         expect(control.contains(document.elementFromPoint(point.x, point.y)))
           .withContext(control.className)

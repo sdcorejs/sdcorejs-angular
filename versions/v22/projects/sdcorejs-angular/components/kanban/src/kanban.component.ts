@@ -299,9 +299,9 @@ export class SdKanban<T = unknown> {
       const keyword = this.keyword();
       untracked(() => {
         clearTimeout(this.#keywordTimer);
-        if (!this.dataMode() || keyword === this.#loadedKeyword) return;
+        // why: per column, since a column opened inside the 300ms wait already has the new keyword and the others not.
+        if (!this.dataMode() || [...this.#loader.states().values()].every(state => state.keyword === keyword)) return;
         this.#keywordTimer = setTimeout(() => {
-          this.#loadedKeyword = keyword;
           this.#loader.abort();
           for (const id of this.#loader.states().keys()) this.#loader.load(id, this.option(), keyword);
         }, 300);
@@ -373,7 +373,7 @@ export class SdKanban<T = unknown> {
   /** Loads the next page of a column (data source only); ignored while it loads or at the end. */
   loadMore(columnId: string): void {
     if (!this.dataMode()) return;
-    this.#loader.loadMore(columnId, this.option(), this.keyword());
+    this.#loader.loadMore(columnId, this.option());
   }
 
   /** Retry of a column's load error: the same page again. */
@@ -443,7 +443,7 @@ export class SdKanban<T = unknown> {
         return false;
       }
       if (accepted === false) {
-        this.#fail(request, 'rejected');
+        this.#fail(operation, 'rejected');
         this.#focusCard(cardId, operation.focus);
         return false;
       }
@@ -465,7 +465,7 @@ export class SdKanban<T = unknown> {
       return true;
     } catch (error) {
       if (this.#current(operation)) {
-        this.#fail(request, 'error', error);
+        this.#fail(operation, 'error', error);
         this.#focusCard(cardId, operation.focus);
       }
       return false;
@@ -480,7 +480,7 @@ export class SdKanban<T = unknown> {
 
   protected drop(event: CdkDragDrop<ColumnView<T>, ColumnView<T>, CardView<T>>): void {
     if (!event.isPointerOverContainer) {
-      this.#announceBlockedDrop(event.dropPoint);
+      this.#announceBlockedDrop(event.dropPoint, event.item.data, event.previousContainer.data);
       return;
     }
     if (this.moveBlocked()) return;
@@ -650,22 +650,22 @@ export class SdKanban<T = unknown> {
   }
 
   /** §11: a drop on a lane `droppable` refuses reads `drop-blocked`. */
-  #announceBlockedDrop(point: { readonly x: number; readonly y: number }): void {
+  #announceBlockedDrop(point: { readonly x: number; readonly y: number }, view: CardView<T>, from: ColumnView<T>): void {
     const element = this.#host.nativeElement.ownerDocument.elementFromPoint(point.x, point.y);
     const id = element?.closest<HTMLElement>('[data-column-id]')?.dataset['columnId'];
     const column = id ? this.columns().find(candidate => this.token(candidate.id) === id) : undefined;
-    if (column && this.#blocked().has(column.id)) {
+    // why: the CDK emits cdkDragEnded, which clears the refused lanes, before cdkDropListDropped; ask droppable again.
+    if (column && column.id !== from.column.id && !this.canDrop(view, from, column)) {
       this.announcement.set(this.#i18n.t('core.component.kanban.drop-blocked', { column: column.label }));
     }
   }
 
   #lastOption?: SdKanbanOption<T>;
   #keywordTimer: ReturnType<typeof setTimeout> | undefined;
-  /** The keyword the loaded pages were asked with. */
-  #loadedKeyword = '';
   #warnedItems = false;
   #observer?: IntersectionObserver;
-  readonly #observed = new Set<Element>();
+  /** "Show more" buttons watched for loadMore 'auto', with the status of their column when last observed. */
+  readonly #observed = new Map<Element, KanbanColumnStatus>();
 
   /** A column is loaded once it is on screen (not collapsed) or was loaded before. */
   #shouldLoad(columnId: string): boolean {
@@ -687,7 +687,6 @@ export class SdKanban<T = unknown> {
       if (replaced && started) this.#loader.load(column.id, option, keyword);
       else if (!started && !collapsed.includes(column.id)) this.#loader.load(column.id, option, keyword);
     }
-    this.#loadedKeyword = keyword;
   }
 
   /** SC-24, K3: a load error is read through the one status region and emitted. */
@@ -710,16 +709,24 @@ export class SdKanban<T = unknown> {
       },
       { rootMargin: '200px' }
     );
-    const buttons = new Set(Array.from(this.#host.nativeElement.querySelectorAll('[data-load-more]')));
-    for (const button of this.#observed) {
+    const buttons = new Map<Element, KanbanColumnStatus>();
+    for (const button of Array.from(this.#host.nativeElement.querySelectorAll<HTMLElement>('[data-load-more]'))) {
+      const column = this.columns().find(candidate => this.token(candidate.id) === button.dataset['loadMore']);
+      buttons.set(button, column ? this.#loader.state(column.id).status : 'idle');
+    }
+    for (const button of this.#observed.keys()) {
       if (buttons.has(button)) continue;
       this.#observer.unobserve(button);
       this.#observed.delete(button);
     }
-    for (const button of buttons) {
-      if (this.#observed.has(button)) continue;
+    for (const [button, status] of buttons) {
+      const watched = this.#observed.get(button);
+      if (watched === status) continue;
+      // why: an observer reports a target once when it starts observing it, then only when that changes; a report
+      // that came while the column loaded its first page again was ignored, so observe the button again.
+      if (watched !== undefined) this.#observer.unobserve(button);
       this.#observer.observe(button);
-      this.#observed.add(button);
+      this.#observed.set(button, status);
     }
   }
 
@@ -760,7 +767,11 @@ export class SdKanban<T = unknown> {
     this.#pending.set(null);
     this.announcement.set('');
   }
-  #fail(request: SdKanbanMoveRequest<T>, reason: 'error' | 'rejected', error?: unknown): void {
+  #fail(operation: MoveOperation<T>, reason: 'error' | 'rejected', error?: unknown): void {
+    const { request } = operation;
+    // The move is over before sdMoveError, as before sdMove: a handler may move the card again.
+    this.#operation = undefined;
+    this.#pending.set(null);
     const message = this.#i18n.t(`core.component.kanban.${reason}`);
     this.failedId.set(request.card.id);
     this.moveFailure.set(message);

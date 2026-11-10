@@ -85,7 +85,7 @@ A board that only shows cards passes `option: {}`.
 
 | Member | Notes |
 | --- | --- |
-| `move(cardId, { columnId, beforeId? }, source = 'api'): Promise<boolean>` | Runs the move pipeline below. `beforeId` is ignored while `reorder` is off. Resolves `false` when the move is blocked or not accepted. Undo: `move(request.card.id, { columnId: request.from.columnId })`. |
+| `move(cardId, { columnId, beforeId? }, source = 'api'): Promise<boolean>` | Runs the move pipeline below. `beforeId` is ignored while `reorder` is off. Resolves `false` when the move is blocked or not accepted. Undo: `move(request.card.id, { columnId: request.from.columnId })` puts the card back in its column; with `items` and `reorder` off it also gets its old place, with `reorder` on it goes after the last loaded card unless you pass the `beforeId` you kept, and with a data source and `reorder` off it goes to the top. |
 | `reload(columnId?)` | Data source only: aborts the column's (or every column's) load and calls `onLoad` again from `cursor: null`. The cards on screen stay until the result arrives. |
 | `loadMore(columnId)` | Data source only: the next page of that column. Ignored while it loads or when `nextCursor` is `null`. |
 | `pendingId` | `Signal<string \| null>`: id of the card whose move waits for `onMove`. |
@@ -120,9 +120,9 @@ readonly option: SdKanbanOption<Order> = {
 - Every column has its own state: cards, cursor, `total`, `summary`, status (`idle`, `loading`, `loading-more`, `error`).
 - On init every column that is not collapsed loads in parallel. A collapsed column loads when it is expanded the first time; until then its count is "–".
 - A new `columns` reference loads the new columns, aborts the removed ones and keeps the state of columns with the same id.
-- `keyword` changes wait 300ms, abort every load and reload every loaded column from `cursor: null`. The server filters; the board does not.
+- `keyword` changes wait 300ms, abort every load and reload every loaded column from `cursor: null`. The server filters; the board does not. "Show more" and the Retry of a later page send the keyword of the column's first page with its cursor, also during those 300ms.
 - A new `option` reference reloads every column. Results of an aborted load are dropped.
-- A card whose `columnId` differs from `args.columnId`, or with an empty `title`, is dropped with a dev-mode warning. A card id already loaded (another page or another column) keeps the first one, with a warning.
+- A card whose `columnId` differs from `args.columnId`, or with an empty `title`, is dropped with a dev-mode warning. A card id already loaded (another page or another column) keeps the first one, with a warning. A column that loads its first page again does not count: its old page is about to go, so a card that changed column on the server moves to the column that answers with it.
 - The count is `total` when known, otherwise the loaded cards with "+" while there is a next page. Screen readers hear "{n} cards" only when `total` is known; "–" and "n+" are read as shown.
 - A column without its first page (collapsed and never opened, loading it, or failed it) is not a move destination yet: its "Move to" entry is disabled, `Alt` + `←` `→` skips it, a drag fades it, and `move()` resolves `false`. Open or retry it first. While a column loads its first page again (`reload`, a new `keyword` or `option`), its cards stay on screen but cannot move: no drag, the movement menu button is disabled and `Alt` + arrows do nothing.
 - First load: three skeleton blocks and `aria-busy` on the list. First-page error: a message and Retry in place of the cards (the count goes back to "–" and the summary of the server is dropped). Later-page error: a message and Retry in place of "Show more".

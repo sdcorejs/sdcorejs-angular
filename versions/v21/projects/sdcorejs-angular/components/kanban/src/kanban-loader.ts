@@ -17,6 +17,8 @@ export interface KanbanColumnState<T> {
   readonly loaded: boolean;
   /** Grows on every load from `cursor: null`; a move proposed against an older generation is stale. */
   readonly generation: number;
+  /** The keyword the first page was asked with; later pages and their retries keep it with the cursor. */
+  readonly keyword: string;
 }
 
 const EMPTY: KanbanColumnState<never> = {
@@ -28,6 +30,7 @@ const EMPTY: KanbanColumnState<never> = {
   failedCursor: null,
   loaded: false,
   generation: 0,
+  keyword: '',
 };
 
 /**
@@ -51,19 +54,19 @@ export class KanbanColumnLoader<T> {
   /** Loads the first page; the cards on screen stay until the result arrives (SC-23). */
   load(columnId: string, option: SdKanbanOption<T>, keyword: string): void {
     const current = this.state(columnId);
-    this.#patch(columnId, { status: 'loading', failedCursor: null, generation: current.generation + 1 });
+    this.#patch(columnId, { status: 'loading', failedCursor: null, generation: current.generation + 1, keyword });
     void this.#fetch(columnId, option, keyword, null);
   }
 
-  /** The next page; ignored while loading or when there is none. */
-  loadMore(columnId: string, option: SdKanbanOption<T>, keyword: string): void {
+  /** The next page, with the keyword of the first page; ignored while loading or when there is none. */
+  loadMore(columnId: string, option: SdKanbanOption<T>): void {
     const current = this.state(columnId);
     if (!current.loaded || current.status === 'loading' || current.status === 'loading-more' || current.nextCursor === null) return;
     this.#patch(columnId, { status: 'loading-more', failedCursor: null });
-    void this.#fetch(columnId, option, keyword, current.nextCursor);
+    void this.#fetch(columnId, option, current.keyword, current.nextCursor);
   }
 
-  /** Asks again for the page that failed. */
+  /** Asks again for the page that failed; a first page with `keyword`, a later one with the keyword of the first. */
   retry(columnId: string, option: SdKanbanOption<T>, keyword: string): void {
     const current = this.state(columnId);
     if (current.status !== 'error') return;
@@ -72,7 +75,7 @@ export class KanbanColumnLoader<T> {
       return;
     }
     this.#patch(columnId, { status: 'loading-more', failedCursor: null });
-    void this.#fetch(columnId, option, keyword, current.failedCursor);
+    void this.#fetch(columnId, option, current.keyword, current.failedCursor);
   }
 
   abort(columnId?: string): void {
@@ -129,6 +132,10 @@ export class KanbanColumnLoader<T> {
     let result: SdKanbanLoadResult<T>;
     try {
       result = await option.dataSource!.onLoad(args);
+      // why: a result that is not a page must end the load like a throw, not leave the skeletons up for good.
+      if (!result || typeof result !== 'object' || (result.items != null && !Array.isArray(result.items))) {
+        throw new TypeError('[sd-kanban] dataSource.onLoad must resolve to { items, nextCursor }.');
+      }
     } catch (error) {
       if (controller.signal.aborted) return;
       this.#controllers.delete(columnId);
@@ -146,13 +153,21 @@ export class KanbanColumnLoader<T> {
     this.#controllers.delete(columnId);
     const first = cursor === null;
     const before = first ? [] : this.state(columnId).cards;
+    // why: a column that loads its first page again still shows its old page (SC-23). A card that changed column on
+    // the server is in that old page and in this newer one: it belongs here, and leaves the old page now.
+    const reloading = new Set<string>();
     const seen = new Set<string>();
-    for (const [id, state] of this.#states()) if (id !== columnId) for (const card of state.cards) seen.add(card.id);
+    for (const [id, state] of this.#states()) {
+      if (id === columnId) continue;
+      if (state.status === 'loading') reloading.add(id);
+      else for (const card of state.cards) seen.add(card.id);
+    }
     for (const card of before) seen.add(card.id);
     const accepted: SdKanbanCard<T>[] = [];
     for (const card of result.items ?? []) {
       // SC-01, as `items` (kanbanDataInvalid): an id is a non-blank string.
       if (
+        !card ||
         card.columnId !== columnId ||
         typeof card.title !== 'string' ||
         !card.title.trim() ||
@@ -169,16 +184,24 @@ export class KanbanColumnLoader<T> {
       seen.add(card.id);
       accepted.push(card);
     }
-    const current = this.state(columnId);
-    this.#patch(columnId, {
+    const states = new Map(this.#states());
+    const acceptedIds = new Set(accepted.map(card => card.id));
+    for (const id of reloading) {
+      const state = states.get(id)!;
+      const cards = state.cards.filter(card => !acceptedIds.has(card.id));
+      if (cards.length !== state.cards.length) states.set(id, { ...state, cards });
+    }
+    const current = states.get(columnId) ?? EMPTY;
+    states.set(columnId, {
+      ...current,
       cards: [...before, ...accepted],
       nextCursor: result.nextCursor ?? null,
       status: 'idle',
       failedCursor: null,
       loaded: true,
       ...(first ? { total: typeof result.total === 'number' ? result.total : null, summary: result.summary ?? null } : {}),
-      generation: current.generation,
     });
+    this.#states.set(states);
     this.onLoaded();
   }
 

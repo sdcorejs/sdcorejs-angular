@@ -200,6 +200,8 @@ describe('SdKanban · move pipeline', () => {
       mount({ droppable: context => context.to.id !== 'done', onMove });
       startDrag('x');
       spyOn(document, 'elementFromPoint').and.returnValue(lane('done'));
+      // The CDK order: cdkDragEnded, then cdkDropListDropped.
+      endDrag('x');
       drop('x', 'done', 0, false);
       await settle();
       expect(onMove).not.toHaveBeenCalled();
