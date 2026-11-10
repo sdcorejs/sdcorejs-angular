@@ -89,6 +89,8 @@ export class SdQueryInlineValueChip {
   readonly phTo = computed(() =>
     this.#i18n.t(this.isNumber() ? 'core.component.query-bar.placeholder.to-number' : 'core.component.query-bar.placeholder.to-text')
   );
+  /** `aria-label` of the × — names the field, in the current language. */
+  readonly removeLabel = computed(() => this.#i18n.t('core.component.query-bar.remove-filter', { label: this.field().label }));
 
   readonly hasValue = computed(() => {
     if (this.isNoData()) return true;

@@ -62,6 +62,8 @@ test('QB-E-01 popover mode: add with +, edit a chip, save, apply again, delete a
   await page.keyboard.press('Escape');
   await expect(chipPanel).toBeHidden();
   const nameChip = bar.locator('.c-chip[data-field="name"]');
+  // why: nút × nằm cạnh trigger `.c-chip`, không nằm trong nó (QB-B-11).
+  const nameRemove = bar.locator('sd-query-popover-chip:has(.c-chip[data-field="name"]) .c-chip-remove');
   await expect(nameChip).toContainText('An');
 
   await nameChip.click();
@@ -83,7 +85,8 @@ test('QB-E-01 popover mode: add with +, edit a chip, save, apply again, delete a
   await expect(dialog).toBeHidden();
 
   // Remove the chip, then apply the saved filter again.
-  await nameChip.locator('.c-chip-remove').click();
+  await expect(nameRemove).toHaveAccessibleName('Xoá bộ lọc Họ tên');
+  await nameRemove.click();
   await expect(nameChip).toHaveCount(0);
   await bar.locator('[data-autoid="query-bar-popover-saved-filters"]').click();
   await saved.locator('[data-autoid="query-bar-popover-saved-filter-0"]').click();
@@ -174,6 +177,7 @@ test('QB-E-04 keyboard only: Tab through the bar and its three panels', async ({
   const example = await openExample(page, 'query-bar', 'example-che-do-popover');
   const bar = example.locator('sd-query-bar');
   const chips = bar.locator('sd-query-popover-chip .c-chip');
+  const removeOf = (index: number) => bar.locator('sd-query-popover-chip').nth(index).locator('.c-chip-remove');
   const add = bar.locator('.c-add-filter');
   const clear = bar.locator('.c-clear-all');
   const savedButton = bar.locator('[data-autoid="query-bar-popover-saved-filters"]');
@@ -190,7 +194,7 @@ test('QB-E-04 keyboard only: Tab through the bar and its three panels', async ({
   await page.keyboard.press('Tab');
   await expect(chips.first()).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(chips.first().locator('.c-chip-remove')).toBeFocused();
+  await expect(removeOf(0)).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(add).toBeFocused();
 
@@ -213,7 +217,7 @@ test('QB-E-04 keyboard only: Tab through the bar and its three panels', async ({
   await expect(chips).toHaveCount(2);
   await expect(chips.nth(1)).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(chips.nth(1).locator('.c-chip-remove')).toBeFocused();
+  await expect(removeOf(1)).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(add).toBeFocused();
   const logic = bar.locator('.c-logic-toggle .c-logic-segment');

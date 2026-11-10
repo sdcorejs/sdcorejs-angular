@@ -91,7 +91,7 @@
 
   <!-- × segment — pinned chips cannot be removed. -->
   @if (!pinned()) {
-    <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
+    <button type="button" class="c-seamless__x" [attr.aria-label]="removeLabel()" (click)="onRemove($event)">
       <sd-icon name="close"></sd-icon>
     </button>
   }

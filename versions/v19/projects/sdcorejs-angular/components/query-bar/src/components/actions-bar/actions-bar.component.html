@@ -55,6 +55,7 @@
       class="c-search-trigger"
       [disabled]="!canSearch()"
       [matTooltip]="searchLabel()"
+      [attr.aria-label]="searchLabel()"
       (click)="search.emit()">
       <sd-icon name="search"></sd-icon>
     </button>

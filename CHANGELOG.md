@@ -217,7 +217,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Inline mode: an **Add condition** box (`core.component.query-bar.add-condition`, `role="combobox"`) at the end of the chips replaces the **+** button and drives the field list (`aria-expanded`, `aria-controls`, `aria-activedescendant`). It opens on a click in the box or on the empty part of the chip row, on typing, ↓ or Alt+↓ — not when Tab only focuses it. Typing filters (accents ignored) and points at the first match; Enter picks it and empties the box; Enter on an empty box with the list closed applies like Search; Escape closes and empties; Backspace on an empty box focuses the last chip, a second Backspace removes it (never a required or pinned chip); a finished chip sends focus back to the box. Disabled when every field is used. Popover mode keeps **+**. `data-autoid` `<autoId>-add-condition`.
 - `data-autoid` for the search box (`<autoId>-search`, `-search-clear`), the panels (`-panel-field-picker`, `-panel-chip`, `-panel-saved-filters`) and saved filters (`-saved-filters`, `-saved-filter-<i>`, `-saved-filter-<i>-delete`, `-saved-filters-save`).
 - `SdQueryBar.canSaveFilter()` and `isLocked(field)`.
-- i18n keys `core.component.query-bar.{saved-filters.heading,saved-filters.deleted,saved-filters.undo,saved-filters.read-error,saved-filters.write-error,search-clear,add-condition,required-min-one}` in the five locales.
+- i18n keys `core.component.query-bar.{saved-filters.heading,saved-filters.deleted,saved-filters.undo,saved-filters.read-error,saved-filters.write-error,search-clear,add-condition,required-min-one,remove-filter}` in the five locales.
 
 #### Search field
 
@@ -298,6 +298,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Query bar
 
 - The internal chip popover drops its `switchPickerMenu` input and `swapField` output, and the internal field picker its `currentKey` input: changing the field of a chip was not offered by the bar (remove the chip and add another). Its i18n key is listed under Changed (BREAKING).
+
+### Fixed
+
+#### Query bar
+
+- The × of the popover, inline and inline value chips read "Remove filter" in English in every language and did not say which filter. It is named by the new key `core.component.query-bar.remove-filter` with the field label (`{label}`): "Xoá bộ lọc Trạng thái", "Remove Trạng thái filter".
+- Popover mode: the × of a chip was a `span[role=button]` inside the chip's `div[role=button]`, a button nested in a button. It is now a native `<button>` beside the trigger, in a `.c-chip-shell` wrapper, drawn over the end of the pill: the chip keeps its size and look, Space removes too, and `.c-chip` (the trigger) no longer contains `.c-chip-remove`.
+  - E2E selectors that look for the × inside the chip must start from the chip host.
+
+    ```diff
+    - bar.locator('.c-chip[data-field="name"] .c-chip-remove')
+    + bar.locator('sd-query-popover-chip:has(.c-chip[data-field="name"]) .c-chip-remove')
+    ```
+
+- The icon-only Search button had a tooltip but no `aria-label`, so it was read as its icon ligature "search". It now carries `core.component.query-bar.search` as `aria-label` too.
+- The type label of each field in the field picker (11px) used `--sd-query-bar-text-muted`, 4.2:1 on the light panel of the default theme, under the 4.5:1 of WCAG AA. It uses `--sd-query-bar-text-secondary`: 5.9:1 light, 10.9:1 dark.
 
 ## [3.5] - 2026-11-05
 

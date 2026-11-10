@@ -762,6 +762,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.required-min-one': 'Chọn ít nhất một giá trị.',
   'core.component.query-bar.search-clear': 'Xoá từ khoá',
   'core.component.query-bar.add-condition': 'Thêm điều kiện',
+  'core.component.query-bar.remove-filter': 'Xoá bộ lọc {label}',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': 'Ngày cụ thể',

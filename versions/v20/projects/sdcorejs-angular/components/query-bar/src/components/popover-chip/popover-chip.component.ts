@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { NgTemplateOutlet } from '@angular/common';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 
@@ -12,6 +13,7 @@ import { ɵSdQueryPanelDirective, ɵSdQueryPanelTriggerDirective } from '../pane
 /**
  * Compact popover-mode chip face. Click, Enter or Space → opens the parent-supplied [panel] (the chip popover dialog).
  * Inert div[role=button] so the nested <sd-operator> doesn't end up as a button-in-button (invalid HTML).
+ * The × is a `<button>` beside that trigger, never inside it.
  */
 @Component({
   selector: 'sd-query-popover-chip',
@@ -64,6 +66,12 @@ export class SdQueryPopoverChip {
   readonly remove = output<void>();
 
   readonly iconFor = sdQueryFieldIcon;
+
+  readonly #i18n = inject(I18nService);
+  /** `aria-label` of the × — names the field, in the current language. */
+  readonly removeLabel = computed(() =>
+    this.#i18n.t('core.component.query-bar.remove-filter', { label: this.field()?.label || this.filterField() })
+  );
 
   filterField(): string {
     return (this.filter() as any).field as string;

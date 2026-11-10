@@ -48,6 +48,8 @@ export class SdQueryInlineChip {
   // và với build chip, nếu không cùng một field sẽ hiện hai ngôn ngữ tuỳ chỗ.
   readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
   readonly booleanFalseLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.false'));
+  /** `aria-label` of the × — names the field, in the current language. */
+  readonly removeLabel = computed(() => this.#i18n.t('core.component.query-bar.remove-filter', { label: this.field().label }));
 
   // ---------------------------------------------------------------------------
   // Inputs

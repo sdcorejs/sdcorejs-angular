@@ -119,7 +119,7 @@
   }
 
   @if (!pinned()) {
-    <button type="button" class="c-token-remove" aria-label="Remove filter" (click)="remove.emit()">
+    <button type="button" class="c-token-remove" [attr.aria-label]="removeLabel()" (click)="remove.emit()">
       <sd-icon name="close"></sd-icon>
     </button>
   }

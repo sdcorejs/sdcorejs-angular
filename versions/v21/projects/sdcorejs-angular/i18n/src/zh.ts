@@ -758,6 +758,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.required-min-one': '请至少选择一个值。',
   'core.component.query-bar.search-clear': '清除搜索词',
   'core.component.query-bar.add-condition': '添加条件',
+  'core.component.query-bar.remove-filter': '删除 {label} 筛选',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '指定日期',

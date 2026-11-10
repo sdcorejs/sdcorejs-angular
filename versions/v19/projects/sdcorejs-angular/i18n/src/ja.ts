@@ -765,6 +765,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.required-min-one': '値を 1 つ以上選択してください。',
   'core.component.query-bar.search-clear': '検索語をクリア',
   'core.component.query-bar.add-condition': '条件を追加',
+  'core.component.query-bar.remove-filter': '{label} のフィルターを削除',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '指定した日付',
