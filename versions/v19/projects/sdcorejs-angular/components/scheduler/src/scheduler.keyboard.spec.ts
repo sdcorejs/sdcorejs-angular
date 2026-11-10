@@ -1,5 +1,5 @@
 import { TestBed, discardPeriodicTasks, fakeAsync } from '@angular/core/testing';
-import { deferred, press, q, text } from '../../../testing/schedule-testing';
+import { deferred, press, q, qa, text } from '../../../testing/schedule-testing';
 import type { SdSchedulerCreateArgs, SdSchedulerMoveRequest, SdSchedulerOption, SdSchedulerResource } from './scheduler.model';
 import { clientOption, renderScheduler, type Booking, type Rendered, type Room } from './scheduler.testing';
 
@@ -110,6 +110,48 @@ describe('SdScheduler · keyboard and a11y', () => {
         expect(active(host)).withContext('the collapsed group row is a stop').toBe('Tầng 3, 2 tài nguyên');
         key(rendered, 'Enter', { alt: true });
         expect(q(host, '[data-group="Tầng 3"]')!.hasAttribute('data-collapsed')).toBeFalse();
+      })
+    );
+
+    it(
+      '[SCH-C-14] week: crosses back from the first column, pages keeping the column, ignores other keys',
+      run(() => {
+        const rendered = renderScheduler({ view: 'week' });
+        const { host, scheduler } = rendered;
+        focusGrid(rendered);
+        key(rendered, 'ArrowLeft');
+        expect(scheduler.date()).toBe('2026/11/02');
+        expect(active(host)).toBe('Hội trường, Chủ Nhật 08/11');
+        key(rendered, 'PageDown');
+        expect(active(host)).toBe('Hội trường, Chủ Nhật 15/11');
+        key(rendered, 'PageUp');
+        expect(active(host)).toBe('Hội trường, Chủ Nhật 08/11');
+        key(rendered, 'Home');
+        expect(active(host)).toBe('Hội trường, Thứ Hai 02/11');
+        expect(key(rendered, 'x').defaultPrevented).withContext('not a grid key').toBeFalse();
+        key(rendered, 'Enter', { alt: true });
+        expect(qa(host, '[data-collapsed]').length).withContext('Hội trường has no group').toBe(0);
+        expect(active(host)).toBe('Hội trường, Thứ Hai 02/11');
+      })
+    );
+
+    it(
+      '[SCH-C-13] Home / End on a collapsed group use the working hours of the scheduler',
+      run(() => {
+        const rendered = renderScheduler();
+        const { host } = rendered;
+        focusGrid(rendered);
+        key(rendered, 'ArrowDown');
+        key(rendered, 'Enter', { alt: true });
+        expect(active(host)).toBe('Tầng 3, 2 tài nguyên');
+        key(rendered, 'End');
+        expect(active(host)).toBe('Tầng 3, 2 tài nguyên');
+        key(rendered, 'ArrowDown');
+        expect(active(host)).withContext('the last slot of 08:00–17:30').toBe('Phòng Cần Thơ, Thứ Hai 09/11, 17:00');
+        key(rendered, 'ArrowUp');
+        key(rendered, 'Home');
+        key(rendered, 'ArrowDown');
+        expect(active(host)).toBe('Phòng Cần Thơ, Thứ Hai 09/11, 08:00');
       })
     );
 

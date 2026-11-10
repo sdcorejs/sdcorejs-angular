@@ -94,6 +94,30 @@ describe('SdScheduler · selection and create', () => {
     );
 
     it(
+      '[SCH-C-05] creates one day on a click in the week and drops a sweep the browser takes away',
+      run(() => {
+        const onCreate = jasmine.createSpy('onCreate').and.returnValue(undefined);
+        const rendered = renderScheduler({ option: creating(onCreate), view: 'week' });
+        const { host, settle } = rendered;
+        const at = atColumn(host, 'hue', 3);
+        pointer(track(host, 'hue'), 'pointerdown', at);
+        pointer(track(host, 'hue'), 'pointerup', at);
+        settle();
+        const args = onCreate.calls.mostRecent().args[0] as SdSchedulerCreateArgs<Room>;
+        expect({ start: args.start, end: args.end, allDay: args.allDay }).toEqual({ start: '2026/11/12', end: '2026/11/12', allDay: true });
+
+        sweep(rendered, 'hue', atColumn(host, 'hue', 1), atColumn(host, 'hue', 2));
+        expect(ghost(host)).not.toBeNull();
+        pointer(track(host, 'hue'), 'pointercancel', atColumn(host, 'hue', 2));
+        rendered.fixture.detectChanges();
+        expect(ghost(host)).toBeNull();
+        pointer(track(host, 'hue'), 'pointerup', atColumn(host, 'hue', 2));
+        settle();
+        expect(onCreate).toHaveBeenCalledTimes(1);
+      })
+    );
+
+    it(
       '[SCH-C-05] has no slot on a group row: pressing it toggles the group',
       run(() => {
         const onCreate = jasmine.createSpy('onCreate');

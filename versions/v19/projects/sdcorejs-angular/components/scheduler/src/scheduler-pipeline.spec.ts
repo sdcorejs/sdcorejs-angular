@@ -608,5 +608,107 @@ describe('SdScheduler · move pipeline', () => {
         expect(rendered.ranges[rendered.ranges.length - 1]).toEqual({ from: '2026/11/10', to: '2026/11/10', view: 'day' });
       })
     );
+
+    it(
+      '[SCH-SC-17] refuses a move past maxDate and says why',
+      run(() => {
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        const rendered = render({ onMove }, { maxDate: '2026/11/09' });
+        let result: boolean | undefined;
+        void rendered.scheduler.move('client', { start: '2026/11/10 09:00:00' }).then(value => (result = value));
+        rendered.settle();
+        expect(result).toBeFalse();
+        expect(onMove).not.toHaveBeenCalled();
+        expect(status(rendered.host)).toBe('Ngoài khoảng cho phép.');
+      })
+    );
+
+    it(
+      '[SCH-SC-08] refuses the target when droppable throws, with one dev-mode warning',
+      run(() => {
+        const warn = spyOn(console, 'warn');
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        const rendered = render({
+          onMove,
+          droppable: () => {
+            throw new Error('broken rule');
+          },
+        });
+        let result: boolean | undefined;
+        void rendered.scheduler.move('client', { start: '2026/11/09 10:00:00', resourceId: 'hue' }).then(value => (result = value));
+        rendered.settle();
+        void rendered.scheduler.move('client', { start: '2026/11/09 14:00:00' });
+        rendered.settle();
+        expect(result).toBeFalse();
+        expect(onMove).not.toHaveBeenCalled();
+        expect(status(rendered.host)).toBe('Không chuyển sang Phòng Hội An được');
+        const messages = warn.calls.allArgs().map(args => String(args[0]));
+        expect(messages.filter(message => message.includes('move.droppable threw for event "client"')).length).toBe(1);
+      })
+    );
+  });
+
+  describe('gesture edges', () => {
+    it(
+      '[SCH-SC-26] does not select the block on the click that ends its drag; the next click does',
+      run(() => {
+        const rendered = render({});
+        const { host, scheduler, settle } = rendered;
+        const selected: string[] = [];
+        scheduler.sdSelect.subscribe(event => selected.push(event.id));
+        drag(rendered, 'client', onRow(host, 'hue', 'client'));
+        expect(rowOf(host, 'client')).toBe('hue');
+        block(host, 'client')!.click();
+        settle();
+        expect(scheduler.selectedId()).toBeNull();
+        block(host, 'client')!.click();
+        settle();
+        expect(scheduler.selectedId()).toBe('client');
+        expect(selected).toEqual(['client']);
+      })
+    );
+
+    it(
+      '[SCH-C-10] drops a live resize on Escape and on pointercancel without onMove',
+      run(() => {
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        const rendered = render({ onMove });
+        const { host, fixture, settle } = rendered;
+        const resize = (finish: () => void): void => {
+          const handle = q(block(host, 'client')!, '[data-resize-handle]')!;
+          const from = centerOf(handle);
+          pointer(handle, 'pointerdown', from);
+          pointer(handle, 'pointermove', { x: from.x + 80, y: from.y });
+          fixture.detectChanges();
+          expect(block(host, 'client')!.style.inlineSize).toContain('* 2.5');
+          finish();
+          fixture.detectChanges();
+          expect(block(host, 'client')!.style.inlineSize).withContext('back to its size').not.toContain('* 2.5');
+          pointer(handle, 'pointerup', { x: from.x + 80, y: from.y });
+          settle();
+        };
+        resize(() => press(document, 'Escape'));
+        resize(() => pointer(q(block(host, 'client')!, '[data-resize-handle]')!, 'pointercancel', { x: 0, y: 0 }));
+        expect(onMove).not.toHaveBeenCalled();
+        expect(block(host, 'client')!.dataset['end']).toBe('2026/11/09 11:30:00');
+      })
+    );
+
+    it(
+      '[SCH-C-10] widens an all-day block by whole columns while resizing in the week',
+      run(() => {
+        const rendered = render({}, { view: 'week' });
+        const { host, fixture } = rendered;
+        const handle = q(block(host, 'workshop')!, '[data-resize-handle]')!;
+        const from = centerOf(handle);
+        const column = track(host, 'hall').getBoundingClientRect().width / 7;
+        pointer(handle, 'pointerdown', from);
+        pointer(handle, 'pointermove', { x: from.x + column * 2, y: from.y });
+        fixture.detectChanges();
+        // Monday and Tuesday, two more columns: four of the seven.
+        expect(block(host, 'workshop')!.style.inlineSize).toContain('57.14');
+        pointer(handle, 'pointercancel', from);
+      })
+    );
   });
 });
