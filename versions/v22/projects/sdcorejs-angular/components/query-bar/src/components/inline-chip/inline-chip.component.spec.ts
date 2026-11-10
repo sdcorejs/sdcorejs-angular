@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryInlineChip } from './inline-chip.component';
 import { SdQueryField } from '../../query-bar.model';
@@ -382,5 +383,19 @@ describe('SdQueryInlineChip', () => {
     host.child()!.enterEdit();
     host.child()!.enterEdit();
     expect(host.child()!.editing()).toBeTrue();
+  });
+
+  // axe trên showcase (PR #143): nút × đọc "Remove filter" bằng tiếng Anh ở mọi ngôn ngữ và không nói bộ lọc nào.
+  it('QB-B-09 names the remove button after the field, in the current language', () => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLanguage('vi', { reload: false });
+    fixture.detectChanges();
+    const remove = fixture.nativeElement.querySelector('.c-token-remove') as HTMLElement;
+    expect(remove.getAttribute('aria-label')).toBe('Xoá bộ lọc Created');
+
+    i18n.setLanguage('en', { reload: false });
+    fixture.detectChanges();
+    expect(remove.getAttribute('aria-label')).toBe('Remove Created filter');
+    i18n.setLanguage('vi', { reload: false });
   });
 });

@@ -9,14 +9,25 @@ $qb-text-muted:    var(--sd-query-bar-text-muted, #7a7a7a);
 $qb-danger:        var(--sd-query-bar-chip-danger, #d23535);
 $qb-danger-bg:     var(--sd-query-bar-chip-danger-bg, #fff5f5);
 $qb-radius-chip:   999px;
+$qb-chip-end:      4px;  // đệm phải của chip trước chevron / ×
+$qb-chip-gap:      4px;
+$qb-remove-size:   20px;
 
-:host { display: contents; } // chip is laid out by the parent flex row directly.
+:host { display: contents; } // the shell is laid out by the parent flex row directly.
+
+// why: trigger và × là anh em (không lồng nút); × đặt tuyệt đối lên đuôi viên chip, chỗ của nó được giữ bằng đệm phải
+// của `.c-chip-removable`, nên chip có cùng kích thước và hình dạng như khi × còn nằm trong trigger.
+.c-chip-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 
 .c-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 4px 0 10px;
+  gap: $qb-chip-gap;
+  padding: 0 $qb-chip-end 0 10px;
   border-radius: $qb-radius-chip;
   border: 1px solid $qb-border;
   background: $qb-bg;
@@ -49,7 +60,12 @@ $qb-radius-chip:   999px;
 
   // Ghim: không có nút ×, chừa đuôi ▾ sát mép như chip rỗng.
   &.c-chip-pinned.c-chip-active {
-    padding-right: 4px;
+    padding-right: $qb-chip-end;
+  }
+
+  // Chừa chỗ cho nút × (anh em của trigger) như khi nó còn là mục cuối của hàng flex: gap + 20px + đệm phải.
+  &.c-chip-removable {
+    padding-right: $qb-chip-end + $qb-remove-size + $qb-chip-gap;
   }
 
   // Bắt buộc mà rỗng: viền và chữ màu lỗi, cùng token với trạng thái lỗi của chip inline.
@@ -100,17 +116,27 @@ $qb-radius-chip:   999px;
     height: 18px;
     color: currentColor;
   }
-  .c-chip-remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: $qb-text-muted;
-    sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
-    &:hover { background: rgba(0, 0, 0, 0.06); }
-  }
+}
+
+.c-chip-remove {
+  position: absolute;
+  top: 50%;
+  right: $qb-chip-end + 1px; // + viền 1px của chip
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: $qb-remove-size;
+  height: $qb-remove-size;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: $qb-text-muted;
+  sd-icon { font-size: var(--sd-font-size-14, 14px); width: 14px; height: 14px; }
+  &:hover { background: rgba(0, 0, 0, 0.06); }
 }
 

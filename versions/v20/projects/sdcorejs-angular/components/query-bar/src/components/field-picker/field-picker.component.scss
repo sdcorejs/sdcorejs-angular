@@ -4,7 +4,6 @@
 // nên style áp cả khi gắn vào overlay, không cần `::ng-deep`.
 $qb-primary: var(--sd-primary);
 $qb-text-secondary: var(--sd-query-bar-text-secondary, #5f6368);
-$qb-text-muted: var(--sd-query-bar-text-muted, #7a7a7a);
 
 .c-field-picker-menu {
   @include panel.panel-list;
@@ -68,7 +67,8 @@ $qb-text-muted: var(--sd-query-bar-text-muted, #7a7a7a);
   padding-left: 4px;
   font-family: 'Roboto Mono', monospace;
   font-size: var(--sd-font-size-11, 11px);
-  color: $qb-text-muted;
+  // why: chữ 11px cần 4.5:1 — muted chỉ đạt ~4.2:1 trên nền panel sáng; secondary đạt 5.9:1 sáng, 10.9:1 tối.
+  color: $qb-text-secondary;
 }
 
 .c-field-item-check {

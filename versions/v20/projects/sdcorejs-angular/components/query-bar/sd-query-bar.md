@@ -191,7 +191,7 @@ Content projection: `<ng-content select="[sdQueryBarEnd]">` renders after the ac
 - One horizontal filter bar with optional free-text search input (`sd-search-field`) on the left and actions on the right.
 - Popover mode renders compact chips; chip click opens the chip popover for operator/value. All three panels (field picker, chip popover, saved filters) share the frame of the `sd-button` Action Popover.
 - Inline mode renders GitLab-style tokens where operator/value controls sit directly in the chip row, followed by the borderless **Add condition** box.
-- Active chips show field label, value summary, optional operator glyph (read-only, with its name as tooltip), and a remove `×`.
+- Active chips show field label, value summary, optional operator glyph (read-only, with its name as tooltip), and a remove `×` button named after the field (`core.component.query-bar.remove-filter`, "Xoá bộ lọc Trạng thái").
 - Saved filters appear as bookmark controls near the Search action when enabled.
 - AND/OR toggle appears only when enabled and there are at least two filters.
 
@@ -245,7 +245,7 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 | `<sd-query-saved-filters-menu>` | `saved-filters-menu.component.*` | Saved-filters button + menu panel + `localStorage` persistence (`saved-filters-storage.ts`: reader, `Date` reviver). |
 | `<sd-query-field-picker>` | `field-picker.component.*` | "Add filter" listbox panel (`[usedKeys]` render disabled with a check). Popover mode: optional find box; inline mode: driven by the Add condition box (`setQuery`, `move`, `pickActive`). |
 | `<sd-query-actions-bar>` | `actions-bar.component.*` | Right-pinned toolbar — divider, AND/OR toggle, clear-all, saved-filters button (its panel holds "Lưu bộ lọc hiện tại"), Search trigger. |
-| `<sd-query-popover-chip>` | `popover-chip.component.*` | Popover-mode chip face — `div[role=button]` host + nested `<sd-operator>` (button-in-button is invalid HTML) + × remove. Triggers the `[panel]` of `<sd-query-chip-popover>`. |
+| `<sd-query-popover-chip>` | `popover-chip.component.*` | Popover-mode chip face — `div[role=button]` trigger + nested `<sd-operator>` (button-in-button is invalid HTML); the × remove is a `<button>` beside the trigger in `.c-chip-shell`, drawn over the end of the pill. Triggers the `[panel]` of `<sd-query-chip-popover>`. |
 | `<sd-query-chip-popover>` | `chip-popover.component.*` | Popover-mode editor (a dialog panel). Owns operator + value staging signals, async option loading, range mutators, multi toggle. Emits `(commit)` whenever the panel closes → parent splices. `seed(filter, field, index)` reseeds before each open, before the panel renders. |
 | `<sd-query-inline-value-chip>` | `inline-value-chip.component.*` | Seamless string / number chip — the pill IS the input. Numbers are grouped with the thousands separator of `I18nService.locale()` (vi `25.000.000`, en `25,000,000`) and parsed back with the same separator, BETWEEN dual input, Enter commits / Esc reverts. Used by both completed and build chips. |
 | `<sd-query-inline-chip>` | `inline-chip.component.*` | Inline-mode completed chip for non-string/number types (boolean / date / datetime / values / lazy-values + BETWEEN). Owns its own click-to-edit / focusout-to-exit lifecycle and `#chipPicker` viewChild. |
@@ -469,7 +469,9 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 - **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.
 - **Required chips** carry `aria-invalid="true"` while empty and point `aria-describedby` at `option.invalidHintId`, so the host's explanation is read with the chip.
 - **`openField(key, returnFocusTo)`** returns focus to `returnFocusTo` when the popover closes — the chip it opened may be dropped on close (`applyOn: 'commit'`), and the user started from the host control.
-- **Clear button** is icon-only; its `aria-label` and tooltip carry the same text.
+- **Clear and Search buttons** are icon-only; the `aria-label` and the tooltip of each carry the same text (`clear-all` / `clear`, `search`), so neither is read as its icon ligature.
+- **Remove buttons** (×) of the popover, inline and inline value chips are native `<button>`s named `core.component.query-bar.remove-filter` with the field label (`{label}`): "Xoá bộ lọc Trạng thái", "Remove Trạng thái filter". In popover mode the × sits beside the chip trigger (`div[role=button]`), not inside it, so no button is nested in another; Tab goes from the chip to its ×.
+- **Field picker:** the type label of each field (11px) uses `--sd-query-bar-text-secondary`, which keeps 4.5:1 on the panel in light and dark.
 
 ## i18n
 
@@ -489,7 +491,8 @@ as `computed()` signals (not the `sdTranslate` pipe) because the pipe is pure an
 | Open-ended range on a chip (`{value}`)      | `core.component.query-bar.range.from` / `.range.to` | `chipValueText()` |
 | Field-picker find box                       | `core.component.query-bar.find-field`           | field picker `findLabel()` |
 | Required hint rendered by a host (`{label}`) | `core.component.query-bar.required`            | host (e.g. `sd-table`) |
-| Search trigger tooltip                      | `core.component.query-bar.search`               | `searchLabel()` (actions bar)   |
+| Search trigger tooltip + `aria-label`       | `core.component.query-bar.search`               | `searchLabel()` (actions bar)   |
+| Chip remove button `aria-label` (`{label}`) | `core.component.query-bar.remove-filter`        | `removeLabel()` (popover, inline and inline value chips) |
 | AND/OR group `aria-label`                   | `core.component.query-bar.logic-operator`       | `logicGroupLabel()` (actions bar) |
 | Boolean chip value, default true / false    | `core.component.query-bar.boolean.true` / `.false` | `chipValueText()`, plus the build chip and inline chip toggle buttons (same keys, so one field never shows two languages) |
 | Seamless value placeholder (number / text)  | `core.component.query-bar.placeholder.value` / `.text` | inline value chip `ph()` |

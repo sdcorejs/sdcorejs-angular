@@ -762,6 +762,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.required-min-one': '값을 하나 이상 선택하세요.',
   'core.component.query-bar.search-clear': '검색어 지우기',
   'core.component.query-bar.add-condition': '조건 추가',
+  'core.component.query-bar.remove-filter': '{label} 필터 삭제',
 
   // ---- Component: query-builder ----
   'core.component.query-builder.date-mode.absolute': '특정 날짜',

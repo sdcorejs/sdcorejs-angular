@@ -158,6 +158,19 @@ describe('SdQueryInlineValueChip', () => {
       x.click();
       expect(spy).toHaveBeenCalledTimes(1);
     });
+
+    // axe trên showcase (PR #143): nút × đọc "Remove filter" bằng tiếng Anh ở mọi ngôn ngữ và không nói bộ lọc nào.
+    it('QB-B-09 names the remove button after the field, in the current language', () => {
+      setup(stringField, 'abc');
+      const x = fixture.nativeElement.querySelector('.c-seamless__x') as HTMLButtonElement;
+      expect(x.getAttribute('aria-label')).toBe('Xoá bộ lọc Name');
+
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(x.getAttribute('aria-label')).toBe('Remove Name filter');
+      i18n.setLanguage('vi', { reload: false });
+    });
   });
 
   describe('revert (Esc)', () => {
