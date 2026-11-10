@@ -12088,6 +12088,73 @@ export class QuickActionDemoComponent {
   gap: 8px;
 }`,
   },
+  "components/scheduler/example-dat-phong-hop": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { SdScheduler, type SdSchedulerOption, type SdSchedulerView } from '@sdcorejs/angular/components/scheduler';
+import { DEMO_DAY, demoBookings, demoRooms, perfEvents, perfResources, type BookingDto, type BookingEvent, type RoomDto } from './scheduler-demo.data';
+
+@Component({
+  selector: 'app-scheduler-booking-example',
+  standalone: true,
+  imports: [SdScheduler],
+  templateUrl: './scheduler-booking.example.html',
+  styleUrl: './scheduler-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SchedulerBookingExampleComponent {
+  readonly view = signal<SdSchedulerView>('day');
+  readonly date = signal<string | null | undefined>(DEMO_DAY);
+  /** 150 resources × 31 days × 3 events (TESTING §10). */
+  readonly perf = signal(false);
+  readonly events = signal<BookingEvent[]>(demoBookings());
+
+  readonly resources = computed(() => (this.perf() ? perfResources() : demoRooms()));
+  readonly option = computed<SdSchedulerOption<BookingDto, RoomDto>>(() => {
+    const events = this.perf() ? perfEvents() : this.events();
+    return { dataSource: { onLoad: () => events } };
+  });
+
+  togglePerf(): void {
+    const next = !this.perf();
+    this.perf.set(next);
+    this.view.set(next ? 'month' : 'day');
+    this.date.set(next ? '2026/12/01' : DEMO_DAY);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-example__switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-example__switch {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  font: inherit;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    border-color: var(--sd-primary);
+    background: var(--sd-primary-light);
+  }
+}
+
+.scheduler-example__scheduler {
+  height: 560px;
+}`,
+  },
   "components/section": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -31539,6 +31606,21 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-button sdAction type="text" color="primary" prefixIcon="undo" title="Hoàn tác" (click)="undo()"></sd-button>
     </sd-quick-action>
   </demo-section>`,
+  },
+  "components/scheduler/example-dat-phong-hop": {
+    ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-dat-phong-hop"],
+    html: `<div class="scheduler-example__switches">
+  <button type="button" class="scheduler-example__switch" data-testid="scheduler-perf" [attr.aria-pressed]="perf()" (click)="togglePerf()">
+    150 tài nguyên × 31 ngày
+  </button>
+</div>
+<sd-scheduler
+  class="scheduler-example__scheduler"
+  autoId="booking"
+  [option]="option()"
+  [resources]="resources()"
+  [(view)]="view"
+  [(date)]="date" />`,
   },
   "components/section/example-basic-info-rows": {
     ...SHOWCASE_PAGE_SOURCES["components/section"],

@@ -17,15 +17,15 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(114);
-    expect(new Set(publishedIds).size).toBe(114);
+    expect(DOC_PAGES).toHaveSize(115);
+    expect(new Set(publishedIds).size).toBe(115);
     expect(DOC_PAGES.some(page => page.category === 'components' && page.slug === 'chart')).toBeFalse();
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(518);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(519);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {

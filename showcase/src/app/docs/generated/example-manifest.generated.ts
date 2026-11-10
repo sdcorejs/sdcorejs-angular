@@ -205,6 +205,7 @@ export type ShowcaseExampleSourceKey =
   | "components/quick-action/example-thong-bao-trang-thai"
   | "components/quick-action/example-trong-container"
   | "components/quick-action/example-undo-toast"
+  | "components/scheduler/example-dat-phong-hop"
   | "components/section/example-basic-info-rows"
   | "components/section/example-collapsible-section"
   | "components/section/example-custom-header-left-right"
@@ -1950,6 +1951,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-trong-container",
     title: "Trong container",
     description: "Existing “Trong container” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/scheduler/example-dat-phong-hop",
+    pageKey: "components/scheduler",
+    sectionId: "example-dat-phong-hop",
+    title: "Đặt phòng họp",
+    description: "Phòng nhóm theo tầng, bấm hàng nhóm để thu gọn. Nút 150 tài nguyên × 31 ngày dựng lịch Tháng nặng để đo hiệu năng.",
   },
   {
     sourceKey: "components/section/example-basic-info-rows",

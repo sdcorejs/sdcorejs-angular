@@ -4,7 +4,13 @@ import type { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import type { Language } from '@sdcorejs/utils/models';
 import { configureScheduleTesting, createWith, deferred, type Deferred } from '../../../testing/schedule-testing';
 import { SdScheduler } from './scheduler.component';
-import type { SdSchedulerEvent, SdSchedulerLoadArgs, SdSchedulerOption, SdSchedulerResource, SdSchedulerVisibleRange } from './scheduler.model';
+import type {
+  SdSchedulerEvent,
+  SdSchedulerLoadArgs,
+  SdSchedulerOption,
+  SdSchedulerResource,
+  SdSchedulerVisibleRange,
+} from './scheduler.model';
 
 // Fixtures of the sd-scheduler component specs (rooms of the design file, Monday 09/11/2026). Spec-only.
 
@@ -50,9 +56,23 @@ export function bookings(): SdSchedulerEvent<Booking>[] {
       color: 'success',
       data: { people: 4 },
     },
-    { id: 'training', title: 'Đào tạo', resourceId: 'da-lat', start: '2026/11/09 13:00:00', end: '2026/11/09 17:00:00', data: { people: 9 } },
+    {
+      id: 'training',
+      title: 'Đào tạo',
+      resourceId: 'da-lat',
+      start: '2026/11/09 13:00:00',
+      end: '2026/11/09 17:00:00',
+      data: { people: 9 },
+    },
     { id: 'workshop', title: 'Hội thảo', resourceId: 'hall', start: '2026/11/09', end: '2026/11/10', allDay: true, data: { people: 80 } },
-    { id: 'tuesday', title: 'Họp thứ Ba', resourceId: 'can-tho', start: '2026/11/10 09:00:00', end: '2026/11/10 10:00:00', data: { people: 3 } },
+    {
+      id: 'tuesday',
+      title: 'Họp thứ Ba',
+      resourceId: 'can-tho',
+      start: '2026/11/10 09:00:00',
+      end: '2026/11/10 10:00:00',
+      data: { people: 3 },
+    },
   ];
 }
 
@@ -105,7 +125,11 @@ export interface Rendered {
 }
 
 /** Renders `<sd-scheduler>` on Monday 09/11/2026 with the rooms; call inside `fakeAsync`. */
-export function renderScheduler(inputs: Record<string, unknown> = {}, setup: SchedulerSetup = {}, size = { width: 1122, height: 640 }): Rendered {
+export function renderScheduler(
+  inputs: Record<string, unknown> = {},
+  setup: SchedulerSetup = {},
+  size = { width: 1122, height: 640 }
+): Rendered {
   const { setNow } = configureScheduler(setup);
   const fixture = createWith(SdScheduler<Booking, Room>, { option: clientOption(), resources: rooms(), date: '2026/11/09', ...inputs });
   const host = fixture.nativeElement as HTMLElement;

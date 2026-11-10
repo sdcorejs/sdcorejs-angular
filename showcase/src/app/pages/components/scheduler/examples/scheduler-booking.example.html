@@ -1,0 +1,12 @@
+<div class="scheduler-example__switches">
+  <button type="button" class="scheduler-example__switch" data-testid="scheduler-perf" [attr.aria-pressed]="perf()" (click)="togglePerf()">
+    150 tài nguyên × 31 ngày
+  </button>
+</div>
+<sd-scheduler
+  class="scheduler-example__scheduler"
+  autoId="booking"
+  [option]="option()"
+  [resources]="resources()"
+  [(view)]="view"
+  [(date)]="date" />

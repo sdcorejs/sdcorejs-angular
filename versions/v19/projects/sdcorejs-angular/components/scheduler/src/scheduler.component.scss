@@ -291,6 +291,9 @@ $hour: var(--sd-scheduler-hour-width);
   min-height: 0;
   max-height: max-content;
   overflow: auto;
+  // why: the grid is wider than most hosts; without this its width becomes the min-content width of every flex or
+  // shrink-to-fit ancestor, and the page scrolls instead of the grid.
+  contain: inline-size;
   overscroll-behavior: contain;
 
   &[data-view='week'] {

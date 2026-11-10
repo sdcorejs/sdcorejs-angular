@@ -339,7 +339,12 @@ export class SdScheduler<T = unknown, R = unknown> {
   });
   /** Days drawn on the axis: the visible days without the weekend when `hideWeekends` (week, month). */
   protected readonly columns = computed(
-    () => sdSchedulerColumns(sdSchedulerVisibleDays(this.activeView(), this.#anchor(), this.#firstDayOfWeek()), this.activeView(), this.hideWeekends()),
+    () =>
+      sdSchedulerColumns(
+        sdSchedulerVisibleDays(this.activeView(), this.#anchor(), this.#firstDayOfWeek()),
+        this.activeView(),
+        this.hideWeekends()
+      ),
     { equal: ɵsdCalendarSameList }
   );
 
@@ -364,7 +369,13 @@ export class SdScheduler<T = unknown, R = unknown> {
   protected readonly invalid = computed(() => {
     const ids = new Set<string>();
     for (const resource of this.resources()) {
-      if (typeof resource.id !== 'string' || !resource.id || ids.has(resource.id) || typeof resource.title !== 'string' || !resource.title.trim())
+      if (
+        typeof resource.id !== 'string' ||
+        !resource.id ||
+        ids.has(resource.id) ||
+        typeof resource.title !== 'string' ||
+        !resource.title.trim()
+      )
         return true;
       ids.add(resource.id);
     }
@@ -478,7 +489,8 @@ export class SdScheduler<T = unknown, R = unknown> {
           this.#emittedKey = key;
           this.sdRangeChange.emit(range);
         }
-        const changedSource = (this.#lastOption !== null && this.#lastOption !== option) || (this.#lastResources !== null && this.#lastResources !== resources);
+        const changedSource =
+          (this.#lastOption !== null && this.#lastOption !== option) || (this.#lastResources !== null && this.#lastResources !== resources);
         if (this.#lastResources !== resources) {
           this.#generation++;
           this.#pruneGroups(resources);
@@ -493,7 +505,8 @@ export class SdScheduler<T = unknown, R = unknown> {
 
     effect(() => {
       const { unknown, unreadable } = this.#reading();
-      for (const id of unknown) this.#report('warn', `resource:${id}`, `event "${id}" has a resourceId that is not in resources; it is not shown.`);
+      for (const id of unknown)
+        this.#report('warn', `resource:${id}`, `event "${id}" has a resourceId that is not in resources; it is not shown.`);
       for (const id of unreadable)
         this.#report('warn', `date:${id}`, `event "${id}" has an unreadable date or does not end after it starts; it is not shown.`);
     });
@@ -548,7 +561,18 @@ export class SdScheduler<T = unknown, R = unknown> {
       untracked(() => {
         const entered = view !== this.#lastView;
         this.#lastView = view;
-        afterNextRender(() => (view === 'day' ? entered && this.#scrollToTime() : this.#revealToday()), { injector: this.#injector });
+        afterNextRender(
+          () => {
+            if (view === 'day') {
+              if (entered) this.#scrollToTime();
+              return;
+            }
+            // A week or a month opens at its first column, then brings today into view (§6).
+            if (entered && this.scroller()) this.scroller()!.nativeElement.scrollLeft = 0;
+            this.#revealToday();
+          },
+          { injector: this.#injector }
+        );
       });
     });
 
@@ -709,7 +733,14 @@ export class SdScheduler<T = unknown, R = unknown> {
     const columns = this.columns();
     const placed = this.#byResource().get(resource.id) ?? [];
     // §8.4 step 5: a pending block is left out of the lanes and drawn in lane 0, on top.
-    const laid: { item: SdSchedulerPlaced<T>; lane: SdSchedulerLaneItem; start: number; end: number; clippedStart: boolean; clippedEnd: boolean }[] = [];
+    const laid: {
+      item: SdSchedulerPlaced<T>;
+      lane: SdSchedulerLaneItem;
+      start: number;
+      end: number;
+      clippedStart: boolean;
+      clippedEnd: boolean;
+    }[] = [];
     for (const item of placed) {
       if (view === 'day') {
         const span = sdSchedulerDaySpan(item.placement, columns[0]);

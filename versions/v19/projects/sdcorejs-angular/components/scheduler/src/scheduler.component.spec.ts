@@ -3,7 +3,11 @@ import { TestBed, discardPeriodicTasks, fakeAsync, flushMicrotasks, tick } from 
 import { q, qa, text } from '../../../testing/schedule-testing';
 import { SdScheduler } from './scheduler.component';
 import type { SdSchedulerLoadArgs, SdSchedulerResource, SdSchedulerView } from './scheduler.model';
-import { SdSchedulerEmptyTemplateDirective, SdSchedulerEventTemplateDirective, SdSchedulerResourceTemplateDirective } from './scheduler.templates';
+import {
+  SdSchedulerEmptyTemplateDirective,
+  SdSchedulerEventTemplateDirective,
+  SdSchedulerResourceTemplateDirective,
+} from './scheduler.templates';
 import {
   bookings,
   clientOption,
@@ -181,7 +185,10 @@ describe('SdScheduler · rendering and data source', () => {
       '[SCH-C-03] leaves out an event whose resource is unknown and warns once',
       run(() => {
         const warn = spyOn(console, 'warn');
-        const events = (): Events => [...bookings(), { id: 'ghost', title: 'Ma', resourceId: 'nowhere', start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00' }];
+        const events = (): Events => [
+          ...bookings(),
+          { id: 'ghost', title: 'Ma', resourceId: 'nowhere', start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00' },
+        ];
         const { host, scheduler, settle } = renderScheduler({ option: clientOption(events) });
         expect(block(host, 'ghost')).toBeNull();
         expect(block(host, 'review')).not.toBeNull();
@@ -282,7 +289,9 @@ describe('SdScheduler · rendering and data source', () => {
       run(() => {
         const { host } = renderScheduler();
         expect(groupRows(host)).toEqual(['Tầng 3', 'Tầng 5']);
-        const order = qa(host, '[role="rowgroup"].sd-scheduler__body > [role="row"]').map(row => row.dataset['group'] ?? row.dataset['resourceId']);
+        const order = qa(host, '[role="rowgroup"].sd-scheduler__body > [role="row"]').map(
+          row => row.dataset['group'] ?? row.dataset['resourceId']
+        );
         expect(order).toEqual(['hall', 'Tầng 3', 'hue', 'hoi-an', 'Tầng 5', 'can-tho', 'da-lat']);
         const group = q<HTMLButtonElement>(host, '[data-group="Tầng 3"] button')!;
         expect(text(group)).toContain('2 tài nguyên');
@@ -305,7 +314,10 @@ describe('SdScheduler · rendering and data source', () => {
         settle();
         expect(lastArgs(onLoad).resourceIds).toContain('da-lat');
         expect(rowIds(host)).withContext('kept on another range').toEqual(['hall', 'hue', 'hoi-an']);
-        fixture.componentRef.setInput('resources', rooms().map(room => ({ ...room, group: room.group === 'Tầng 5' ? undefined : room.group })));
+        fixture.componentRef.setInput(
+          'resources',
+          rooms().map(room => ({ ...room, group: room.group === 'Tầng 5' ? undefined : room.group }))
+        );
         settle();
         fixture.componentRef.setInput('resources', rooms());
         settle();
@@ -329,7 +341,10 @@ describe('SdScheduler · rendering and data source', () => {
         settle();
         expect(invalid()).withContext('empty id').toBeTrue();
         fixture.componentRef.setInput('resources', rooms());
-        fixture.componentRef.setInput('option', clientOption(() => [...bookings(), { ...bookings()[0] }]));
+        fixture.componentRef.setInput(
+          'option',
+          clientOption(() => [...bookings(), { ...bookings()[0] }])
+        );
         settle();
         expect(invalid()).withContext('duplicate event id').toBeTrue();
       })
@@ -483,7 +498,9 @@ describe('SdScheduler · rendering and data source', () => {
         expect(qa(plain.host, '[data-autoid^="components-scheduler"]').length).toBe(0);
         TestBed.resetTestingModule();
         const resources: SdSchedulerResource<Room>[] = [{ id: 'p/1 a', title: 'Phòng 1' }];
-        const events = (): Events => [{ id: 'e 1', title: 'E', resourceId: 'p/1 a', start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00' }];
+        const events = (): Events => [
+          { id: 'e 1', title: 'E', resourceId: 'p/1 a', start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00' },
+        ];
         const { host } = renderScheduler({ autoId: 'rooms', resources, option: clientOption(events) });
         expect(q(host, '[role="region"]')!.dataset['autoid']).toBe('components-scheduler-rooms');
         expect(q(host, `[data-autoid="components-scheduler-rooms-resource-${encodeURIComponent('p/1 a')}"]`)).not.toBeNull();
@@ -503,7 +520,9 @@ describe('SdScheduler · rendering and data source', () => {
             <span data-resource-template>{{ resource.title }}|{{ group }}|{{ compact }}|{{ resource.data?.seats }}</span>
           </ng-template>
           <ng-template sdSchedulerEventTemplate let-event let-resource="resource" let-range="range" let-view="view">
-            <span data-event-template>{{ event.title }}|{{ resource.title }}|{{ range.resourceId }}|{{ view }}|{{ event.data?.people }}</span>
+            <span data-event-template
+              >{{ event.title }}|{{ resource.title }}|{{ range.resourceId }}|{{ view }}|{{ event.data?.people }}</span
+            >
           </ng-template>
           <ng-template sdSchedulerEmptyTemplate let-range>
             <span data-empty-template>{{ range.from }}–{{ range.to }}</span>
