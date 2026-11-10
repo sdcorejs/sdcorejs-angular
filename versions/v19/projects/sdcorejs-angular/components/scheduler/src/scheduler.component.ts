@@ -141,6 +141,9 @@ const COMPACT_SIZES = { hour: 64, resource: 120, day: 96, month: 28 } as const;
 /** Gaps around a block (px): before and after on the hour axis, before and after on the day axis (§7). */
 const DAY_GAP = { before: 1, after: 2 } as const;
 const COLUMN_GAP = { before: 2, after: 3 } as const;
+/** Floating label (§8.3): 6px from the block; under 160px of track left after the block it goes before it. */
+const LABEL_GAP = 6;
+const LABEL_ROOM = 160;
 /** Where the first-load skeleton draws its blocks on the first three rows: [inline start, size] as fractions (§12). */
 const SKELETON: readonly (readonly [number, number])[] = [
   [0.08, 0.22],
@@ -266,6 +269,8 @@ interface SdSchedulerDragProposal {
   readonly outside: boolean;
   /** Floating label: "{resource} · 10:00 – 11:30" across rows, "10:00 – 11:30" in the same row (§8.3). */
   readonly label: string;
+  /** No room for the label after the block: it goes before it (§8.3). */
+  readonly flip: boolean;
 }
 
 /** @internal What a drag measured when it started (Step 0 D.2). */
@@ -1075,7 +1080,8 @@ export class SdScheduler<T = unknown, R = unknown> {
   #activateSlot(row: SdSchedulerResourceRow<T, R>, cursor: { readonly day: string; readonly minutes: number }): void {
     const cell = row.cells?.find(item => item.day === cursor.day);
     if (cell?.events.length) {
-      this.sdCellSelect.emit({ resource: row.resource, date: cell.day, events: cell.events });
+      // As a selection: not while disabled, still while readonly (SC-28).
+      if (!this.disabled()) this.sdCellSelect.emit({ resource: row.resource, date: cell.day, events: cell.events });
       return;
     }
     if (this.activeView() === 'day') {
@@ -1416,7 +1422,8 @@ export class SdScheduler<T = unknown, R = unknown> {
       blocked = session.memo.get(memoKey)!;
     }
     const label = this.#proposalLabel(target, resourceId !== event.resourceId);
-    this.#zone.run(() => this.#drag.set({ id: event.id, target, onGroup, blocked, outside, label }));
+    const flip = this.#labelFlips(target);
+    this.#zone.run(() => this.#drag.set({ id: event.id, target, onGroup, blocked, outside, label, flip }));
   }
 
   /**
@@ -1548,6 +1555,50 @@ export class SdScheduler<T = unknown, R = unknown> {
     this.#resizeSession = null;
     this.#resize.set(null);
     document.removeEventListener('keydown', this.#onDragKeydown, true);
+  }
+
+  /** Floating label of a live resize (§8.3): after the block, or before it when the row has no room left. */
+  protected resizeLabel(block: SdSchedulerBlockView<T, R>): { text: string; start: string | null; end: string | null; top: string } | null {
+    const resize = this.#resize();
+    if (resize?.id !== block.key) return null;
+    const target: SdSchedulerTarget = block.placement.allDay
+      ? { ...ɵsdCalendarTargetOf(block.placement), endDay: resize.lastDay, resourceId: block.event.resourceId }
+      : { ...ɵsdCalendarTargetOf(block.placement), endMinutes: resize.endMinutes, resourceId: block.event.resourceId };
+    const { from, to } = this.#inlineOffsets(target);
+    const flip = this.#labelFlips(target);
+    return {
+      text: this.#proposalLabel(target, false),
+      start: flip ? null : `calc(${to} + ${LABEL_GAP}px)`,
+      end: flip ? `calc(100% - ${from} + ${LABEL_GAP}px)` : null,
+      top: `calc(${block.top} + var(--sd-scheduler-lane-height) / 2)`,
+    };
+  }
+
+  /** Inline start and end of a target in its track, as CSS lengths. */
+  #inlineOffsets(target: SdSchedulerTarget): { from: string; to: string } {
+    const lastDay = ɵsdCalendarLastDayOf(target);
+    const placement = { ...target, inGrid: !target.allDay && lastDay === target.startDay, firstDay: target.startDay, lastDay };
+    if (this.activeView() === 'day') {
+      const span = sdSchedulerDaySpan(placement, this.columns()[0]) ?? { start: 0, end: 1440 };
+      return { from: `var(--sd-scheduler-hour-width) * ${span.start / 60}`, to: `var(--sd-scheduler-hour-width) * ${span.end / 60}` };
+    }
+    const columns = this.columns();
+    const span = sdSchedulerColumnSpan(placement, columns) ?? { from: 0, to: 0 };
+    return { from: `${(span.from / columns.length) * 100}%`, to: `${((span.to + 1) / columns.length) * 100}%` };
+  }
+
+  /** The space after a target up to the end of its track is too narrow for the floating label (§8.3). */
+  #labelFlips(target: SdSchedulerTarget): boolean {
+    const lastDay = ɵsdCalendarLastDayOf(target);
+    if (this.activeView() === 'day') {
+      const hour = this.#sizes().hour;
+      const end = target.endDay > this.columns()[0] || target.allDay ? 1440 : target.endMinutes;
+      return hour * 24 - (end / 60) * hour < LABEL_ROOM;
+    }
+    const columns = this.columns();
+    const span = sdSchedulerColumnSpan({ ...target, inGrid: false, firstDay: target.startDay, lastDay }, columns);
+    const width = this.#trackWidth();
+    return width - (((span?.to ?? 0) + 1) / columns.length) * width < LABEL_ROOM;
   }
 
   /** Inline size of a block, following a live resize. */
@@ -1823,13 +1874,16 @@ export class SdScheduler<T = unknown, R = unknown> {
     });
   }
 
-  /** Off hours (day view) or days off (week, month) of a resource, merged into spans (§7). */
+  /** Off hours (day view) or days off (week, month) of a resource, merged into spans (§7); days outside `minDate` / `maxDate` too. */
   #shades(resource: SdSchedulerResource<R>): readonly SdSchedulerShade[] {
     const hours = this.#hoursOf(resource);
     const columns = this.columns();
+    const min = this.#minDay();
+    const max = this.#maxDay();
+    const shaded = (day: string): boolean => this.#offDay(day, hours) || (!!min && day < min) || (!!max && day > max);
     if (this.activeView() === 'day') {
       const day = columns[0];
-      const off: ɵSdCalendarSpan[] = this.#offDay(day, hours)
+      const off: ɵSdCalendarSpan[] = shaded(day)
         ? [{ start: 0, end: 1440 }]
         : ɵsdCalendarOffSegments(ɵsdCalendarWorkingRanges(hours, ɵsdCalendarWeekday(day)));
       return off.map(span => ({
@@ -1847,7 +1901,7 @@ export class SdScheduler<T = unknown, R = unknown> {
       from = -1;
     };
     columns.forEach((day, column) => {
-      if (this.#offDay(day, hours)) {
+      if (shaded(day)) {
         if (from < 0) from = column;
       } else close(column - 1);
     });

@@ -365,6 +365,18 @@
                             (pointercancel)="onResizeCancel()"></div>
                         }
                       </div>
+                      @if (resizeLabel(block); as _resize) {
+                        <span
+                          class="sd-scheduler__label sd-scheduler__label--resize"
+                          data-resize-label
+                          aria-hidden="true"
+                          [attr.data-flip]="_resize.end ? true : null"
+                          [style.inset-inline-start]="_resize.start"
+                          [style.inset-inline-end]="_resize.end"
+                          [style.top]="_resize.top">
+                          {{ _resize.text }}
+                        </span>
+                      }
                     }
                     @if (_proposal && !_proposal.outside && !_proposal.onGroup && _proposal.target.resourceId === row.resource.id) {
                       @let _drop = proposalBox(_proposal);
@@ -376,7 +388,7 @@
                         [style.inset-inline-start]="_drop.start"
                         [style.inline-size]="_drop.size"
                         [style.top.px]="row.height > 48 ? 6 : 10">
-                        <span class="sd-scheduler__label" data-drag-label>{{ _proposal.label }}</span>
+                        <span class="sd-scheduler__label" data-drag-label [attr.data-flip]="_proposal.flip || null">{{ _proposal.label }}</span>
                       </div>
                     }
                     @if (_ghost && _ghost.resourceId === row.resource.id) {

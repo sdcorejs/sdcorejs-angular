@@ -707,7 +707,61 @@ describe('SdScheduler · move pipeline', () => {
         fixture.detectChanges();
         // Monday and Tuesday, two more columns: four of the seven.
         expect(block(host, 'workshop')!.style.inlineSize).toContain('57.14');
+        expect(text(q(host, '[data-resize-label]'))).toBe('09/11 – 12/11');
         pointer(handle, 'pointercancel', from);
+        fixture.detectChanges();
+        expect(q(host, '[data-resize-label]')).toBeNull();
+      })
+    );
+
+    it(
+      '[SCH-C-10] shows the floating label while resizing, before the block when the day has no room after it',
+      run(() => {
+        const rendered = render({});
+        const { host, fixture, scheduler, settle } = rendered;
+        const resize = (id: string): HTMLElement | null => {
+          const handle = q(block(host, id)!, '[data-resize-handle]')!;
+          const from = centerOf(handle);
+          pointer(handle, 'pointerdown', from);
+          pointer(handle, 'pointermove', { x: from.x + 80, y: from.y });
+          fixture.detectChanges();
+          const label = q(host, '[data-resize-label]');
+          expect(label?.closest('[data-track]')?.getAttribute('data-resource-id')).withContext('in the row of the block').toBe('hoi-an');
+          pointer(handle, 'pointercancel', from);
+          fixture.detectChanges();
+          return label;
+        };
+        let label = resize('client');
+        expect(text(label)).toBe('10:00 – 12:30');
+        expect(label!.hasAttribute('data-flip')).toBeFalse();
+        void scheduler.move('client', { start: '2026/11/09 21:00:00' });
+        settle();
+        label = resize('client');
+        expect(text(label)).toBe('21:00 – 23:30');
+        expect(label!.dataset['flip']).withContext('40px left after 23:30').toBe('true');
+      })
+    );
+
+    it(
+      '[SCH-C-06] puts the drag label before the proposal in the last column of the week',
+      run(() => {
+        const rendered = render({}, { view: 'week' });
+        const { host, fixture } = rendered;
+        const width = track(host, 'can-tho').getBoundingClientRect().width / 7;
+        let flip: string | undefined;
+        let label = '';
+        mouseDrag(block(host, 'tuesday')!, onRow(host, 'can-tho', 'tuesday', width * 5), {
+          step: () => fixture.detectChanges(),
+          beforeRelease: () => {
+            fixture.detectChanges();
+            const element = q(host, '[data-drag-label]')!;
+            label = text(element);
+            flip = element.dataset['flip'];
+          },
+        });
+        rendered.settle();
+        expect(label).toBe('09:00 – 10:00');
+        expect(flip).toBe('true');
       })
     );
   });

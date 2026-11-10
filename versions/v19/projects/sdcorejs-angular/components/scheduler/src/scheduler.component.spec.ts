@@ -457,6 +457,26 @@ describe('SdScheduler · rendering and data source', () => {
     );
 
     it(
+      '[SCH-C-13] shades the days before minDate and after maxDate, as sd-calendar',
+      run(() => {
+        const { host, fixture, settle } = renderScheduler({ view: 'week', minDate: '2026/11/11' });
+        const hue = (): HTMLElement[] => qa(host, '[role="row"][data-resource-id="hue"] [data-off-hours]');
+        expect(hue().length).withContext('Monday and Tuesday, then the weekend').toBe(2);
+        expect(parseFloat(hue()[0].style.insetInlineStart)).toBe(0);
+        expect(parseFloat(hue()[0].style.inlineSize)).toBeCloseTo((2 / 7) * 100, 2);
+        fixture.componentRef.setInput('minDate', undefined);
+        fixture.componentRef.setInput('maxDate', '2026/11/12');
+        settle();
+        expect(hue().length).withContext('Friday to Sunday as one span').toBe(1);
+        expect(parseFloat(hue()[0].style.insetInlineStart)).toBeCloseTo((4 / 7) * 100, 2);
+        fixture.componentRef.setInput('view', 'day');
+        fixture.componentRef.setInput('date', '2026/11/13');
+        settle();
+        expect(hue().length).withContext('the whole day').toBe(1);
+      })
+    );
+
+    it(
       '[SCH-U-07] places day blocks on the hour axis and week blocks on the day columns',
       run(() => {
         const { host, scheduler, settle } = renderScheduler();

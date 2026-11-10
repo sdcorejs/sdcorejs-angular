@@ -92,7 +92,14 @@ describe('SdScheduler · compact, touch, cell template and media', () => {
       standalone: true,
       imports: [SdScheduler, SdSchedulerCellTemplateDirective],
       template: `
-        <sd-scheduler [option]="option" [resources]="resources" date="2026/11/09" [view]="view()" (sdCellSelect)="selected.push($event)">
+        <sd-scheduler
+          [option]="option"
+          [resources]="resources"
+          date="2026/11/09"
+          [view]="view()"
+          [disabled]="disabled()"
+          [readonly]="readonly()"
+          (sdCellSelect)="selected.push($event)">
           <ng-template sdSchedulerCellTemplate [views]="views()" let-date let-events="events" let-off="off" let-resource="resource">
             <span data-code>{{ events.length ? 'X' : off ? '–' : '' }}|{{ resource.id }}|{{ date }}</span>
           </ng-template>
@@ -106,6 +113,8 @@ describe('SdScheduler · compact, touch, cell template and media', () => {
       readonly view = signal<SdSchedulerView>('week');
       readonly views = signal<readonly ('week' | 'month')[]>(['week', 'month']);
       readonly selected: SdSchedulerCellSelect<Booking, Room>[] = [];
+      readonly disabled = signal(false);
+      readonly readonly = signal(false);
     }
 
     function mount(): { fixture: ReturnType<typeof TestBed.createComponent<CellHost>>; host: HTMLElement; settle: () => void } {
@@ -150,6 +159,32 @@ describe('SdScheduler · compact, touch, cell template and media', () => {
         const args = fixture.componentInstance.onCreate.calls.mostRecent().args[0] as SdSchedulerCreateArgs<Room>;
         expect([args.resourceId, args.start, args.end, args.allDay]).toEqual(['hue', '2026/11/12', '2026/11/12', true]);
         expect(selected.length).withContext('an empty cell does not select').toBe(1);
+      })
+    );
+
+    it(
+      '[SCH-SC-28] emits sdCellSelect while readonly, not while disabled; neither creates',
+      run(() => {
+        const { fixture, host, settle } = mount();
+        const cell = (resourceId: string, date: string): HTMLElement =>
+          q(host, `[role="gridcell"][data-resource-id="${resourceId}"][data-date="${date}"]`)!;
+        const { componentInstance } = fixture;
+        componentInstance.disabled.set(true);
+        settle();
+        cell('can-tho', '2026/11/10').click();
+        cell('hue', '2026/11/12').click();
+        settle();
+        expect(componentInstance.selected.length).withContext('disabled').toBe(0);
+        componentInstance.disabled.set(false);
+        componentInstance.readonly.set(true);
+        settle();
+        cell('can-tho', '2026/11/10').click();
+        cell('hue', '2026/11/12').click();
+        settle();
+        expect(componentInstance.selected.map(item => item.date))
+          .withContext('readonly')
+          .toEqual(['2026/11/10']);
+        expect(componentInstance.onCreate).not.toHaveBeenCalled();
       })
     );
 

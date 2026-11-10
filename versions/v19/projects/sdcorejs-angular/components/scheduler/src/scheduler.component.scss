@@ -87,6 +87,7 @@ $hour: var(--sd-scheduler-hour-width);
   --sd-scheduler-row-min-height: 48px;
   --sd-scheduler-lane-height: 28px;
   --sd-scheduler-event-radius: #{radius(6)};
+  --sd-scheduler-group-height: 32px;
 
   display: block;
   min-width: 0;
@@ -95,7 +96,6 @@ $hour: var(--sd-scheduler-hour-width);
 }
 
 .sd-scheduler {
-  --sd-scheduler-group-height: 32px;
   --sd-scheduler-track: calc(#{$hour} * 24);
 
   position: relative;
@@ -841,7 +841,8 @@ $hour: var(--sd-scheduler-hour-width);
 }
 
 .sd-scheduler__grid:focus-visible [data-cursor-row] {
-  outline: 2px solid tok(focus-ring-color);
+  @include focus-ring;
+
   outline-offset: -2px;
 }
 
@@ -868,7 +869,8 @@ $hour: var(--sd-scheduler-hour-width);
 
   &[data-cursor-cell] {
     .sd-scheduler__grid:focus-visible & {
-      outline: 2px solid tok(focus-ring-color);
+      @include focus-ring;
+
       outline-offset: -3px;
     }
   }
@@ -961,6 +963,22 @@ $hour: var(--sd-scheduler-hour-width);
   font-weight: $medium;
   white-space: nowrap;
   transform: translateY(-50%);
+  pointer-events: none;
+
+  // No room after the block: the label goes before it.
+  &[data-flip] {
+    inset-inline-start: auto;
+    inset-inline-end: calc(100% + 6px);
+  }
+
+  // The label of a resize is a sibling of the block in the track; its inline position and top come inline.
+  &--resize {
+    z-index: 6;
+
+    &[data-flip] {
+      inset-inline-start: auto;
+    }
+  }
 }
 
 // A valid target row is tinted; a refused one is striped, its resource cell faded (§8.3).
