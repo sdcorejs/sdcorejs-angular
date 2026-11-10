@@ -656,7 +656,7 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'components/scheduler/example-cham-cong': {
     title: 'Timesheet',
     description:
-      'The cell template replaces blocks with the attendance code (X worked, P leave, CT business trip); no dragging. Click a cell with a code to emit sdCellSelect.',
+      "The cell template replaces blocks with the consumer's attendance codes (full day, half day, leave, sick leave, unpaid, a missing clock-in or clock-out); the total column is in the resource template. No dragging. Click a cell with a code to emit sdCellSelect.",
   },
   'components/scheduler/example-dat-phong-hop': {
     title: 'Meeting room booking',

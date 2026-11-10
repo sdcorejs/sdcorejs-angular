@@ -1981,7 +1981,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/scheduler",
     sectionId: "example-cham-cong",
     title: "Chấm công",
-    description: "Template ô thay khối bằng mã công (X đi làm, P nghỉ phép, CT công tác); không kéo. Bấm ô có mã để phát sdCellSelect.",
+    description: "Template ô thay khối bằng mã công của consumer (X đủ công, ½ nửa công, P nghỉ phép, Ô nghỉ ốm, KL không lương, ! thiếu giờ vào hoặc ra); cột tổng nằm trong template tài nguyên. Không kéo. Bấm ô có mã để phát sdCellSelect.",
   },
   {
     sourceKey: "components/section/example-basic-info-rows",

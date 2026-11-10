@@ -7,7 +7,7 @@ import {
   type SdSchedulerEvent,
   type SdSchedulerOption,
 } from '@sdcorejs/angular/components/scheduler';
-import { demoShifts, demoStaff, type PersonDto, type ShiftDto } from './scheduler-demo.data';
+import { SHIFT_LEGEND, demoShifts, demoStaff, shiftTotal, type PersonDto, type ShiftDto } from './scheduler-demo.data';
 
 @Component({
   selector: 'app-scheduler-timesheet-example',
@@ -20,8 +20,9 @@ import { demoShifts, demoStaff, type PersonDto, type ShiftDto } from './schedule
 export class SchedulerTimesheetExampleComponent {
   readonly staff = demoStaff();
   readonly shifts = demoShifts();
-  /** Days worked per person for the total column of the resource template. */
-  readonly totals = new Map(this.staff.map(person => [person.id, this.shifts.filter(shift => shift.resourceId === person.id && shift.data?.code !== 'P').length]));
+  readonly legend = SHIFT_LEGEND;
+  /** Days worked per person for the total column of the resource template ("4,5"). */
+  readonly totals = new Map(this.staff.map(person => [person.id, shiftTotal(this.shifts, person.id).toLocaleString('vi-VN')]));
   readonly option: SdSchedulerOption<ShiftDto, PersonDto> = { dataSource: { onLoad: () => this.shifts } };
   readonly picked = signal<string | null>(null);
 

@@ -12098,7 +12098,7 @@ import {
   type SdSchedulerEvent,
   type SdSchedulerOption,
 } from '@sdcorejs/angular/components/scheduler';
-import { demoShifts, demoStaff, type PersonDto, type ShiftDto } from './scheduler-demo.data';
+import { SHIFT_LEGEND, demoShifts, demoStaff, shiftTotal, type PersonDto, type ShiftDto } from './scheduler-demo.data';
 
 @Component({
   selector: 'app-scheduler-timesheet-example',
@@ -12111,8 +12111,9 @@ import { demoShifts, demoStaff, type PersonDto, type ShiftDto } from './schedule
 export class SchedulerTimesheetExampleComponent {
   readonly staff = demoStaff();
   readonly shifts = demoShifts();
-  /** Days worked per person for the total column of the resource template. */
-  readonly totals = new Map(this.staff.map(person => [person.id, this.shifts.filter(shift => shift.resourceId === person.id && shift.data?.code !== 'P').length]));
+  readonly legend = SHIFT_LEGEND;
+  /** Days worked per person for the total column of the resource template ("4,5"). */
+  readonly totals = new Map(this.staff.map(person => [person.id, shiftTotal(this.shifts, person.id).toLocaleString('vi-VN')]));
   readonly option: SdSchedulerOption<ShiftDto, PersonDto> = { dataSource: { onLoad: () => this.shifts } };
   readonly picked = signal<string | null>(null);
 
@@ -12229,24 +12230,56 @@ export class SchedulerTimesheetExampleComponent {
   font-variant-numeric: tabular-nums;
 }
 
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
 .scheduler-code {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
   font-weight: 600;
 
-  &[data-code='X'] {
-    color: var(--sd-success, #2e7d32);
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
   }
 
   &[data-code='P'] {
-    color: var(--sd-info, #006a6a);
+    background: var(--sd-info-light, #dbe8f5);
   }
 
-  &[data-code='CT'] {
-    color: var(--sd-warning, #8a5100);
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
   }
 
-  &--off {
-    color: var(--sd-text-secondary, #44474f);
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
   }
 }`,
   },
@@ -12516,24 +12549,56 @@ export class SchedulerBookingExampleComponent {
   font-variant-numeric: tabular-nums;
 }
 
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
 .scheduler-code {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
   font-weight: 600;
 
-  &[data-code='X'] {
-    color: var(--sd-success, #2e7d32);
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
   }
 
   &[data-code='P'] {
-    color: var(--sd-info, #006a6a);
+    background: var(--sd-info-light, #dbe8f5);
   }
 
-  &[data-code='CT'] {
-    color: var(--sd-warning, #8a5100);
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
   }
 
-  &--off {
-    color: var(--sd-text-secondary, #44474f);
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
   }
 }`,
   },
@@ -12671,24 +12736,56 @@ export class SchedulerLeaveExampleComponent {
   font-variant-numeric: tabular-nums;
 }
 
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
 .scheduler-code {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
   font-weight: 600;
 
-  &[data-code='X'] {
-    color: var(--sd-success, #2e7d32);
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
   }
 
   &[data-code='P'] {
-    color: var(--sd-info, #006a6a);
+    background: var(--sd-info-light, #dbe8f5);
   }
 
-  &[data-code='CT'] {
-    color: var(--sd-warning, #8a5100);
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
   }
 
-  &--off {
-    color: var(--sd-text-secondary, #44474f);
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
   }
 }`,
   },
@@ -12827,24 +12924,56 @@ export class SchedulerVehiclesExampleComponent {
   font-variant-numeric: tabular-nums;
 }
 
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
 .scheduler-code {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
   font-weight: 600;
 
-  &[data-code='X'] {
-    color: var(--sd-success, #2e7d32);
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
   }
 
   &[data-code='P'] {
-    color: var(--sd-info, #006a6a);
+    background: var(--sd-info-light, #dbe8f5);
   }
 
-  &[data-code='CT'] {
-    color: var(--sd-warning, #8a5100);
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
   }
 
-  &--off {
-    color: var(--sd-text-secondary, #44474f);
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
   }
 }`,
   },
@@ -32307,15 +32436,22 @@ Bởi Nguyễn Văn A"></sd-badge>
     <ng-template sdSchedulerResourceTemplate let-resource>
       <span class="scheduler-person">
         <span class="scheduler-person__name">{{ resource.title }}</span>
-        <span class="scheduler-person__total" data-total>{{ totals.get(resource.id) }} công</span>
+        <span class="scheduler-person__total" data-total>{{ totals.get(resource.id) }}</span>
       </span>
     </ng-template>
-    <ng-template sdSchedulerCellTemplate let-events="events" let-off="off">
+    <ng-template sdSchedulerCellTemplate let-events="events">
       @let _code = codeOf(events);
-      <span class="scheduler-code" [attr.data-code]="_code || null" [class.scheduler-code--off]="off && !_code">{{ _code || (off ? '–' : '') }}</span>
+      @if (_code) {
+        <span class="scheduler-code" [attr.data-code]="_code">{{ _code }}</span>
+      }
     </ng-template>
   </sd-scheduler>
 </div>
+<ul class="scheduler-legend">
+  @for (item of legend; track item.code) {
+    <li><span class="scheduler-code" [attr.data-code]="item.code">{{ item.code }}</span>{{ item.label }}</li>
+  }
+</ul>
 <p class="scheduler-detail" data-testid="timesheet-picked">{{ picked() ?? 'Bấm một ô có mã công.' }}</p>`,
   },
   "components/scheduler/example-dat-phong-hop": {
@@ -32339,6 +32475,7 @@ Bởi Nguyễn Văn A"></sd-badge>
   <div class="scheduler-box">
     <sd-scheduler
       autoId="booking"
+      resourceLabel="Phòng"
       [option]="option()"
       [resources]="resources()"
       [(view)]="view"
@@ -32382,13 +32519,13 @@ Bởi Nguyễn Văn A"></sd-badge>
   "components/scheduler/example-nghi-phep-phong-ban": {
     ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-nghi-phep-phong-ban"],
     html: `<div class="scheduler-box">
-  <sd-scheduler autoId="leave" view="month" date="2026/11/09" resourceLabel="Nhân sự" [views]="['week', 'month']" [option]="option" [resources]="people" />
+  <sd-scheduler autoId="leave" view="month" date="2026/11/09" resourceLabel="Nhân viên" [views]="['week', 'month']" [option]="option" [resources]="people" />
 </div>`,
   },
   "components/scheduler/example-xe-giao-hang": {
     ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-xe-giao-hang"],
     html: `<div class="scheduler-box">
-  <sd-scheduler autoId="vehicles" view="week" date="2026/11/09" resourceLabel="Phương tiện" [option]="option" [resources]="resources" />
+  <sd-scheduler autoId="vehicles" view="week" date="2026/11/09" resourceLabel="Xe" [option]="option" [resources]="resources" />
 </div>`,
   },
   "components/section/example-basic-info-rows": {

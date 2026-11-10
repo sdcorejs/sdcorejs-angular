@@ -75,7 +75,7 @@ import { SchedulerVehiclesExampleComponent } from './examples/scheduler-vehicles
           { name: 'sdSchedulerResourceTemplate', value: 'cột tổng' },
           { name: 'sdCellSelect', value: '{ resource, date, events }' },
         ]"
-        note="Template ô thay khối bằng mã công (X đi làm, P nghỉ phép, CT công tác); không kéo. Bấm ô có mã để phát sdCellSelect.">
+        note="Template ô thay khối bằng mã công của consumer (X đủ công, ½ nửa công, P nghỉ phép, Ô nghỉ ốm, KL không lương, ! thiếu giờ vào hoặc ra); cột tổng nằm trong template tài nguyên. Không kéo. Bấm ô có mã để phát sdCellSelect.">
         <app-scheduler-timesheet-example></app-scheduler-timesheet-example>
       </demo-section>
     }

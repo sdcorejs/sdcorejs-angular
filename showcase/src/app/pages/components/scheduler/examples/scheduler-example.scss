@@ -103,23 +103,55 @@
   font-variant-numeric: tabular-nums;
 }
 
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
 .scheduler-code {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
   font-weight: 600;
 
-  &[data-code='X'] {
-    color: var(--sd-success, #2e7d32);
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
   }
 
   &[data-code='P'] {
-    color: var(--sd-info, #006a6a);
+    background: var(--sd-info-light, #dbe8f5);
   }
 
-  &[data-code='CT'] {
-    color: var(--sd-warning, #8a5100);
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
   }
 
-  &--off {
-    color: var(--sd-text-secondary, #44474f);
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
   }
 }
