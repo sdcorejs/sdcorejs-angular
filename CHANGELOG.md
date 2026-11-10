@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `syncQueryParams` on `sd-table`, `sd-tab-group` and `sd-anchor`: filters, sort, page, selected tab and current section go into the URL, so a copied link opens the same state
 - `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`
 - `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
+- `sd-calendar` (`@sdcorejs/angular/components/calendar`): month, week, day and agenda views with `dataSource.onLoad`, create by click/sweep/Enter and move by drag, edge or `Alt` + arrows through `onMove` (which can also answer `'cancel'`)
 - `sd-query-bar`: one panel frame (the `sd-button` Action Popover) for the field picker, the chip popover and saved filters instead of `mat-menu`; saved filters with Undo and empty / error states; required fields always keep a chip and a value; an **Add condition** box in inline mode; `sd-table` saves its query-bar filters with `filter.queryBar.savedFilters`
 
 ### Changed (BREAKING for consumers)
@@ -121,6 +122,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Anchor
 
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
+
+#### Calendar
+
+- `sd-calendar` (`@sdcorejs/angular/components/calendar`, `SdCalendar<T>`): month, week, day and agenda views of `SdCalendarEvent<T>` (`id`, `title`, `start`, `end`, `allDay`, `color`, `occurrence`, `data`).
+  - `option.dataSource.onLoad({ from, to, view, signal })` per range, with abort of late results, `reload()`, a load-error band with Retry and the `sdLoadError` output.
+  - `option.create = { creatable?, onCreate }`: click, sweep, tap or `Enter` on an empty slot; the dashed block waits for `onCreate`.
+  - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo.
+  - Recurring occurrences ask for the scope (`this`, `following`, `all`) before `onMove`.
+  - Two-way `view`, `date`, `selectedId`; `step`, `firstDayOfWeek`, `hideWeekends`, `workingHours`, `holidays`, `minDate`/`maxDate`, `scrollTime`, `agendaDays`, `dimPast`, `transform`, `readonly`, `disabled`; `SD_CALENDAR_CONFIGURATION`.
+  - Compact layout under 600px of host width, touch, print, forced colors and reduced motion; dates in `ISdCoreConfiguration.timeZone`.
+- Theme tokens `--sd-calendar-line`, `--sd-calendar-line-half`, `--sd-calendar-off-hours`, `--sd-calendar-now`, `--sd-calendar-today`, and the i18n keys `core.component.calendar.*` in the five locales.
 
 #### Card
 

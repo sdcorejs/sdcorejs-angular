@@ -1,0 +1,96 @@
+.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}

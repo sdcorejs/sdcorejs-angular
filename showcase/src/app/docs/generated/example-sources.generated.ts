@@ -2518,6 +2518,812 @@ export class ButtonStatesExampleComponent {
   font-size: 13px;
 }`,
   },
+  "components/calendar/example-bang-cham-cong-mot-nguoi": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdCalendar, SdCalendarDayCellTemplateDirective, type SdCalendarEvent, type SdCalendarOption } from '@sdcorejs/angular/components/calendar';
+
+interface Attendance {
+  readonly code: 'X' | 'P' | 'Ô' | '½';
+}
+
+const CODES: Attendance['code'][] = ['X', 'X', 'X', 'P', 'X', '½', 'X', 'Ô'];
+
+/** One person's month: one all-day event per working day, the code in \`data\`. */
+function attendance(): SdCalendarEvent<Attendance>[] {
+  const events: SdCalendarEvent<Attendance>[] = [];
+  for (let day = 1; day <= 31; day++) {
+    const date = \`2026/10/\${String(day).padStart(2, '0')}\`;
+    const weekday = new Date(2026, 9, day).getDay();
+    if (weekday === 0 || weekday === 6) continue;
+    const code = CODES[day % CODES.length];
+    events.push({ id: \`att-\${day}\`, title: code, start: date, allDay: true, color: code === 'X' ? 'success' : code === 'P' ? 'info' : 'warning', data: { code } });
+  }
+  return events;
+}
+
+@Component({
+  selector: 'app-calendar-timesheet-example',
+  standalone: true,
+  imports: [SdCalendar, SdCalendarDayCellTemplateDirective],
+  templateUrl: './calendar-timesheet.example.html',
+  styleUrl: './calendar-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarTimesheetExampleComponent {
+  readonly option: SdCalendarOption<Attendance> = { dataSource: { onLoad: () => attendance() } };
+
+  /** The template context is typed by the directive; reading \`data\` through a method keeps the template strict. */
+  codeOf(events: readonly SdCalendarEvent<unknown>[]): Attendance['code'] | null {
+    return (events[0]?.data as Attendance | undefined)?.code ?? null;
+  }
+}`,
+    scss: `.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}`,
+  },
+  "components/calendar/example-cot-hep-va-dong-bo-url": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SdCalendar, type SdCalendarDateInput, type SdCalendarOption, type SdCalendarView } from '@sdcorejs/angular/components/calendar';
+import { demoEvents, type MeetingDto } from './calendar-demo.data';
+
+const VIEWS: readonly SdCalendarView[] = ['month', 'week', 'day', 'agenda'];
+
+@Component({
+  selector: 'app-calendar-url-example',
+  standalone: true,
+  imports: [SdCalendar],
+  templateUrl: './calendar-url.example.html',
+  styleUrl: './calendar-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarUrlExampleComponent {
+  readonly #router = inject(Router);
+  readonly #query = toSignal(inject(ActivatedRoute).queryParamMap, { requireSync: true });
+  readonly option: SdCalendarOption<MeetingDto> = { dataSource: { onLoad: () => demoEvents() } };
+
+  // ?view= follows the view model and ?date= the date model; sdRangeChange is not used for the URL (it reports 'day'
+  // for a compact week).
+  view(): SdCalendarView {
+    const view = this.#query().get('view') as SdCalendarView | null;
+    return view && VIEWS.includes(view) ? view : 'week';
+  }
+
+  date(): string {
+    return this.#query().get('date')?.replace(/-/g, '/') ?? '2026/10/22';
+  }
+
+  write(params: { view?: SdCalendarView; date?: SdCalendarDateInput | null }): void {
+    const query = { ...params, ...(typeof params.date === 'string' ? { date: params.date.replace(/\\//g, '-') } : {}) };
+    void this.#router.navigate([], { queryParams: query, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+}`,
+    scss: `.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}`,
+  },
+  "components/calendar/example-lich-hop-nguon-client": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import {
+  SdCalendar,
+  type SdCalendarCreateArgs,
+  type SdCalendarDateInput,
+  type SdCalendarMoveRequest,
+  type SdCalendarOption,
+  type SdCalendarView,
+  type SdCalendarWorkingHours,
+} from '@sdcorejs/angular/components/calendar';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import type { SdTemporalValueTransform } from '@sdcorejs/angular/forms/models';
+import { DEMO_HOLIDAYS, delay, demoEvents, type MeetingDto, type MeetingEvent } from './calendar-demo.data';
+
+type MoveMode = 'accept' | 'reject' | 'throw' | 'slow' | 'reason';
+
+const CUSTOM_HOURS: SdCalendarWorkingHours = {
+  1: [{ from: '07:30', to: '16:30' }],
+  2: [{ from: '07:30', to: '16:30' }],
+  3: [{ from: '07:30', to: '16:30' }],
+  4: [{ from: '07:30', to: '16:30' }],
+  5: [{ from: '07:30', to: '16:30' }],
+  6: [{ from: '08:00', to: '12:00' }],
+};
+
+@Component({
+  selector: 'app-calendar-playground-example',
+  standalone: true,
+  imports: [SdButton, SdCalendar],
+  templateUrl: './calendar-playground.example.html',
+  styleUrl: './calendar-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarPlaygroundExampleComponent {
+  readonly view = signal<SdCalendarView>('week');
+  readonly date = signal<SdCalendarDateInput | null | undefined>('2026/10/22');
+  readonly step = signal(30);
+  readonly firstDayOfWeek = signal(1);
+  readonly hideWeekends = signal(false);
+  readonly hours = signal<'default' | 'custom' | 'none'>('default');
+  readonly showHolidays = signal(true);
+  readonly minToday = signal(false);
+  readonly dimPast = signal(false);
+  readonly readonly = signal(false);
+  readonly disabled = signal(false);
+  readonly transform = signal<SdTemporalValueTransform | undefined>(undefined);
+  readonly withCreate = signal(true);
+  readonly withMove = signal(true);
+  readonly lockPast = signal(false);
+  readonly moveMode = signal<MoveMode>('accept');
+
+  /** The consumer's store: the calendar only reads it through onLoad. */
+  readonly events = signal<MeetingEvent[]>(demoEvents());
+  readonly calendar = viewChild.required(SdCalendar);
+  readonly selected = signal<MeetingEvent | null>(null);
+  readonly log = signal<string[]>([]);
+  /** The demo dialog of a create or of a move reason; the calendar waits on its promise. */
+  readonly dialog = signal<{ kind: 'create'; args: SdCalendarCreateArgs; title: string } | { kind: 'reason'; title: string } | null>(null);
+  #answer: ((value: unknown) => void) | null = null;
+
+  readonly workingHours = computed(() => (this.hours() === 'none' ? null : this.hours() === 'custom' ? CUSTOM_HOURS : undefined));
+  readonly holidays = computed(() => (this.showHolidays() ? DEMO_HOLIDAYS : []));
+
+  readonly option = computed<SdCalendarOption<MeetingDto>>(() => ({
+    dataSource: { onLoad: () => this.events() },
+    ...(this.withCreate() ? { create: { onCreate: (args: SdCalendarCreateArgs) => this.#openCreate(args) } } : {}),
+    ...(this.withMove()
+      ? {
+          move: {
+            movable: (event: MeetingEvent) => !this.lockPast() || String(event.start) >= '2026/10/22',
+            onMove: (request: SdCalendarMoveRequest<MeetingDto>) => this.#onMove(request),
+          },
+        }
+      : {}),
+  }));
+
+  toggle(flag: { set(value: boolean): void; (): boolean }): void {
+    flag.set(!flag());
+  }
+
+  /** Performance check (TESTING §10): 500 events in the week of 19–25/10, then reload. */
+  loadMany(): void {
+    const many: MeetingEvent[] = Array.from({ length: 500 }, (_, index) => {
+      const day = 19 + (index % 7);
+      const start = 7 * 60 + ((index * 37) % (11 * 60));
+      const time = (minutes: number): string => \`\${String(Math.floor(minutes / 60)).padStart(2, '0')}:\${String(minutes % 60).padStart(2, '0')}:00\`;
+      return {
+        id: \`bulk-\${index}\`,
+        title: \`Sự kiện \${index + 1}\`,
+        start: \`2026/10/\${day} \${time(start)}\`,
+        end: \`2026/10/\${day} \${time(start + 30 + (index % 4) * 15)}\`,
+        color: ['primary', 'success', 'warning', 'info'][index % 4],
+        data: { room: 'Phòng Sen', owner: 'Lan' },
+      };
+    });
+    this.events.set(many);
+    this.calendar().reload();
+  }
+
+  cycleStep(): void {
+    this.step.set(this.step() === 15 ? 30 : this.step() === 30 ? 60 : 15);
+  }
+
+  cycleHours(): void {
+    this.hours.set(this.hours() === 'default' ? 'custom' : this.hours() === 'custom' ? 'none' : 'default');
+  }
+
+  cycleMode(): void {
+    const modes: MoveMode[] = ['accept', 'reject', 'throw', 'slow', 'reason'];
+    this.moveMode.set(modes[(modes.indexOf(this.moveMode()) + 1) % modes.length]);
+  }
+
+  record(name: string, value: unknown): void {
+    this.log.update(lines => [\`\${name} \${JSON.stringify(value, (key, item) => (key === 'signal' || key === 'data' ? undefined : item))}\`, ...lines].slice(0, 8));
+  }
+
+  answer(value: unknown): void {
+    this.#answer?.(value);
+    this.#answer = null;
+    this.dialog.set(null);
+  }
+
+  #openCreate(args: SdCalendarCreateArgs): Promise<MeetingEvent | void> {
+    this.dialog.set({ kind: 'create', args, title: 'Họp mới' });
+    return new Promise<unknown>(resolve => (this.#answer = resolve)).then(saved => {
+      if (!saved) return;
+      const created: MeetingEvent = { id: \`new-\${Date.now()}\`, title: String(saved), start: args.start, end: args.end, data: { room: 'Phòng Huế', owner: 'Bạn' } };
+      this.events.update(events => [...events, created]);
+      return created;
+    });
+  }
+
+  async #onMove(request: SdCalendarMoveRequest<MeetingDto>): Promise<boolean | 'cancel'> {
+    const mode = this.moveMode();
+    if (mode === 'reject') return false;
+    if (mode === 'throw') throw new Error('Máy chủ từ chối');
+    if (mode === 'slow') await delay(2000, request.signal);
+    if (mode === 'reason') {
+      this.dialog.set({ kind: 'reason', title: request.event.title });
+      const reason = await new Promise<unknown>(resolve => (this.#answer = resolve));
+      if (!reason) return 'cancel';
+    }
+    this.events.update(events =>
+      events.map(event => (event.id === request.event.id ? { ...event, start: request.to.start, end: request.to.end, allDay: request.to.allDay } : event))
+    );
+    return true;
+  }
+}`,
+    scss: `.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}`,
+  },
+  "components/calendar/example-nguon-server": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdCalendar, type SdCalendarOption } from '@sdcorejs/angular/components/calendar';
+import { delay, demoEvents, type MeetingDto } from './calendar-demo.data';
+
+@Component({
+  selector: 'app-calendar-server-example',
+  standalone: true,
+  imports: [SdButton, SdCalendar],
+  templateUrl: './calendar-server.example.html',
+  styleUrl: './calendar-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarServerExampleComponent {
+  readonly failing = signal(false);
+  readonly calls = signal(0);
+  readonly lastError = signal('');
+  readonly calendar = viewChild.required(SdCalendar);
+
+  // A server source: query the range, pass the signal on, let the calendar handle loading and errors.
+  readonly option = computed<SdCalendarOption<MeetingDto>>(() => ({
+    dataSource: {
+      onLoad: async ({ from, to, signal }) => {
+        this.calls.update(count => count + 1);
+        await delay(600, signal);
+        if (this.failing()) throw new Error('Máy chủ không phản hồi');
+        return demoEvents().filter(event => String(event.start).slice(0, 10) <= to && String(event.end ?? event.start).slice(0, 10) >= from);
+      },
+    },
+  }));
+}`,
+    scss: `.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}`,
+  },
+  "components/calendar/example-tao-bang-drawer-doi-co-hoan-tac": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import {
+  SdCalendar,
+  type SdCalendarCreateArgs,
+  type SdCalendarMoveRequest,
+  type SdCalendarOption,
+} from '@sdcorejs/angular/components/calendar';
+import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { demoEvents, type MeetingDto, type MeetingEvent } from './calendar-demo.data';
+
+@Component({
+  selector: 'app-calendar-drawer-example',
+  standalone: true,
+  imports: [SdButton, SdCalendar],
+  templateUrl: './calendar-drawer.example.html',
+  styleUrl: './calendar-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CalendarDrawerExampleComponent {
+  readonly #notify = inject(SdNotifyService);
+  readonly calendar = viewChild.required(SdCalendar);
+  readonly events = signal<MeetingEvent[]>(demoEvents());
+  /** The create drawer (pattern P2): rendered with @if, no route. The calendar keeps its dashed block meanwhile. */
+  readonly drawer = signal<{ args: SdCalendarCreateArgs; resolve: (event: MeetingEvent | void) => void } | null>(null);
+
+  readonly option: SdCalendarOption<MeetingDto> = {
+    dataSource: { onLoad: () => this.events() },
+    create: { onCreate: args => new Promise<MeetingEvent | void>(resolve => this.drawer.set({ args, resolve })) },
+    move: { onMove: request => this.#save(request) },
+  };
+
+  save(): void {
+    const drawer = this.drawer();
+    if (!drawer) return;
+    const created: MeetingEvent = { id: \`drawer-\${Date.now()}\`, title: 'Họp với khách', start: drawer.args.start, end: drawer.args.end, color: 'success', data: { room: 'Phòng Huế', owner: 'Bạn' } };
+    this.events.update(events => [...events, created]);
+    this.drawer.set(null);
+    drawer.resolve(created);
+  }
+
+  close(): void {
+    this.drawer()?.resolve();
+    this.drawer.set(null);
+  }
+
+  // Move right away, with an undo toast (pattern S1): Undo calls move(id, request.from, 'api').
+  #save(request: SdCalendarMoveRequest<MeetingDto>): true {
+    this.#apply(request.event.id, request.to);
+    if (request.source !== 'api') {
+      this.#notify.success(\`Đã dời “\${request.event.title}”\`, {
+        actionLabel: 'Hoàn tác',
+        onAction: () => void this.calendar().move(request.event.id, request.from, 'api'),
+      });
+    }
+    return true;
+  }
+
+  #apply(id: string, to: SdCalendarMoveRequest['to']): void {
+    this.events.update(events => events.map(event => (event.id === id ? { ...event, start: to.start, end: to.end, allDay: to.allDay } : event)));
+  }
+}`,
+    scss: `.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.calendar-layout {
+  // The calendar takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .calendar-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.calendar-box {
+  position: relative;
+  height: 640px;
+}
+
+.calendar-narrow {
+  width: 400px;
+  max-width: 100%;
+  height: 640px;
+}
+
+.calendar-side,
+.calendar-drawer {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.calendar-detail,
+.calendar-readout {
+  margin: 0 0 12px;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.calendar-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.calendar-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.calendar-code {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+
+  &[data-code='X'] {
+    color: var(--sd-success, #2e7d32);
+  }
+
+  &[data-code='P'] {
+    color: var(--sd-info, #006a6a);
+  }
+
+  &--missing {
+    color: var(--sd-text-secondary, #44474f);
+  }
+}`,
+  },
   "components/card/example-behavior": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdCard, type SdCardContent } from '@sdcorejs/angular/components/card';
@@ -27937,6 +28743,126 @@ Bởi Nguyễn Văn A"></sd-badge>
     tooltip="Không thể xóa"
     disabled
     autoId="secondary-icon-disabled"></sd-button>
+</div>`,
+  },
+  "components/calendar/example-bang-cham-cong-mot-nguoi": {
+    ...SHOWCASE_PAGE_SOURCES["components/calendar/example-bang-cham-cong-mot-nguoi"],
+    html: `<div class="calendar-box">
+  <sd-calendar autoId="timesheet" view="month" date="2026/10/01" [views]="['month']" [option]="option">
+    <ng-template sdCalendarDayCellTemplate let-events="events" let-off="off">
+      @if (codeOf(events); as code) {
+        <span class="calendar-code" [attr.data-code]="code">{{ code }}</span>
+      } @else if (!off) {
+        <span class="calendar-code calendar-code--missing">—</span>
+      }
+    </ng-template>
+  </sd-calendar>
+</div>`,
+  },
+  "components/calendar/example-cot-hep-va-dong-bo-url": {
+    ...SHOWCASE_PAGE_SOURCES["components/calendar/example-cot-hep-va-dong-bo-url"],
+    html: `<div class="calendar-narrow">
+  <sd-calendar autoId="url" [option]="option" [view]="view()" [date]="date()" (viewChange)="write({ view: $event })" (dateChange)="write({ date: $event })" />
+</div>`,
+  },
+  "components/calendar/example-lich-hop-nguon-client": {
+    ...SHOWCASE_PAGE_SOURCES["components/calendar/example-lich-hop-nguon-client"],
+    html: `<div class="calendar-controls">
+  <sd-button type="outline" [title]="'step: ' + step()" (click)="cycleStep()" />
+  <sd-button type="outline" [title]="'firstDayOfWeek: ' + firstDayOfWeek()" (click)="firstDayOfWeek.set(firstDayOfWeek() ? 0 : 1)" />
+  <sd-button type="outline" [title]="'hideWeekends: ' + hideWeekends()" (click)="toggle(hideWeekends)" />
+  <sd-button type="outline" [title]="'workingHours: ' + hours()" (click)="cycleHours()" />
+  <sd-button type="outline" [title]="'holidays: ' + showHolidays()" (click)="toggle(showHolidays)" />
+  <sd-button type="outline" [title]="'minDate: ' + (minToday() ? 'TODAY' : '—')" (click)="toggle(minToday)" />
+  <sd-button type="outline" [title]="'dimPast: ' + dimPast()" (click)="toggle(dimPast)" />
+  <sd-button type="outline" [title]="'readonly: ' + readonly()" (click)="toggle(readonly)" />
+  <sd-button type="outline" [title]="'disabled: ' + disabled()" (click)="toggle(disabled)" />
+  <sd-button type="outline" [title]="'transform: ' + (transform() ?? '—')" (click)="transform.set(transform() ? undefined : 'ISOString')" />
+  <sd-button type="outline" [title]="'option.create: ' + withCreate()" (click)="toggle(withCreate)" />
+  <sd-button type="outline" [title]="'option.move: ' + withMove()" (click)="toggle(withMove)" />
+  <sd-button type="outline" [title]="'movable khoá sự kiện đã qua: ' + lockPast()" (click)="toggle(lockPast)" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" autoId="playground-mode" (click)="cycleMode()" />
+  <sd-button type="outline" title="500 sự kiện" autoId="playground-many" (click)="loadMany()" />
+</div>
+<div class="calendar-layout">
+  <div class="calendar-box">
+    <sd-calendar
+      #calendar
+      autoId="playground"
+      [option]="option()"
+      [(view)]="view"
+      [(date)]="date"
+      [step]="step()"
+      [firstDayOfWeek]="firstDayOfWeek()"
+      [hideWeekends]="hideWeekends()"
+      [workingHours]="workingHours()"
+      [holidays]="holidays()"
+      [minDate]="minToday() ? 'TODAY' : undefined"
+      [dimPast]="dimPast()"
+      [readonly]="readonly()"
+      [disabled]="disabled()"
+      [transform]="transform()"
+      (sdSelect)="selected.set($event); record('sdSelect', $event.id)"
+      (sdRangeChange)="record('sdRangeChange', $event)"
+      (sdMove)="record('sdMove', { id: $event.event.id, to: $event.to, scope: $event.scope, source: $event.source })"
+      (sdMoveError)="record('sdMoveError', { id: $event.request.event.id, reason: $event.reason })"
+      (sdLoadError)="record('sdLoadError', 'error')" />
+    @if (dialog(); as _dialog) {
+      <div class="calendar-dialog" role="dialog" aria-modal="false" [attr.aria-label]="_dialog.kind === 'create' ? 'Tạo sự kiện' : 'Lý do dời'">
+        @if (_dialog.kind === 'create') {
+          <p>Tạo “{{ _dialog.title }}” · {{ _dialog.args.start }} → {{ _dialog.args.end }}</p>
+          <sd-button type="fill" color="primary" title="Lưu" autoId="dialog-save" (click)="answer(_dialog.title)" />
+        } @else {
+          <p>Nhập lý do dời “{{ _dialog.title }}”</p>
+          <sd-button type="fill" color="primary" title="Xác nhận" autoId="dialog-confirm" (click)="answer('Khách đổi lịch')" />
+        }
+        <sd-button type="outline" title="Đóng" autoId="dialog-close" (click)="answer(null)" />
+      </div>
+    }
+  </div>
+  <aside class="calendar-side">
+    <h4>Chi tiết</h4>
+    @if (selected(); as _event) {
+      <p class="calendar-detail">{{ _event.title }}<br />{{ _event.data?.room }} · {{ _event.data?.owner }}</p>
+    } @else {
+      <p class="calendar-detail">Chọn một sự kiện.</p>
+    }
+    <h4>Output đã phát</h4>
+    <ol class="calendar-log" data-testid="calendar-log">
+      @for (line of log(); track $index) {
+        <li>{{ line }}</li>
+      }
+    </ol>
+  </aside>
+</div>`,
+  },
+  "components/calendar/example-nguon-server": {
+    ...SHOWCASE_PAGE_SOURCES["components/calendar/example-nguon-server"],
+    html: `<div class="calendar-controls">
+  <sd-button type="outline" autoId="server-fail" [title]="failing() ? 'Lỗi: bật' : 'Lỗi: tắt'" (click)="failing.set(!failing())" />
+  <sd-button type="outline" autoId="server-reload" title="reload()" (click)="calendar().reload()" />
+</div>
+<div class="calendar-box">
+  <sd-calendar autoId="server" date="2026/10/22" [option]="option()" (sdLoadError)="lastError.set('sdLoadError')" />
+</div>
+<p class="calendar-readout">onLoad: {{ calls() }} lần · {{ lastError() || '—' }}</p>`,
+  },
+  "components/calendar/example-tao-bang-drawer-doi-co-hoan-tac": {
+    ...SHOWCASE_PAGE_SOURCES["components/calendar/example-tao-bang-drawer-doi-co-hoan-tac"],
+    html: `<div class="calendar-layout">
+  <div class="calendar-box">
+    <sd-calendar autoId="drawer" date="2026/10/22" [option]="option" />
+  </div>
+  @if (drawer(); as _drawer) {
+    <aside class="calendar-drawer" role="dialog" aria-modal="false" aria-label="Tạo cuộc họp">
+      <h4>Tạo cuộc họp</h4>
+      <p>{{ _drawer.args.start }} → {{ _drawer.args.end }}</p>
+      <div class="calendar-controls">
+        <sd-button type="fill" color="primary" title="Lưu" autoId="drawer-save" (click)="save()" />
+        <sd-button type="outline" title="Đóng" autoId="drawer-close" (click)="close()" />
+      </div>
+    </aside>
+  }
 </div>`,
   },
   "components/card/example-behavior": {

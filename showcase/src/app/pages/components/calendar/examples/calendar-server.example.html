@@ -1,0 +1,8 @@
+<div class="calendar-controls">
+  <sd-button type="outline" autoId="server-fail" [title]="failing() ? 'Lỗi: bật' : 'Lỗi: tắt'" (click)="failing.set(!failing())" />
+  <sd-button type="outline" autoId="server-reload" title="reload()" (click)="calendar().reload()" />
+</div>
+<div class="calendar-box">
+  <sd-calendar autoId="server" date="2026/10/22" [option]="option()" (sdLoadError)="lastError.set('sdLoadError')" />
+</div>
+<p class="calendar-readout">onLoad: {{ calls() }} lần · {{ lastError() || '—' }}</p>

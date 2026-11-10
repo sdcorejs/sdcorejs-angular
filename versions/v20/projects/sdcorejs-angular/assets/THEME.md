@@ -386,6 +386,24 @@ values; by default they point at the shared tokens:
 - `--sd-chip-calendar-chip-locked-bg`: `var(--sd-chip-locked-bg)`, the background of a chip that `removable` keeps.
 - `--sd-chip-calendar-more-hover-bg`: `var(--sd-chip-more-hover-bg)`, the hover background of the “+N” button.
 
+## Calendar tokens
+
+`sd-calendar` (and `sd-scheduler`, which reuses them) draws its grid with five tokens:
+
+| Token | Value (light and dark) | Default light |
+| --- | --- | --- |
+| `--sd-calendar-line` | `color-mix(in srgb, var(--sd-border) 55%, var(--sd-surface))` | `#dedee5` |
+| `--sd-calendar-line-half` | `color-mix(in srgb, var(--sd-border) 25%, var(--sd-surface))` | `#efeef3` |
+| `--sd-calendar-off-hours` | `color-mix(in srgb, var(--sd-surface-muted) 45%, var(--sd-surface))` | `#f3f3f7` |
+| `--sd-calendar-now` | `var(--sd-error)` | `#ba1a1a` |
+| `--sd-calendar-today` | `var(--sd-primary)` | `#005cbb` |
+
+`-line` draws hour lines and borders, `-line-half` the half-hour lines, `-off-hours` the background outside working
+hours, on days off and outside `minDate`/`maxDate`, `-now` the current-time line and `-today` the marker of today.
+Each value derives from the palette of its own scope, so one expression serves light, dark and every preset.
+Sizes are not theme tokens: `--sd-calendar-hour-height` (48px), `--sd-calendar-gutter-width` (56px, 48px when
+compact) and `--sd-calendar-event-radius` are declared on the calendar host.
+
 ## Timeline token
 
 `--sd-timeline-line` (`var(--sd-border)` in light and dark) is the 1px connector between the markers of `sd-timeline`.
