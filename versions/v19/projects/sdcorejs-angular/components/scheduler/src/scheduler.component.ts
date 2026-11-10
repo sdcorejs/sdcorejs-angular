@@ -620,6 +620,15 @@ export class SdScheduler<T = unknown, R = unknown> {
     this.#startLoad(untracked(this.option), untracked(this.resources), untracked(this.visible));
   }
 
+  /** RED stub of checkpoint 4: the move pipeline is not there yet. */
+  move(
+    _eventId: string,
+    _to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean; resourceId?: string },
+    _source: 'drag' | 'resize' | 'keyboard' | 'api' = 'api'
+  ): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
   // ---- toolbar ----
 
   protected setView(view: SdSchedulerView): void {
