@@ -304,6 +304,27 @@ describe('SdQueryChipPopover', () => {
     expect(panel()!.querySelector('sd-input')!.contains(document.activeElement)).toBeTrue();
   });
 
+  // PD after R1 (G-9): on a short screen the frame keeps its rounded clip and the body scrolls instead of being cut off.
+  it('QB-B-06 the body scrolls when the panel is shorter than its content; the header stays', () => {
+    host.field = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
+    host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2026-01-01', to: '2026-01-31' } } as any;
+    fixture.detectChanges();
+    host.child()!.seed(host.filter, host.field);
+    fixture.detectChanges();
+    openPopover();
+
+    const frame = panel()!;
+    const header = frame.querySelector<HTMLElement>('.c-pop-header')!;
+    const body = frame.querySelector<HTMLElement>('.c-pop-body')!;
+    frame.style.maxHeight = `${header.offsetHeight + 24}px`;
+
+    expect(getComputedStyle(frame).overflow).toBe('hidden');
+    expect(getComputedStyle(body).overflowY).toBe('auto');
+    expect(body.scrollHeight).withContext('body content taller than its box').toBeGreaterThan(body.clientHeight);
+    expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(frame.getBoundingClientRect().bottom + 0.5);
+    expect(header.getBoundingClientRect().top).toBeGreaterThanOrEqual(frame.getBoundingClientRect().top);
+  });
+
   describe('QB-P-04 commits the staged value on every way out', () => {
     const stage = (): void => {
       host.child()!.seed(host.filter, host.field!);

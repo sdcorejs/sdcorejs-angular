@@ -103,7 +103,7 @@ Knobs shared by every type, for a host that owns the chip list (for example `sd-
 | `group` | Field-picker heading. Groups keep the order in which they first appear; a single group shows no heading. |
 | `disabled` | The chip is read-only: no popover, no remove button, `aria-disabled="true"`. In inline mode it renders as that read-only chip too, instead of an editable inline chip. |
 
-The field picker is a listbox panel (rows 40px, 14px text). In popover mode it gets a find box (`sd-search-field` sm, a combobox, `core.component.query-bar.find-field`) when it lists more than eight fields; in inline mode the **Add condition** box outside the panel plays that role. Both match labels ignoring case and Vietnamese accents (`don` finds "Mã đơn" and "Đơn vị"). Keyboard: ↑ ↓ Home End over the enabled options, Enter picks; with the find box, focus stays in it and the arrows move `aria-activedescendant`. No typeahead. Fields already on the bar are `aria-disabled` with a check.
+The field picker is a listbox panel (rows 40px, 14px text). In popover mode it gets a find box (`sd-search-field` sm, a combobox, `core.component.query-bar.find-field`, "Tìm kiếm") when it lists ten fields or more; in inline mode the **Add condition** box outside the panel plays that role. Both match labels ignoring case and Vietnamese accents (`don` finds "Mã đơn" and "Đơn vị"). Keyboard: ↑ ↓ Home End over the enabled options, Enter picks; with the find box, focus stays in it and the arrows move `aria-activedescendant`. No typeahead. Fields already on the bar are `aria-disabled` with a check.
 
 **Chip text.** `date` / `datetime` values show as `dd/MM/yyyy` / `dd/MM/yyyy HH:mm` through `SdDateTimeService`, never the model string. A `BETWEEN` range inside one year shortens to `01/10 – 31/10/2026`; a range with one end shows `core.component.query-bar.range.from` / `.range.to` (`Từ 01/10/2026`). A `BETWEEN` with both ends empty counts as empty (`isFilterActive()` is false).
 
@@ -282,7 +282,7 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 
 The field picker (listbox), the chip popover (dialog) and saved filters (menu) open in a CDK Overlay with the frame of the `sd-button` Action Popover (`assets/scss/core/_popover-panel.scss`: border, 8px radius, shadow, 40px rows with 14px text, 12px headings). No Material menu is involved.
 
-- **Position:** below the trigger, 4px away, start-aligned (saved filters end-aligned); flips above when there is no room; follows scrolling. Widths: field picker 200–260px, chip popover 280–320px, saved filters 220–320px.
+- **Position:** below the trigger, 4px away, start-aligned (saved filters end-aligned); flips above when there is no room; follows scrolling. Widths: field picker 200–260px, chip popover 280–320px, saved filters 220–320px. Panels are at most 360px high (less on a short screen); the chip popover then scrolls its body and keeps its header.
 - **Open:** click, Enter or Space on the trigger (`aria-haspopup`, `aria-expanded`, `aria-controls`). From the keyboard a list lands on its find box or first option and a form on its first value control; from the mouse a list without a find box keeps focus on the panel.
 - **Close:** Escape, a click outside, Tab out of the panel (a list on any Tab, a form past its first / last control), picking an item, `closeMenu()`. Focus returns to the trigger, or to `returnFocusTo` of `openField()`; a click outside on another focusable element keeps focus there. The chip popover commits its value on every one of these. Escape is left to a control whose own popup (sd-select panel, date picker, sd-operator menu) is open above the panel; a click or focus inside such a popup does not close the panel.
 - **One at a time:** opening a panel closes the other panel of the same bar.
@@ -439,7 +439,7 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 ## Known limitations / next iterations
 
 - Operator picker dropdown doesn't support keyboard arrow navigation yet (planned).
-- The field picker's find box appears above eight fields only (popover mode).
+- The field picker's find box appears from ten fields only (popover mode).
 - Saved filters live in this browser only (`localStorage`); there is no loading state, sharing, renaming or "active filter" marker.
 - No `Esc` shortcut to cancel an in-progress build chip (planned).
 - `(values | lazy-values).option.items` async-function variant is loaded once per popover open — no caching across opens. Acceptable for the current usage; revisit if a heavy endpoint hurts UX. (Chip labels are resolved separately, once — see "Labels of restored values".)
@@ -463,7 +463,7 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
 
 ## Accessibility
 
-- **Panels:** field picker `role="listbox"` (options `role="option"`, used fields `aria-disabled="true"`, the active option through `aria-activedescendant` of the find box or the Add condition box); chip popover `role="dialog"` named by the field label (`aria-labelledby`); saved filters `role="menu"` with `menuitem` apply / save buttons and plain delete buttons beside them (no nested interactive elements). Triggers carry `aria-haspopup`, `aria-expanded` and, while open, `aria-controls`.
+- **Panels:** field picker `role="listbox"` named by what opens it (`add-filter` in popover mode, `add-condition` inline; options `role="option"`, used fields `aria-disabled="true"`, the active option through `aria-activedescendant` of the find box or the Add condition box); chip popover `role="dialog"` named by the field label (`aria-labelledby`); saved filters `role="menu"` with `menuitem` apply / save buttons and plain delete buttons beside them (no nested interactive elements). Triggers carry `aria-haspopup`, `aria-expanded` and, while open, `aria-controls`.
 - **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"` and are not tab stops — Tab goes straight to the operator picker and value editors.
 - **Required chips** carry `aria-required="true"`; the `required-min-one` line is `aria-live="polite"` and referenced by `aria-describedby`.
 - **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.

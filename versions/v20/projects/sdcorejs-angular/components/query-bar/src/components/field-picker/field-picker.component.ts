@@ -9,8 +9,8 @@ import { sdNormalizeSearchText } from '@sdcorejs/angular/utilities/extensions';
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 import { ɵSdQueryPanelCloseReason, ɵSdQueryPanelDirective } from '../panel/query-panel';
 
-/** More fields than this get a find box at the top of the picker. */
-const FIND_THRESHOLD = 8;
+/** From this many fields the picker gets a find box at the top (PD after R1, G-2). */
+const FIND_MIN_FIELDS = 10;
 
 let nextListId = 0;
 
@@ -40,6 +40,13 @@ export class SdQueryFieldPicker {
   readonly #i18n = inject(I18nService);
   readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-bar.field-empty'));
   readonly findLabel = computed(() => this.#i18n.t('core.component.query-bar.find-field'));
+  /**
+   * Name of the listbox: the label of what opens it — the + button in popover mode, the Add condition box inline. The
+   * find box label is a command ("Tìm kiếm"), not a name for the list.
+   */
+  readonly listLabel = computed(() =>
+    this.#i18n.t(this.findBox() ? 'core.component.query-bar.add-filter' : 'core.component.query-bar.add-condition')
+  );
 
   /** Field list shown in the panel (caller-supplied; rendered in input order). */
   readonly fields = input<SdQueryField[]>([]);
@@ -72,8 +79,8 @@ export class SdQueryFieldPicker {
   /** Key of the option the arrows point at (`aria-activedescendant` / roving focus). */
   readonly activeKey = signal<string | null>(null);
 
-  /** Find box above more than eight fields (not when an outside input types the filter). */
-  readonly searchable = computed(() => this.findBox() && this.fields().length > FIND_THRESHOLD);
+  /** Find box from ten fields (not when an outside input types the filter). */
+  readonly searchable = computed(() => this.findBox() && this.fields().length >= FIND_MIN_FIELDS);
   /** The list follows the typed text: with the find box, or with the outside combobox. */
   readonly #filterable = computed(() => this.searchable() || !this.findBox());
 

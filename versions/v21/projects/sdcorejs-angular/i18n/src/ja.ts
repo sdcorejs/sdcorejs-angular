@@ -758,7 +758,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.write-error': 'フィルターを保存できませんでした。',
   'core.component.query-bar.all': 'すべて',
   'core.component.query-bar.required': 'データを表示するには{label}を選択してください',
-  'core.component.query-bar.find-field': '項目を検索',
+  'core.component.query-bar.find-field': '検索',
   'core.component.query-bar.range.from': '{value} 以降',
   'core.component.query-bar.range.to': '{value} まで',
   'core.component.query-bar.clear': 'すべてクリア',

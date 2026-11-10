@@ -1322,10 +1322,19 @@ describe('SdQueryBar (host options)', () => {
       expect(openPicker().querySelector('.c-field-group')).toBeNull();
     });
 
-    it('adds a find box above more than eight fields and filters labels ignoring accents', () => {
-      const fields = ['Mã đơn', 'Khách hàng', 'Ngày tạo', 'Trạng thái', 'Thanh toán', 'Tổng tiền', 'Kênh bán', 'Nhân viên', 'Đơn vị'].map(
-        (label, i) => ({ key: `f${i}`, label, type: 'string' }) as SdQueryField
-      );
+    it('adds a find box from ten fields and filters labels ignoring accents', () => {
+      const fields = [
+        'Mã đơn',
+        'Khách hàng',
+        'Ngày tạo',
+        'Trạng thái',
+        'Thanh toán',
+        'Tổng tiền',
+        'Kênh bán',
+        'Nhân viên',
+        'Đơn vị',
+        'Ghi chú',
+      ].map((label, i) => ({ key: `f${i}`, label, type: 'string' }) as SdQueryField);
       fixture.componentRef.setInput('fields', fields);
       fixture.detectChanges();
       const panel = openPicker();
@@ -1340,7 +1349,7 @@ describe('SdQueryBar (host options)', () => {
       expect(labels).toEqual(['Mã đơn', 'Đơn vị']);
     });
 
-    it('has no find box for eight fields or fewer', () => {
+    it('has no find box below ten fields', () => {
       fixture.componentRef.setInput('fields', [name]);
       fixture.detectChanges();
       expect(openPicker().querySelector('sd-search-field input')).toBeNull();

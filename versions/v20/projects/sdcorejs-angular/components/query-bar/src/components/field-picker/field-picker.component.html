@@ -49,7 +49,7 @@
           (input)="setQuery($any($event.target).value)" />
       </sd-search-field>
     }
-    <div class="c-field-list" role="listbox" [id]="listId" [attr.aria-label]="findLabel()">
+    <div class="c-field-list" role="listbox" [id]="listId" [attr.aria-label]="listLabel()">
       @for (group of groups(); track group.label) {
         @if (_showHeadings) {
           <div role="group" [attr.aria-labelledby]="group.headingId">

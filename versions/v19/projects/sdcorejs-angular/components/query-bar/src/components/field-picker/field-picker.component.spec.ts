@@ -15,7 +15,7 @@ const FEW: SdQueryField[] = [
   { key: 'd', label: 'D', type: 'boolean' } as SdQueryField,
 ];
 
-// More than eight fields: the picker shows its find box.
+// Ten fields: the picker shows its find box (PD, R1 G-2).
 const MANY: SdQueryField[] = [
   { key: 'code', label: 'Mã đơn', type: 'string', group: 'Bộ lọc' },
   { key: 'customer', label: 'Khách hàng', type: 'string', group: 'Bộ lọc' },
@@ -26,6 +26,7 @@ const MANY: SdQueryField[] = [
   { key: 'region', label: 'Khu vực', type: 'string', group: 'Cột' },
   { key: 'note', label: 'Ghi chú', type: 'string', group: 'Cột' },
   { key: 'paid', label: 'Đã thanh toán', type: 'boolean', group: 'Cột' },
+  { key: 'seller', label: 'Nhân viên bán', type: 'string', group: 'Cột' },
 ] as SdQueryField[];
 
 @Component({
@@ -33,13 +34,20 @@ const MANY: SdQueryField[] = [
   imports: [SdQueryFieldPicker, ɵSdQueryPanelTriggerDirective],
   template: `
     <button id="add" type="button" [sdQueryPanelTrigger]="picker.panel()">+</button>
-    <sd-query-field-picker #picker [fields]="fields()" [usedKeys]="used()" [autoId]="autoId()" (pick)="picked.push($any($event).key)" />
+    <sd-query-field-picker
+      #picker
+      [fields]="fields()"
+      [usedKeys]="used()"
+      [autoId]="autoId()"
+      [findBox]="findBox()"
+      (pick)="picked.push($any($event).key)" />
   `,
 })
 class Host {
   readonly fields = signal<SdQueryField[]>(FEW);
   readonly used = signal(new Set<string>());
   readonly autoId = signal<string | undefined>(undefined);
+  readonly findBox = signal(true);
   readonly picked: string[] = [];
   readonly picker = viewChild.required(SdQueryFieldPicker);
 }
@@ -122,6 +130,37 @@ describe('SdQueryFieldPicker', () => {
     const controlled = document.getElementById(trigger().getAttribute('aria-controls')!)!;
     expect(controlled.getAttribute('role')).toBe('listbox');
     expect(find()!.getAttribute('aria-controls')).toBe(controlled.id);
+  });
+
+  // PD after R1 (G-2): the find box comes at ten fields, not above eight.
+  it('QB-B-04 nine fields have no find box, ten have one', () => {
+    host.fields.set(MANY.slice(0, 9));
+    fixture.detectChanges();
+    open();
+    expect(find()).withContext('9 fields').toBeNull();
+    key(document.activeElement!, 'Escape');
+    host.fields.set(MANY);
+    fixture.detectChanges();
+    open();
+    expect(find()).withContext('10 fields').not.toBeNull();
+  });
+
+  // PD after R1 (G-8): the find box reads "Tìm kiếm"; the listbox is named after what opens it, not after the find box.
+  it('QB-B-05 the find box reads "Tìm kiếm" and the listbox takes the name of its trigger', () => {
+    host.fields.set(MANY);
+    fixture.detectChanges();
+    open();
+    expect(find()!.placeholder).toBe('Tìm kiếm');
+    expect(find()!.getAttribute('aria-label')).toBe('Tìm kiếm');
+    expect(listbox().getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.add-filter'));
+    key(document.activeElement!, 'Escape');
+
+    // Inline mode: the Add condition box outside the panel opens the list.
+    host.findBox.set(false);
+    fixture.detectChanges();
+    open();
+    expect(find()).toBeNull();
+    expect(listbox().getAttribute('aria-label')).toBe(i18n.t('core.component.query-bar.add-condition'));
   });
 
   it('picking an option emits the field and closes the panel; a used option does nothing', () => {

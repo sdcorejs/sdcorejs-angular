@@ -754,7 +754,7 @@ export const EN_MESSAGES = {
   'core.component.query-bar.saved-filters.write-error': "The filter couldn't be saved.",
   'core.component.query-bar.all': 'All',
   'core.component.query-bar.required': 'Select {label} to view data',
-  'core.component.query-bar.find-field': 'Find field',
+  'core.component.query-bar.find-field': 'Search',
   'core.component.query-bar.range.from': 'From {value}',
   'core.component.query-bar.range.to': 'To {value}',
   'core.component.query-bar.clear': 'Clear all',

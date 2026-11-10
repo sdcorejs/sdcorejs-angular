@@ -755,7 +755,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.write-error': '필터를 저장할 수 없습니다.',
   'core.component.query-bar.all': '전체',
   'core.component.query-bar.required': '데이터를 보려면 {label}을(를) 선택하세요',
-  'core.component.query-bar.find-field': '필드 찾기',
+  'core.component.query-bar.find-field': '검색',
   'core.component.query-bar.range.from': '{value}부터',
   'core.component.query-bar.range.to': '{value}까지',
   'core.component.query-bar.clear': '전체 지우기',

@@ -751,7 +751,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.write-error': '无法保存筛选。',
   'core.component.query-bar.all': '全部',
   'core.component.query-bar.required': '请选择{label}以查看数据',
-  'core.component.query-bar.find-field': '查找字段',
+  'core.component.query-bar.find-field': '搜索',
   'core.component.query-bar.range.from': '{value} 起',
   'core.component.query-bar.range.to': '至 {value}',
   'core.component.query-bar.clear': '清除全部',

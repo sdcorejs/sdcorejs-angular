@@ -755,7 +755,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.query-bar.saved-filters.write-error': 'Không lưu được bộ lọc.',
   'core.component.query-bar.all': 'Tất cả',
   'core.component.query-bar.required': 'Chọn {label} để xem dữ liệu',
-  'core.component.query-bar.find-field': 'Tìm trường',
+  'core.component.query-bar.find-field': 'Tìm kiếm',
   'core.component.query-bar.range.from': 'Từ {value}',
   'core.component.query-bar.range.to': 'Đến {value}',
   'core.component.query-bar.clear': 'Xóa tất cả',

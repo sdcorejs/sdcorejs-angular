@@ -621,7 +621,7 @@ filter: {
 
 **Layout.** The bar is flush inside the table card (padding `8px 12px`): search box (`sd-search-field` size `xs`, bound to `quickSearch.term`, with the quick-search `placeholder` as placeholder and accessible name, shown whenever `quickSearch` is set) │ pinned chips │ added chips │ the **Add condition** box (inline editor) or `+` (popover editor) … clear button │ saved filters (with `queryBar.savedFilters`) │ Search (with `manualFilter` only) │ the `sdTableQuickSearchRightDef` template. Chips wrap; the actions stay on the first row. The bar sits outside the loading layer, so it stays usable during `skeleton` and `refresh`. `role="search"`, `aria-label` = `core.component.table.filter`.
 
-**Chips.** Pinned chips (no remove button) read `Tất cả` when empty, `Chọn giá trị` when the field is `required`. Once a `required` chip has a value it cannot be emptied, and its operators exclude `NULL` / `NOT_NULL` (see `sd-query-bar.md`, *Required fields*). Other fields are under `+`, grouped "Bộ lọc" (quick + external) and "Cột"; more than eight fields get a find box. Operators are limited to what the raw record can hold:
+**Chips.** Pinned chips (no remove button) read `Tất cả` when empty, `Chọn giá trị` when the field is `required`. Once a `required` chip has a value it cannot be emptied, and its operators exclude `NULL` / `NOT_NULL` (see `sd-query-bar.md`, *Required fields*). Other fields are under `+`, grouped "Bộ lọc" (quick + external) and "Cột"; ten fields or more get a find box. Operators are limited to what the raw record can hold:
 
 | Source | Bar field | Operators | Raw value |
 | --- | --- | --- | --- |

@@ -14,8 +14,11 @@ $qb-border-soft: var(--sd-query-bar-border-soft, #e2e4e7);
 
 .c-chip-popover {
   @include panel.panel;
-  // why: header có viền dưới chạm hai mép — cắt theo bo 8px của khung thay vì cuộn.
+  // why: header có viền dưới chạm hai mép — cắt theo bo 8px của khung; màn hình thấp thì thân cuộn, header đứng yên
+  // (PD sau R1, G-9).
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   min-width: min(280px, calc(100vw - 16px));
   max-width: min(320px, calc(100vw - 16px));
 
@@ -65,6 +68,8 @@ $qb-border-soft: var(--sd-query-bar-border-soft, #e2e4e7);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .c-pop-between {
