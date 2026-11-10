@@ -1,6 +1,8 @@
-import { Injector } from '@angular/core';
+import { Injector, type Provider, type Type } from '@angular/core';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import type { Language } from '@sdcorejs/utils/models';
 import { I18N_MESSAGES } from '../i18n/src/i18n.messages';
 
 // Test helpers shared by sd-calendar, sd-scheduler and sd-kanban (handoff schedule-kanban, TESTING.md §3).
@@ -168,6 +170,47 @@ export function stubNow(service: SdDateTimeService, wallClock = SCHEDULE_TEST_NO
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
   return next => (current = next);
+}
+
+export interface ScheduleTestSetup {
+  readonly zone?: string;
+  readonly now?: string;
+  readonly language?: Language;
+  /** Extra providers, for example the component's configuration token. */
+  readonly providers?: readonly Provider[];
+}
+
+/** Configures TestBed with the zone, the language and a pinned "now"; returns the clock and a setter for "now". */
+export function configureScheduleTesting(setup: ScheduleTestSetup = {}): { clock: SdDateTimeService; setNow: (next: string) => void } {
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: SD_CORE_CONFIGURATION, useValue: { timeZone: setup.zone ?? SCHEDULE_TEST_ZONE, language: setup.language ?? 'vi' } },
+      ...(setup.providers ?? []),
+    ],
+  });
+  const clock = TestBed.inject(SdDateTimeService);
+  const setNow = stubNow(clock, setup.now ?? SCHEDULE_TEST_NOW);
+  return { clock, setNow };
+}
+
+/** Creates `type` with the given inputs set before the first change detection. */
+export function createWith<C>(type: Type<C>, inputs: Record<string, unknown>): ComponentFixture<C> {
+  const fixture = TestBed.createComponent(type);
+  for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
+  return fixture;
+}
+
+export function q<T extends Element = HTMLElement>(root: Element, selector: string): T | null {
+  return root.querySelector<T>(selector);
+}
+
+export function qa<T extends Element = HTMLElement>(root: Element, selector: string): T[] {
+  return Array.from(root.querySelectorAll<T>(selector));
+}
+
+/** Visible text with collapsed white space. */
+export function text(element: Element | null): string {
+  return (element?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 /** A point in client coordinates. */

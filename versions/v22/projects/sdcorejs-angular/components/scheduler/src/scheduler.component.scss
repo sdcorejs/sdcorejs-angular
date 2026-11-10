@@ -1,0 +1,1206 @@
+@use 'sass:map';
+
+// Tokens the scheduler reads, each with the default light value as its fallback. The calendar tokens are shared with
+// sd-calendar (scheduler.md §13): no new colour token.
+$tokens: (
+  'primary': var(--sd-primary, #005cbb),
+  'primary-light': var(--sd-primary-light, #dbe8f5),
+  'primary-contrast': var(--sd-primary-contrast, #ffffff),
+  'secondary': var(--sd-secondary, #5c6270),
+  'secondary-light': var(--sd-secondary-light, #ebecee),
+  'info': var(--sd-info, #006a6a),
+  'info-light': var(--sd-info-light, #dbeaea),
+  'success': var(--sd-success, #2e7d32),
+  'success-light': var(--sd-success-light, #e2ede2),
+  'warning': var(--sd-warning, #a66300),
+  'warning-light': var(--sd-warning-light, #f3e9db),
+  'error': var(--sd-error, #ba1a1a),
+  'error-light': var(--sd-error-light, #f5dfdf),
+  'surface': var(--sd-surface, #fdfbff),
+  'surface-muted': var(--sd-surface-muted, #e7e8ed),
+  'surface-inverse': var(--sd-surface-inverse, #1a1b1f),
+  'text': var(--sd-text, #1a1b1f),
+  'text-secondary': var(--sd-text-secondary, #44474f),
+  'border': var(--sd-border, #c4c6d0),
+  'border-strong': var(--sd-border-strong, #74777f),
+  'status-error-bg': var(--sd-status-error-bg, #f5dfdf),
+  'status-error-fg': var(--sd-status-error-fg, #9c1616),
+  'focus-ring-color': var(--sd-focus-ring-color, #005cbb),
+  'calendar-line': var(--sd-calendar-line, #dedee5),
+  'calendar-line-half': var(--sd-calendar-line-half, #efeef3),
+  'calendar-off-hours': var(--sd-calendar-off-hours, #f3f3f7),
+  'calendar-now': var(--sd-calendar-now, #ba1a1a),
+  'calendar-today': var(--sd-calendar-today, #005cbb),
+);
+$palette: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
+
+@function tok($name) {
+  @return map.get($tokens, $name);
+}
+
+@function fs($px) {
+  @return var(--sd-font-size-#{$px}, #{$px}px);
+}
+
+@function lh($px) {
+  @return var(--sd-line-height-#{$px}, #{$px}px);
+}
+
+@function radius($px) {
+  @return var(--sd-radius-#{$px}, #{$px}px);
+}
+
+$medium: var(--sd-font-weight-medium, 500);
+$hour: var(--sd-scheduler-hour-width);
+
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin focus-ring {
+  outline: var(--sd-focus-ring-width, 2px) solid tok(focus-ring-color);
+  outline-offset: var(--sd-focus-ring-offset, 2px);
+}
+
+@mixin bare-button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+:host {
+  // Sizes, not theme tokens (§7): override them on the host.
+  --sd-scheduler-resource-width: 240px;
+  --sd-scheduler-hour-width: 80px;
+  --sd-scheduler-day-min-width: 120px;
+  --sd-scheduler-month-day-min-width: 28px;
+  --sd-scheduler-row-min-height: 48px;
+  --sd-scheduler-lane-height: 28px;
+  --sd-scheduler-event-radius: #{radius(6)};
+  --sd-scheduler-group-height: 32px;
+
+  display: block;
+  min-width: 0;
+  // why: the library reboot sets `body { text-align: left }`; text starts from the inline start, also in RTL.
+  text-align: start;
+}
+
+.sd-scheduler {
+  --sd-scheduler-track: calc(#{$hour} * 24);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid tok(border);
+  border-radius: radius(12);
+  background: tok(surface);
+  color: tok(text);
+  font-size: fs(14);
+  line-height: lh(20);
+}
+
+// ---- toolbar (as sd-calendar §7) ----
+.sd-scheduler__toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding-block: 0;
+  padding-inline: 14px 12px;
+  border-bottom: 1px solid tok(calendar-line);
+}
+
+.sd-scheduler__nav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-scheduler__today {
+  @include bare-button;
+
+  height: var(--sd-control-height-sm, 32px);
+  margin-inline-end: 4px;
+  padding: 0 14px;
+  border: 1px solid tok(border);
+  border-radius: radius(8);
+  font-size: fs(14);
+  font-weight: $medium;
+}
+
+.sd-scheduler__icon-button {
+  @include bare-button;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sd-control-height-sm, 32px);
+  height: var(--sd-control-height-sm, 32px);
+  border-radius: radius(999);
+  color: tok(text-secondary);
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.38;
+  }
+}
+
+.sd-scheduler__title {
+  @include ellipsis;
+
+  flex: 1;
+  min-width: 0;
+  font-size: fs(18);
+  line-height: lh(24);
+  font-weight: $medium;
+}
+
+.sd-scheduler__views {
+  display: flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid tok(border);
+  border-radius: radius(8);
+}
+
+.sd-scheduler__view {
+  @include bare-button;
+
+  height: 30px;
+  padding: 0 12px;
+  font-size: fs(13);
+  font-weight: $medium;
+
+  & + & {
+    border-inline-start: 1px solid tok(border);
+  }
+
+  &[aria-pressed='true'] {
+    background: tok(primary-light);
+    color: tok(text);
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__today:hover,
+  .sd-scheduler__icon-button:not(:disabled):hover,
+  .sd-scheduler__view:not([aria-pressed='true']):hover {
+    background: color-mix(in srgb, tok(text) 6%, transparent);
+  }
+}
+
+// ---- progress, bands, status ----
+.sd-scheduler__progress {
+  position: relative;
+  flex: none;
+  height: 2px;
+  overflow: hidden;
+  background: tok(primary-light);
+}
+
+.sd-scheduler__progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: tok(primary);
+  animation: sd-scheduler-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes sd-scheduler-progress {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.sd-scheduler__band {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid color-mix(in srgb, tok(error) 28%, tok(surface));
+  background: tok(status-error-bg);
+  color: tok(status-error-fg);
+  font-size: fs(13);
+}
+
+.sd-scheduler__band-icon {
+  flex: none;
+  color: tok(error);
+}
+
+.sd-scheduler__band-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-scheduler__band-button {
+  @include bare-button;
+
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid tok(error);
+  border-radius: radius(8);
+  font-weight: $medium;
+}
+
+.sd-scheduler__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.sd-scheduler__invalid {
+  flex: 1;
+  min-height: 0;
+}
+
+// ---- scroll area and grid (§7) ----
+.sd-scheduler__scroller {
+  position: relative;
+  // why: with a host height the scroller takes the rest of the column; without one it is 640px at most. In both cases
+  // it is never taller than its rows, so a few resources leave no empty band.
+  flex: 1 1 640px;
+  min-height: 0;
+  max-height: max-content;
+  overflow: auto;
+  // why: the grid is wider than most hosts; without this its width becomes the min-content width of every flex or
+  // shrink-to-fit ancestor, and the page scrolls instead of the grid.
+  contain: inline-size;
+  overscroll-behavior: contain;
+
+  &[data-view='week'] {
+    --sd-scheduler-track: max(100% - var(--sd-scheduler-resource-width), var(--sd-scheduler-day-min-width) * var(--sd-scheduler-columns));
+  }
+
+  &[data-view='month'] {
+    --sd-scheduler-track: max(
+      100% - var(--sd-scheduler-resource-width),
+      var(--sd-scheduler-month-day-min-width) * var(--sd-scheduler-columns)
+    );
+  }
+}
+
+.sd-scheduler__grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 100%;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.sd-scheduler__head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.sd-scheduler__head-row,
+.sd-scheduler__row,
+.sd-scheduler__group {
+  display: flex;
+}
+
+.sd-scheduler__corner {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 4;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  width: var(--sd-scheduler-resource-width);
+  padding: 0 14px;
+  overflow: hidden;
+  border-inline-end: 1px solid tok(border);
+  border-bottom: 1px solid tok(border);
+  background: tok(surface);
+  color: tok(text-secondary);
+  font-size: fs(12);
+  line-height: lh(16);
+  font-weight: $medium;
+  white-space: nowrap;
+}
+
+.sd-scheduler__corner-count {
+  font-weight: 400;
+}
+
+.sd-scheduler__axis {
+  display: flex;
+  flex: none;
+  width: var(--sd-scheduler-track);
+  height: 40px;
+  border-bottom: 1px solid tok(border);
+  background: tok(surface);
+  color: tok(text-secondary);
+
+  .sd-scheduler__scroller:not([data-view='day']) & {
+    display: grid;
+    grid-template-columns: repeat(var(--sd-scheduler-columns), minmax(0, 1fr));
+    height: 48px;
+  }
+}
+
+.sd-scheduler__hour {
+  flex: none;
+  box-sizing: border-box;
+  width: $hour;
+  padding-inline-start: 6px;
+  border-inline-end: 1px solid tok(calendar-line);
+  font-size: fs(11);
+  line-height: 40px;
+  font-weight: $medium;
+}
+
+.sd-scheduler__axis-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  border-inline-end: 1px solid tok(calendar-line);
+  font-size: fs(11);
+  line-height: lh(14);
+  font-weight: $medium;
+
+  &:last-child {
+    border-inline-end: 0;
+  }
+
+  &[data-holiday='off'] .sd-scheduler__weekday {
+    color: tok(error);
+  }
+
+  &[data-today] {
+    .sd-scheduler__weekday {
+      color: tok(calendar-today);
+    }
+
+    .sd-scheduler__day-number {
+      background: tok(calendar-today);
+      color: tok(primary-contrast);
+    }
+  }
+}
+
+.sd-scheduler__weekday {
+  letter-spacing: 0.04em;
+}
+
+.sd-scheduler__day-number {
+  @include bare-button;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: radius(999);
+  color: tok(text);
+  font-size: fs(15);
+  font-weight: $medium;
+}
+
+@media (hover: hover) {
+  .sd-scheduler__axis-day:not([data-today]) .sd-scheduler__day-number:hover {
+    background: color-mix(in srgb, tok(text) 6%, transparent);
+  }
+}
+
+// Month: each column stacks the weekday, the day number and the holiday dot (§7).
+.sd-scheduler__scroller[data-view='month'] {
+  .sd-scheduler__axis-day {
+    flex-direction: column;
+    gap: 0;
+    font-size: fs(10);
+    line-height: lh(12);
+  }
+
+  .sd-scheduler__day-number {
+    width: 22px;
+    height: 22px;
+    font-size: fs(12);
+  }
+}
+
+.sd-scheduler__holiday-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: radius(999);
+  background: tok(text-secondary);
+}
+
+// ---- rows ----
+.sd-scheduler__body {
+  position: relative;
+}
+
+.sd-scheduler__row {
+  box-sizing: border-box;
+  min-height: var(--sd-scheduler-row-min-height);
+  border-bottom: 1px solid tok(calendar-line);
+}
+
+.sd-scheduler__resource {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: var(--sd-scheduler-resource-width);
+  padding-block: 0;
+  padding-inline: 14px 12px;
+  overflow: hidden;
+  border-inline-end: 1px solid tok(border);
+  background: tok(surface);
+}
+
+.sd-scheduler__resource-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: radius(8);
+  background: color-mix(in srgb, tok(text) 6%, tok(surface));
+  color: tok(text-secondary);
+}
+
+.sd-scheduler__avatar {
+  flex: none;
+}
+
+.sd-scheduler__resource-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sd-scheduler__resource-title {
+  @include ellipsis;
+
+  font-size: fs(14);
+  line-height: lh(20);
+  font-weight: $medium;
+}
+
+.sd-scheduler__resource-description {
+  @include ellipsis;
+
+  color: tok(text-secondary);
+  font-size: fs(12);
+  line-height: lh(16);
+}
+
+.sd-scheduler__track {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--sd-scheduler-track);
+
+  // why: the lines are drawn after the off-hours shades (same layer, later in tree order) and under the blocks.
+  &::after {
+    position: absolute;
+    inset: 0;
+    background-image: inherit;
+    content: '';
+    pointer-events: none;
+  }
+
+  // The background itself stays empty; `::after` paints it (`inherit`) above the shades.
+  background-size: 0 0;
+  // Hour lines at the end of every hour, half-hour lines in between (§7): one gradient, no element per slot (SC-44).
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(#{$hour} / 2 - 1px),
+    #{tok(calendar-line-half)} calc(#{$hour} / 2 - 1px) calc(#{$hour} / 2),
+    transparent calc(#{$hour} / 2) calc(#{$hour} - 1px),
+    #{tok(calendar-line)} calc(#{$hour} - 1px) #{$hour}
+  );
+
+  &:dir(rtl) {
+    background-image: repeating-linear-gradient(
+      to left,
+      transparent 0 calc(#{$hour} / 2 - 1px),
+      #{tok(calendar-line-half)} calc(#{$hour} / 2 - 1px) calc(#{$hour} / 2),
+      transparent calc(#{$hour} / 2) calc(#{$hour} - 1px),
+      #{tok(calendar-line)} calc(#{$hour} - 1px) #{$hour}
+    );
+  }
+
+  .sd-scheduler__scroller:not([data-view='day']) & {
+    $column: calc(100% / var(--sd-scheduler-columns));
+
+    background-image: repeating-linear-gradient(to right, transparent 0 calc(#{$column} - 1px), #{tok(calendar-line)} calc(#{$column} - 1px) #{$column});
+
+    &:dir(rtl) {
+      background-image: repeating-linear-gradient(to left, transparent 0 calc(#{$column} - 1px), #{tok(calendar-line)} calc(#{$column} - 1px) #{$column});
+    }
+  }
+}
+
+.sd-scheduler__off {
+  position: absolute;
+  inset-block: 0;
+  background: tok(calendar-off-hours);
+  pointer-events: none;
+}
+
+.sd-scheduler__skeleton {
+  position: absolute;
+  top: 10px;
+  height: 28px;
+  border-radius: radius(6);
+  background: tok(surface-muted);
+}
+
+// ---- groups (§7, §10) ----
+.sd-scheduler__group {
+  box-sizing: border-box;
+  height: var(--sd-scheduler-group-height);
+  border-bottom: 1px solid tok(calendar-line);
+  background: tok(surface);
+}
+
+.sd-scheduler__group-cell {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+}
+
+.sd-scheduler__group-button {
+  @include bare-button;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--sd-scheduler-group-height);
+  padding-inline: 10px 14px;
+  color: tok(text-secondary);
+  font-size: fs(12);
+  line-height: lh(16);
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+.sd-scheduler__group-count {
+  font-weight: 400;
+}
+
+.sd-scheduler__group-icon:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+// ---- empty state (§12) ----
+.sd-scheduler__empty-row {
+  display: flex;
+}
+
+.sd-scheduler__empty {
+  position: sticky;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 144px;
+  padding: 24px;
+  color: tok(text-secondary);
+}
+
+.sd-scheduler__empty-text {
+  margin: 0;
+  color: tok(text);
+  font-size: fs(14);
+  font-weight: $medium;
+}
+
+// ---- now line (§7) ----
+.sd-scheduler__now {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--sd-scheduler-resource-width) + var(--sd-scheduler-now-offset) - 1px);
+  z-index: 1;
+  width: 2px;
+  background: tok(calendar-now);
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    inset-inline-start: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: radius(999);
+    background: tok(calendar-now);
+    content: '';
+  }
+}
+
+// ---- event blocks (§8) ----
+.sd-scheduler__event {
+  --sd-scheduler-event-bg: color-mix(in srgb, var(--sd-scheduler-event-color) 14%, #{tok(surface)});
+  --sd-scheduler-event-border: color-mix(in srgb, var(--sd-scheduler-event-color) 28%, #{tok(surface)});
+  --sd-scheduler-event-dot: var(--sd-scheduler-event-color);
+
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: var(--sd-scheduler-lane-height);
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px solid var(--sd-scheduler-event-border);
+  border-radius: var(--sd-scheduler-event-radius);
+  background: var(--sd-scheduler-event-bg);
+  color: tok(text);
+  font-size: fs(12);
+  line-height: lh(16);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s,
+    background-color 0.15s;
+
+  @each $color in $palette {
+    &[data-color='#{$color}'] {
+      --sd-scheduler-event-color: #{tok($color)};
+      --sd-scheduler-event-bg: #{tok('#{$color}-light')};
+    }
+  }
+
+  &[data-past] {
+    --sd-scheduler-event-dot: color-mix(in srgb, var(--sd-scheduler-event-color) 45%, #{tok(surface)});
+
+    border-color: color-mix(in srgb, var(--sd-scheduler-event-border) 50%, #{tok(surface)});
+    background: color-mix(in srgb, var(--sd-scheduler-event-bg) 45%, #{tok(surface)});
+  }
+
+  &[data-tier='sm'] {
+    justify-content: center;
+    padding: 0;
+  }
+
+  // A side that goes past the range is square (§8.2).
+  &[data-clipped-start] {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  &[data-clipped-end] {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  &[data-selected] {
+    z-index: 2;
+    border-color: var(--sd-scheduler-event-color);
+    box-shadow: var(--sd-shadow-md);
+  }
+
+  &[data-failed] {
+    outline: 2px solid tok(error);
+    outline-offset: 1px;
+  }
+
+  &[data-pending] {
+    z-index: 3;
+    border: 1px dashed var(--sd-scheduler-event-color);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__event:hover {
+    background: color-mix(in srgb, var(--sd-scheduler-event-color) 7%, var(--sd-scheduler-event-bg));
+    box-shadow: var(--sd-shadow-sm);
+  }
+}
+
+.sd-scheduler__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: radius(999);
+  background: var(--sd-scheduler-event-dot, var(--sd-scheduler-event-color));
+}
+
+.sd-scheduler__repeat {
+  flex: none;
+  color: tok(text-secondary);
+}
+
+.sd-scheduler__event-content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.sd-scheduler__event-title {
+  @include ellipsis;
+
+  flex: 0 1 auto;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.sd-scheduler__lead-time {
+  margin-inline-end: 4px;
+  font-weight: 400;
+}
+
+.sd-scheduler__event-time {
+  flex: none;
+  color: tok(text-secondary);
+}
+
+.sd-scheduler__sync {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--sd-scheduler-event-color, #{tok(primary)});
+  animation: sd-scheduler-spin 1s linear infinite;
+}
+
+@keyframes sd-scheduler-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---- keyboard cursor (§9.7) and cell template (§8.5) ----
+.sd-scheduler__cursor {
+  position: absolute;
+  inset-block: 6px;
+  z-index: 5;
+  display: none;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 2px solid tok(focus-ring-color);
+  border-radius: radius(4);
+  background: color-mix(in srgb, #{tok(primary)} 8%, transparent);
+  font-size: fs(10);
+  line-height: lh(12);
+  font-weight: $medium;
+  pointer-events: none;
+
+  .sd-scheduler__grid:focus-visible & {
+    display: block;
+  }
+}
+
+.sd-scheduler__grid:focus-visible [data-cursor-row] {
+  @include focus-ring;
+
+  outline-offset: -2px;
+}
+
+.sd-scheduler__scroller {
+  // Keyboard scrolling keeps the cursor out from under the sticky axis and resource column.
+  scroll-padding-block-start: 48px;
+  scroll-padding-inline-start: var(--sd-scheduler-resource-width);
+}
+
+.sd-scheduler__track--cells {
+  display: grid;
+  grid-template-columns: repeat(var(--sd-scheduler-columns), minmax(0, 1fr));
+}
+
+.sd-scheduler__cell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  cursor: pointer;
+
+  &[data-cursor-cell] {
+    .sd-scheduler__grid:focus-visible & {
+      @include focus-ring;
+
+      outline-offset: -3px;
+    }
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__cell:hover {
+    background: color-mix(in srgb, #{tok(text)} 4%, transparent);
+  }
+}
+
+// ---- create (§9.2) ----
+.sd-scheduler__track--create {
+  cursor: cell;
+}
+
+// A sweep that creatable refuses shows the not-allowed cursor.
+.sd-scheduler__track--blocked {
+  cursor: not-allowed;
+}
+
+.sd-scheduler__ghost {
+  position: absolute;
+  top: 10px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: var(--sd-scheduler-lane-height);
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px dashed tok(primary);
+  border-radius: var(--sd-scheduler-event-radius);
+  background: color-mix(in srgb, #{tok(primary-light)} 92%, transparent);
+  font-size: fs(12);
+  line-height: lh(16);
+  white-space: nowrap;
+  pointer-events: none;
+
+  &[data-blocked] {
+    border-color: tok(border-strong);
+  }
+}
+
+// ---- move (§8.3, §9.3, §9.4) ----
+.sd-scheduler__event[data-movable] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.sd-scheduler__event[data-dragging] {
+  // The original position while dragging: a dashed frame in the old lane, the proposal is drawn on the target row.
+  border: 1px dashed var(--sd-scheduler-event-border);
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+.sd-scheduler__proposal {
+  position: absolute;
+  z-index: 4;
+  box-sizing: border-box;
+  height: var(--sd-scheduler-lane-height);
+  border: 1px solid tok(primary);
+  border-radius: var(--sd-scheduler-event-radius);
+  background: color-mix(in srgb, #{tok(primary-light)} 80%, transparent);
+  box-shadow: var(--sd-shadow-lg);
+  pointer-events: none;
+
+  &[data-blocked] {
+    border-style: dashed;
+    border-color: tok(border-strong);
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+// §8.3: the floating label beside the block, inverse surface, aria-hidden.
+.sd-scheduler__label {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: calc(100% + 6px);
+  padding: 2px 6px;
+  border-radius: radius(4);
+  background: tok(surface-inverse);
+  color: tok(surface);
+  font-size: fs(11);
+  line-height: lh(14);
+  font-weight: $medium;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+
+  // No room after the block: the label goes before it.
+  &[data-flip] {
+    inset-inline-start: auto;
+    inset-inline-end: calc(100% + 6px);
+  }
+
+  // The label of a resize is a sibling of the block in the track; its inline position and top come inline.
+  &--resize {
+    z-index: 6;
+
+    &[data-flip] {
+      inset-inline-start: auto;
+    }
+  }
+}
+
+// A valid target row is tinted; a refused one is striped, its resource cell faded (§8.3).
+.sd-scheduler__row[data-drop] .sd-scheduler__track::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: '';
+  pointer-events: none;
+}
+
+.sd-scheduler__row[data-drop='ok'] .sd-scheduler__track::before {
+  background: color-mix(in srgb, #{tok(primary)} 6%, transparent);
+}
+
+.sd-scheduler__row[data-drop='blocked'] {
+  cursor: not-allowed;
+
+  .sd-scheduler__track::before {
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, #{tok(text)} 5%, transparent) 0 6px,
+      transparent 6px 12px
+    );
+  }
+
+  .sd-scheduler__resource {
+    opacity: 0.5;
+  }
+}
+
+.sd-scheduler__resize {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 8px;
+  cursor: ew-resize;
+  touch-action: none;
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 3px;
+    width: 3px;
+    height: 12px;
+    margin-top: -6px;
+    border-radius: radius(2);
+    background: var(--sd-scheduler-event-color);
+    content: '';
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__event:hover .sd-scheduler__resize::after {
+    opacity: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  // §9.4: on touch only the selected block resizes, with a 24px target and a 6×24px handle.
+  .sd-scheduler__event:not([data-selected]) .sd-scheduler__resize {
+    display: none;
+  }
+
+  .sd-scheduler__event[data-selected] .sd-scheduler__resize {
+    width: 24px;
+
+    &::after {
+      width: 6px;
+      height: 24px;
+      margin-top: -12px;
+      opacity: 1;
+    }
+  }
+}
+
+// ---- scope bar (§9.6, as sd-calendar) ----
+.sd-scheduler__scope {
+  position: absolute;
+  inset-inline-end: 12px;
+  bottom: 12px;
+  inset-inline-start: 12px;
+  z-index: 10;
+  padding: 12px 14px;
+  border-radius: radius(10);
+  background: tok(surface-inverse);
+  box-shadow: var(--sd-shadow-lg);
+  color: tok(surface);
+  font-size: fs(14);
+}
+
+.sd-scheduler__scope-message {
+  margin: 0 0 10px;
+}
+
+.sd-scheduler__scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sd-scheduler__scope-button {
+  @include bare-button;
+
+  height: 36px;
+  padding: 0 10px;
+  border-radius: radius(6);
+  color: tok(primary-light);
+  font-size: fs(14);
+  font-weight: $medium;
+
+  &--cancel {
+    color: tok(surface);
+  }
+}
+
+@media (hover: hover) {
+  .sd-scheduler__scope-button:hover {
+    background: color-mix(in srgb, #{tok(surface)} 12%, transparent);
+  }
+}
+// Direction icons and the running progress bar go the other way in right-to-left.
+.sd-scheduler__icon-button sd-icon:dir(rtl),
+.sd-scheduler__progress:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+// ---- compact (§11) ----
+.sd-scheduler--compact {
+  --sd-scheduler-resource-width: 120px;
+  --sd-scheduler-hour-width: 64px;
+  --sd-scheduler-day-min-width: 96px;
+  --sd-scheduler-group-height: 44px;
+
+  .sd-scheduler__toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    height: auto;
+    padding: 8px 12px;
+  }
+
+  .sd-scheduler__title {
+    order: -2;
+    flex: 1 1 0;
+  }
+
+  .sd-scheduler__nav {
+    order: -1;
+  }
+
+  .sd-scheduler__today,
+  .sd-scheduler__icon-button {
+    height: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-scheduler__icon-button {
+    width: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-scheduler__views {
+    flex: 1 0 100%;
+  }
+
+  .sd-scheduler__view {
+    flex: 1;
+    height: 42px;
+  }
+
+  .sd-scheduler__resource {
+    gap: 8px;
+    padding-inline: 10px 8px;
+  }
+
+  .sd-scheduler__resource-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: fs(13);
+    line-height: lh(16);
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .sd-scheduler__resource-description {
+    display: none;
+  }
+
+  .sd-scheduler__resource-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// ---- motion, forced colours (SC-34, SC-35) ----
+@media (prefers-reduced-motion: reduce) {
+  .sd-scheduler__event {
+    transition: none;
+  }
+
+  .sd-scheduler__sync,
+  .sd-scheduler__progress-bar {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .sd-scheduler,
+  .sd-scheduler__event {
+    border-color: CanvasText;
+  }
+
+  .sd-scheduler__event[data-selected] {
+    border: 2px solid Highlight;
+  }
+
+  .sd-scheduler__event[data-pending] {
+    border-color: Highlight;
+  }
+
+  .sd-scheduler__now,
+  .sd-scheduler__now::before {
+    background-color: Highlight;
+  }
+}

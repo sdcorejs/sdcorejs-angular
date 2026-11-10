@@ -1,0 +1,425 @@
+@let _view = activeView();
+@let _disabled = disabled();
+@let _selected = selectedId();
+@let _failure = failure();
+@let _days = dayViews();
+@let _ghost = ghost();
+@let _canCreate = canCreate();
+@let _proposal = dragProposal();
+@let _lockAxis = lockAxis();
+@let _cursor = cursor();
+<section
+  #root
+  class="sd-scheduler"
+  role="region"
+  [class.sd-scheduler--compact]="compact()"
+  [attr.data-compact]="compact() || null"
+  [attr.aria-label]="regionLabel()"
+  [attr.data-autoid]="rootAutoId()"
+  [attr.data-view]="_view"
+  [attr.data-from]="visible().from"
+  [attr.data-to]="visible().to">
+  <header class="sd-scheduler__toolbar">
+    <div class="sd-scheduler__nav">
+      <button type="button" class="sd-scheduler__today" data-action="today" [attr.data-autoid]="childAutoId('today')" (click)="goToday()">
+        {{ 'core.component.calendar.today' | sdTranslate }}
+      </button>
+      <button
+        type="button"
+        class="sd-scheduler__icon-button"
+        data-action="prev"
+        [attr.aria-label]="prevLabel()"
+        [attr.data-autoid]="childAutoId('prev')"
+        [disabled]="prevDisabled()"
+        (click)="shift(-1)">
+        <sd-icon name="chevron_left" size="22px" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="sd-scheduler__icon-button"
+        data-action="next"
+        [attr.aria-label]="nextLabel()"
+        [attr.data-autoid]="childAutoId('next')"
+        [disabled]="nextDisabled()"
+        (click)="shift(1)">
+        <sd-icon name="chevron_right" size="22px" aria-hidden="true" />
+      </button>
+    </div>
+    <div class="sd-scheduler__title" data-title>{{ title() }}</div>
+    <div class="sd-scheduler__views" role="group" [attr.aria-label]="'core.component.calendar.views' | sdTranslate">
+      @for (option of viewOptions(); track option) {
+        <button
+          type="button"
+          class="sd-scheduler__view"
+          [attr.data-view-option]="option"
+          [attr.data-autoid]="childAutoId('view-' + option)"
+          [attr.aria-pressed]="option === _view"
+          (click)="setView(option)">
+          {{ viewLabel(option) }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (busy()) {
+    <div class="sd-scheduler__progress" role="progressbar" [attr.aria-label]="regionLabel()">
+      <span class="sd-scheduler__progress-bar"></span>
+    </div>
+  }
+  @if (phase() === 'error') {
+    <div class="sd-scheduler__band" data-band="load-error">
+      <sd-icon class="sd-scheduler__band-icon" name="error" size="18px" aria-hidden="true" />
+      <span class="sd-scheduler__band-text">{{ 'core.component.calendar.load-error' | sdTranslate }}</span>
+      <button type="button" class="sd-scheduler__band-button" data-action="retry" [attr.data-autoid]="childAutoId('retry')" (click)="reload()">
+        {{ 'core.component.calendar.retry' | sdTranslate }}
+      </button>
+    </div>
+  }
+  @if (_failure) {
+    <div class="sd-scheduler__band" data-band="move-error">
+      <sd-icon class="sd-scheduler__band-icon" name="error" size="18px" aria-hidden="true" />
+      <span class="sd-scheduler__band-text">{{ _failure.message }}</span>
+      <button type="button" class="sd-scheduler__band-button" data-action="dismiss" [attr.data-autoid]="childAutoId('dismiss')" (click)="dismissFailure()">
+        {{ 'core.component.calendar.dismiss' | sdTranslate }}
+      </button>
+    </div>
+  }
+  <div class="sd-scheduler__status" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</div>
+  <span class="sd-scheduler__status" [id]="gridHelpId">{{ 'core.component.scheduler.grid-help' | sdTranslate }}</span>
+  <span class="sd-scheduler__status" [id]="eventHelpId">{{ 'core.component.scheduler.event-help' | sdTranslate }}</span>
+  @if (asking(); as _ask) {
+    <div class="sd-scheduler__scope" role="alertdialog" [attr.aria-labelledby]="scopeMessageId" (keydown)="onScopeKeydown($event)">
+      <p class="sd-scheduler__scope-message" [id]="scopeMessageId">
+        {{ 'core.component.calendar.scope-message' | sdTranslate: { title: _ask.title } }}
+      </p>
+      <div class="sd-scheduler__scope-actions">
+        <button type="button" class="sd-scheduler__scope-button" data-scope="this" [attr.data-autoid]="childAutoId('scope-this')" (click)="answerScope('this')">
+          {{ 'core.component.calendar.scope-this' | sdTranslate }}
+        </button>
+        <button
+          type="button"
+          class="sd-scheduler__scope-button"
+          data-scope="following"
+          [attr.data-autoid]="childAutoId('scope-following')"
+          (click)="answerScope('following')">
+          {{ 'core.component.calendar.scope-following' | sdTranslate }}
+        </button>
+        <button type="button" class="sd-scheduler__scope-button" data-scope="all" [attr.data-autoid]="childAutoId('scope-all')" (click)="answerScope('all')">
+          {{ 'core.component.calendar.scope-all' | sdTranslate }}
+        </button>
+        <button
+          type="button"
+          class="sd-scheduler__scope-button sd-scheduler__scope-button--cancel"
+          data-scope="cancel"
+          [attr.data-autoid]="childAutoId('scope-cancel')"
+          (click)="answerScope(null)">
+          {{ 'core.common.cancel' | sdTranslate }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (invalid()) {
+    <sd-data-state class="sd-scheduler__invalid" state="error" compact [title]="'core.component.calendar.invalid-data' | sdTranslate" />
+  } @else {
+    <div
+      #scroller
+      class="sd-scheduler__scroller"
+      data-region="scroller"
+      [attr.data-view]="_view"
+      [style.--sd-scheduler-columns]="_days.length">
+      <div
+        #grid
+        class="sd-scheduler__grid"
+        role="grid"
+        tabindex="0"
+        data-region="grid"
+        [attr.aria-label]="regionLabel() + ', ' + title()"
+        [attr.aria-describedby]="gridHelpId"
+        [attr.aria-activedescendant]="cursorTarget()"
+        [attr.aria-busy]="busy() || null"
+        [attr.aria-disabled]="_disabled || null"
+        (focus)="onGridFocus()"
+        (keydown)="onGridKeydown($event)">
+        <div class="sd-scheduler__head" role="rowgroup">
+          <div class="sd-scheduler__head-row" role="row">
+            <div class="sd-scheduler__corner" role="columnheader" data-corner>
+              <span class="sd-scheduler__corner-label">{{ cornerLabel() }}</span>
+              <span class="sd-scheduler__corner-count">· {{ resources().length }}</span>
+            </div>
+            <div class="sd-scheduler__axis" data-axis>
+              @if (_view === 'day') {
+                @for (hour of hours; track hour.hour) {
+                  <div class="sd-scheduler__hour" role="columnheader" data-axis-hour>{{ hour.label }}</div>
+                }
+              } @else {
+                @for (day of _days; track day.day) {
+                  <div
+                    class="sd-scheduler__axis-day"
+                    role="columnheader"
+                    data-axis-day
+                    [attr.data-date]="day.day"
+                    [attr.data-today]="day.today || null"
+                    [attr.data-holiday]="day.holiday?.type ?? null"
+                    [attr.title]="day.holiday?.label ?? null">
+                    <span class="sd-scheduler__weekday">{{ day.weekdayShort }}</span>
+                    <button type="button" class="sd-scheduler__day-number" tabindex="-1" [attr.aria-label]="day.openLabel" (click)="openDay(day.day)">
+                      {{ day.dayNumber }}
+                    </button>
+                    @if (_view === 'month' && day.holiday?.type === 'observance') {
+                      <span class="sd-scheduler__holiday-dot" data-holiday-dot aria-hidden="true"></span>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+        <div class="sd-scheduler__body" role="rowgroup" data-rows>
+          @if (empty()) {
+            <div class="sd-scheduler__empty-row" role="row">
+              <div class="sd-scheduler__empty" role="gridcell" data-empty>
+                @if (emptyTemplate(); as _empty) {
+                  <ng-container [ngTemplateOutlet]="_empty.template" [ngTemplateOutletContext]="{ $implicit: visible() }" />
+                } @else {
+                  <sd-icon class="sd-scheduler__empty-icon" name="event_busy" size="28px" aria-hidden="true" />
+                  <p class="sd-scheduler__empty-text">{{ 'core.component.scheduler.empty' | sdTranslate }}</p>
+                }
+              </div>
+            </div>
+          } @else {
+            @for (row of rows(); track row.key) {
+              @if (row.kind === 'group') {
+                <div class="sd-scheduler__group" role="row" [attr.data-group]="row.name" [attr.data-collapsed]="row.collapsed || null">
+                  <div
+                    class="sd-scheduler__group-cell"
+                    role="rowheader"
+                    [id]="row.headerId"
+                    [attr.data-cursor-row]="_cursor?.rowKey === row.key || null">
+                    <button
+                      type="button"
+                      class="sd-scheduler__group-button"
+                      tabindex="-1"
+                      [attr.aria-expanded]="!row.collapsed"
+                      [attr.aria-label]="row.label"
+                      [attr.title]="row.hint"
+                      (click)="toggleGroup(row.name)">
+                      <sd-icon class="sd-scheduler__group-icon" [name]="row.collapsed ? 'chevron_right' : 'expand_more'" size="18px" aria-hidden="true" />
+                      <span class="sd-scheduler__group-label">{{ row.name }}</span>
+                      <span class="sd-scheduler__group-count">· {{ row.countText }}</span>
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div
+                  class="sd-scheduler__row"
+                  role="row"
+                  [attr.data-resource-id]="row.resource.id"
+                  [attr.data-autoid]="row.autoId"
+                  [attr.data-drop]="_proposal && !_proposal.outside && _proposal.target.resourceId === row.resource.id ? (_proposal.blocked ? 'blocked' : 'ok') : null"
+                  [attr.data-blocked]="(_proposal?.blocked && !_proposal?.outside && _proposal?.target?.resourceId === row.resource.id) || null"
+                  [style.height.px]="row.height">
+                  <div class="sd-scheduler__resource" role="rowheader" [id]="row.headerId" [attr.title]="row.resource.title">
+                    @if (resourceTemplate(); as _template) {
+                      <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="row.context" />
+                    } @else {
+                      @if (row.resource.avatar) {
+                        <sd-avatar class="sd-scheduler__avatar" [src]="row.resource.avatar" [name]="row.resource.title" [size]="compact() ? 24 : 28" />
+                      } @else if (row.resource.icon) {
+                        <span class="sd-scheduler__resource-icon" aria-hidden="true">
+                          <sd-icon [name]="row.resource.icon" size="18px" />
+                        </span>
+                      }
+                      <span class="sd-scheduler__resource-text">
+                        <span class="sd-scheduler__resource-title">{{ row.resource.title }}</span>
+                        @if (row.resource.description) {
+                          <span class="sd-scheduler__resource-description" [attr.title]="row.resource.description">{{ row.resource.description }}</span>
+                        }
+                      </span>
+                    }
+                  </div>
+                  <!-- why: one set of listeners per row instead of per block (Step 0 H6, way 2); blocks are found by data-event-id.
+                       The row itself is not a tab stop: the grid is (aria-activedescendant), and blocks are buttons. -->
+                  <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+                  <div
+                    class="sd-scheduler__track"
+                    data-track
+                    [id]="row.trackId"
+                    [attr.role]="row.cells ? 'presentation' : 'gridcell'"
+                    [attr.aria-label]="!row.cells && _cursor?.rowKey === row.key ? cursorLabel() : null"
+                    [class.sd-scheduler__track--cells]="!!row.cells"
+                    [class.sd-scheduler__track--create]="_canCreate"
+                    [class.sd-scheduler__track--blocked]="!!_ghost?.blocked && _ghost?.resourceId === row.resource.id"
+                    [attr.data-resource-id]="row.resource.id"
+                    (pointerdown)="onTrackPointerDown($event, row.resource.id)"
+                    (pointermove)="onTrackPointerMove($event)"
+                    (pointerup)="onTrackPointerUp()"
+                    (pointercancel)="onTrackPointerCancel()"
+                    (mousedown)="onTrackPress($event)"
+                    (touchstart)="onTrackPress($event)"
+                    (click)="onTrackClick($event, row)"
+                    (keydown)="onTrackKeydown($event, row)">
+                    @for (shade of row.shades; track shade.key) {
+                      <div class="sd-scheduler__off" data-off-hours aria-hidden="true" [style.inset-inline-start]="shade.start" [style.inline-size]="shade.size"></div>
+                    }
+                    @if (row.cells) {
+                      @for (cell of row.cells; track cell.day) {
+                        <!-- why: a cell is reached with the grid cursor (aria-activedescendant + Enter), not with Tab. -->
+                        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                        <div
+                          class="sd-scheduler__cell"
+                          role="gridcell"
+                          [id]="row.trackId + '-' + cell.day"
+                          [attr.aria-label]="cell.label"
+                          [attr.data-date]="cell.day"
+                          [attr.data-resource-id]="row.resource.id"
+                          [attr.data-off]="cell.off || null"
+                          [attr.data-today]="cell.today || null"
+                          [attr.data-cursor-cell]="(_cursor?.rowKey === row.key && _cursor?.day === cell.day) || null"
+                          (click)="onCellClick(row, cell)">
+                          <ng-container [ngTemplateOutlet]="cellTemplate()!.template" [ngTemplateOutletContext]="cell.context" />
+                        </div>
+                      }
+                    }
+                    @if (_cursor?.rowKey === row.key && cursorBox(); as _cursorBox) {
+                      <div class="sd-scheduler__cursor" data-cursor aria-hidden="true" [style.inset-inline-start]="_cursorBox.start" [style.inline-size]="_cursorBox.size">
+                        {{ _cursorBox.text }}
+                      </div>
+                    }
+                    @if (skeleton() && skeletonRows().has(row.key)) {
+                      @let _shape = skeletonShapes[skeletonRows().get(row.key)!];
+                      <div
+                        class="sd-scheduler__skeleton"
+                        data-skeleton
+                        aria-hidden="true"
+                        [style.inset-inline-start.%]="_shape[0] * 100"
+                        [style.inline-size.%]="_shape[1] * 100"></div>
+                    }
+                    @for (block of row.blocks; track block.key) {
+                      <div
+                        class="sd-scheduler__event"
+                        role="button"
+                        cdkDrag
+                        [cdkDragDisabled]="!block.movable"
+                        [cdkDragStartDelay]="dragDelay"
+                        [cdkDragConstrainPosition]="constrainDrag"
+                        [cdkDragLockAxis]="_lockAxis"
+                        (cdkDragStarted)="onDragStarted($event, block)"
+                        (cdkDragEnded)="onDragEnded($event)"
+                        [attr.tabindex]="_disabled ? -1 : 0"
+                        [attr.aria-label]="block.label"
+                        [attr.aria-describedby]="row.headerId + ' ' + eventHelpId"
+                        [attr.title]="block.title"
+                        [attr.data-event-id]="block.event.id"
+                        [attr.data-autoid]="block.autoId"
+                        [attr.data-resource-id]="block.event.resourceId"
+                        [attr.data-start]="block.range.start"
+                        [attr.data-end]="block.range.end"
+                        [attr.data-all-day]="block.placement.allDay"
+                        [attr.data-color]="block.color"
+                        [attr.data-tier]="block.tier"
+                        [attr.data-past]="block.past || null"
+                        [attr.data-pending]="block.pending || null"
+                        [attr.data-selected]="block.key === _selected || null"
+                        [attr.data-failed]="isFailed(block.key) || null"
+                        [attr.data-movable]="block.movable || null"
+                        [attr.data-dragging]="isDragging(block.key) || null"
+                        [attr.data-clipped-start]="block.clippedStart || null"
+                        [attr.data-clipped-end]="block.clippedEnd || null"
+                        [style.--sd-scheduler-event-color]="block.customColor"
+                        [style.inset-inline-start]="block.start"
+                        [style.inline-size]="blockSize(block)"
+                        [style.top]="block.top">
+                        <span class="sd-scheduler__dot" aria-hidden="true"></span>
+                        @if (eventTemplate(); as _template) {
+                          <div class="sd-scheduler__event-content">
+                            <ng-container [ngTemplateOutlet]="_template.template" [ngTemplateOutletContext]="block.context" />
+                          </div>
+                        } @else if (block.tier !== 'sm') {
+                          @if (block.recurring) {
+                            <sd-icon class="sd-scheduler__repeat" name="repeat" size="13px" aria-hidden="true" />
+                          }
+                          <span class="sd-scheduler__event-title">
+                            @if (block.leadTime) {
+                              <span class="sd-scheduler__lead-time">{{ block.leadTime }}</span>
+                            }
+                            {{ block.event.title }}
+                          </span>
+                          @if (block.tier === 'lg' && _view === 'day') {
+                            <span class="sd-scheduler__event-time">{{ block.timeText }}</span>
+                          }
+                        }
+                        @if (block.saving) {
+                          <sd-icon class="sd-scheduler__sync" name="sync" size="14px" aria-hidden="true" />
+                        }
+                        @if (block.resizable) {
+                          <div
+                            class="sd-scheduler__resize"
+                            data-resize-handle
+                            aria-hidden="true"
+                            (mousedown)="$event.stopPropagation()"
+                            (touchstart)="$event.stopPropagation()"
+                            (pointerdown)="onResizeDown($event, block)"
+                            (pointermove)="onResizeMove($event)"
+                            (pointerup)="onResizeUp($event)"
+                            (pointercancel)="onResizeCancel()"></div>
+                        }
+                      </div>
+                      @if (resizeLabel(block); as _resize) {
+                        <span
+                          class="sd-scheduler__label sd-scheduler__label--resize"
+                          data-resize-label
+                          aria-hidden="true"
+                          [attr.data-flip]="_resize.end ? true : null"
+                          [style.inset-inline-start]="_resize.start"
+                          [style.inset-inline-end]="_resize.end"
+                          [style.top]="_resize.top">
+                          {{ _resize.text }}
+                        </span>
+                      }
+                    }
+                    @if (_proposal && !_proposal.outside && !_proposal.onGroup && _proposal.target.resourceId === row.resource.id) {
+                      @let _drop = proposalBox(_proposal);
+                      <div
+                        class="sd-scheduler__proposal"
+                        data-drag-proposal
+                        aria-hidden="true"
+                        [attr.data-blocked]="_proposal.blocked || null"
+                        [style.inset-inline-start]="_drop.start"
+                        [style.inline-size]="_drop.size"
+                        [style.top.px]="row.height > 48 ? 6 : 10">
+                        <span class="sd-scheduler__label" data-drag-label [attr.data-flip]="_proposal.flip || null">{{ _proposal.label }}</span>
+                      </div>
+                    }
+                    @if (_ghost && _ghost.resourceId === row.resource.id) {
+                      @let _box = ghostBox(_ghost);
+                      <div
+                        class="sd-scheduler__ghost"
+                        data-create-ghost
+                        aria-hidden="true"
+                        [attr.data-pending]="_ghost.pending || null"
+                        [attr.data-blocked]="_ghost.blocked || null"
+                        [style.inset-inline-start]="_box.start"
+                        [style.inline-size]="_box.size">
+                        <span class="sd-scheduler__event-title">{{ 'core.component.calendar.new-event' | sdTranslate }}</span>
+                        @if (_box.time) {
+                          <span class="sd-scheduler__event-time">{{ _box.time }}</span>
+                        }
+                        @if (_ghost.pending) {
+                          <sd-icon class="sd-scheduler__sync" name="sync" size="14px" aria-hidden="true" />
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            }
+            @if (nowOffset(); as _now) {
+              <div class="sd-scheduler__now" data-now aria-hidden="true" [style.--sd-scheduler-now-offset]="_now"></div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>
