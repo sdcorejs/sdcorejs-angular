@@ -308,7 +308,7 @@ A `required` field is always on the bar (it implies `pinned`), and once its chip
 
 - Its operators never include `NULL` / `NOT_NULL`.
 - A single-value select is `required` and not clearable; picking the selected item again does not clear it.
-- A multi-value select keeps its previous values when a change would empty it, and shows `required-min-one` under the control (`aria-live="polite"`, referenced by `aria-describedby`).
+- A multi-value select keeps its previous values when a change would empty it, and shows `required-min-one` (`aria-live="polite"`) under the control in the popover, beside the chip in inline mode. It is referenced by the `aria-describedby` of the popover body or of the inline chip — `sd-select` takes no `aria-describedby` of its own.
 - Text, number, date, datetime and `BETWEEN` values that are cleared get their previous value back when the popover closes or the inline chip loses focus (`BETWEEN` needs one end).
 - With `applyOn: 'commit'`, a required chip is never dropped.
 - `clearAll()` keeps the chip as it is; `onApplyFilter()` keeps it unless the saved filter has a value for it.

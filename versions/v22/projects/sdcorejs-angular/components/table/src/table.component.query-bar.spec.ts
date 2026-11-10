@@ -722,6 +722,33 @@ describe('SdTable filter.mode query-bar', () => {
       expect(bar().invalidFields()).toEqual([]);
       expect(clearButton().disabled).toBeTrue();
     }));
+
+    it('QB-T-03 keeps the value of a required quick filter that is hidden (no chip)', fakeAsync(() => {
+      const option = buildOption();
+      Object.assign(option.filter!.quickSearch!.filters![0], { required: true, hidden: true });
+      mount(option);
+      expect(
+        bar()
+          .filters()
+          .some(filter => (filter as { field?: string }).field === 'quick:warehouseId')
+      )
+        .withContext('a hidden quick filter has no chip')
+        .toBeFalse();
+      // A hidden filter gets its value from code, not from the bar.
+      const register = table.filterRegister;
+      const current = register.value.get();
+      register.value.set({
+        ...current,
+        quickSearch: { ...current.quickSearch!, filters: { ...current.quickSearch!.filters, warehouseId: 'hn' } },
+      });
+      settle();
+      commit('column:total', { data: 5 });
+      const clearButton = () => el().querySelector('sd-query-bar .c-clear-all') as HTMLButtonElement;
+      clearButton().click();
+      settle();
+      expect(table.getFilterRequest().rawColumnFilter['total' as never]).toBeUndefined();
+      expect(table.quickSearchValue().filters['warehouseId']).toBe('hn');
+    }));
   });
 
   describe('cache', () => {

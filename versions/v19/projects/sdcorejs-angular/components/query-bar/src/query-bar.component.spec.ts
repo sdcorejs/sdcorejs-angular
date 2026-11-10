@@ -4,6 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { SdDate } from '@sdcorejs/angular/forms/date';
+import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
+import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Operator } from '@sdcorejs/utils/models';
 
@@ -1919,6 +1922,55 @@ describe('SdQueryBar (host options)', () => {
         expect((component.filters()[0] as any).data).toEqual({ from: 1, to: 9 });
         component.onInlineRange(0, { from: null, to: null });
         expect((component.filters()[0] as any).data).toEqual({ from: 1, to: 9 });
+      });
+
+      describe('QB-B-03 inline date chips show the previous value again (R2 B-1)', () => {
+        const day = new Date(2026, 10, 9);
+        const inline = async (field: SdQueryField, filter: object): Promise<void> => {
+          fixture.componentRef.setInput('mode', 'inline');
+          fixture.componentRef.setInput('fields', [field]);
+          component.filters.set([{ field: field.key, ...filter } as any]);
+          fixture.detectChanges();
+          await fixture.whenStable();
+        };
+        const settle = async (): Promise<void> => {
+          fixture.detectChanges();
+          await fixture.whenStable();
+          fixture.detectChanges();
+        };
+
+        it('QB-B-03 date: clearing the date keeps the filter and the control shows the date again', async () => {
+          await inline(joined, { operator: 'EQUAL', data: day });
+          const date = fixture.debugElement.query(By.directive(SdDate)).componentInstance as SdDate;
+          date.formControl.setValue(null);
+          await settle();
+          expect((component.filters()[0] as any).data).toBe(day);
+          expect(date.valueModel()).withContext('model').toBeTruthy();
+          expect(date.formControl.value).withContext('control').toBeTruthy();
+        });
+
+        it('QB-B-03 datetime: clearing the date and time keeps the filter and the control shows it again', async () => {
+          const moment = new Date(2026, 10, 9, 10, 30);
+          await inline(at, { operator: 'EQUAL', data: moment });
+          const datetime = fixture.debugElement.query(By.directive(SdDatetime)).componentInstance as SdDatetime;
+          datetime.formControl.setValue(null);
+          await settle();
+          expect((component.filters()[0] as any).data).toBe(moment);
+          expect(datetime.valueModel()).withContext('model').toBeTruthy();
+          expect(datetime.formControl.value).withContext('control').toBeTruthy();
+        });
+
+        it('QB-B-03 BETWEEN dates: clearing the range keeps the filter and the control shows both ends again', async () => {
+          const range = { from: day, to: new Date(2026, 10, 12) };
+          await inline(joined, { operator: 'BETWEEN', data: range });
+          const control = fixture.debugElement.query(By.directive(SdDateRange)).componentInstance as SdDateRange;
+          control.clear();
+          await settle();
+          expect((component.filters()[0] as any).data).toBe(range);
+          expect(control.valueModel()?.from).withContext('model from').toBeTruthy();
+          expect(control.control1.value).withContext('control from').toBeTruthy();
+          expect(control.control2.value).withContext('control to').toBeTruthy();
+        });
       });
     });
 
