@@ -8,7 +8,18 @@ Gói `schedule-kanban` có ba PR. Không PR nào được tag, publish hay bump 
 | 2 · sd-kanban API mới (breaking) | `feat/kanban-api` | [#142](https://github.com/sdcorejs/sdcorejs-angular/pull/142) đã merge vào `main`. | Các mục "Kanban: cần PD chốt" dưới đây. |
 | 3 · sd-scheduler | `feat/sd-scheduler` (nhánh local `feat/scheduler`, cắt lại từ `main`) | Draft PR `feat(scheduler): thêm sd-scheduler`. Qua G0, CP1–CP6, R1, G-final, R2 (2 reviewer), R2' và xác nhận R2'': cả hai reviewer "Được mở PR". | Review PR; chốt các mục "Scheduler: cần PD chốt"; merge khi đồng ý. |
 
-Còn cổng RX (review chéo ba component, `REVIEW.md` mục 4): chưa làm. Ghi chú cho RX: vùng chạm 44px của calendar khi hẹp, fallback `--sd-shadow-*` (SC-43), helper E2E chung (`schedule.support.ts` theo Bước 0 H9 chưa tạo).
+RX (review chéo ba component, `REVIEW.md` mục 4) đã xong: `reviews/cross-RX.md` (0 Chặn, 5 Nên sửa, 18 Ghi chú), phản hồi `reviews/cross-RX-author.md`. Sửa trên #146: focus SC-30 dùng chung (#4), vùng chạm 44px của calendar khi hẹp (#1), chữ "Bỏ qua" của kanban (#3), helper E2E chung `showcase/e2e/components/schedule.support.ts` (#5).
+
+## RX: cần PD chốt
+| Mục | Câu hỏi |
+| --- | --- |
+| #2 | `Alt` + `Shift` + mũi tên (đổi giờ kết thúc): `request.source` là `'keyboard'` (calendar) hay `'resize'` (scheduler)? |
+| #6 | SC-31 khi focus đang trên chính item: `move(…, 'api')` ở kanban đưa focus theo thẻ, calendar/scheduler để rơi về `body` khi khối dựng lại. |
+| #7 | Điều kiện bật vùng chạm lớn: `pointer: coarse` (kanban, 40px) hay host < 600px (calendar, scheduler, 44px); nút "+N" 22px của calendar. |
+| #8 | SC-43: fallback màu (kể cả `--sd-shadow-*`) ba component làm ba cách. |
+| #9 | Vùng live thứ hai của `sd-data-state` có ở cả ba component (không chỉ kanban, A-14). |
+| #10 | Key chung "Thử lại" / "Bỏ qua" (hiện mỗi component một cặp key). |
+| #11 | Câu đọc cùng nghĩa khác chữ: "Đang lưu" / "Đang chuyển", "Đã huỷ thay đổi" / "Đã huỷ chuyển {title}", "Đã dời" / "Đã chuyển". |
 
 ## Scheduler: cần PD chốt
 | Mục | Câu hỏi | Hiện trạng |
