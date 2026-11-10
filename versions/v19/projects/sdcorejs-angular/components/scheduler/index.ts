@@ -1,3 +1,4 @@
+export * from './src/scheduler.component';
 export type * from './src/scheduler.model';
 export {
   SdSchedulerCellTemplateDirective,
