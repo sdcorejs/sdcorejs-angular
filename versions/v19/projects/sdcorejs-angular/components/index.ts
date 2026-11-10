@@ -33,6 +33,7 @@ export * from '@sdcorejs/angular/components/job-progress';
 export * from '@sdcorejs/angular/components/audit-diff';
 export * from '@sdcorejs/angular/components/ckeditor-styles';
 export * from '@sdcorejs/angular/components/calendar';
+export * from '@sdcorejs/angular/components/scheduler';
 export * from '@sdcorejs/angular/components/timeline';
 export * from '@sdcorejs/angular/components/operator';
 export * from '@sdcorejs/angular/components/stepper';
