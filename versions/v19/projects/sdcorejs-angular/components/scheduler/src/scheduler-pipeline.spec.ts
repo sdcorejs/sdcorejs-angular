@@ -715,7 +715,7 @@ describe('SdScheduler · move pipeline', () => {
     );
 
     it(
-      '[SCH-C-10] shows the floating label while resizing, before the block when the day has no room after it',
+      '[SCH-B-30] [SCH-C-10] shows the floating label while resizing, before the block when the day has no room after it',
       run(() => {
         const rendered = render({});
         const { host, fixture, scheduler, settle } = rendered;
@@ -743,7 +743,7 @@ describe('SdScheduler · move pipeline', () => {
     );
 
     it(
-      '[SCH-C-06] puts the drag label before the proposal in the last column of the week',
+      '[SCH-B-31] [SCH-C-06] puts the drag label before the proposal in the last column of the week',
       run(() => {
         const rendered = render({}, { view: 'week' });
         const { host, fixture } = rendered;

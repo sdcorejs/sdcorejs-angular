@@ -163,7 +163,7 @@ describe('SdScheduler · compact, touch, cell template and media', () => {
     );
 
     it(
-      '[SCH-SC-28] emits sdCellSelect while readonly, not while disabled; neither creates',
+      '[SCH-B-33] [SCH-SC-28] emits sdCellSelect while readonly, not while disabled; neither creates',
       run(() => {
         const { fixture, host, settle } = mount();
         const cell = (resourceId: string, date: string): HTMLElement =>

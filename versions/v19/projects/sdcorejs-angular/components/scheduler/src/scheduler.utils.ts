@@ -31,6 +31,8 @@ export interface SdSchedulerLaneItem {
   readonly start: number;
   readonly end: number;
   readonly allDay: boolean;
+  /** Week and month: the start instant, so timed blocks of one day keep the order of their start time (§8.4 step 2). */
+  readonly at?: number;
 }
 
 export interface SdSchedulerLaneLayout {
@@ -89,13 +91,19 @@ export function sdSchedulerColumns(days: readonly string[], view: SdSchedulerVie
 }
 
 /**
- * Lanes of one resource row (§8.4): sorted by start, all-day first on a tie, then the longer first; each item takes
- * the first lane whose last end is at or before its start, otherwise a new lane.
+ * Lanes of one resource row (§8.4): sorted by start, all-day first on a tie, then by `at`, then the longer first; each
+ * item takes the first lane whose last end is at or before its start, otherwise a new lane.
  */
 export function sdSchedulerLanes(items: readonly SdSchedulerLaneItem[]): SdSchedulerLaneLayout {
   const sorted = items
     .map((item, index) => ({ item, index }))
-    .sort((a, b) => a.item.start - b.item.start || Number(b.item.allDay) - Number(a.item.allDay) || b.item.end - a.item.end);
+    .sort(
+      (a, b) =>
+        a.item.start - b.item.start ||
+        Number(b.item.allDay) - Number(a.item.allDay) ||
+        (a.item.at ?? 0) - (b.item.at ?? 0) ||
+        b.item.end - a.item.end
+    );
   const ends: number[] = [];
   const order = sorted.map(({ item, index }) => {
     let lane = ends.findIndex(end => end <= item.start);
@@ -216,12 +224,4 @@ export function sdSchedulerRowAt(rows: readonly SdSchedulerHitRow[], y: number):
     else return row;
   }
   return null;
-}
-
-/** Column under `x` along the inline axis, `edges` being the `count + 1` column boundaries; kept in the columns. */
-export function sdSchedulerColumnAt(edges: readonly number[], x: number): number {
-  const count = edges.length - 1;
-  if (count <= 0) return 0;
-  for (let column = 0; column < count; column++) if (x < edges[column + 1]) return column;
-  return count - 1;
 }

@@ -2,7 +2,6 @@ import { ɵsdCalendarPlace, type ɵSdCalendarPlacement } from '@sdcorejs/angular
 import { clockFor } from '../../../testing/schedule-testing';
 import type { SdSchedulerResource } from './scheduler.model';
 import {
-  sdSchedulerColumnAt,
   sdSchedulerColumnBox,
   sdSchedulerColumns,
   sdSchedulerColumnSpan,
@@ -248,11 +247,6 @@ describe('sd-scheduler utils', () => {
       expect(sdSchedulerRowAt(rows, 152)).toBeNull();
       expect(sdSchedulerRowAt(rows, -1)).toBeNull();
       expect(sdSchedulerRowAt([], 5)).toBeNull();
-      const edges = [0, 100, 200, 300];
-      expect(sdSchedulerColumnAt(edges, -10)).toBe(0);
-      expect(sdSchedulerColumnAt(edges, 150)).toBe(1);
-      expect(sdSchedulerColumnAt(edges, 999)).toBe(2);
-      expect(sdSchedulerColumnAt([0], 5)).toBe(0);
     });
   });
 });
