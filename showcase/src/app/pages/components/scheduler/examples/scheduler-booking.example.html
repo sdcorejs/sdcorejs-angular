@@ -1,12 +1,58 @@
-<div class="scheduler-example__switches">
-  <button type="button" class="scheduler-example__switch" data-testid="scheduler-perf" [attr.aria-pressed]="perf()" (click)="togglePerf()">
-    150 tài nguyên × 31 ngày
-  </button>
+<div class="scheduler-controls">
+  <sd-button type="outline" [title]="'view: ' + view()" autoId="booking-view" (click)="cycleView()" />
+  <sd-button type="outline" [title]="'step: ' + step()" (click)="cycleStep()" />
+  <sd-button type="outline" [title]="'hideWeekends: ' + hideWeekends()" (click)="toggle(hideWeekends)" />
+  <sd-button type="outline" [title]="'workingHours: ' + (withHours() ? 'mặc định' : 'null')" (click)="toggle(withHours)" />
+  <sd-button type="outline" [title]="'holidays: ' + showHolidays()" (click)="toggle(showHolidays)" />
+  <sd-button type="outline" [title]="'dimPast: ' + dimPast()" (click)="toggle(dimPast)" />
+  <sd-button type="outline" [title]="'readonly: ' + readonly()" (click)="toggle(readonly)" />
+  <sd-button type="outline" [title]="'disabled: ' + disabled()" (click)="toggle(disabled)" />
+  <sd-button type="outline" [title]="'nguồn: ' + (server() ? 'server 600ms' : 'client')" autoId="booking-source" (click)="toggle(server)" />
+  <sd-button type="outline" title="onLoad lỗi một lần" autoId="booking-load-error" (click)="failOnce()" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" autoId="booking-mode" (click)="cycleMode()" />
+  <sd-button type="outline" [title]="'resources rỗng: ' + noResources()" autoId="booking-empty" (click)="toggle(noResources)" />
+  <sd-button type="outline" title="150 tài nguyên × 31 ngày" autoId="booking-perf" (click)="togglePerf()" />
 </div>
-<sd-scheduler
-  class="scheduler-example__scheduler"
-  autoId="booking"
-  [option]="option()"
-  [resources]="resources()"
-  [(view)]="view"
-  [(date)]="date" />
+<div class="scheduler-layout">
+  <div class="scheduler-box">
+    <sd-scheduler
+      autoId="booking"
+      [option]="option()"
+      [resources]="resources()"
+      [(view)]="view"
+      [(date)]="date"
+      [step]="step()"
+      [hideWeekends]="hideWeekends()"
+      [workingHours]="workingHours()"
+      [holidays]="holidays()"
+      [dimPast]="dimPast()"
+      [readonly]="readonly()"
+      [disabled]="disabled()"
+      (sdSelect)="selected.set($event); record('sdSelect', $event.id)"
+      (sdRangeChange)="record('sdRangeChange', $event)"
+      (sdMove)="record('sdMove', { id: $event.event.id, to: $event.to, scope: $event.scope, source: $event.source })"
+      (sdMoveError)="record('sdMoveError', { id: $event.request.event.id, reason: $event.reason })"
+      (sdLoadError)="record('sdLoadError', 'error')" />
+    @if (dialog(); as _dialog) {
+      <div class="scheduler-dialog" role="dialog" aria-modal="false" aria-label="Đặt phòng">
+        <p>{{ _dialog.title }} · {{ _dialog.args.start }} → {{ _dialog.args.end }}</p>
+        <sd-button type="fill" color="primary" title="Lưu" autoId="dialog-save" (click)="answer(_dialog.title)" />
+        <sd-button type="outline" title="Đóng" autoId="dialog-close" (click)="answer(null)" />
+      </div>
+    }
+  </div>
+  <aside class="scheduler-side">
+    <h4>Chi tiết</h4>
+    @if (selected(); as _event) {
+      <p class="scheduler-detail">{{ _event.title }}<br />{{ _event.data?.people }} người · {{ _event.data?.host }}</p>
+    } @else {
+      <p class="scheduler-detail">Chọn một lịch đặt.</p>
+    }
+    <h4>Output đã phát</h4>
+    <ol class="scheduler-log" data-testid="scheduler-log">
+      @for (line of log(); track $index) {
+        <li>{{ line }}</li>
+      }
+    </ol>
+  </aside>
+</div>

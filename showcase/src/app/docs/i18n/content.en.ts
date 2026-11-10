@@ -23,11 +23,19 @@ export const EN_PAGE_CONTENT: Readonly<Record<string, DocsContentTranslation>> =
   },
   'components-button': { description: 'Action button with variants, sizes, icons and a loading state.' },
   'components-breadcrumb': { description: 'Static or router-generated breadcrumb with async labels, overflow and semantic navigation.' },
+  'components-calendar': {
+    description:
+      'Month, week, day and agenda calendar: loads by range, creates by click or sweep, moves by drag, edge drag or Alt + arrow keys.',
+  },
   'components-code-editor': { description: 'Source code editor with Prism highlighting and copy support.' },
   'components-data-state': { description: 'Accessible loading, empty, error, forbidden and transparent success presentation.' },
   'components-editor': { description: 'Rich text editor with a CoreUI toolbar, validation and FormGroup binding.' },
   'components-file-explorer': {
     description: 'Google Drive-style file browser: folder tree, list/grid, search, preview, upload/download and a transfer queue.',
+  },
+  'components-scheduler': {
+    description:
+      'Resource scheduler: rooms, vehicles and people as rows; the day by hour, the week and month by day; collapsible groups and moves on two axes.',
   },
   'modules-integrations-generic': { description: 'Dynamic form builder and renderer with drag/drop, conditions and runtime preview.' },
   'components-image-editor': {
@@ -77,7 +85,9 @@ export const EN_PAGE_CONTENT: Readonly<Record<string, DocsContentTranslation>> =
   'components-tab': { description: 'Declarative tabs supporting icons, badges, disabled, closable and lazy content.' },
   'components-tab-router': { description: 'Browser-tab-style router shell that keeps state when switching back and forth between URLs.' },
   'components-table': { description: 'Local/server data table with pagination, filter, selection, commands and export.' },
-  'components-timeline': { description: 'Vertical timeline for comments, field changes and events of a record; grouped by day, loaded by cursor.' },
+  'components-timeline': {
+    description: 'Vertical timeline for comments, field changes and events of a record; grouped by day, loaded by cursor.',
+  },
   'components-tree': { description: 'Static/lazy tree for catalogs and organizations, supporting selection, commands and templates.' },
   'components-upload-file': { description: 'File and image upload with drag and drop, validation, multi-file and preview.' },
   'components-view': { description: 'Read-only label/value pairs for detail pages.' },
@@ -329,6 +339,30 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
       'The buttons below still pass Material icon names; when switching to Lucide, SdIcon maps them automatically through the corresponding aliases.',
   },
   'components/button/example-trang-thai': { title: 'States' },
+  'components/calendar/example-bang-cham-cong-mot-nguoi': {
+    title: "One person's timesheet",
+    description: 'The month cell template replaces the area under the day number with the attendance code read from event.data.',
+  },
+  'components/calendar/example-cot-hep-va-dong-bo-url': {
+    title: 'Narrow column and URL sync',
+    description:
+      'A 400px column on a desktop page still turns compact because the component measures its own width. The URL takes the view from viewChange and the day from dateChange.',
+  },
+  'components/calendar/example-lich-hop-nguon-client': {
+    title: 'Meetings, client source',
+    description:
+      "The switches above change the inputs; the demo dialog returns an event or cancels; onMove accepts, rejects, throws, waits 2 seconds or opens a reason dialog ('cancel' when it closes). The stand-up is recurring: moving it asks for the scope.",
+  },
+  'components/calendar/example-nguon-server': {
+    title: 'Server source',
+    description:
+      'Each load waits 600ms; changing the range quickly cancels the older load. Turn the error on to see the error band, Retry and sdLoadError.',
+  },
+  'components/calendar/example-tao-bang-drawer-doi-co-hoan-tac': {
+    title: 'Create in a drawer, move with undo',
+    description:
+      "onCreate opens a drawer without a route; the dashed block stays until Save or Close. After a move, the toast's Undo button calls move(id, request.from, 'api').",
+  },
   'components/card/example-behavior': {
     description: 'A standalone card defaults to static; inside sd-card-group it defaults to select.',
   },
@@ -587,7 +621,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     description:
       "Chip values: click a value to edit it inline (the panel opens right away, with no separate input box); click outside to return to text. Uses sd-select [viewed]='inline'.",
   },
-  'components/query-bar/example-che-do-popover': { title: 'Popover mode' },
+  'components/query-bar/example-che-do-popover': {
+    title: 'Popover mode',
+    description:
+      'The + button opens the field list; clicking a chip opens a popover to edit its operator and value, and the value is written when it closes (Esc, a click outside, Tab out). The bookmark button saves the current filter, applies a saved one and deletes with Undo.',
+  },
   'components/query-builder/example-bat-dau-trong-dung-tu-dau': {
     title: 'Start empty (build from scratch)',
     description:
@@ -615,6 +653,24 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   },
   'components/quick-action/example-bulk-action-nhieu-dong': { title: 'Bulk action - multiple rows' },
   'components/quick-action/example-thong-bao-trang-thai': { title: 'Status notifications' },
+  'components/scheduler/example-cham-cong': {
+    title: 'Timesheet',
+    description:
+      'The cell template replaces blocks with the attendance code (X worked, P leave, CT business trip); no dragging. Click a cell with a code to emit sdCellSelect.',
+  },
+  'components/scheduler/example-dat-phong-hop': {
+    title: 'Meeting room booking',
+    description:
+      'Rooms are grouped by floor; click a group row to collapse it. Dragging a meeting to a room with fewer seats than people blocks that row. Sweep along one row to book; the demo dialog returns the booking or cancels. The 150 resources × 31 days button builds a heavy month to measure performance.',
+  },
+  'components/scheduler/example-nghi-phep-phong-ban': {
+    title: 'Department leave',
+    description: 'A leave moves along the days only, never to another person; Alt + ↑ ↓ does nothing.',
+  },
+  'components/scheduler/example-xe-giao-hang': {
+    title: 'Delivery vehicles',
+    description: 'A trip within one day is a timed block, a trip over several days an all-day bar; drag to change the vehicle or the day.',
+  },
   'components/section/example-icon-shape': {
     description:
       'Default is a square with 8px radius (token --sd-icon-shape-radius). circle keeps the old round style; none removes the background and keeps the box size.',
@@ -868,7 +924,8 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   },
   'components/timeline/example-nhat-ky-cap-nhat': {
     title: 'Change log',
-    description: 'Old values are struck through, empty values show a dash and statuses show as badges; rows from the fourth on fold into +N more changes.',
+    description:
+      'Old values are struck through, empty values show a dash and statuses show as badges; rows from the fourth on fold into +N more changes.',
   },
   'components/timeline/example-rong': { title: 'Empty' },
   'components/timeline/example-tac-vu-cua-binh-luan': {

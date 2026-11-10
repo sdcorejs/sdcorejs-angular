@@ -1,3 +1,4 @@
+import type { SdCalendarHoliday } from '@sdcorejs/angular/components/calendar';
 import type { SdSchedulerEvent, SdSchedulerResource } from '@sdcorejs/angular/components/scheduler';
 
 // Sample data of the Scheduler page: the rooms, vehicles, people and timesheet of the design file (Monday 09/11/2026).
@@ -35,7 +36,7 @@ export function demoBookings(day = DEMO_DAY): BookingEvent[] {
     {
       id: 'budget',
       title: 'Review ngân sách Q4',
-      resourceId: 'hue',
+      resourceId: 'sa-pa',
       start: at(day, '09:00'),
       end: at(day, '10:30'),
       color: 'warning',
@@ -51,10 +52,144 @@ export function demoBookings(day = DEMO_DAY): BookingEvent[] {
       data: { people: 5, host: 'Hà' },
     },
     { id: 'design', title: 'Thiết kế màn hình đặt phòng', resourceId: 'sa-pa', start: at(day, '13:30'), end: at(day, '15:00'), data: { people: 9, host: 'Tú' } },
-    { id: 'one-on-one', title: '1:1 với Minh', resourceId: 'can-tho', start: at(day, '14:00'), end: at(day, '14:30'), color: 'info', data: { people: 2, host: 'Lan' } },
+    { id: 'one-on-one', title: '1:1 với Minh', resourceId: 'sa-pa', start: at(day, '11:00'), end: at(day, '11:30'), color: 'info', data: { people: 2, host: 'Lan' } },
+    { id: 'interview', title: 'Phỏng vấn ứng viên', resourceId: 'can-tho', start: at(day, '14:00'), end: at(day, '15:00'), data: { people: 3, host: 'Hà' } },
     { id: 'training', title: 'Đào tạo nhân viên mới', resourceId: 'da-lat', start: at(day, '13:00'), end: at(day, '17:00'), color: 'secondary', data: { people: 10, host: 'Phong' } },
     { id: 'town-hall', title: 'Họp toàn công ty', resourceId: 'hall', start: at(day, '15:30'), end: at(day, '17:00'), color: 'error', data: { people: 90, host: 'CEO' } },
   ];
+}
+
+export const DEMO_HOLIDAYS: readonly SdCalendarHoliday[] = [
+  { date: '2026/11/20', label: 'Ngày Nhà giáo Việt Nam', type: 'observance' },
+  { date: '2026/11/13', label: 'Nghỉ bù (demo)', type: 'off' },
+];
+
+/** Resolves after `ms`, rejects when `signal` aborts. */
+export const delay = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    });
+  });
+
+// ---- vehicles: week view, grouped by depot ----
+
+export interface VehicleDto {
+  readonly plate: string;
+}
+
+export interface TripDto {
+  readonly stops: number;
+}
+
+export function demoVehicles(): SdSchedulerResource<VehicleDto>[] {
+  return [
+    { id: 'truck-1', title: 'Xe tải 51C-123.45', description: '2,5 tấn', icon: 'local_shipping', group: 'Kho Thủ Đức', data: { plate: '51C-123.45' } },
+    { id: 'truck-2', title: 'Xe tải 51C-678.90', description: '5 tấn', icon: 'local_shipping', group: 'Kho Thủ Đức', data: { plate: '51C-678.90' } },
+    { id: 'van-1', title: 'Xe van 51D-246.80', description: '900 kg', icon: 'airport_shuttle', group: 'Kho Thủ Đức', data: { plate: '51D-246.80' } },
+    { id: 'truck-3', title: 'Xe tải 51C-135.79', description: '2,5 tấn', icon: 'local_shipping', group: 'Kho Bình Tân', data: { plate: '51C-135.79' } },
+    { id: 'bike-1', title: 'Xe máy 59X-111.22', description: 'Giao nhanh', icon: 'two_wheeler', group: 'Kho Bình Tân', data: { plate: '59X-111.22' } },
+  ];
+}
+
+export function demoTrips(): SdSchedulerEvent<TripDto>[] {
+  return [
+    { id: 'trip-1', title: 'Giao Quận 1', resourceId: 'truck-1', start: at('2026/11/09', '07:30'), end: at('2026/11/09', '11:00'), data: { stops: 12 } },
+    { id: 'trip-2', title: 'Giao Quận 7', resourceId: 'truck-1', start: at('2026/11/10', '13:00'), end: at('2026/11/10', '17:00'), color: 'info', data: { stops: 9 } },
+    { id: 'trip-3', title: 'Chuyến Đà Lạt', resourceId: 'truck-2', start: '2026/11/10', end: '2026/11/12', allDay: true, color: 'warning', data: { stops: 4 } },
+    { id: 'trip-4', title: 'Bảo dưỡng', resourceId: 'van-1', start: '2026/11/12', end: '2026/11/12', allDay: true, color: 'secondary', data: { stops: 0 } },
+    { id: 'trip-5', title: 'Giao Thủ Đức', resourceId: 'van-1', start: at('2026/11/09', '08:00'), end: at('2026/11/09', '12:00'), color: 'success', data: { stops: 15 } },
+    { id: 'trip-6', title: 'Chuyến Cần Thơ', resourceId: 'truck-3', start: '2026/11/11', end: '2026/11/14', allDay: true, color: 'warning', data: { stops: 6 } },
+    { id: 'trip-7', title: 'Giao Bình Chánh', resourceId: 'truck-3', start: at('2026/11/09', '09:00'), end: at('2026/11/09', '15:00'), data: { stops: 10 } },
+    { id: 'trip-8', title: 'Đơn hoả tốc', resourceId: 'bike-1', start: at('2026/11/10', '10:00'), end: at('2026/11/10', '11:00'), color: 'error', data: { stops: 3 } },
+  ];
+}
+
+// ---- leave: month view, avatars, axis 'time' ----
+
+export interface PersonDto {
+  readonly role: string;
+}
+
+export interface LeaveDto {
+  readonly kind: 'annual' | 'sick' | 'remote';
+}
+
+export function demoPeople(): SdSchedulerResource<PersonDto>[] {
+  const person = (id: string, title: string, role: string, group: string): SdSchedulerResource<PersonDto> => ({
+    id,
+    title,
+    description: role,
+    // sd-avatar draws the initials of a name.
+    avatar: title,
+    group,
+    data: { role },
+  });
+  return [
+    person('an', 'Nguyễn Văn An', 'Trưởng nhóm', 'Phòng Kỹ thuật'),
+    person('bich', 'Trần Thị Bích', 'Lập trình viên', 'Phòng Kỹ thuật'),
+    person('hoang', 'Lê Minh Hoàng', 'Kiểm thử', 'Phòng Kỹ thuật'),
+    person('quynh', 'Phạm Quỳnh Anh', 'Kinh doanh', 'Phòng Kinh doanh'),
+    person('tuan', 'Đỗ Anh Tuấn', 'Kinh doanh', 'Phòng Kinh doanh'),
+  ];
+}
+
+export function demoLeaves(): SdSchedulerEvent<LeaveDto>[] {
+  const leave = (id: string, resourceId: string, from: string, to: string, kind: LeaveDto['kind']): SdSchedulerEvent<LeaveDto> => ({
+    id,
+    title: kind === 'annual' ? 'Nghỉ phép năm' : kind === 'sick' ? 'Nghỉ ốm' : 'Làm từ xa',
+    resourceId,
+    start: from,
+    end: to,
+    allDay: true,
+    color: kind === 'annual' ? 'primary' : kind === 'sick' ? 'error' : 'info',
+    data: { kind },
+  });
+  return [
+    leave('leave-1', 'an', '2026/11/16', '2026/11/18', 'annual'),
+    leave('leave-2', 'bich', '2026/11/05', '2026/11/05', 'sick'),
+    leave('leave-3', 'bich', '2026/11/23', '2026/11/27', 'annual'),
+    leave('leave-4', 'hoang', '2026/11/10', '2026/11/11', 'remote'),
+    leave('leave-5', 'quynh', '2026/11/02', '2026/11/06', 'annual'),
+    leave('leave-6', 'tuan', '2026/11/19', '2026/11/19', 'sick'),
+  ];
+}
+
+// ---- timesheet: month view, cell template ----
+
+export interface ShiftDto {
+  /** X: worked, P: paid leave, CT: business trip. */
+  readonly code: 'X' | 'P' | 'CT';
+}
+
+export function demoStaff(): SdSchedulerResource<PersonDto>[] {
+  return demoPeople()
+    .slice(0, 4)
+    .map(person => ({ ...person, group: undefined }));
+}
+
+/** One entry per working day of November 2026, a few as leave or business trip. */
+export function demoShifts(): SdSchedulerEvent<ShiftDto>[] {
+  const shifts: SdSchedulerEvent<ShiftDto>[] = [];
+  const special: Record<string, ShiftDto['code']> = {
+    'bich/2026/11/05': 'P',
+    'quynh/2026/11/03': 'CT',
+    'quynh/2026/11/04': 'CT',
+    'an/2026/11/16': 'P',
+    'an/2026/11/17': 'P',
+  };
+  for (const person of demoStaff()) {
+    for (let date = 2; date <= 30; date++) {
+      const day = `2026/11/${String(date).padStart(2, '0')}`;
+      const weekday = (date - 2) % 7; // 2026/11/02 is a Monday: 0 Monday … 6 Sunday.
+      if (weekday > 4 || day > '2026/11/20') continue;
+      const code = special[`${person.id}/${day}`] ?? 'X';
+      shifts.push({ id: `${person.id}-${day}`, title: code, resourceId: person.id, start: day, end: day, allDay: true, data: { code } });
+    }
+  }
+  return shifts;
 }
 
 /** 150 resources in 10 groups, three events each over a 31-day month: the load of TESTING §10. */

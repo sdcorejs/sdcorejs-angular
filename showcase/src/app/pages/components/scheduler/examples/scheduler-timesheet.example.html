@@ -1,0 +1,15 @@
+<div class="scheduler-box">
+  <sd-scheduler autoId="timesheet" view="month" date="2026/11/09" resourceLabel="Nhân viên" [views]="['month']" [option]="option" [resources]="staff" (sdCellSelect)="pick($event)">
+    <ng-template sdSchedulerResourceTemplate let-resource>
+      <span class="scheduler-person">
+        <span class="scheduler-person__name">{{ resource.title }}</span>
+        <span class="scheduler-person__total" data-total>{{ totals.get(resource.id) }} công</span>
+      </span>
+    </ng-template>
+    <ng-template sdSchedulerCellTemplate let-events="events" let-off="off">
+      @let _code = codeOf(events);
+      <span class="scheduler-code" [attr.data-code]="_code || null" [class.scheduler-code--off]="off && !_code">{{ _code || (off ? '–' : '') }}</span>
+    </ng-template>
+  </sd-scheduler>
+</div>
+<p class="scheduler-detail" data-testid="timesheet-picked">{{ picked() ?? 'Bấm một ô có mã công.' }}</p>

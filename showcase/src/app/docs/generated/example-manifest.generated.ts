@@ -205,7 +205,10 @@ export type ShowcaseExampleSourceKey =
   | "components/quick-action/example-thong-bao-trang-thai"
   | "components/quick-action/example-trong-container"
   | "components/quick-action/example-undo-toast"
+  | "components/scheduler/example-cham-cong"
   | "components/scheduler/example-dat-phong-hop"
+  | "components/scheduler/example-nghi-phep-phong-ban"
+  | "components/scheduler/example-xe-giao-hang"
   | "components/section/example-basic-info-rows"
   | "components/section/example-collapsible-section"
   | "components/section/example-custom-header-left-right"
@@ -1957,7 +1960,28 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/scheduler",
     sectionId: "example-dat-phong-hop",
     title: "Đặt phòng họp",
-    description: "Phòng nhóm theo tầng, bấm hàng nhóm để thu gọn. Nút 150 tài nguyên × 31 ngày dựng lịch Tháng nặng để đo hiệu năng.",
+    description: "Phòng nhóm theo tầng, bấm hàng nhóm để thu gọn. Kéo cuộc họp sang phòng ít chỗ hơn số người thì hàng đó bị chặn. Quét trên một hàng để đặt phòng; hộp thoại demo trả lịch đặt hoặc huỷ. Nút 150 tài nguyên × 31 ngày dựng lịch Tháng nặng để đo hiệu năng.",
+  },
+  {
+    sourceKey: "components/scheduler/example-xe-giao-hang",
+    pageKey: "components/scheduler",
+    sectionId: "example-xe-giao-hang",
+    title: "Xe giao hàng",
+    description: "Chuyến trong ngày là khối có giờ, chuyến nhiều ngày là thanh cả ngày; kéo để đổi xe hoặc đổi ngày.",
+  },
+  {
+    sourceKey: "components/scheduler/example-nghi-phep-phong-ban",
+    pageKey: "components/scheduler",
+    sectionId: "example-nghi-phep-phong-ban",
+    title: "Nghỉ phép phòng ban",
+    description: "Lượt nghỉ chỉ dời theo ngày, không sang người khác; Alt + ↑ ↓ không làm gì.",
+  },
+  {
+    sourceKey: "components/scheduler/example-cham-cong",
+    pageKey: "components/scheduler",
+    sectionId: "example-cham-cong",
+    title: "Chấm công",
+    description: "Template ô thay khối bằng mã công (X đi làm, P nghỉ phép, CT công tác); không kéo. Bấm ô có mã để phát sdCellSelect.",
   },
   {
     sourceKey: "components/section/example-basic-info-rows",

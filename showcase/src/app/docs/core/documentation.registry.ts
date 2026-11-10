@@ -337,7 +337,7 @@ const COMPONENT_PAGES = [
     publishedDocId: 'components/scheduler/sd-scheduler',
     keywords: ['scheduler', 'resource', 'timeline', 'booking', 'room', 'timesheet', 'shift', 'drag'],
     status: 'stable',
-    demoSectionCount: 1,
+    demoSectionCount: 4,
     loadComponent: () => import('../../pages/components/scheduler/scheduler-demo.component').then(m => m.SchedulerDemoComponent),
   }),
   defineDocPage({
