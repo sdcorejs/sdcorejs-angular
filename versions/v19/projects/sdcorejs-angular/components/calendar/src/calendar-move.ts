@@ -1,8 +1,8 @@
-import { afterNextRender, computed, signal, untracked, type Injector } from '@angular/core';
+import { afterNextRender, computed, effect, signal, untracked, type Injector } from '@angular/core';
 import type { SdCalendarMoveScope, SdCalendarMoveSource, SdCalendarState } from './calendar.model';
 
-// Pieces of the move pipeline (calendar.md §9.5, SHARED-CONTRACT §3) that do not depend on the calendar's layout, so
-// sd-scheduler reuses them through the ɵ exports of the entry point.
+// Pieces of the create and move pipelines (calendar.md §9.2, §9.5, SHARED-CONTRACT §3) that do not depend on the
+// calendar's layout, so sd-scheduler reuses them through the ɵ exports of the entry point.
 
 /** What one `onMove` call ended with. `aborted`: the request was cancelled before or after it answered (SC-15). */
 export type SdCalendarMoveOutcome =
@@ -161,6 +161,102 @@ export class SdCalendarMoveRunner {
     announcer.announce(plan.accept(request));
     if (scope === 'following' || scope === 'all') this.host.reload();
     return true;
+  }
+}
+
+/** One create handed to `SdCalendarCreateRunner`: the span the user picked and what to do with the answer. */
+export interface SdCalendarCreatePlan<A extends object, E> {
+  /** Arguments of `onCreate` without `signal`. */
+  readonly args: A;
+  readonly onCreate: (args: A & { readonly signal: AbortSignal }) => E | void | Promise<E | void>;
+  /** Draws the dashed block as waiting (`true`) or removes it (`false`). */
+  readonly show: (waiting: boolean) => void;
+  /** `onCreate` returned an item: insert and select it. */
+  readonly accept: (created: E) => void;
+}
+
+/** What `SdCalendarCreateRunner` needs from its component. */
+export interface SdCalendarCreateHost {
+  readonly operation: SdCalendarOperation<'create' | 'move'>;
+  readonly announcer: SdCalendarAnnouncer;
+  readonly t: (key: string, params?: Record<string, string | number>) => string;
+  /** Shows the create failure band (`id: null`), or clears the band with `null`. */
+  readonly band: (failure: { readonly id: null; readonly message: string } | null) => void;
+}
+
+/**
+ * The create pipeline after the component's own checks (calendar.md §9.2, SC-14, SC-19 … SC-21): one waiting
+ * operation, the waiting dashed block, `onCreate`, the error band without the error text, and the late answer of an
+ * aborted create dropped (SC-15). Shared by sd-calendar and sd-scheduler.
+ */
+export class SdCalendarCreateRunner {
+  constructor(private readonly host: SdCalendarCreateHost) {}
+
+  async run<A extends object, E>(plan: SdCalendarCreatePlan<A, E>): Promise<void> {
+    const { operation, announcer, t } = this.host;
+    const signal = operation.begin('create');
+    if (!signal) return;
+    this.host.band(null);
+    plan.show(true);
+    let created: E | void;
+    try {
+      created = await plan.onCreate({ ...plan.args, signal });
+    } catch {
+      if (signal.aborted) return;
+      operation.end(signal);
+      plan.show(false);
+      const message = t('core.component.calendar.create-error');
+      this.host.band({ id: null, message });
+      announcer.announce(message);
+      return;
+    }
+    if (signal.aborted) return;
+    operation.end(signal);
+    plan.show(false);
+    if (created) plan.accept(created);
+  }
+}
+
+/**
+ * The scope bar of a recurring move (calendar.md §9.6): it holds the one waiting question and takes the focus on its
+ * first answer when it opens.
+ */
+export class SdCalendarScopeBar {
+  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
+  /** The open question, for the template: `{ title }` or `null`. */
+  readonly asking = this.#asking.asReadonly();
+
+  constructor(host: HTMLElement, injector: Injector) {
+    effect(
+      () => {
+        if (!this.#asking()) return;
+        untracked(() =>
+          afterNextRender(() => host.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), { injector })
+        );
+      },
+      { injector }
+    );
+  }
+
+  /** Opens the bar; resolves with the answer, `null` for Cancel. */
+  ask(title: string): Promise<SdCalendarMoveScope | null> {
+    return new Promise(answer => this.#asking.set({ title, answer }));
+  }
+
+  /** Answers and closes the bar; `null` is Cancel. Nothing happens while the bar is closed. */
+  answer(scope: SdCalendarMoveScope | null): void {
+    const asking = untracked(this.#asking);
+    if (!asking) return;
+    this.#asking.set(null);
+    asking.answer(scope);
+  }
+
+  /** Esc on the bar is Cancel. */
+  onKeydown(domEvent: KeyboardEvent): void {
+    if (domEvent.key !== 'Escape') return;
+    domEvent.preventDefault();
+    domEvent.stopPropagation();
+    this.answer(null);
   }
 }
 

@@ -29,7 +29,15 @@ import { SdCalendarEdgeScroller } from './calendar-edge-scroll';
 import { sdCalendarDateText, sdCalendarFormats, sdCalendarMovedText, sdCalendarTitle, sdCalendarWeekdayLong } from './calendar-format';
 import { SdCalendarHostWidth, SdCalendarMinuteTimer, SdCalendarReporter, sdCalendarIsRtl } from './calendar-host';
 import { SdCalendarLoader } from './calendar-loader';
-import { SdCalendarAnnouncer, SdCalendarFocusKeeper, SdCalendarMoveRunner, SdCalendarOperation, sdCalendarAllows } from './calendar-move';
+import {
+  SdCalendarAnnouncer,
+  SdCalendarCreateRunner,
+  SdCalendarFocusKeeper,
+  SdCalendarMoveRunner,
+  SdCalendarOperation,
+  SdCalendarScopeBar,
+  sdCalendarAllows,
+} from './calendar-move';
 import { SD_CALENDAR_CONFIGURATION, ɵSD_CALENDAR_DEFAULTS } from './calendar.configuration';
 import type {
   SdCalendarDateInput,
@@ -37,7 +45,6 @@ import type {
   SdCalendarHoliday,
   SdCalendarMoveError,
   SdCalendarMoveRequest,
-  SdCalendarMoveScope,
   SdCalendarMoveSource,
   SdCalendarOption,
   SdCalendarRange,
@@ -86,6 +93,7 @@ import {
   sdCalendarResolveWorkingHours,
   sdCalendarSameList,
   sdCalendarMoveTarget,
+  sdCalendarOutOfRange,
   sdCalendarSelectionGone,
   sdCalendarShiftDate,
   sdCalendarShiftDays,
@@ -321,7 +329,7 @@ export class SdCalendar<T = unknown> {
   /** Move waiting for `onMove`: the event is drawn at `target` (§8.3, saving). */
   readonly #moving = signal<{ readonly id: string; readonly target: SdCalendarTarget; readonly saving: boolean } | null>(null);
   /** Scope bar of a recurring event (§9.6); it holds the one waiting operation until answered. */
-  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
+  protected readonly scopeBar = new SdCalendarScopeBar(this.#host.nativeElement, this.#injector);
   readonly #ghost = signal<SdCalendarGhost | null>(null);
   readonly #failure = signal<{ readonly id: string | null; readonly message: string } | null>(null);
   readonly #drag = signal<SdCalendarDragProposal | null>(null);
@@ -333,9 +341,15 @@ export class SdCalendar<T = unknown> {
     announcer: this.#announcer,
     focus: this.#focus,
     t: this.#t,
-    ask: title => new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title, answer })),
+    ask: title => this.scopeBar.ask(title),
     band: failure => this.#failure.set(failure),
     reload: () => this.reload(),
+  });
+  readonly #creator = new SdCalendarCreateRunner({
+    operation: this.#operation,
+    announcer: this.#announcer,
+    t: this.#t,
+    band: failure => this.#failure.set(failure),
   });
   #emittedKey: string | null = null;
   #lastOption: SdCalendarOption<T> | null = null;
@@ -380,7 +394,6 @@ export class SdCalendar<T = unknown> {
   protected readonly ghost = this.#ghost.asReadonly();
   protected readonly dragProposal = this.#drag.asReadonly();
   protected readonly cursor = this.#cursor.asReadonly();
-  protected readonly asking = this.#asking.asReadonly();
   protected readonly scopeMessageId = `${this.baseId}-scope`;
   protected readonly busy = computed(() => this.#loader.phase() === 'loading' || this.#loader.phase() === 'reloading');
   protected readonly skeleton = computed(() => this.#loader.phase() === 'loading' && !this.#loader.everLoaded());
@@ -645,16 +658,6 @@ export class SdCalendar<T = unknown> {
           `workingHours[${weekday}] has a range without both ends or that does not end after it starts; it is ignored.`
         );
       }
-    });
-
-    // §9.6: the scope bar takes the focus on its first answer when it opens.
-    effect(() => {
-      if (!this.#asking()) return;
-      untracked(() =>
-        afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), {
-          injector: this.#injector,
-        })
-      );
     });
 
     // SC-15: turning disabled or readonly on aborts a waiting move.
@@ -1185,21 +1188,6 @@ export class SdCalendar<T = unknown> {
     });
   }
 
-  /** Answer of the scope bar; `null` is Cancel (Esc too). */
-  protected answerScope(scope: SdCalendarMoveScope | null): void {
-    const asking = this.#asking();
-    if (!asking) return;
-    this.#asking.set(null);
-    asking.answer(scope);
-  }
-
-  protected onScopeKeydown(domEvent: KeyboardEvent): void {
-    if (domEvent.key !== 'Escape') return;
-    domEvent.preventDefault();
-    domEvent.stopPropagation();
-    this.answerScope(null);
-  }
-
   async #create(day: string, span: SdCalendarSpan): Promise<void> {
     const create = untracked(this.option).create;
     if (!create || untracked(this.locked) || untracked(this.#operation.busy)) return;
@@ -1209,29 +1197,15 @@ export class SdCalendar<T = unknown> {
     }
     const range = this.#createRange(day, span);
     if (!sdCalendarAllows(create.creatable, range)) return;
-    const signal = this.#operation.begin('create');
-    if (!signal) return;
-    this.#failure.set(null);
-    this.#ghost.set({ day, start: span.start, end: span.end, pending: true, blocked: false });
-    let created: SdCalendarEvent<T> | void;
-    try {
-      created = await create.onCreate({ ...range, signal });
-    } catch {
-      if (signal.aborted) return;
-      this.#operation.end(signal);
-      this.#ghost.set(null);
-      const message = this.#i18n.t('core.component.calendar.create-error');
-      this.#failure.set({ id: null, message });
-      this.#announce(message);
-      return;
-    }
-    if (signal.aborted) return;
-    this.#operation.end(signal);
-    this.#ghost.set(null);
-    if (!created) return;
-    const event = created;
-    this.#loader.items.update(items => [...items, event]);
-    this.selectedId.set(event.id);
+    await this.#creator.run<SdCalendarRange, SdCalendarEvent<T>>({
+      args: range,
+      onCreate: create.onCreate,
+      show: waiting => this.#ghost.set(waiting ? { day, start: span.start, end: span.end, pending: true, blocked: false } : null),
+      accept: event => {
+        this.#loader.items.update(items => [...items, event]);
+        this.selectedId.set(event.id);
+      },
+    });
   }
 
   #createRange(day: string, span: SdCalendarSpan): SdCalendarRange {
@@ -1265,9 +1239,7 @@ export class SdCalendar<T = unknown> {
   #abortMove(): void {
     if (!this.#operation.abort(['move'])) return;
     this.#moving.set(null);
-    const asking = this.#asking();
-    this.#asking.set(null);
-    asking?.answer(null);
+    this.scopeBar.answer(null);
   }
 
   #abortCreate(): void {
@@ -1396,9 +1368,7 @@ export class SdCalendar<T = unknown> {
   }
 
   #outOfRange(day: string): boolean {
-    const min = untracked(this.#minDay);
-    const max = untracked(this.#maxDay);
-    return (!!min && day < min) || (!!max && day > max);
+    return sdCalendarOutOfRange(day, untracked(this.#minDay), untracked(this.#maxDay));
   }
 
   #slotLabel(day: string, minutes: number): string {
