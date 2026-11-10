@@ -258,6 +258,9 @@ describe('SdScheduler · R2 fixes', () => {
     '[SCH-B-03] keeps a selected block under the sticky resource column while scrolling, R2 #3',
     run(() => {
       const { host, settle } = renderScheduler({ selectedId: 'client', scrollTime: '00:00' });
+      // why: elementFromPoint only sees the viewport; in the full suite the reporter above pushes an in-flow host below
+      // it (R2 recheck B-1), so the host is pinned to the top of the viewport as in kanban.interaction.spec.ts.
+      Object.assign(host.style, { position: 'fixed', top: '0px', left: '0px' });
       settle();
       expect(block(host, 'client')!.dataset['selected']).toBe('true');
       const scroller = q(host, '[data-region="scroller"]')!;
@@ -329,6 +332,26 @@ describe('SdScheduler · R2 fixes', () => {
       settle();
       expect(onMove).not.toHaveBeenCalled();
       expect(text(q(host, '[role="status"]'))).toBe(status);
+    })
+  );
+
+  it(
+    '[SCH-B-47] does not select text while sweeping or dragging on a row, R2 recheck M1',
+    run(() => {
+      const { host } = renderScheduler();
+      expect(getComputedStyle(q(host, '[data-track]')!).userSelect).toBe('none');
+    })
+  );
+
+  it(
+    '[SCH-B-48] keeps "13:30–15:30" in reading order in right-to-left, R2 recheck notes',
+    run(() => {
+      const { host } = renderScheduler();
+      host.setAttribute('dir', 'rtl');
+      const time = q(block(host, 'workshop')!, '.sd-scheduler__event-time');
+      expect(time).withContext('a block wide enough for its time').not.toBeNull();
+      const style = getComputedStyle(time!);
+      expect([style.direction, style.unicodeBidi]).toEqual(['ltr', 'isolate']);
     })
   );
 

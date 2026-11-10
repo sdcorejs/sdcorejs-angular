@@ -283,7 +283,7 @@
                     }
                     @if (_cursor?.rowKey === row.key && cursorBox(); as _cursorBox) {
                       <div class="sd-scheduler__cursor" data-cursor aria-hidden="true" [style.inset-inline-start]="_cursorBox.start" [style.inline-size]="_cursorBox.size">
-                        {{ _cursorBox.text }}
+                        <bdi>{{ _cursorBox.text }}</bdi>
                       </div>
                     }
                     @if (skeleton() && skeletonRows().has(row.key)) {
@@ -374,7 +374,7 @@
                           [style.inset-inline-start]="_resize.start"
                           [style.inset-inline-end]="_resize.end"
                           [style.top]="_resize.top">
-                          {{ _resize.text }}
+                          <bdi>{{ _resize.text }}</bdi>
                         </span>
                       }
                     }
@@ -395,7 +395,7 @@
                         @if (_proposal.tier !== 'sm') {
                           <span class="sd-scheduler__event-title">{{ _proposal.title }}</span>
                         }
-                        <span class="sd-scheduler__label" data-drag-label [attr.data-flip]="_proposal.flip || null">{{ _proposal.label }}</span>
+                        <span class="sd-scheduler__label" data-drag-label [attr.data-flip]="_proposal.flip || null"><bdi>{{ _proposal.label }}</bdi></span>
                       </div>
                     }
                     @if (_ghost && _ghost.resourceId === row.resource.id) {
