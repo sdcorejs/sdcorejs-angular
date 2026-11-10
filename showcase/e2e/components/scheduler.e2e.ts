@@ -1,22 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { existsSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { axe, button, cycle, screenshots } from './schedule.support';
 
 // E2E of sd-scheduler on its Showcase page (handoff schedule-kanban, TESTING.md §6.3, §8–§11). The data is the one of
 // SD Scheduler Design.dc.html; the clock is pinned to its "today", Monday 09/11/2026 10:40.
 
-declare global {
-  interface Window {
-    __t0: number;
-    __long: number[];
-    axe: { run: (context: Element) => Promise<{ violations: { id: string; impact: string }[] }> };
-  }
-}
-
-// why: Playwright loads the e2e files as CommonJS here, so __dirname instead of import.meta.url.
-const HERE = __dirname;
-const AXE = resolve(HERE, '../../../versions/v19/node_modules/axe-core/axe.min.js');
-const SHOTS = resolve(HERE, '../../../.sdcorejs/handoff/schedule-kanban/reports/scheduler-screens');
+const { shot } = screenshots('scheduler-screens');
 const PAGE = '/v/latest/components/scheduler/examples';
 /** Today of the design, in the zone of the Showcase (Asia/Ho_Chi_Minh). */
 const NOW = new Date('2026-11-09T10:40:00+07:00');
@@ -90,37 +78,6 @@ async function drag(page: Page, source: Locator, to: { x: number; y: number }, b
 }
 
 const log = (page: Page): Locator => page.getByTestId('scheduler-log');
-const button = (page: Page, autoId: string): Locator => page.locator(`[data-autoid="components-button-${autoId}"]`).first();
-
-async function cycle(page: Page, autoId: string, label: string, tries = 6): Promise<void> {
-  for (let index = 0; index < tries; index++) {
-    const text = (await button(page, autoId).textContent()) ?? '';
-    if (text.includes(label)) return;
-    // why: sd-button throttles clicks for 300ms.
-    await page.waitForTimeout(350);
-    await button(page, autoId).click();
-    await expect(button(page, autoId)).not.toHaveText(text);
-  }
-  throw new Error(`${autoId} never showed ${label}`);
-}
-
-async function axe(page: Page, root: Locator): Promise<void> {
-  if (!existsSync(AXE)) test.skip(true, 'axe-core is not installed in versions/v19');
-  await page.addScriptTag({ path: AXE });
-  const handle = await root.elementHandle();
-  const violations = await page.evaluate(async element => {
-    const result = await window.axe.run(element!);
-    return result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical').map(item => `${item.id} (${item.impact})`);
-  }, handle);
-  expect(violations).toEqual([]);
-}
-
-async function shot(root: Locator, name: string): Promise<void> {
-  // why: every test runs in both zone projects; only the Bangkok run writes the pictures.
-  if (test.info().project.name !== 'asia-bangkok') return;
-  mkdirSync(SHOTS, { recursive: true });
-  await root.screenshot({ path: resolve(SHOTS, `${name}.png`), animations: 'disabled' });
-}
 
 test.describe('sd-scheduler', () => {
   // why: at a 1280px viewport the docs sidebar and contents leave a section under 600px, which is compact for the

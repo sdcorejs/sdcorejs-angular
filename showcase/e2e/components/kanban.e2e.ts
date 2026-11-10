@@ -1,20 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { existsSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { axe, screenshots } from './schedule.support';
 
 // E2E of sd-kanban on its Showcase page (handoff schedule-kanban, TESTING.md §7.4, §8–§10).
 
-declare global {
-  interface Window {
-    __long: number[];
-    axe: { run: (context: Element) => Promise<{ violations: { id: string; impact: string }[] }> };
-  }
-}
-
-// why: Playwright loads the e2e files as CommonJS here, so __dirname instead of import.meta.url.
-const HERE = __dirname;
-const AXE = resolve(HERE, '../../../versions/v19/node_modules/axe-core/axe.min.js');
-const SHOTS = resolve(HERE, '../../../.sdcorejs/handoff/schedule-kanban/reports/kanban-screens');
+const { shot, shotAround } = screenshots('kanban-screens');
 const PAGE = '/v/latest/components/kanban/examples';
 const SECTIONS = { orders: 'orders', tasks: 'tasks', cms: 'cms-mapping', async: 'async-confirmation' } as const;
 
@@ -84,33 +73,6 @@ async function frame(root: Locator, width = 1500): Promise<void> {
       last = window.scrollY;
     }
   }, width);
-}
-
-async function axe(page: Page, root: Locator): Promise<void> {
-  if (!existsSync(AXE)) test.skip(true, 'axe-core is not installed in versions/v19');
-  await page.addScriptTag({ path: AXE });
-  const handle = await root.elementHandle();
-  const violations = await page.evaluate(async element => {
-    const result = await window.axe.run(element!);
-    return result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical').map(item => `${item.id} (${item.impact})`);
-  }, handle);
-  expect(violations).toEqual([]);
-}
-
-async function shot(root: Locator, file: string): Promise<void> {
-  // why: every test runs in both zone projects; only the Bangkok run writes the pictures.
-  if (test.info().project.name !== 'asia-bangkok') return;
-  mkdirSync(SHOTS, { recursive: true });
-  await root.screenshot({ path: resolve(SHOTS, `${file}.png`), animations: 'disabled' });
-}
-
-/** A picture of `target` with a margin, so a focus ring drawn outside the element is in it. */
-async function shotAround(page: Page, target: Locator, file: string, margin = 8): Promise<void> {
-  if (test.info().project.name !== 'asia-bangkok') return;
-  mkdirSync(SHOTS, { recursive: true });
-  const box = (await target.boundingBox())!;
-  const clip = { x: box.x - margin, y: box.y - margin, width: box.width + 2 * margin, height: box.height + 2 * margin };
-  await page.screenshot({ path: resolve(SHOTS, `${file}.png`), animations: 'disabled', clip });
 }
 
 test.describe('sd-kanban', () => {
