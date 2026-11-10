@@ -1,15 +1,27 @@
 import { Component, Injector, NgZone } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { clockFor } from '../../../testing/schedule-testing';
 import { SdCalendarEdgeScroller, sdCalendarEdgeSpeed } from './calendar-edge-scroll';
-import { sdCalendarDateText, sdCalendarFormats, sdCalendarTitle, sdCalendarUtcDay, sdCalendarWeekdayLong } from './calendar-format';
-import { SdCalendarAnnouncer, SdCalendarFocusKeeper } from './calendar-move';
+import {
+  sdCalendarDateText,
+  sdCalendarFormats,
+  sdCalendarMovedText,
+  sdCalendarTitle,
+  sdCalendarUtcDay,
+  sdCalendarWeekdayLong,
+} from './calendar-format';
+import { SdCalendarHostWidth, SdCalendarMinuteTimer, SdCalendarReporter, sdCalendarIsRtl } from './calendar-host';
+import { SdCalendarAnnouncer, SdCalendarFocusKeeper, SdCalendarMoveRunner, SdCalendarOperation } from './calendar-move';
 import {
   sdCalendarBoundDay,
+  sdCalendarBrokenWeekdays,
   sdCalendarCarrierDay,
+  sdCalendarColor,
   sdCalendarCssEscape,
   sdCalendarDaysBetween,
   sdCalendarHolidayMap,
+  sdCalendarInvalidItems,
+  sdCalendarIsOffDay,
   sdCalendarLastDayOf,
   sdCalendarPointOf,
   sdCalendarRangeKey,
@@ -17,6 +29,7 @@ import {
   sdCalendarResolveStep,
   sdCalendarResolveWorkingHours,
   sdCalendarSameList,
+  sdCalendarSelectionGone,
   sdCalendarTargetOf,
 } from './calendar.utils';
 
@@ -51,6 +64,22 @@ describe('sd-calendar shared pieces', () => {
       expect(sdCalendarTitle('range', { anchor: '2026/12/30', from: '2026/12/30', to: '2027/01/02' }, en, t)).toBe(
         'core.component.calendar.title-range|{"from":"Dec 30, 2026","to":"Jan 2, 2027"}'
       );
+    });
+
+    it('[CAL-C-23] words an accepted move as resized or moved', () => {
+      const en = sdCalendarFormats('en-US', 'en');
+      const target = { allDay: false, startDay: '2026/11/09', startMinutes: 600, endMinutes: 660 };
+      const from = { start: '2026/11/09 09:00:00', end: '2026/11/09 10:00:00' };
+      expect(sdCalendarMovedText('A', target, from, { start: '2026/11/09 10:00:00', end: '2026/11/09 11:00:00' }, 'drag', en, t)).toBe(
+        'core.component.calendar.moved|{"title":"A","weekday":"Monday","date":"Nov 9","time":"10:00"}'
+      );
+      expect(sdCalendarMovedText('A', target, from, { start: from.start, end: '2026/11/09 11:00:00' }, 'keyboard', en, t)).toContain(
+        'resized'
+      );
+      expect(sdCalendarMovedText('A', target, from, from, 'resize', en, t)).toContain('resized');
+      expect(
+        sdCalendarMovedText('A', { ...target, allDay: true }, from, { start: '2026/11/10', end: '2026/11/10' }, 'drag', en, t)
+      ).toContain('"time":"core.component.calendar.all-day|{}"');
     });
   });
 
@@ -120,6 +149,113 @@ describe('sd-calendar shared pieces', () => {
       } finally {
         CSS.escape = escape;
       }
+    });
+  });
+
+  describe('data checks', () => {
+    it('[CAL-C-23] refuses bad ids and titles, names colours, finds days off, broken hours and a gone selection', () => {
+      expect(sdCalendarInvalidItems([{ id: 'a', title: 'A' }])).toBeFalse();
+      expect(
+        sdCalendarInvalidItems([
+          { id: 'a', title: 'A' },
+          { id: 'a', title: 'B' },
+        ])
+      ).toBeTrue();
+      expect(sdCalendarInvalidItems([{ id: '', title: 'A' }])).toBeTrue();
+      expect(sdCalendarInvalidItems([{ id: 7, title: 'A' }])).toBeTrue();
+      expect(sdCalendarInvalidItems([{ id: 'a', title: '  ' }])).toBeTrue();
+      expect(sdCalendarInvalidItems([{ id: 'a', title: 9 }])).toBeTrue();
+      expect(sdCalendarColor(undefined)).toEqual({ color: 'primary', customColor: null });
+      expect(sdCalendarColor('warning')).toEqual({ color: 'warning', customColor: null });
+      expect(sdCalendarColor('rebeccapurple')).toEqual({ color: 'custom', customColor: 'rebeccapurple' });
+      const hours = { 1: [{ from: '08:00', to: '17:00' }], 2: [{ from: '10:00', to: '09:00' }] };
+      expect(sdCalendarIsOffDay('2026/11/09', null, hours)).toBeFalse();
+      expect(sdCalendarIsOffDay('2026/11/14', null, hours))
+        .withContext('Saturday has no hours')
+        .toBeTrue();
+      expect(sdCalendarIsOffDay('2026/11/09', { date: '2026/11/09', label: 'Lễ', type: 'off' }, hours)).toBeTrue();
+      expect(sdCalendarIsOffDay('2026/11/09', { date: '2026/11/09', label: 'Lễ', type: 'observance' }, hours)).toBeFalse();
+      expect(sdCalendarIsOffDay('2026/11/14', undefined, null))
+        .withContext('null hours: no days off')
+        .toBeFalse();
+      expect(sdCalendarBrokenWeekdays(hours)).toEqual([2]);
+      expect(sdCalendarBrokenWeekdays(null)).toEqual([]);
+      expect(sdCalendarBrokenWeekdays(undefined)).toEqual([]);
+      expect(sdCalendarBrokenWeekdays({ 3: undefined })).toEqual([]);
+      expect(sdCalendarSelectionGone('a', 'idle', [{ id: 'b' }])).toBeTrue();
+      expect(sdCalendarSelectionGone('a', 'idle', [{ id: 'a' }])).toBeFalse();
+      expect(sdCalendarSelectionGone('a', 'loading', [])).toBeFalse();
+      expect(sdCalendarSelectionGone(null, 'idle', [])).toBeFalse();
+    });
+  });
+
+  describe('host', () => {
+    it('[CAL-C-23] reads the host width once, reports once per key, ticks every minute and reads the direction', fakeAsync(() => {
+      const zone = TestBed.inject(NgZone);
+      const element = document.createElement('div');
+      element.style.width = '320px';
+      document.body.appendChild(element);
+      try {
+        const width = new SdCalendarHostWidth(element, zone);
+        expect(width.width()).toBeNull();
+        width.measureOnce();
+        expect(width.width()).toBe(320);
+        width.measureOnce();
+        width.disconnect();
+        element.dir = 'rtl';
+        expect(sdCalendarIsRtl(element)).toBeTrue();
+      } finally {
+        element.remove();
+      }
+      const warn = spyOn(console, 'warn');
+      const reporter = new SdCalendarReporter('[sd-test]');
+      reporter.report('warn', 'a', 'first');
+      reporter.report('warn', 'a', 'again');
+      expect(warn.calls.allArgs()).toEqual([['[sd-test] first']]);
+      const onTick = jasmine.createSpy('onTick');
+      const timer = new SdCalendarMinuteTimer(zone, onTick);
+      timer.run(true);
+      timer.run(true);
+      tick(60_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+      timer.run(false);
+      tick(60_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+      timer.stop();
+    }));
+  });
+
+  describe('move runner', () => {
+    it('[CAL-SC-14] refuses a move while another operation waits, without calling anything', async () => {
+      const operation = new SdCalendarOperation<'create' | 'move'>();
+      operation.begin('create');
+      const show = jasmine.createSpy('show');
+      const runner = new SdCalendarMoveRunner({
+        operation,
+        announcer: new SdCalendarAnnouncer(),
+        focus: new SdCalendarFocusKeeper(document.body, TestBed.inject(Injector), id => `#${id}`, '.scope'),
+        t: key => key,
+        ask: () => Promise.resolve(null),
+        band: () => undefined,
+        reload: () => undefined,
+      });
+      const onMove = jasmine.createSpy('onMove');
+      const result = await runner.run({
+        id: 'a',
+        title: 'A',
+        recurring: false,
+        source: 'api',
+        keyboard: false,
+        allowed: () => true,
+        request: (scope, signal) => ({ scope, signal }),
+        onMove,
+        show,
+        accept: () => '',
+        fail: () => undefined,
+      });
+      expect(result).toBeFalse();
+      expect(onMove).not.toHaveBeenCalled();
+      expect(show).not.toHaveBeenCalled();
     });
   });
 

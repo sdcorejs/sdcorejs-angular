@@ -1,5 +1,5 @@
 import { afterNextRender, computed, signal, untracked, type Injector } from '@angular/core';
-import type { SdCalendarState } from './calendar.model';
+import type { SdCalendarMoveScope, SdCalendarMoveSource, SdCalendarState } from './calendar.model';
 
 // Pieces of the move pipeline (calendar.md §9.5, SHARED-CONTRACT §3) that do not depend on the calendar's layout, so
 // sd-scheduler reuses them through the ɵ exports of the entry point.
@@ -65,6 +65,101 @@ export class SdCalendarOperation<K extends string> {
     if (!current || (kinds && !kinds.includes(current.kind))) return false;
     current.controller.abort();
     this.#current.set(null);
+    return true;
+  }
+}
+
+/** One move handed to `SdCalendarMoveRunner`: what is specific to the component (calendar.md §9.5, scheduler.md §9.5). */
+export interface SdCalendarMovePlan<R extends { readonly signal: AbortSignal }> {
+  readonly id: string;
+  readonly title: string;
+  /** An occurrence of a series: the scope bar asks first, unless the move comes from `move()` (§9.6). */
+  readonly recurring: boolean;
+  readonly source: SdCalendarMoveSource;
+  /** Started from the keyboard: the focus goes back to the item afterwards (SC-29). */
+  readonly keyboard: boolean;
+  /** The capability flags, evaluated again right before `onMove` (SC-06); `false` stops without a callback. */
+  readonly allowed: () => boolean;
+  readonly request: (scope: SdCalendarMoveScope | null, signal: AbortSignal) => R;
+  readonly onMove: (request: R) => boolean | 'cancel' | void | Promise<boolean | 'cancel' | void>;
+  /** Draws the item at its target: `false` while the scope bar asks, `true` while `onMove` runs, `null` clears. */
+  readonly show: (saving: boolean | null) => void;
+  /** `onMove` accepted: change the data and emit the move output. Returns the text for the live region. */
+  readonly accept: (request: R) => string;
+  /** `onMove` rejected or failed: emit the error output. */
+  readonly fail: (request: R, outcome: { readonly kind: 'rejected' } | { readonly kind: 'error'; readonly error: unknown }) => void;
+}
+
+/** What `SdCalendarMoveRunner` needs from its component. */
+export interface SdCalendarMoveHost {
+  readonly operation: SdCalendarOperation<'create' | 'move'>;
+  readonly announcer: SdCalendarAnnouncer;
+  readonly focus: SdCalendarFocusKeeper;
+  readonly t: (key: string, params?: Record<string, string | number>) => string;
+  /** Opens the scope bar and resolves with the answer; `null` is Cancel. */
+  readonly ask: (title: string) => Promise<SdCalendarMoveScope | null>;
+  /** Shows the failure band of an item, or clears it with `null`. */
+  readonly band: (failure: { readonly id: string; readonly message: string } | null) => void;
+  readonly reload: () => void;
+}
+
+/**
+ * The move pipeline after the component's own checks (calendar.md §9.5 steps 4–6): one waiting operation (SC-14), the
+ * scope bar of an occurrence, the flags once more (SC-06), `onMove` and its five results (SC-09 … SC-13), focus
+ * (SC-29, SC-30) and the live region. Shared by sd-calendar and sd-scheduler.
+ */
+export class SdCalendarMoveRunner {
+  constructor(private readonly host: SdCalendarMoveHost) {}
+
+  async run<R extends { readonly signal: AbortSignal }>(plan: SdCalendarMovePlan<R>): Promise<boolean> {
+    const { operation, announcer, focus, t } = this.host;
+    const signal = operation.begin('move');
+    if (!signal) return false;
+    const origin = plan.keyboard ? document.activeElement : null;
+    let restore = plan.keyboard;
+    let scope: SdCalendarMoveScope | null = plan.recurring ? 'this' : null;
+    if (plan.recurring && plan.source !== 'api') {
+      // The scope bar takes the focus, so it goes back to the item when the bar closes, after a mouse drag too.
+      restore = true;
+      // §9.6: an occurrence waits at the proposal (dashed, no sync icon) until the user picks a scope.
+      plan.show(false);
+      scope = await this.host.ask(plan.title);
+      if (signal.aborted) return false;
+      if (scope === null) {
+        operation.end(signal);
+        plan.show(null);
+        announcer.announce(t('core.component.calendar.cancelled'));
+        focus.restore(plan.id, origin);
+        return false;
+      }
+    }
+    if (!plan.allowed()) {
+      operation.end(signal);
+      plan.show(null);
+      return false;
+    }
+    const request = Object.freeze(plan.request(scope, signal));
+    this.host.band(null);
+    plan.show(true);
+    announcer.announce(t('core.component.calendar.pending', { title: plan.title }));
+    const outcome = await sdCalendarCallMove(plan.onMove, request);
+    if (outcome.kind === 'aborted') return false;
+    operation.end(signal);
+    plan.show(null);
+    if (restore) focus.restore(plan.id, origin);
+    if (outcome.kind === 'cancelled') {
+      announcer.announce(t('core.component.calendar.cancelled'));
+      return false;
+    }
+    if (outcome.kind === 'rejected' || outcome.kind === 'error') {
+      const message = t(`core.component.calendar.${outcome.kind === 'rejected' ? 'rejected' : 'error'}`);
+      this.host.band({ id: plan.id, message });
+      announcer.announce(message);
+      plan.fail(request, outcome);
+      return false;
+    }
+    announcer.announce(plan.accept(request));
+    if (scope === 'following' || scope === 'all') this.host.reload();
     return true;
   }
 }

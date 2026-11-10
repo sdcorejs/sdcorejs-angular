@@ -20,8 +20,15 @@ export {
   type SdCalendarEdgeArea as ɵSdCalendarEdgeArea,
 } from './src/calendar-edge-scroll';
 export {
+  SdCalendarHostWidth as ɵSdCalendarHostWidth,
+  SdCalendarMinuteTimer as ɵSdCalendarMinuteTimer,
+  SdCalendarReporter as ɵSdCalendarReporter,
+  sdCalendarIsRtl as ɵsdCalendarIsRtl,
+} from './src/calendar-host';
+export {
   sdCalendarDateText as ɵsdCalendarDateText,
   sdCalendarFormats as ɵsdCalendarFormats,
+  sdCalendarMovedText as ɵsdCalendarMovedText,
   sdCalendarTitle as ɵsdCalendarTitle,
   sdCalendarUtcDay as ɵsdCalendarUtcDay,
   sdCalendarWeekdayLong as ɵsdCalendarWeekdayLong,
@@ -33,14 +40,22 @@ export { SdCalendarLoader as ɵSdCalendarLoader, type SdCalendarLoadPhase as ɵS
 export {
   SdCalendarAnnouncer as ɵSdCalendarAnnouncer,
   SdCalendarFocusKeeper as ɵSdCalendarFocusKeeper,
+  SdCalendarMoveRunner as ɵSdCalendarMoveRunner,
   SdCalendarOperation as ɵSdCalendarOperation,
+  type SdCalendarMoveHost as ɵSdCalendarMoveHost,
+  type SdCalendarMovePlan as ɵSdCalendarMovePlan,
   sdCalendarAllows as ɵsdCalendarAllows,
   sdCalendarCallMove as ɵsdCalendarCallMove,
   type SdCalendarMoveOutcome as ɵSdCalendarMoveOutcome,
 } from './src/calendar-move';
 export {
   sdCalendarBoundDay as ɵsdCalendarBoundDay,
+  sdCalendarBrokenWeekdays as ɵsdCalendarBrokenWeekdays,
   sdCalendarCarrierDay as ɵsdCalendarCarrierDay,
+  sdCalendarColor as ɵsdCalendarColor,
+  sdCalendarInvalidItems as ɵsdCalendarInvalidItems,
+  sdCalendarIsOffDay as ɵsdCalendarIsOffDay,
+  sdCalendarSelectionGone as ɵsdCalendarSelectionGone,
   sdCalendarCssEscape as ɵsdCalendarCssEscape,
   sdCalendarDaysBetween as ɵsdCalendarDaysBetween,
   sdCalendarHolidayMap as ɵsdCalendarHolidayMap,

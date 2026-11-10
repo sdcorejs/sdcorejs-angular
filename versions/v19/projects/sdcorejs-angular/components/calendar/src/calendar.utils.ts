@@ -612,6 +612,48 @@ export function sdCalendarPointOf(event: MouseEvent | TouchEvent): { x: number; 
   return { x: event.clientX, y: event.clientY };
 }
 
+/** Duplicate, empty or non-string ids, or an empty title: the data set is refused (calendar §5, scheduler §12). */
+export function sdCalendarInvalidItems(items: readonly { readonly id: unknown; readonly title: unknown }[]): boolean {
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (typeof item.id !== 'string' || !item.id || seen.has(item.id) || typeof item.title !== 'string' || !item.title.trim()) return true;
+    seen.add(item.id);
+  }
+  return false;
+}
+
+const PALETTE = new Set(['primary', 'secondary', 'info', 'success', 'warning', 'error']);
+
+/** `data-color` of an item (§8.1): a palette name as is, any other CSS colour as `custom` with the value aside. */
+export function sdCalendarColor(color: string | undefined): { readonly color: string; readonly customColor: string | null } {
+  const value = color ?? 'primary';
+  return PALETTE.has(value) ? { color: value, customColor: null } : { color: 'custom', customColor: value };
+}
+
+/** A day off: an `off` holiday, or a weekday without working hours (never with `null` hours). */
+export function sdCalendarIsOffDay(
+  day: string,
+  holiday: SdCalendarHoliday | null | undefined,
+  hours: SdCalendarWorkingHours | null
+): boolean {
+  if (holiday?.type === 'off') return true;
+  const working = sdCalendarWorkingRanges(hours, sdCalendarWeekday(day));
+  return working !== null && working.length === 0;
+}
+
+/** Weekdays of `hours` with a range that `sdCalendarWorkingRanges` leaves out (a dev-mode warning). */
+export function sdCalendarBrokenWeekdays(hours: SdCalendarWorkingHours | null | undefined): number[] {
+  if (!hours) return [];
+  return Object.entries(hours)
+    .filter(([weekday, ranges]) => sdCalendarWorkingRanges(hours, Number(weekday))!.length !== (ranges ?? []).length)
+    .map(([weekday]) => Number(weekday));
+}
+
+/** SC-27: the selected id is no longer in the loaded items (only once the load settled). */
+export function sdCalendarSelectionGone(selected: string | null, phase: string, items: readonly { readonly id: string }[]): boolean {
+  return selected !== null && phase === 'idle' && !items.some(item => item.id === selected);
+}
+
 /** An id inside an attribute selector. */
 export function sdCalendarCssEscape(value: string): string {
   return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, '\\$&');

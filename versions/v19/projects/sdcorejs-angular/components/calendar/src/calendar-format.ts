@@ -1,4 +1,5 @@
-import { sdCalendarDay, sdCalendarDayParts } from './calendar.utils';
+import type { SdCalendarMoveSource } from './calendar.model';
+import { sdCalendarClockText, sdCalendarDay, sdCalendarDayParts } from './calendar.utils';
 
 // Date names of the toolbar title, the labels and the live region (calendar.md §6, §15), shared with sd-scheduler
 // through the ɵ exports of the entry point so both components name a day the same way.
@@ -104,5 +105,33 @@ export function sdCalendarTitle(
   return t('core.component.calendar.title-range', {
     from: sdCalendarDateText(formats, span.from, a.year !== b.year),
     to: sdCalendarDateText(formats, span.to, true),
+  });
+}
+
+/**
+ * Live-region text of an accepted move (calendar.md §15): "resized" when only the end changed (or the move was a
+ * resize), otherwise "moved" with the new day and time.
+ */
+export function sdCalendarMovedText(
+  title: string,
+  target: { readonly allDay: boolean; readonly startDay: string; readonly startMinutes: number; readonly endMinutes: number },
+  from: { readonly start: string; readonly end: string },
+  to: { readonly start: string; readonly end: string },
+  source: SdCalendarMoveSource,
+  formats: SdCalendarFormats,
+  t: SdCalendarTranslate
+): string {
+  if (source === 'resize' || (from.start === to.start && from.end !== to.end)) {
+    return t('core.component.calendar.resized', {
+      title,
+      start: sdCalendarClockText(target.startMinutes),
+      end: sdCalendarClockText(target.endMinutes),
+    });
+  }
+  return t('core.component.calendar.moved', {
+    title,
+    weekday: sdCalendarWeekdayLong(formats, target.startDay),
+    date: sdCalendarDateText(formats, target.startDay, false),
+    time: target.allDay ? t('core.component.calendar.all-day') : sdCalendarClockText(target.startMinutes),
   });
 }

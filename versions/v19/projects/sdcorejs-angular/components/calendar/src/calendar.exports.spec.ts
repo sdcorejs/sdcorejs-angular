@@ -56,6 +56,17 @@ describe('sd-calendar entry point', () => {
       calendar.ɵSdCalendarAnnouncer,
       calendar.ɵSdCalendarFocusKeeper,
       calendar.ɵSdCalendarEdgeScroller,
+      calendar.ɵSdCalendarMoveRunner,
+      calendar.ɵSdCalendarHostWidth,
+      calendar.ɵSdCalendarMinuteTimer,
+      calendar.ɵSdCalendarReporter,
+      calendar.ɵsdCalendarIsRtl,
+      calendar.ɵsdCalendarMovedText,
+      calendar.ɵsdCalendarInvalidItems,
+      calendar.ɵsdCalendarColor,
+      calendar.ɵsdCalendarIsOffDay,
+      calendar.ɵsdCalendarSelectionGone,
+      calendar.ɵsdCalendarBrokenWeekdays,
     ]) {
       expect(typeof helper).toBe('function');
     }
