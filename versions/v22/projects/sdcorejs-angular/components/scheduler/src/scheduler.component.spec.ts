@@ -165,7 +165,7 @@ describe('SdScheduler · rendering and data source', () => {
     );
 
     it(
-      '[SCH-C-02] clears the grid until the events of new resources arrive, shows the skeleton on the first load',
+      '[SCH-C-02] clears the grid until the events of other resources arrive, shows the skeleton on the first load',
       run(() => {
         const { option, pending } = deferredOption();
         const { fixture, host, settle } = renderScheduler({ option });
@@ -174,7 +174,10 @@ describe('SdScheduler · rendering and data source', () => {
         settle();
         expect(qa(host, '[data-skeleton]').length).toBe(0);
         expect(block(host, 'review')).not.toBeNull();
-        fixture.componentRef.setInput('resources', rooms());
+        fixture.componentRef.setInput(
+          'resources',
+          rooms().filter(room => room.id !== 'da-lat')
+        );
         settle();
         expect(block(host, 'review')).withContext('Step 0 H7').toBeNull();
         expect(q(host, '[role="progressbar"]')).not.toBeNull();
@@ -219,7 +222,10 @@ describe('SdScheduler · rendering and data source', () => {
         action(host, 'next').click();
         settle();
         expect(calls[0].signal.aborted).withContext('range').toBeTrue();
-        fixture.componentRef.setInput('resources', rooms());
+        fixture.componentRef.setInput(
+          'resources',
+          rooms().filter(room => room.id !== 'da-lat')
+        );
         settle();
         expect(calls[1].signal.aborted).withContext('resources').toBeTrue();
         fixture.componentRef.setInput('option', { ...option });

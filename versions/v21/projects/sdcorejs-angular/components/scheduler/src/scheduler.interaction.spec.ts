@@ -212,7 +212,10 @@ describe('SdScheduler · selection and create', () => {
         settle();
         expect(block(host, 'late')).withContext('late result').toBeNull();
         click();
-        fixture.componentRef.setInput('resources', rooms());
+        fixture.componentRef.setInput(
+          'resources',
+          rooms().filter(room => room.id !== 'da-lat')
+        );
         settle();
         expect(calls[1].signal.aborted).withContext('resources').toBeTrue();
         click();

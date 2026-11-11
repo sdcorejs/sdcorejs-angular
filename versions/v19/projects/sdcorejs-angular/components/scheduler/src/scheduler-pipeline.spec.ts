@@ -511,7 +511,11 @@ describe('SdScheduler · move pipeline', () => {
           void scheduler.move('client', { start: '2026/11/09 14:00:00', resourceId: 'hue' });
           settle();
           if (trigger === 'range') q<HTMLButtonElement>(host, '[data-action="next"]')!.click();
-          if (trigger === 'resources') fixture.componentRef.setInput('resources', rooms());
+          if (trigger === 'resources')
+            fixture.componentRef.setInput(
+              'resources',
+              rooms().filter(room => room.id !== 'da-lat')
+            );
           if (trigger === 'option') fixture.componentRef.setInput('option', { ...clientOption(), move: { onMove: () => true } });
           if (trigger === 'reload') scheduler.reload();
           if (trigger === 'readonly') fixture.componentRef.setInput('readonly', true);
@@ -593,6 +597,20 @@ describe('SdScheduler · move pipeline', () => {
         rendered.settle();
         expect(document.activeElement).toBe(outside);
         outside.remove();
+      })
+    );
+
+    it(
+      '[SCH-SC-31] keeps the focus on the block that move(…, api) moves into another row (RX #6)',
+      run(() => {
+        const rendered = render({});
+        const client = block(rendered.host, 'client')!;
+        client.focus();
+        void rendered.scheduler.move('client', { start: '2026/11/09 14:00:00', end: '2026/11/09 15:30:00', resourceId: 'hue' });
+        rendered.settle();
+        expect(rowOf(rendered.host, 'client')).toBe('hue');
+        expect(block(rendered.host, 'client')).withContext('the block of the new row is another element').not.toBe(client);
+        expect(document.activeElement).toBe(block(rendered.host, 'client'));
       })
     );
 

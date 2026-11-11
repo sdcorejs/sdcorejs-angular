@@ -465,7 +465,9 @@ export class SdScheduler<T = unknown, R = unknown> {
   } | null = null;
   #emittedKey: string | null = null;
   #lastOption: SdSchedulerOption<T, R> | null = null;
-  #lastResources: readonly SdSchedulerResource<R>[] | null = null;
+  /** The ids of the resources of the last load, in order: only a change of this list loads again (R1 #7, PD). */
+  #lastResourceIds: string | null = null;
+  #lastRangeKey: string | null = null;
   /** Bumped by every new `resources` array: part of the load key, so the grid clears until the new events arrive. */
   #generation = 0;
   #lastView: SdSchedulerView | null = null;
@@ -521,9 +523,15 @@ export class SdScheduler<T = unknown, R = unknown> {
 
   readonly #formats = computed(() => ɵsdCalendarFormats(this.#i18n.locale(), this.#i18n.language()));
   protected readonly title = computed(() => {
-    const { from, to } = this.visible();
     const view = this.activeView();
-    return ɵsdCalendarTitle(view, { anchor: this.#anchor(), from, to }, this.#formats(), (key, params) => this.#i18n.t(key, params));
+    const formats = this.#formats();
+    const columns = this.columns();
+    // why: with `hideWeekends` the week names the days of its columns, as sd-calendar (R2 #12, PD).
+    const { from, to } = view === 'week' && columns.length ? { from: columns[0], to: columns[columns.length - 1] } : this.visible();
+    // why: narrow, Day and Week use numeric dates, which fit one line (R2 #5, PD); Month keeps its name.
+    if (this.compact() && view === 'day') return ɵsdCalendarDateText(formats, from, true);
+    const kind = this.compact() && view === 'week' ? 'range' : view;
+    return ɵsdCalendarTitle(kind, { anchor: this.#anchor(), from, to }, formats, (key, params) => this.#i18n.t(key, params));
   });
   protected readonly prevLabel = computed(() => this.#i18n.t(`core.component.calendar.prev-${this.activeView()}`));
   protected readonly nextLabel = computed(() => this.#i18n.t(`core.component.calendar.next-${this.activeView()}`));
@@ -651,16 +659,19 @@ export class SdScheduler<T = unknown, R = unknown> {
           this.#emittedKey = key;
           this.sdRangeChange.emit(range);
         }
+        // why: a new array with the same ids only changes what the rows show (title, group, working hours), which the
+        // computed views redraw; it does not load again, clear the grid or abort a waiting create or move (R1 #7, PD).
+        const ids = JSON.stringify(resources.map(resource => resource.id));
+        this.#pruneGroups(resources);
+        if (option === this.#lastOption && ids === this.#lastResourceIds && key === this.#lastRangeKey) return;
         const changedSource =
-          (this.#lastOption !== null && this.#lastOption !== option) || (this.#lastResources !== null && this.#lastResources !== resources);
-        if (this.#lastResources !== resources) {
-          this.#generation++;
-          this.#pruneGroups(resources);
-        }
+          (this.#lastOption !== null && this.#lastOption !== option) || (this.#lastResourceIds !== null && this.#lastResourceIds !== ids);
+        if (this.#lastResourceIds !== ids) this.#generation++;
         // SC-15: a new source also aborts a waiting create; a range change or a reload aborts a waiting move only.
         if (changedSource && this.#operation.abort(['create'])) this.#ghost.set(null);
         this.#lastOption = option;
-        this.#lastResources = resources;
+        this.#lastResourceIds = ids;
+        this.#lastRangeKey = key;
         this.#startLoad(option, resources, range);
       });
     });

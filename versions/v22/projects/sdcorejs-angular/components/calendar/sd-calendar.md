@@ -103,7 +103,7 @@ readonly option: SdCalendarOption = { dataSource: { onLoad: () => this.events() 
 ### Methods
 
 - `reload(): void` — aborts the running load and a waiting move, then calls `onLoad` again for the range on screen. The events stay until the result arrives.
-- `move(eventId, to: { start; end?; allDay? }, source = 'api'): Promise<boolean>` — runs the move pipeline. Resolves `true` only when `onMove` accepts. `false` without `option.move`, while locked or while another create/move waits, for an unknown id, a refused `movable`, the same position, a target outside `minDate`/`maxDate`, `false`, `'cancel'` or an error. Without `end` the duration is kept. `'api'` never asks for the scope of a recurring event (`scope: 'this'`) and never moves the focus.
+- `move(eventId, to: { start; end?; allDay? }, source = 'api'): Promise<boolean>` — runs the move pipeline. Resolves `true` only when `onMove` accepts. `false` without `option.move`, while locked or while another create/move waits, for an unknown id, a refused `movable`, the same position, a target outside `minDate`/`maxDate`, `false`, `'cancel'` or an error. Without `end` the duration is kept. `'api'` never asks for the scope of a recurring event (`scope: 'this'`) and never takes the focus; a block that has the focus keeps it (see Moving).
 
 ### Configuration
 
@@ -152,9 +152,11 @@ With `option.move`, on week and day: drag (5px threshold, a 400ms hold on touch)
 
 Return `'cancel'` when the user closes a dialog of yours (a reason, a confirmation): nothing failed, so nothing is reported.
 
+`request.source` says what started the move: `'drag'` (a drag of the block), `'resize'` (the bottom edge, or `Alt` + `Shift` + `↑` `↓`), `'keyboard'` (`Alt` + arrows) or `'api'` (`move()`).
+
 `request.signal` is aborted when the range changes, on `reload()`, for a new `option`, when `disabled` or `readonly` turns on and on destroy; a late answer is ignored. Aborting is cooperative: it does not undo a backend change that already happened. Only one create or move waits at a time.
 
-A move started from the keyboard returns the focus to the block afterwards, even when `Alt` + `←`/`→` moved it into the next range; a focus the user moved elsewhere meanwhile stays there.
+A move started from the keyboard returns the focus to the block afterwards, even when `Alt` + `←`/`→` moved it into the next range; a focus the user moved elsewhere meanwhile stays there. A drag or `move()` does the same when the block had the focus when the move started (as sd-kanban); otherwise it leaves the focus where it is.
 
 **Undo** (pattern S1): after `sdMove`, show a toast with an Undo action that calls `calendar.move(request.event.id, request.from, 'api')`.
 

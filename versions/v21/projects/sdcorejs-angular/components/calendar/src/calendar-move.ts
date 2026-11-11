@@ -76,7 +76,10 @@ export interface SdCalendarMovePlan<R extends { readonly signal: AbortSignal }> 
   /** An occurrence of a series: the scope bar asks first, unless the move comes from `move()` (§9.6). */
   readonly recurring: boolean;
   readonly source: SdCalendarMoveSource;
-  /** Started from the keyboard: the focus goes back to the item afterwards (SC-29). */
+  /**
+   * Started from the keyboard: the focus goes back to the item afterwards (SC-29). Any other source does the same when
+   * the item held the focus at the start (review RX #6, as sd-kanban); a focus elsewhere stays there (SC-31).
+   */
   readonly keyboard: boolean;
   /** The capability flags, evaluated again right before `onMove` (SC-06); `false` stops without a callback. */
   readonly allowed: () => boolean;
@@ -115,10 +118,11 @@ export class SdCalendarMoveRunner {
     const { operation, focus } = this.host;
     const signal = operation.begin('move');
     if (!signal) return false;
-    const origin = plan.keyboard ? document.activeElement : null;
+    const follow = plan.keyboard || focus.holds(plan.id);
+    const origin = follow ? document.activeElement : null;
     const watch = focus.track(origin);
     try {
-      return await this.#run(plan, signal, origin, watch);
+      return await this.#run(plan, signal, origin, watch, follow);
     } finally {
       watch.stop();
     }
@@ -128,10 +132,11 @@ export class SdCalendarMoveRunner {
     plan: SdCalendarMovePlan<R>,
     signal: AbortSignal,
     origin: Element | null,
-    watch: SdCalendarFocusWatch
+    watch: SdCalendarFocusWatch,
+    follow: boolean
   ): Promise<boolean> {
     const { operation, announcer, focus, t } = this.host;
-    let restore = plan.keyboard;
+    let restore = follow;
     let scope: SdCalendarMoveScope | null = plan.recurring ? 'this' : null;
     if (plan.recurring && plan.source !== 'api') {
       // The scope bar takes the focus, so it goes back to the item when the bar closes, after a mouse drag too.
@@ -325,6 +330,12 @@ export class SdCalendarFocusKeeper {
     };
     document.addEventListener('focusin', listener, true);
     return { abandoned: () => abandoned, stop: () => document.removeEventListener('focusin', listener, true) };
+  }
+
+  /** Whether the focus is on the item `id` or inside it (review RX #6). */
+  holds(id: string): boolean {
+    const active = document.activeElement;
+    return !!active && this.host.contains(active) && !!active.closest(this.selector(id));
   }
 
   /** Focuses `id` unless the user moved the focus somewhere else while waiting (`origin` is where it started). */

@@ -97,7 +97,7 @@ readonly option: SdSchedulerOption = { dataSource: { onLoad: () => this.events()
 | Input | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `option` | `SdSchedulerOption<T, R>` | required | Data source and capabilities. A new object loads again; changes inside the same object do not. |
-| `resources` | `readonly SdSchedulerResource<R>[]` | required | The rows (see Resources and groups). A new array loads again and clears the grid until the result; an empty array shows the empty state and does not call `onLoad`. |
+| `resources` | `readonly SdSchedulerResource<R>[]` | required | The rows (see Resources and groups). A new array with other ids loads again and clears the grid until the result; a new array with the same ids only redraws the rows. An empty array shows the empty state and does not call `onLoad`. |
 | `view` | `SdSchedulerView` | `'day'` | Two-way (`[(view)]`). A view outside `views` shows the first of `views`. |
 | `date` | `Date \| string \| number \| null \| undefined` | today in the zone | Two-way anchor day. The scheduler writes back `'yyyy/MM/dd'` (never transformed). |
 | `selectedId` | `string \| null` | `null` | Two-way. Back to `null` when the event is no longer loaded. |
@@ -131,7 +131,7 @@ readonly option: SdSchedulerOption = { dataSource: { onLoad: () => this.events()
 ### Methods
 
 - `reload(): void` — aborts the running load and a waiting move (not a waiting create), then calls `onLoad` again for the range and the resources on screen. The events stay until the result arrives. With no resources nothing is called.
-- `move(eventId, to: { start; end?; allDay?; resourceId? }, source = 'api'): Promise<boolean>` — runs the move pipeline (see Moving). Resolves `true` only when `onMove` accepts. `false` without `option.move`, while locked or while another create/move waits, on a view drawn by a cell template, for an unknown event id, an unreadable `to`, a `resourceId` that is not in `resources`, a move against `axis`, a refused `movable` or `droppable`, the same time on the same resource, a target outside `minDate`/`maxDate`, `false`, `'cancel'` or an error. Without `end` the duration is kept; without `resourceId` the event keeps its resource. `'api'` never asks for the scope of a recurring event (`scope: 'this'`) and never moves the focus.
+- `move(eventId, to: { start; end?; allDay?; resourceId? }, source = 'api'): Promise<boolean>` — runs the move pipeline (see Moving). Resolves `true` only when `onMove` accepts. `false` without `option.move`, while locked or while another create/move waits, on a view drawn by a cell template, for an unknown event id, an unreadable `to`, a `resourceId` that is not in `resources`, a move against `axis`, a refused `movable` or `droppable`, the same time on the same resource, a target outside `minDate`/`maxDate`, `false`, `'cancel'` or an error. Without `end` the duration is kept; without `resourceId` the event keeps its resource. `'api'` never asks for the scope of a recurring event (`scope: 'this'`) and never takes the focus; a block that has the focus keeps it (see Moving).
 
 ### Configuration
 
@@ -188,7 +188,7 @@ interface SdSchedulerOption<T = unknown, R = unknown> {
 - One row per resource, in the order of `resources`. Resources without `group` come first, without a group row. Then each group gets a group row followed by its resources; groups keep the order of their first resource. The same string is the same group.
 - The resource cell shows the `avatar` (`sd-avatar`, 28px; the initials of `title` when the image fails) or the `icon` in a 32px frame, the `title`, and the `description` on a second line. Each line is cut with an ellipsis; the cell's `title` attribute holds the full name.
 - `workingHours` on a resource replaces the component's for that row, `null` included: off-hours shading, days off, `Home`/`End` and the first cursor position follow it. An `off` holiday shades every row.
-- A new `resources` array loads again, even with the same ids, and clears the grid until the result. It does not emit `sdRangeChange` and it aborts a waiting create or move. Changes inside the same array are not seen.
+- A new `resources` array whose ids differ (other ids, or the same in another order) loads again and clears the grid until the result; it aborts a waiting create or move. A new array with the same ids in the same order redraws the rows (title, description, group, icon, avatar, working hours) without calling `onLoad`; the events stay and a waiting create or move goes on. Neither emits `sdRangeChange`. Changes inside the same array are not seen: give a new array.
 - An empty array shows "No resources" (or `sdSchedulerEmptyTemplate`) under the time axis. `onLoad` is not called, and nothing can be created or moved.
 - A duplicate or empty `id`, or an empty `title`, refuses the data (`invalid-data` state).
 
@@ -202,7 +202,7 @@ Lanes: overlapping events of one row stack in lanes. They are sorted by start, a
 
 ## Data source
 
-`dataSource.onLoad({ from, to, view, resourceIds, signal })` is called on init, when the range changes, when `option` is a new object, when `resources` is a new array and on `reload()`. `from`/`to` are `'yyyy/MM/dd'`, both included; a week with `hideWeekends` still spans seven days.
+`dataSource.onLoad({ from, to, view, resourceIds, signal })` is called on init, when the range changes, when `option` is a new object, when the ids of `resources` change and on `reload()`. `from`/`to` are `'yyyy/MM/dd'`, both included; a week with `hideWeekends` still spans seven days.
 
 - A newer call aborts `signal`; a late result is dropped.
 - First load: progress bar, `aria-busy`, the resource column at once and a static skeleton on the first three rows. Later loads: progress bar only. A new range or a new `resources` array empties the grid until the result; `reload()` and a new `option` for the same range keep the events.
@@ -286,7 +286,7 @@ Announced after an accepted move:
 
 `request.signal` is aborted when the range changes, when `resources` or `option` changes, on `reload()`, when `disabled` or `readonly` turns on and on destroy; a late answer is ignored. Aborting is cooperative: it does not undo a backend change that already happened. Only one create or move waits at a time.
 
-Focus works as in the calendar: a move started from the keyboard returns the focus to the block afterwards, also after it changed row or range; a focus the user moved elsewhere meanwhile stays there; `move(…, 'api')` never takes the focus.
+Focus works as in the calendar: a move started from the keyboard returns the focus to the block afterwards, also after it changed row or range; a focus the user moved elsewhere meanwhile stays there. A drag or `move()` does the same when the block had the focus when the move started (as sd-kanban); otherwise it leaves the focus where it is.
 
 **Undo** (pattern S1): after `sdMove`, show a toast with an Undo action that calls `scheduler.move(request.event.id, request.from, 'api')`; `request.from` carries the old resource. Because `droppable` also runs for `move()`, an Undo resolves `false` (and says "Can't move to {resource}") when `droppable` refuses the old place.
 
@@ -308,6 +308,7 @@ As the calendar ([Date values](../calendar/sd-calendar.md#date-values)): values 
 - **Week**: seven days from `firstDayOfWeek` (five with `hideWeekends`). A column header shows the weekday and the day number; click the number for its day. Days off of each resource (a weekday without working hours, an `off` holiday) are shaded; an `off` holiday's weekday is red. Columns are at least `--sd-scheduler-day-min-width` wide, otherwise they share the width; the grid scrolls sideways when they do not fit.
 - **Month**: day 1 to the last day of the month (28–31 columns), no days of the months around it. Columns are at least `--sd-scheduler-month-day-min-width` wide. An `observance` holiday shows a dot under its number.
 - Week and month open at their first column, then bring today's column next to the resource column when it is hidden. Previous and Next keep the horizontal scroll otherwise; the vertical scroll is kept across ranges and views.
+- Title: "Monday, November 9, 2026" on Day, the days of the columns on Week ("Nov 9 – 15, 2026", "Nov 9 – 13, 2026" with `hideWeekends`), "November 2026" on Month.
 - Navigation: Previous and Next move by one day, one week or one month (to day 1 of the month); Today goes to today; each navigation announces the new title.
 - Block content by width: 120px and more shows the colour dot, the title and the time (the time on the day view only); 48–119px the dot and the title; under 48px the dot only. On week and month the start time leads the title of a timed block of at least 96px ("09:00 Weekly review"). Occurrences show a repeat icon. Colours as the calendar: a `Color` or any CSS colour.
 
@@ -316,6 +317,7 @@ As the calendar ([Date values](../calendar/sd-calendar.md#date-values)): values 
 Under 600px of **host** width (`ResizeObserver` on the host, not a media query, as in the [calendar](../calendar/sd-calendar.md#compact-layout)):
 
 - The toolbar takes two rows (title and navigation, then the view switcher across the width) with 44px navigation buttons. Every view of `views` stays.
+- The title of Day and Week uses short dates, which fit one line: "Nov 9, 2026" (vi "09/11/2026") and "Nov 9 – Nov 15, 2026" (vi "09/11 – 15/11/2026"). Month keeps "November 2026".
 - The resource column is 120px wide: icon or avatar 24px, the title on up to two lines, no description. The resource template receives `compact: true`.
 - `--sd-scheduler-hour-width` is 64px and `--sd-scheduler-day-min-width` 96px; the month keeps 28px. Group rows are 44px tall.
 - The week stays a week: `view`, `onLoad` and `sdRangeChange` keep the view on screen. There is no swipe between days.

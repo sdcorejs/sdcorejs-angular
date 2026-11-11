@@ -2,7 +2,7 @@ import { TestBed, discardPeriodicTasks, fakeAsync, flushMicrotasks } from '@angu
 import { findCssRule } from '../../../testing';
 import { FakeResizeObserver, centerOf, deferred, mouse, mouseDrag, press, q, qa, text } from '../../../testing/schedule-testing';
 import type { SdSchedulerEvent, SdSchedulerOption } from './scheduler.model';
-import { bookings, clientOption, renderScheduler, type Booking, type Events, type Room } from './scheduler.testing';
+import { bookings, clientOption, renderScheduler, rooms, type Booking, type Events, type Room } from './scheduler.testing';
 import { sdSchedulerLanes } from './scheduler.utils';
 
 // Regression tests of the fixes after the independent review R2 (reviews/scheduler-R2-*.md).
@@ -306,6 +306,89 @@ describe('SdScheduler · R2 fixes', () => {
     run(() => {
       const { host } = renderScheduler({}, {}, { width: 390, height: 640 });
       expect(getComputedStyle(q(host, '[data-title]')!).whiteSpace).toBe('normal');
+    })
+  );
+
+  it(
+    '[SCH-B-05] writes the narrow Day and Week titles as numeric dates and keeps the month name, R2 #5 (PD)',
+    run(() => {
+      const title = (host: HTMLElement): string => text(q(host, '[data-title]'));
+      const wide = renderScheduler({});
+      expect(title(wide.host)).withContext('wide day').toBe('Thứ Hai, 9 tháng 11, 2026');
+      TestBed.resetTestingModule();
+      const narrow = renderScheduler({}, {}, { width: 390, height: 640 });
+      expect(title(narrow.host)).withContext('narrow day').toBe('09/11/2026');
+      narrow.scheduler.view.set('week');
+      narrow.settle();
+      expect(title(narrow.host)).withContext('narrow week').toBe('09/11 – 15/11/2026');
+      narrow.scheduler.view.set('month');
+      narrow.settle();
+      expect(title(narrow.host)).withContext('narrow month').toBe('Tháng 11, 2026');
+    })
+  );
+
+  it(
+    '[SCH-B-50] redraws a new resources array with the same ids without loading again, R1 #7 (PD)',
+    run(() => {
+      const onLoad = jasmine.createSpy('onLoad').and.callFake(() => bookings());
+      const { fixture, host, ranges, settle } = renderScheduler({ option: { dataSource: { onLoad } } });
+      expect(onLoad).toHaveBeenCalledTimes(1);
+      fixture.componentRef.setInput(
+        'resources',
+        rooms().map(room => (room.id === 'hue' ? { ...room, title: 'Phòng Huế mới' } : room))
+      );
+      settle();
+      expect(onLoad).withContext('same ids').toHaveBeenCalledTimes(1);
+      expect(block(host, 'review')).withContext('the grid is not cleared').not.toBeNull();
+      expect(q(host, '[role="rowheader"][title="Phòng Huế mới"]')).withContext('the row shows the new title').not.toBeNull();
+      expect(ranges.length).toBe(1);
+      fixture.componentRef.setInput(
+        'resources',
+        rooms().filter(room => room.id !== 'da-lat')
+      );
+      settle();
+      expect(onLoad).withContext('another list of ids').toHaveBeenCalledTimes(2);
+      const args = onLoad.calls.mostRecent().args[0] as { resourceIds: string[] };
+      expect(args.resourceIds).toEqual(['hall', 'hue', 'hoi-an', 'can-tho']);
+    })
+  );
+
+  it(
+    '[SCH-B-50] keeps a waiting move through a new resources array with the same ids, R1 #7 (PD)',
+    run(() => {
+      const wait = deferred<boolean>();
+      let request: { signal: AbortSignal } | null = null;
+      const option: SdSchedulerOption<Booking, Room> = {
+        dataSource: { onLoad: () => bookings() },
+        move: {
+          onMove: next => {
+            request = next;
+            return wait.promise;
+          },
+        },
+      };
+      const { fixture, host, scheduler, settle } = renderScheduler({ option });
+      void scheduler.move('client', { start: '2026/11/09 14:00:00', end: '2026/11/09 15:30:00', resourceId: 'hue' });
+      settle();
+      fixture.componentRef.setInput('resources', rooms());
+      settle();
+      expect(request).withContext('onMove ran').not.toBeNull();
+      expect(request!.signal.aborted).toBeFalse();
+      wait.resolve(true);
+      settle();
+      expect(block(host, 'client')!.dataset['resourceId']).toBe('hue');
+    })
+  );
+
+  it(
+    '[SCH-B-12] names the days of the columns in the Week title with hideWeekends, R2 #12 (PD)',
+    run(() => {
+      const { host, fixture, settle } = renderScheduler({ view: 'week', hideWeekends: true });
+      expect(text(q(host, '[data-title]'))).toBe('9 – 13 tháng 11, 2026');
+      expect(q(host, '[role="grid"]')?.getAttribute('aria-label')).toContain('9 – 13 tháng 11, 2026');
+      fixture.componentRef.setInput('hideWeekends', false);
+      settle();
+      expect(text(q(host, '[data-title]'))).toBe('9 – 15 tháng 11, 2026');
     })
   );
 

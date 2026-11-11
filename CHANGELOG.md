@@ -175,7 +175,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`, `SdCalendar<T>`): month, week, day and agenda views of `SdCalendarEvent<T>` (`id`, `title`, `start`, `end`, `allDay`, `color`, `occurrence`, `data`).
   - `option.dataSource.onLoad({ from, to, view, signal })` per range, with abort of late results, `reload()`, a load-error band with Retry and the `sdLoadError` output.
   - `option.create = { creatable?, onCreate }`: click, sweep, tap or `Enter` on an empty slot; the dashed block waits for `onCreate`.
-  - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo.
+  - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo. `request.source` is `'drag'`, `'resize'` (bottom edge or `Alt` + `Shift` + ↑ ↓), `'keyboard'` or `'api'`; a block that has the focus keeps it after its move.
   - Recurring occurrences ask for the scope (`this`, `following`, `all`) before `onMove`.
   - Two-way `view`, `date`, `selectedId`; `step`, `firstDayOfWeek`, `hideWeekends`, `workingHours`, `holidays`, `minDate`/`maxDate`, `scrollTime`, `agendaDays`, `dimPast`, `transform`, `readonly`, `disabled`; `SD_CALENDAR_CONFIGURATION`.
   - Compact layout under 600px of host width, touch, print, forced colors and reduced motion; dates in `ISdCoreConfiguration.timeZone`.
@@ -223,7 +223,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Scheduler
 
 - `sd-scheduler` (`@sdcorejs/angular/components/scheduler`, `SdScheduler<T, R>`): one row per `SdSchedulerResource<R>` (`id`, `title`, `description`, `group`, `icon`, `avatar`, `workingHours`, `data`), a day on the hour axis or a week or a month on the day axis, for `SdSchedulerEvent<T>` (the calendar event plus `resourceId`).
-  - `option.dataSource.onLoad({ from, to, view, resourceIds, signal })` per range; a new `resources` array loads again, an empty one shows the empty state without a load.
+  - `option.dataSource.onLoad({ from, to, view, resourceIds, signal })` per range; a `resources` array with other ids loads again (the same ids only redraw the rows), an empty one shows the empty state without a load.
   - Resource groups (`group`) that collapse and stay collapsed across ranges; per-resource `workingHours`.
   - `option.create = { creatable?, onCreate }`: sweep on one row, click, tap or `Enter`; the context carries `resource` and `resourceId`.
   - `option.move = { movable?, droppable?, axis?, onMove }`: drag on two axes (row and time), the end handle and `Alt` + arrows (`Alt` + ↑ ↓ to the nearest resource `droppable` allows); `droppable({ event, to, resource })` is checked while dragging and for `move()`; `axis: 'time' | 'resource'` locks one axis. `onMove`, the recurring scope bar, `sdMove`, `sdMoveError` and `move(eventId, to, source)` behave as in `sd-calendar`.

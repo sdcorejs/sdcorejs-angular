@@ -812,18 +812,21 @@ export class SdCalendar<T = unknown> {
     domEvent.stopPropagation();
     const placement = item.placement;
     let target: SdCalendarTarget | null = null;
+    let resize = false;
     if (key === 'ArrowLeft' || key === 'ArrowRight') {
       target = this.#shifted(placement, (key === 'ArrowRight') !== this.#rtl() ? 1 : -1, 0);
     } else if (placement.inGrid) {
       const delta = sdCalendarMoveStep(this.stepValue()) * (key === 'ArrowDown' ? 1 : -1);
-      target = domEvent.shiftKey
+      resize = domEvent.shiftKey;
+      target = resize
         ? {
             ...sdCalendarTargetOf(placement),
             endMinutes: sdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, delta, this.stepValue()),
           }
         : this.#shifted(placement, 0, delta);
     }
-    if (target) void this.#runMove(item.event.id, target, 'keyboard', true);
+    // why: a change of the end is a 'resize' whichever input made it, as in sd-scheduler (review RX #2).
+    if (target) void this.#runMove(item.event.id, target, resize ? 'resize' : 'keyboard', true);
   }
 
   // ---- create (§9.2) ----
