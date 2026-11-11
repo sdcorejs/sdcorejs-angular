@@ -405,6 +405,12 @@ Each value derives from the palette of its own scope, so one expression serves l
 Sizes are not theme tokens: `--sd-calendar-hour-height` (48px), `--sd-calendar-gutter-width` (56px, 48px when
 compact) and `--sd-calendar-event-radius` are declared on the calendar host.
 
+`sd-scheduler` adds no colour token. Its sizes are declared on its host: `--sd-scheduler-resource-width` (240px, 120px
+when compact), `--sd-scheduler-hour-width` (80px, 64px), `--sd-scheduler-day-min-width` (120px, 96px),
+`--sd-scheduler-month-day-min-width` (28px), `--sd-scheduler-lane-height` (28px), `--sd-scheduler-row-min-height`
+(48px), `--sd-scheduler-group-height` (32px, 44px) and `--sd-scheduler-event-radius`. Set the four widths in `px`: the
+scheduler reads them with `getComputedStyle` to size the content of a block and to place a drag.
+
 ## Timeline token
 
 `--sd-timeline-line` (`var(--sd-border)` in light and dark) is the 1px connector between the markers of `sd-timeline`.

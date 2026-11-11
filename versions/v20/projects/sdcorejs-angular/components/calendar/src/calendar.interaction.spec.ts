@@ -678,6 +678,7 @@ describe('SdCalendar · interaction', () => {
       const { host, settle } = mount(() => ({ move: { onMove } }));
       const last = (): SdCalendarMoveRequest['to'] | undefined =>
         (onMove.calls.mostRecent()?.args[0] as SdCalendarMoveRequest | undefined)?.to;
+      const source = (): string | undefined => (onMove.calls.mostRecent()?.args[0] as SdCalendarMoveRequest | undefined)?.source;
       const review = (): HTMLElement => block(host, 'review') ?? host;
       press(review(), 'ArrowDown');
       press(review(), 'ArrowRight');
@@ -686,9 +687,12 @@ describe('SdCalendar · interaction', () => {
       press(review(), 'ArrowDown', { alt: true });
       settle();
       expect(last()).toEqual({ start: '2026/10/21 14:15:00', end: '2026/10/21 15:45:00', allDay: false });
+      expect(source()).toBe('keyboard');
       press(review(), 'ArrowUp', { alt: true, shift: true });
       settle();
       expect(last()).toEqual({ start: '2026/10/21 14:00:00', end: '2026/10/21 15:15:00', allDay: false });
+      // why: RX #2, like sd-scheduler: a change of the end is a 'resize', whichever input made it.
+      expect(source()).toBe('resize');
       press(review(), 'ArrowRight', { alt: true });
       settle();
       expect(last()?.start).toBe('2026/10/22 14:00:00');
@@ -757,6 +761,30 @@ describe('SdCalendar · interaction', () => {
       settle();
       expect(document.activeElement).toBe(today);
       expect(block(host, 'review')?.dataset['start']).toBe('2026/10/21 16:00:00');
+    }));
+
+    it('[CAL-SC-31] keeps the focus on the block that move(…, "api") moves into another day (RX #6)', fakeAsync(() => {
+      const { host, calendar, settle } = mount(() => ({ move: { onMove: moveSpy(true) } }));
+      const review = block(host, 'review');
+      review?.focus();
+      void calendar.move('review', { start: '2026/10/22 16:00:00', end: '2026/10/22 17:30:00' }, 'api');
+      settle();
+      const moved = block(host, 'review');
+      expect(moved?.dataset['start']).toBe('2026/10/22 16:00:00');
+      expect(moved).withContext('the block of the new day is another element').not.toBe(review);
+      expect(document.activeElement).toBe(moved);
+    }));
+
+    it('[CAL-SC-31] keeps the focus on the block a mouse drag moves when the block held it (RX #6)', fakeAsync(() => {
+      const { host, settle } = mount(() => ({ move: { onMove: moveSpy(true) } }));
+      const review = block(host, 'review')!;
+      review.focus();
+      const from = review.getBoundingClientRect();
+      mouseDrag(review, { x: at(host, '2026/10/22', 0).x, y: from.top + 4 }, { from: { x: from.left + 8, y: from.top + 4 }, step: settle });
+      settle();
+      const moved = block(host, 'review');
+      expect(moved?.dataset['start']?.startsWith('2026/10/22')).toBeTrue();
+      expect(document.activeElement).toBe(moved);
     }));
 
     it('[CAL-C-19] moves a single grid cursor with aria-activedescendant and announces it', fakeAsync(() => {

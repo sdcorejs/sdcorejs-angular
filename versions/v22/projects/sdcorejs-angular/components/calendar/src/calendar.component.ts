@@ -14,7 +14,6 @@ import {
   effect,
   inject,
   input,
-  isDevMode,
   model,
   output,
   signal,
@@ -26,8 +25,19 @@ import type { SdTemporalValueTransform } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import { SdCalendarEdgeScroller } from './calendar-edge-scroll';
+import { sdCalendarDateText, sdCalendarFormats, sdCalendarMovedText, sdCalendarTitle, sdCalendarWeekdayLong } from './calendar-format';
+import { SdCalendarHostWidth, SdCalendarMinuteTimer, SdCalendarReporter, sdCalendarIsRtl } from './calendar-host';
 import { SdCalendarLoader } from './calendar-loader';
-import { SdCalendarOperation, sdCalendarAllows, sdCalendarCallMove } from './calendar-move';
+import {
+  SdCalendarAnnouncer,
+  SdCalendarCreateRunner,
+  SdCalendarFocusKeeper,
+  SdCalendarMoveRunner,
+  SdCalendarOperation,
+  SdCalendarScopeBar,
+  sdCalendarAllows,
+} from './calendar-move';
 import { SD_CALENDAR_CONFIGURATION, ɵSD_CALENDAR_DEFAULTS } from './calendar.configuration';
 import type {
   SdCalendarDateInput,
@@ -35,7 +45,6 @@ import type {
   SdCalendarHoliday,
   SdCalendarMoveError,
   SdCalendarMoveRequest,
-  SdCalendarMoveScope,
   SdCalendarMoveSource,
   SdCalendarOption,
   SdCalendarRange,
@@ -56,26 +65,43 @@ import {
   sdCalendarAddDays,
   sdCalendarAddMonthsKeepDay,
   sdCalendarAllDayLayout,
+  sdCalendarBoundDay,
+  sdCalendarBrokenWeekdays,
+  sdCalendarCarrierDay,
+  sdCalendarColor,
   sdCalendarClampAgendaDays,
   sdCalendarClockText,
-  sdCalendarDay,
-  sdCalendarDayDiff,
+  sdCalendarCssEscape,
   sdCalendarDayParts,
+  sdCalendarHolidayMap,
   sdCalendarInitialScroll,
+  sdCalendarInvalidItems,
+  sdCalendarIsOffDay,
+  sdCalendarLastDayOf,
   sdCalendarMonthWeeks,
   sdCalendarMoveStep,
   sdCalendarNormalizeStep,
   sdCalendarOffSegments,
   sdCalendarPlace,
+  sdCalendarPointOf,
+  sdCalendarRangeKey,
   sdCalendarRangeOf,
   sdCalendarReadDay,
-  sdCalendarReadWallClock,
   sdCalendarResizeEnd,
+  sdCalendarResolveFirstDayOfWeek,
+  sdCalendarResolveStep,
+  sdCalendarResolveWorkingHours,
+  sdCalendarSameList,
+  sdCalendarMoveTarget,
+  sdCalendarOutOfRange,
+  sdCalendarSelectionGone,
   sdCalendarShiftDate,
+  sdCalendarShiftDays,
   sdCalendarSlot,
   sdCalendarSnapMove,
   sdCalendarStack,
   sdCalendarSweep,
+  sdCalendarTargetOf,
   sdCalendarTimeToMinutes,
   sdCalendarVisibleDays,
   sdCalendarVisibleRange,
@@ -84,18 +110,15 @@ import {
   type SdCalendarPlacement,
   type SdCalendarRangeInput,
   type SdCalendarSpan,
+  type SdCalendarTarget,
 } from './calendar.utils';
 
 const ALL_VIEWS: readonly SdCalendarView[] = ['month', 'week', 'day', 'agenda'];
-const PALETTE = new Set(['primary', 'secondary', 'info', 'success', 'warning', 'error']);
 /** Baseline hour height (px) the content tiers of a block are measured against (§8.2). */
 const HOUR_HEIGHT = 48;
 const MINUTE = 60_000;
 /** Pointer travel (px) under which a press is a click (§9.1). */
 const CLICK_SLOP = 5;
-/** Auto-scroll zone at the top and bottom of the scroll area (px) and its top speed (px per frame) (§9.3). */
-const EDGE = 40;
-const EDGE_SPEED = 16;
 /** Horizontal travel (px) of a swipe that changes the day or week (§12). */
 const SWIPE = 60;
 /** Where the first-load skeleton draws its blocks: [day index, start minute, minutes]. */
@@ -107,15 +130,6 @@ const SKELETON: readonly (readonly [number, number, number])[] = [
   [4, 570, 60],
 ];
 let nextCalendarId = 0;
-
-/** Where an event should go: wall clock of its start and end in the zone. */
-interface SdCalendarTarget {
-  readonly allDay: boolean;
-  readonly startDay: string;
-  readonly startMinutes: number;
-  readonly endDay: string;
-  readonly endMinutes: number;
-}
 
 interface SdCalendarPlaced<T> {
   readonly event: SdCalendarEvent<T>;
@@ -235,7 +249,8 @@ export class SdCalendar<T = unknown> {
   readonly #zone = inject(NgZone);
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #injector = inject(Injector);
-  readonly #reported = new Set<string>();
+  readonly #reporter = new SdCalendarReporter('[sd-calendar]');
+  readonly #t = (key: string, params?: Record<string, string | number>): string => this.#i18n.t(key, params);
   protected readonly baseId = `sd-calendar-${nextCalendarId++}`;
 
   /** Data source and capabilities. A new object is the signal to load again. */
@@ -300,21 +315,44 @@ export class SdCalendar<T = unknown> {
   readonly #loader = new SdCalendarLoader<SdCalendarEvent<T>>();
   readonly #operation = new SdCalendarOperation<'create' | 'move'>();
   readonly #now = signal<Date>(this.#clock.now());
-  readonly #width = signal<number | null>(null);
-  readonly #announcement = signal('');
+  readonly #hostWidth = new SdCalendarHostWidth(this.#host.nativeElement, this.#zone);
+  readonly #width = this.#hostWidth.width;
+  readonly #timer = new SdCalendarMinuteTimer(this.#zone, () => this.#now.set(this.#clock.now()));
+  readonly #announcer = new SdCalendarAnnouncer();
+  readonly #focus = new SdCalendarFocusKeeper(
+    this.#host.nativeElement,
+    this.#injector,
+    id => `[data-event-id="${sdCalendarCssEscape(id)}"][tabindex]`,
+    '.sd-calendar__scope'
+  );
+  readonly #edge = new SdCalendarEdgeScroller(this.#zone);
   /** Move waiting for `onMove`: the event is drawn at `target` (§8.3, saving). */
   readonly #moving = signal<{ readonly id: string; readonly target: SdCalendarTarget; readonly saving: boolean } | null>(null);
   /** Scope bar of a recurring event (§9.6); it holds the one waiting operation until answered. */
-  readonly #asking = signal<{ readonly title: string; readonly answer: (scope: SdCalendarMoveScope | null) => void } | null>(null);
+  protected readonly scopeBar = new SdCalendarScopeBar(this.#host.nativeElement, this.#injector);
   readonly #ghost = signal<SdCalendarGhost | null>(null);
   readonly #failure = signal<{ readonly id: string | null; readonly message: string } | null>(null);
   readonly #drag = signal<SdCalendarDragProposal | null>(null);
   readonly #resize = signal<{ readonly id: string; readonly end: number } | null>(null);
   readonly #cursor = signal<{ readonly day: string; readonly minutes: number } | null>(null);
   readonly #monthFocus = signal<string | null>(null);
+  readonly #runner = new SdCalendarMoveRunner({
+    operation: this.#operation,
+    announcer: this.#announcer,
+    focus: this.#focus,
+    t: this.#t,
+    ask: (title, signal) => this.scopeBar.ask(title, signal),
+    band: failure => this.#failure.set(failure),
+    reload: () => this.reload(),
+  });
+  readonly #creator = new SdCalendarCreateRunner({
+    operation: this.#operation,
+    announcer: this.#announcer,
+    t: this.#t,
+    band: failure => this.#failure.set(failure),
+  });
   #emittedKey: string | null = null;
   #lastOption: SdCalendarOption<T> | null = null;
-  #focusTarget: string | null = null;
   /** A drag just ended: the click that follows its mouseup must not select. Reset on the next press. */
   #justDragged = false;
   #press: {
@@ -340,7 +378,6 @@ export class SdCalendar<T = unknown> {
   #dragPointer: Point | null = null;
   /** Where the press that may start a drag happened (CDK's start event is the move that crossed the threshold). */
   #pickup: Point | null = null;
-  #edgeFrame = 0;
   #resizeSession: { readonly id: string; readonly placement: SdCalendarPlacement; readonly y: number } | null = null;
   #stripPress: { readonly x: number; readonly y: number } | null = null;
 
@@ -352,49 +389,33 @@ export class SdCalendar<T = unknown> {
   /** Host at least 720px wide: the agenda shows the place column. */
   protected readonly wide = computed(() => (this.#width() ?? 0) >= 720);
   protected readonly phase = this.#loader.phase.asReadonly();
-  protected readonly announcement = this.#announcement.asReadonly();
+  protected readonly announcement = this.#announcer.text;
   protected readonly failure = this.#failure.asReadonly();
   protected readonly ghost = this.#ghost.asReadonly();
   protected readonly dragProposal = this.#drag.asReadonly();
   protected readonly cursor = this.#cursor.asReadonly();
-  protected readonly asking = this.#asking.asReadonly();
   protected readonly scopeMessageId = `${this.baseId}-scope`;
   protected readonly busy = computed(() => this.#loader.phase() === 'loading' || this.#loader.phase() === 'reloading');
   protected readonly skeleton = computed(() => this.#loader.phase() === 'loading' && !this.#loader.everLoaded());
   protected readonly rootAutoId = computed(() => (this.autoId() ? `components-calendar-${this.autoId()}` : null));
   protected readonly regionLabel = computed(() => this.ariaLabel() || this.#i18n.t('core.component.calendar.label'));
 
-  protected readonly stepValue = computed(
-    () => sdCalendarNormalizeStep(this.step() ?? this.#configuration?.step ?? ɵSD_CALENDAR_DEFAULTS.step) ?? 30
+  protected readonly stepValue = computed(() => sdCalendarResolveStep(this.step(), this.#configuration));
+  readonly #firstDayOfWeek = computed(() => sdCalendarResolveFirstDayOfWeek(this.firstDayOfWeek(), this.#configuration));
+  readonly #workingHours = computed<SdCalendarWorkingHours | null>(() =>
+    sdCalendarResolveWorkingHours(this.workingHours(), this.#configuration)
   );
-  readonly #firstDayOfWeek = computed(() => {
-    const value = this.firstDayOfWeek() ?? this.#configuration?.firstDayOfWeek ?? ɵSD_CALENDAR_DEFAULTS.firstDayOfWeek;
-    return Number.isInteger(value) && value >= 0 && value <= 6 ? value : ɵSD_CALENDAR_DEFAULTS.firstDayOfWeek;
-  });
-  readonly #workingHours = computed<SdCalendarWorkingHours | null>(() => {
-    const value = this.workingHours();
-    if (value !== undefined) return value;
-    const configured = this.#configuration?.workingHours;
-    return configured !== undefined ? configured : ɵSD_CALENDAR_DEFAULTS.workingHours;
-  });
-  readonly #holidays = computed(() => {
-    const map = new Map<string, SdCalendarHoliday>();
-    for (const holiday of this.holidays() ?? this.#configuration?.holidays ?? []) {
-      const day = sdCalendarReadDay(holiday.date, this.#clock);
-      if (day && !map.has(day)) map.set(day, holiday);
-    }
-    return map;
-  });
+  readonly #holidays = computed(() => sdCalendarHolidayMap(this.holidays(), this.#configuration, this.#clock));
 
-  protected readonly today = computed(() => carrierDay(this.#now()));
+  protected readonly today = computed(() => sdCalendarCarrierDay(this.#now()));
   readonly #nowMinutes = computed(() => this.#now().getHours() * 60 + this.#now().getMinutes());
   readonly #nowInstant = computed(() => this.#clock.fromWallClock(this.#now()).getTime());
   readonly #anchor = computed(() => {
     const value = this.date();
     return (value === null || value === undefined ? null : sdCalendarReadDay(value, this.#clock)) ?? this.today();
   });
-  readonly #minDay = computed(() => this.#boundDay(this.minDate()));
-  readonly #maxDay = computed(() => this.#boundDay(this.maxDate()));
+  readonly #minDay = computed(() => sdCalendarBoundDay(this.minDate(), this.today(), this.#clock));
+  readonly #maxDay = computed(() => sdCalendarBoundDay(this.maxDate(), this.today(), this.#clock));
 
   /** Views of the switcher; the week button is hidden while compact (§12). */
   protected readonly viewOptions = computed(() => {
@@ -417,19 +438,13 @@ export class SdCalendar<T = unknown> {
     hideWeekends: this.hideWeekends(),
     agendaDays: sdCalendarClampAgendaDays(this.agendaDays()),
   }));
-  protected readonly visible = computed(() => sdCalendarVisibleRange(this.#rangeInput()), { equal: sameRange });
-  protected readonly days = computed(() => sdCalendarVisibleDays(this.#rangeInput()), { equal: sameList });
+  protected readonly visible = computed(() => sdCalendarVisibleRange(this.#rangeInput()), {
+    equal: (a, b) => sdCalendarRangeKey(a) === sdCalendarRangeKey(b),
+  });
+  protected readonly days = computed(() => sdCalendarVisibleDays(this.#rangeInput()), { equal: sdCalendarSameList });
 
   /** Duplicate or empty id, or an empty title: the whole data set is refused (§5). */
-  protected readonly invalid = computed(() => {
-    const seen = new Set<string>();
-    for (const event of this.#loader.items()) {
-      if (typeof event.id !== 'string' || !event.id || seen.has(event.id) || typeof event.title !== 'string' || !event.title.trim())
-        return true;
-      seen.add(event.id);
-    }
-    return false;
-  });
+  protected readonly invalid = computed(() => sdCalendarInvalidItems(this.#loader.items()));
   /** No create and no move (§4.1, §13): disabled, readonly, loading, load error or invalid data. */
   protected readonly locked = computed(
     () => this.disabled() || this.readonly() || this.busy() || this.#loader.phase() === 'error' || this.invalid()
@@ -437,57 +452,13 @@ export class SdCalendar<T = unknown> {
   /** Create is on: `option.create` and not locked. */
   protected readonly canCreate = computed(() => !!this.option().create && !this.locked());
 
-  readonly #formats = computed(() => {
-    const locale = this.#i18n.locale();
-    const named = this.#i18n.language() === 'en';
-    const format = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat =>
-      new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' });
-    return {
-      named,
-      weekday: format({ weekday: 'long' }),
-      monthShort: format({ month: 'short' }),
-      monthLong: format({ month: 'long' }),
-      date: format(named ? { month: 'short', day: 'numeric' } : { day: '2-digit', month: '2-digit' }),
-      dateYear: format(named ? { month: 'short', day: 'numeric', year: 'numeric' } : { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    };
-  });
+  readonly #formats = computed(() => sdCalendarFormats(this.#i18n.locale(), this.#i18n.language()));
 
   protected readonly title = computed(() => {
     const view = this.displayView();
     const { from, to } = this.visible();
-    const anchor = sdCalendarDayParts(this.#anchor())!;
-    const formats = this.#formats();
-    if (view === 'month' || (this.compact() && view === 'day')) {
-      return this.#i18n.t('core.component.calendar.title-month', {
-        month: anchor.month,
-        monthName: formats.monthLong.format(utcDay(sdCalendarDay(anchor.year, anchor.month, 1))),
-        year: anchor.year,
-      });
-    }
-    if (view === 'day') {
-      return this.#i18n.t('core.component.calendar.title-day', {
-        weekday: this.#weekdayLong(from),
-        day: anchor.day,
-        month: anchor.month,
-        monthName: formats.monthLong.format(utcDay(from)),
-        year: anchor.year,
-      });
-    }
-    const a = sdCalendarDayParts(from)!;
-    const b = sdCalendarDayParts(to)!;
-    if (view === 'week' && a.year === b.year && a.month === b.month) {
-      return this.#i18n.t('core.component.calendar.title-week', {
-        from: a.day,
-        to: b.day,
-        month: a.month,
-        monthName: formats.monthShort.format(utcDay(from)),
-        year: a.year,
-      });
-    }
-    return this.#i18n.t('core.component.calendar.title-range', {
-      from: this.#dateText(from, a.year !== b.year),
-      to: this.#dateText(to, true),
-    });
+    const kind = view === 'month' || (this.compact() && view === 'day') ? 'month' : view === 'agenda' ? 'range' : view;
+    return sdCalendarTitle(kind, { anchor: this.#anchor(), from, to }, this.#formats(), (key, params) => this.#i18n.t(key, params));
   });
 
   protected readonly prevLabel = computed(() => this.#navLabel('prev'));
@@ -646,11 +617,11 @@ export class SdCalendar<T = unknown> {
 
     // why: one effect owns loading and the range output, so a range emits once and only together with its load.
     effect(() => {
-      untracked(() => this.#measureOnce());
+      untracked(() => this.#hostWidth.measureOnce());
       const option = this.option();
       const range = this.visible();
       untracked(() => {
-        const key = rangeKey(range);
+        const key = sdCalendarRangeKey(range);
         if (key !== this.#emittedKey) {
           this.#emittedKey = key;
           this.sdRangeChange.emit(range);
@@ -664,40 +635,29 @@ export class SdCalendar<T = unknown> {
 
     effect(() => {
       for (const id of this.#reading().unreadable) {
-        this.#report('warn', `date:${id}`, `event "${id}" has an unreadable date or does not end after it starts; it is not shown.`);
+        this.#reporter.report(
+          'warn',
+          `date:${id}`,
+          `event "${id}" has an unreadable date or does not end after it starts; it is not shown.`
+        );
       }
     });
 
     effect(() => {
       const step = this.step() ?? this.#configuration?.step;
-      if (isDevMode() && step !== undefined && sdCalendarNormalizeStep(step) === null) {
-        this.#report('warn', `step:${step}`, `step ${step} is not one of 5, 10, 15, 20, 30, 60; 30 is used.`);
+      if (step !== undefined && sdCalendarNormalizeStep(step) === null) {
+        this.#reporter.report('warn', `step:${step}`, `step ${step} is not one of 5, 10, 15, 20, 30, 60; 30 is used.`);
       }
     });
 
     effect(() => {
-      const hours = this.#workingHours();
-      if (!hours) return;
-      for (const [weekday, ranges] of Object.entries(hours)) {
-        const kept = sdCalendarWorkingRanges(hours, Number(weekday))?.length ?? 0;
-        if (kept !== (ranges ?? []).length) {
-          this.#report(
-            'warn',
-            `hours:${weekday}`,
-            `workingHours[${weekday}] has a range without both ends or that does not end after it starts; it is ignored.`
-          );
-        }
+      for (const weekday of sdCalendarBrokenWeekdays(this.#workingHours())) {
+        this.#reporter.report(
+          'warn',
+          `hours:${weekday}`,
+          `workingHours[${weekday}] has a range without both ends or that does not end after it starts; it is ignored.`
+        );
       }
-    });
-
-    // §9.6: the scope bar takes the focus on its first answer when it opens.
-    effect(() => {
-      if (!this.#asking()) return;
-      untracked(() =>
-        afterNextRender(() => this.#host.nativeElement.querySelector<HTMLElement>('[role="alertdialog"] [data-scope="this"]')?.focus(), {
-          injector: this.#injector,
-        })
-      );
     });
 
     // SC-15: turning disabled or readonly on aborts a waiting move.
@@ -706,17 +666,8 @@ export class SdCalendar<T = unknown> {
     });
 
     // why: the timer only runs while today is on a time grid, and outside the zone so it does not tick change detection.
-    let timer: ReturnType<typeof setInterval> | null = null;
-    const stopTimer = (): void => {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
-    };
     const ticking = computed(() => this.timeView() && this.days().includes(this.today()));
-    effect(() => {
-      if (!ticking()) return stopTimer();
-      if (timer !== null) return;
-      timer = this.#zone.runOutsideAngular(() => setInterval(() => this.#zone.run(() => this.#now.set(this.#clock.now())), MINUTE));
-    });
+    effect(() => this.#timer.run(ticking()));
 
     // Scroll to the working day when the week or day view opens; not when the week only changes.
     effect(() => {
@@ -725,25 +676,15 @@ export class SdCalendar<T = unknown> {
     });
 
     effect(() => {
-      const selected = this.selectedId();
-      if (selected === null || this.#loader.phase() !== 'idle') return;
-      if (!this.#loader.items().some(event => event.id === selected)) untracked(() => this.selectedId.set(null));
+      if (sdCalendarSelectionGone(this.selectedId(), this.#loader.phase(), this.#loader.items()))
+        untracked(() => this.selectedId.set(null));
     });
-
-    const observer =
-      typeof ResizeObserver === 'undefined'
-        ? null
-        : new ResizeObserver(entries => {
-            const width = entries[entries.length - 1]?.contentRect.width;
-            if (width !== undefined && width !== untracked(this.#width)) this.#zone.run(() => this.#width.set(width));
-          });
-    observer?.observe(this.#host.nativeElement);
 
     destroyRef.onDestroy(() => {
       this.#loader.abort();
       this.#operation.abort();
-      observer?.disconnect();
-      stopTimer();
+      this.#hostWidth.disconnect();
+      this.#timer.stop();
       this.#stopEdgeScroll();
       document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     });
@@ -849,7 +790,7 @@ export class SdCalendar<T = unknown> {
   /** Press on an item: a new gesture, and the pickup point of a possible drag. */
   protected onPressItem(domEvent: MouseEvent | TouchEvent): void {
     this.#justDragged = false;
-    this.#pickup = pointOf(domEvent);
+    this.#pickup = sdCalendarPointOf(domEvent);
   }
 
   protected onItemKeydown(domEvent: KeyboardEvent, item: SdCalendarItemView<T>): void {
@@ -871,15 +812,21 @@ export class SdCalendar<T = unknown> {
     domEvent.stopPropagation();
     const placement = item.placement;
     let target: SdCalendarTarget | null = null;
+    let resize = false;
     if (key === 'ArrowLeft' || key === 'ArrowRight') {
       target = this.#shifted(placement, (key === 'ArrowRight') !== this.#rtl() ? 1 : -1, 0);
     } else if (placement.inGrid) {
       const delta = sdCalendarMoveStep(this.stepValue()) * (key === 'ArrowDown' ? 1 : -1);
-      target = domEvent.shiftKey
-        ? { ...targetOf(placement), endMinutes: sdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, delta, this.stepValue()) }
+      resize = domEvent.shiftKey;
+      target = resize
+        ? {
+            ...sdCalendarTargetOf(placement),
+            endMinutes: sdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, delta, this.stepValue()),
+          }
         : this.#shifted(placement, 0, delta);
     }
-    if (target) void this.#runMove(item.event.id, target, 'keyboard', true);
+    // why: a change of the end is a 'resize' whichever input made it, as in sd-scheduler (review RX #2).
+    if (target) void this.#runMove(item.event.id, target, resize ? 'resize' : 'keyboard', true);
   }
 
   // ---- create (§9.2) ----
@@ -1072,7 +1019,7 @@ export class SdCalendar<T = unknown> {
       title: item.event.title,
       color: item.color,
       customColor: item.customColor,
-      start: this.#pickup ?? pointOf(start.event) ?? { x: 0, y: 0 },
+      start: this.#pickup ?? sdCalendarPointOf(start.event) ?? { x: 0, y: 0 },
       scrollTop: this.scroller()?.nativeElement.scrollTop ?? 0,
       columns,
       cancelled: false,
@@ -1139,7 +1086,7 @@ export class SdCalendar<T = unknown> {
     this.#resize.set(null);
     document.removeEventListener('keydown', this.#onDocumentKeydown, true);
     if (!session || !resize) return;
-    void this.#runMove(session.id, { ...targetOf(session.placement), endMinutes: resize.end }, 'resize', false);
+    void this.#runMove(session.id, { ...sdCalendarTargetOf(session.placement), endMinutes: resize.end }, 'resize', false);
   }
 
   /** The browser took the pointer away (a scroll or a system gesture): the live resize is dropped. */
@@ -1213,110 +1160,35 @@ export class SdCalendar<T = unknown> {
     const from = sdCalendarRangeOf(placed.placement, this.#clock, transform);
     const to = sdCalendarRangeOf(target, this.#clock, transform);
     if (from.start === to.start && from.end === to.end && from.allDay === to.allDay) return false;
-    if (this.#outOfRange(target.startDay) || this.#outOfRange(lastDayOf(target))) {
+    if (this.#outOfRange(target.startDay) || this.#outOfRange(sdCalendarLastDayOf(target))) {
       this.#announce(this.#i18n.t('core.component.calendar.out-of-range'));
       return false;
     }
-    const signal = this.#operation.begin('move');
-    if (!signal) return false;
-    const origin = keyboard ? document.activeElement : null;
-    let restore = keyboard;
-    let scope: SdCalendarMoveScope | null = placed.event.occurrence ? 'this' : null;
-    if (placed.event.occurrence && source !== 'api') {
-      // The scope bar takes the focus, so it goes back to the block when the bar closes, after a mouse drag too.
-      restore = true;
-      // §9.6: an occurrence waits at the proposal (dashed, no sync icon) until the user picks a scope.
-      this.#moving.set({ id, target, saving: false });
-      scope = await new Promise<SdCalendarMoveScope | null>(answer => this.#asking.set({ title: placed.event.title, answer }));
-      if (signal.aborted) return false;
-      if (scope === null) {
-        this.#operation.end(signal);
-        this.#moving.set(null);
-        this.#announce(this.#i18n.t('core.component.calendar.cancelled'));
-        this.#restoreFocus(id, origin);
-        return false;
-      }
-    }
-    return this.#commitMove(placed, target, from, to, source, scope, signal, origin, restore);
-  }
-
-  /** Answer of the scope bar; `null` is Cancel (Esc too). */
-  protected answerScope(scope: SdCalendarMoveScope | null): void {
-    const asking = this.#asking();
-    if (!asking) return;
-    this.#asking.set(null);
-    asking.answer(scope);
-  }
-
-  protected onScopeKeydown(domEvent: KeyboardEvent): void {
-    if (domEvent.key !== 'Escape') return;
-    domEvent.preventDefault();
-    domEvent.stopPropagation();
-    this.answerScope(null);
-  }
-
-  async #commitMove(
-    placed: SdCalendarPlaced<T>,
-    target: SdCalendarTarget,
-    from: SdCalendarRange,
-    to: SdCalendarRange,
-    source: SdCalendarMoveSource,
-    scope: SdCalendarMoveScope | null,
-    signal: AbortSignal,
-    origin: Element | null,
-    restore: boolean
-  ): Promise<boolean> {
-    const move = untracked(this.option).move!;
-    // SC-06: the flag is evaluated once more right before the callback.
-    if (!sdCalendarAllows(move.movable, placed.event)) {
-      this.#operation.end(signal);
-      this.#moving.set(null);
-      return false;
-    }
     const { event } = placed;
-    const request: SdCalendarMoveRequest<T> = Object.freeze({ event, from, to, source, scope, signal });
-    this.#failure.set(null);
-    this.#moving.set({ id: event.id, target, saving: true });
-    this.#announce(this.#i18n.t('core.component.calendar.pending', { title: event.title }));
-    const outcome = await sdCalendarCallMove(move.onMove, request);
-    if (outcome.kind === 'aborted') return false;
-    this.#operation.end(signal);
-    this.#moving.set(null);
-    if (restore) this.#restoreFocus(event.id, origin);
-    if (outcome.kind === 'cancelled') {
-      this.#announce(this.#i18n.t('core.component.calendar.cancelled'));
-      return false;
-    }
-    if (outcome.kind === 'rejected' || outcome.kind === 'error') {
-      const message = this.#i18n.t(`core.component.calendar.${outcome.kind === 'rejected' ? 'rejected' : 'error'}`);
-      this.#failure.set({ id: event.id, message });
-      this.#announce(message);
-      this.sdMoveError.emit(
-        outcome.kind === 'error' ? { request, reason: 'error', error: outcome.error } : { request, reason: 'rejected' }
-      );
-      return false;
-    }
-    const moved: SdCalendarEvent<T> = { ...event, start: to.start, end: to.end, allDay: to.allDay };
-    this.#loader.items.update(items => items.map(item => (item.id === event.id ? moved : item)));
-    const visible = untracked(this.visible);
-    if (target.startDay < visible.from || target.startDay > visible.to) this.date.set(target.startDay);
-    this.sdMove.emit(request);
-    this.#announce(
-      source === 'resize' || (from.start === to.start && from.end !== to.end)
-        ? this.#i18n.t('core.component.calendar.resized', {
-            title: event.title,
-            start: sdCalendarClockText(target.startMinutes),
-            end: sdCalendarClockText(target.endMinutes),
-          })
-        : this.#i18n.t('core.component.calendar.moved', {
-            title: event.title,
-            weekday: this.#weekdayLong(target.startDay),
-            date: this.#dateText(target.startDay, false),
-            time: target.allDay ? this.#i18n.t('core.component.calendar.all-day') : sdCalendarClockText(target.startMinutes),
-          })
-    );
-    if (scope === 'following' || scope === 'all') this.reload();
-    return true;
+    return this.#runner.run<SdCalendarMoveRequest<T>>({
+      id,
+      title: event.title,
+      recurring: !!event.occurrence,
+      source,
+      keyboard,
+      // SC-06: the flag is evaluated once more right before the callback.
+      allowed: () => sdCalendarAllows(move.movable, event),
+      request: (scope, signal) => ({ event, from, to, source, scope, signal }),
+      onMove: move.onMove,
+      show: saving => this.#moving.set(saving === null ? null : { id, target, saving }),
+      accept: request => {
+        const moved: SdCalendarEvent<T> = { ...event, start: to.start, end: to.end, allDay: to.allDay };
+        this.#loader.items.update(items => items.map(item => (item.id === event.id ? moved : item)));
+        const visible = untracked(this.visible);
+        if (target.startDay < visible.from || target.startDay > visible.to) this.date.set(target.startDay);
+        this.sdMove.emit(request);
+        return sdCalendarMovedText(event.title, target, from, to, source, this.#formats(), this.#t);
+      },
+      fail: (request, outcome) =>
+        this.sdMoveError.emit(
+          outcome.kind === 'error' ? { request, reason: 'error', error: outcome.error } : { request, reason: 'rejected' }
+        ),
+    });
   }
 
   async #create(day: string, span: SdCalendarSpan): Promise<void> {
@@ -1328,29 +1200,15 @@ export class SdCalendar<T = unknown> {
     }
     const range = this.#createRange(day, span);
     if (!sdCalendarAllows(create.creatable, range)) return;
-    const signal = this.#operation.begin('create');
-    if (!signal) return;
-    this.#failure.set(null);
-    this.#ghost.set({ day, start: span.start, end: span.end, pending: true, blocked: false });
-    let created: SdCalendarEvent<T> | void;
-    try {
-      created = await create.onCreate({ ...range, signal });
-    } catch {
-      if (signal.aborted) return;
-      this.#operation.end(signal);
-      this.#ghost.set(null);
-      const message = this.#i18n.t('core.component.calendar.create-error');
-      this.#failure.set({ id: null, message });
-      this.#announce(message);
-      return;
-    }
-    if (signal.aborted) return;
-    this.#operation.end(signal);
-    this.#ghost.set(null);
-    if (!created) return;
-    const event = created;
-    this.#loader.items.update(items => [...items, event]);
-    this.selectedId.set(event.id);
+    await this.#creator.run<SdCalendarRange, SdCalendarEvent<T>>({
+      args: range,
+      onCreate: create.onCreate,
+      show: waiting => this.#ghost.set(waiting ? { day, start: span.start, end: span.end, pending: true, blocked: false } : null),
+      accept: event => {
+        this.#loader.items.update(items => [...items, event]);
+        this.selectedId.set(event.id);
+      },
+    });
   }
 
   #createRange(day: string, span: SdCalendarSpan): SdCalendarRange {
@@ -1371,22 +1229,20 @@ export class SdCalendar<T = unknown> {
     this.#now.set(this.#clock.now());
     void this.#loader
       .load(
-        rangeKey(range),
+        sdCalendarRangeKey(range),
         signal => option.dataSource.onLoad({ from: range.from, to: range.to, view: range.view, signal }),
         error => {
           this.#announce(this.#i18n.t('core.component.calendar.load-error'));
           this.sdLoadError.emit(error);
         }
       )
-      .then(() => this.#focusPending());
+      .then(() => this.#focus.pending());
   }
 
   #abortMove(): void {
     if (!this.#operation.abort(['move'])) return;
     this.#moving.set(null);
-    const asking = this.#asking();
-    this.#asking.set(null);
-    asking?.answer(null);
+    this.scopeBar.answer(null);
   }
 
   #abortCreate(): void {
@@ -1397,30 +1253,7 @@ export class SdCalendar<T = unknown> {
     placed: SdCalendarPlaced<T>,
     to: { start: SdCalendarDateInput; end?: SdCalendarDateInput | null; allDay?: boolean }
   ): SdCalendarTarget | null {
-    const allDay = to.allDay ?? !!placed.event.allDay;
-    if (allDay) {
-      const startDay = sdCalendarReadDay(to.start, this.#clock);
-      if (!startDay) return null;
-      const endDay = to.end
-        ? sdCalendarReadDay(to.end, this.#clock)
-        : sdCalendarAddDays(startDay, sdCalendarDayDiff(placed.placement.firstDay, placed.placement.lastDay));
-      return endDay && endDay >= startDay ? { allDay: true, startDay, startMinutes: 0, endDay, endMinutes: 1440 } : null;
-    }
-    if (to.end !== null && to.end !== undefined) {
-      const placement = sdCalendarPlace({ id: placed.event.id, title: placed.event.title, start: to.start, end: to.end }, this.#clock);
-      return placement ? targetOf(placement) : null;
-    }
-    const start = sdCalendarReadWallClock(to.start, this.#clock);
-    if (!start) return null;
-    const total = start.minutes + Math.round((placed.placement.endInstant - placed.placement.startInstant) / MINUTE);
-    const days = Math.floor((total - 1) / 1440);
-    return {
-      allDay: false,
-      startDay: start.day,
-      startMinutes: start.minutes,
-      endDay: sdCalendarAddDays(start.day, days),
-      endMinutes: total - days * 1440,
-    };
+    return sdCalendarMoveTarget(placed.placement, to, !!placed.event.allDay, this.#clock);
   }
 
   #shifted(placement: SdCalendarPlacement, days: number, minutes: number): SdCalendarTarget {
@@ -1432,13 +1265,7 @@ export class SdCalendar<T = unknown> {
       const day = sdCalendarAddDays(placement.startDay, days);
       return { allDay: false, startDay: day, startMinutes: start, endDay: day, endMinutes: start + duration };
     }
-    return {
-      allDay: placement.allDay,
-      startDay: sdCalendarAddDays(placement.startDay, days),
-      startMinutes: placement.startMinutes,
-      endDay: sdCalendarAddDays(placement.endDay, days),
-      endMinutes: placement.endMinutes,
-    };
+    return sdCalendarShiftDays(placement, days);
   }
 
   #updateDragProposal(): void {
@@ -1462,29 +1289,15 @@ export class SdCalendar<T = unknown> {
   /** Scrolls while the pointer is within 40px of the top or bottom of the scroll area, faster closer to it (§9.3). */
   #edgeScroll(): void {
     const scroller = this.scroller()?.nativeElement;
-    const pointer = this.#dragPointer;
-    if (!scroller || !pointer) return this.#stopEdgeScroll();
-    const rect = scroller.getBoundingClientRect();
-    const top = pointer.y - rect.top;
-    const bottom = rect.bottom - pointer.y;
-    let speed = 0;
-    if (top >= 0 && top < EDGE) speed = -Math.ceil(((EDGE - top) / EDGE) * EDGE_SPEED);
-    else if (bottom >= 0 && bottom < EDGE) speed = Math.ceil(((EDGE - bottom) / EDGE) * EDGE_SPEED);
-    if (!speed) return this.#stopEdgeScroll();
-    if (this.#edgeFrame || typeof requestAnimationFrame === 'undefined') return;
-    const frame = (): void => {
-      this.#edgeFrame = 0;
+    this.#edge.update(scroller, scroller?.getBoundingClientRect() ?? null, this.#dragPointer, { x: false, y: true }, () => {
       if (!this.#dragSession) return;
-      scroller.scrollTop += speed;
-      this.#zone.run(() => this.#updateDragProposal());
+      this.#updateDragProposal();
       this.#edgeScroll();
-    };
-    this.#edgeFrame = this.#zone.runOutsideAngular(() => requestAnimationFrame(frame));
+    });
   }
 
   #stopEdgeScroll(): void {
-    if (this.#edgeFrame && typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(this.#edgeFrame);
-    this.#edgeFrame = 0;
+    this.#edge.stop();
   }
 
   /** Esc cancels a sweep, a drag or a resize. */
@@ -1511,29 +1324,7 @@ export class SdCalendar<T = unknown> {
   };
 
   #restoreFocus(id: string, origin: Element | null): void {
-    const active = document.activeElement;
-    // A focus still inside the scope bar is the calendar's own: the bar is about to be removed (SC-29, R2 A-18).
-    const inScopeBar = !!active && !!this.#host.nativeElement.querySelector('.sd-calendar__scope')?.contains(active);
-    // SC-30: the user moved the focus somewhere else while waiting; keep it there.
-    if (active && active !== document.body && active !== origin && active.isConnected && !inScopeBar) return;
-    this.#focusTarget = id;
-    this.#focusPending();
-  }
-
-  /** Focuses the block of `#focusTarget` once it is rendered (it may first need the next range to load). */
-  #focusPending(): void {
-    if (!this.#focusTarget) return;
-    afterNextRender(
-      () => {
-        const id = this.#focusTarget;
-        if (!id) return;
-        const element = this.#host.nativeElement.querySelector<HTMLElement>(`[data-event-id="${cssEscape(id)}"][tabindex]`);
-        if (!element) return;
-        this.#focusTarget = null;
-        element.focus();
-      },
-      { injector: this.#injector }
-    );
+    this.#focus.restore(id, origin);
   }
 
   #revealCursor(): void {
@@ -1557,13 +1348,6 @@ export class SdCalendar<T = unknown> {
     return direction > 0 ? shifted[0] : shifted[shifted.length - 1];
   }
 
-  /** Width of the host before the first ResizeObserver callback, so the first load already fits a narrow host. */
-  #measureOnce(): void {
-    if (this.#width() !== null || typeof ResizeObserver === 'undefined') return;
-    const width = this.#host.nativeElement.getBoundingClientRect().width;
-    if (width > 0) this.#width.set(width);
-  }
-
   /** Moves one day for a horizontal swipe; returns whether the press was one. */
   #swipe(press: { readonly x: number; readonly y: number }, domEvent: PointerEvent): boolean {
     const dx = domEvent.clientX - press.x;
@@ -1583,13 +1367,11 @@ export class SdCalendar<T = unknown> {
   }
 
   #rtl(): boolean {
-    return getComputedStyle(this.#host.nativeElement).direction === 'rtl';
+    return sdCalendarIsRtl(this.#host.nativeElement);
   }
 
   #outOfRange(day: string): boolean {
-    const min = untracked(this.#minDay);
-    const max = untracked(this.#maxDay);
-    return (!!min && day < min) || (!!max && day > max);
+    return sdCalendarOutOfRange(day, untracked(this.#minDay), untracked(this.#maxDay));
   }
 
   #slotLabel(day: string, minutes: number): string {
@@ -1619,15 +1401,8 @@ export class SdCalendar<T = unknown> {
     this.#announce(untracked(this.title));
   }
 
-  /** Writes the live region; the same text twice in a row gets a trailing no-break space so it is read again (R1-G9). */
   #announce(message: string): void {
-    const current = untracked(this.#announcement);
-    this.#announcement.set(current === message ? `${message}\u00a0` : message);
-  }
-
-  #boundDay(value: SdCalendarDateInput | 'TODAY' | null | undefined): string | null {
-    if (value === null || value === undefined || value === '') return null;
-    return value === 'TODAY' ? this.today() : sdCalendarReadDay(value, this.#clock);
+    this.#announcer.announce(message);
   }
 
   #navLabel(direction: 'prev' | 'next'): string {
@@ -1639,31 +1414,18 @@ export class SdCalendar<T = unknown> {
   }
 
   #weekdayLong(day: string): string {
-    return this.#formats().weekday.format(utcDay(day));
+    return sdCalendarWeekdayLong(this.#formats(), day);
   }
 
-  /**
-   * Short date of a day: "Oct 22" / "Oct 22, 2026" in English, otherwise the numeric parts in the order of the
-   * locale joined by "/" ("22/10/2026", "2026/10/22").
-   *
-   * why: `Intl` writes vi-VN numeric dates with "-" in current Chromium, while the design shows "22/10".
-   */
   #dateText(day: string, withYear: boolean): string {
-    const formats = this.#formats();
-    const format = withYear ? formats.dateYear : formats.date;
-    if (formats.named) return format.format(utcDay(day));
-    return format
-      .formatToParts(utcDay(day))
-      .filter(part => part.type === 'day' || part.type === 'month' || part.type === 'year')
-      .map(part => part.value)
-      .join('/');
+    return sdCalendarDateText(this.#formats(), day, withYear);
   }
 
   #dayView(day: string): SdCalendarDayView {
     const weekday = sdCalendarWeekday(day);
     const holiday = this.#holidays().get(day) ?? null;
     const working = sdCalendarWorkingRanges(this.#workingHours(), weekday);
-    const off = holiday?.type === 'off' || (working !== null && working.length === 0);
+    const off = sdCalendarIsOffDay(day, holiday, this.#workingHours());
     const min = this.#minDay();
     const max = this.#maxDay();
     return {
@@ -1681,8 +1443,7 @@ export class SdCalendar<T = unknown> {
 
   #itemView(placed: SdCalendarPlaced<T>): SdCalendarItemView<T> {
     const { event, placement } = placed;
-    const color = event.color ?? 'primary';
-    const palette = PALETTE.has(color);
+    const { color, customColor } = sdCalendarColor(event.color);
     const start = sdCalendarClockText(placement.startMinutes);
     const end = sdCalendarClockText(placement.endMinutes);
     const recurring = !!event.occurrence;
@@ -1712,8 +1473,8 @@ export class SdCalendar<T = unknown> {
       range: sdCalendarRangeOf(placement, this.#clock, this.transform()),
       label,
       autoId: root ? `${root}-event-${encodeURIComponent(event.id)}` : null,
-      color: palette ? color : 'custom',
-      customColor: palette ? null : color,
+      color,
+      customColor,
       recurring,
       past: this.dimPast() && placement.endInstant <= this.#nowInstant(),
       pending: placed.pending,
@@ -1811,8 +1572,7 @@ export class SdCalendar<T = unknown> {
       const dots = new Map<string, { color: string; customColor: string | null }>();
       for (const event of events) {
         const color = event.color ?? 'primary';
-        if (dots.size < 3 && !dots.has(color))
-          dots.set(color, PALETTE.has(color) ? { color, customColor: null } : { color: 'custom', customColor: color });
+        if (dots.size < 3 && !dots.has(color)) dots.set(color, sdCalendarColor(color));
       }
       return {
         day: view,
@@ -1825,13 +1585,6 @@ export class SdCalendar<T = unknown> {
       };
     });
   }
-
-  /** Logs a dev-mode diagnostic once per instance and key. */
-  #report(level: 'error' | 'warn', key: string, message: string): void {
-    if (!isDevMode() || this.#reported.has(key)) return;
-    this.#reported.add(key);
-    console[level](`[sd-calendar] ${message}`);
-  }
 }
 
 /**
@@ -1843,60 +1596,6 @@ function firstSegment<V extends { readonly key: string; readonly autoId: string 
   if (seen.has(item.key)) return { ...item, autoId: null };
   seen.add(item.key);
   return item;
-}
-
-function targetOf(placement: SdCalendarPlacement): SdCalendarTarget {
-  return {
-    allDay: placement.allDay,
-    startDay: placement.startDay,
-    startMinutes: placement.startMinutes,
-    endDay: placement.endDay,
-    endMinutes: placement.endMinutes,
-  };
-}
-
-/** Last calendar day a target covers (an end at 00:00 belongs to the day before). */
-function lastDayOf(target: SdCalendarTarget): string {
-  if (target.allDay || target.endDay === target.startDay || target.endMinutes > 0) return target.endDay;
-  return sdCalendarAddDays(target.endDay, -1);
-}
-
-function pointOf(event: MouseEvent | TouchEvent): Point | null {
-  if ('touches' in event) {
-    const touch = event.touches[0] ?? event.changedTouches[0];
-    return touch ? { x: touch.clientX, y: touch.clientY } : null;
-  }
-  return { x: event.clientX, y: event.clientY };
-}
-
-function cssEscape(value: string): string {
-  return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, '\\$&');
-}
-
-function rangeKey(range: SdCalendarVisibleRange): string {
-  return `${range.view}|${range.from}|${range.to}`;
-}
-
-function sameRange(a: SdCalendarVisibleRange, b: SdCalendarVisibleRange): boolean {
-  return rangeKey(a) === rangeKey(b);
-}
-
-function sameList(a: readonly string[], b: readonly string[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
-}
-
-/** `'yyyy/MM/dd'` of a carrier (a local `Date` whose fields are a wall clock of the zone). */
-function carrierDay(carrier: Date): string {
-  return sdCalendarDay(carrier.getFullYear(), carrier.getMonth() + 1, carrier.getDate());
-}
-
-/** Noon UTC of a calendar day, only to name it with `Intl` in `timeZone: 'UTC'`. */
-function utcDay(day: string): Date {
-  const { year, month, day: date } = sdCalendarDayParts(day)!;
-  const value = new Date(0);
-  value.setUTCFullYear(year, month - 1, date);
-  value.setUTCHours(12);
-  return value;
 }
 
 function offsetTop(minutes: number): string {

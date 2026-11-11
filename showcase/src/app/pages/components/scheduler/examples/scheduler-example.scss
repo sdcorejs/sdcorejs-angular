@@ -1,0 +1,157 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-layout {
+  // The scheduler takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .scheduler-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.scheduler-box {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 560px;
+
+  > sd-scheduler {
+    flex: 1 1 auto;
+  }
+}
+
+.scheduler-side {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.scheduler-detail {
+  margin: 0;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.scheduler-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.scheduler-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.scheduler-person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scheduler-person__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduler-person__total {
+  flex: none;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
+.scheduler-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
+  font-weight: 600;
+
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
+  }
+
+  &[data-code='P'] {
+    background: var(--sd-info-light, #dbe8f5);
+  }
+
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
+  }
+
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
+  }
+}

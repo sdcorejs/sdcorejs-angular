@@ -1,21 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { existsSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { axe, button, cycle, screenshots } from './schedule.support';
 
 // E2E of sd-calendar on its Showcase page (handoff schedule-kanban, TESTING.md §5.3, §8–§10).
 
-declare global {
-  interface Window {
-    __t0: number;
-    __long: number[];
-    axe: { run: (context: Element) => Promise<{ violations: { id: string; impact: string }[] }> };
-  }
-}
-
-// why: Playwright loads the e2e files as CommonJS here, so __dirname instead of import.meta.url.
-const HERE = __dirname;
-const AXE = resolve(HERE, '../../../versions/v19/node_modules/axe-core/axe.min.js');
-const SHOTS = resolve(HERE, '../../../.sdcorejs/handoff/schedule-kanban/reports/calendar-screens');
+const { shot } = screenshots('calendar-screens');
 const PAGE = '/v/latest/components/calendar/examples';
 
 const SECTIONS = {
@@ -74,31 +62,9 @@ async function drag(page: Page, source: Locator, to: { x: number; y: number }, b
 }
 
 const log = (page: Page): Locator => page.getByTestId('calendar-log');
-const button = (page: Page, autoId: string): Locator => page.locator(`[data-autoid="components-button-${autoId}"]`).first();
 
 async function setMoveMode(page: Page, mode: string): Promise<void> {
-  for (let index = 0; index < 5; index++) {
-    const text = (await button(page, 'playground-mode').textContent()) ?? '';
-    if (text.includes(`onMove: ${mode}`)) return;
-    // why: sd-button throttles clicks for 300ms.
-    await page.waitForTimeout(350);
-    await button(page, 'playground-mode').click();
-    await expect(button(page, 'playground-mode')).not.toHaveText(text);
-  }
-  throw new Error(`move mode ${mode} not reached`);
-}
-
-async function axe(page: Page, root: Locator): Promise<void> {
-  if (!existsSync(AXE)) test.skip(true, 'axe-core is not installed in versions/v19');
-  await page.addScriptTag({ path: AXE });
-  const handle = await root.elementHandle();
-  const violations = await page.evaluate(async element => {
-    const result = await window.axe.run(element!);
-    return result.violations
-      .filter(item => item.impact === 'serious' || item.impact === 'critical')
-      .map(item => `${item.id} (${item.impact})`);
-  }, handle);
-  expect(violations).toEqual([]);
+  await cycle(page, 'playground-mode', `onMove: ${mode}`, 5);
 }
 
 /**
@@ -111,14 +77,6 @@ async function rtl(root: Locator, on: boolean): Promise<void> {
     if (value) host.setAttribute('dir', 'rtl');
     else host.removeAttribute('dir');
   }, on);
-}
-
-async function shot(root: Locator, name: string): Promise<void> {
-  // why: every test runs in both zone projects; only the Bangkok run writes, so a UTC run does not replace the
-  // pictures with GMT+0 labels (R2 A-21).
-  if (test.info().project.name !== 'asia-bangkok') return;
-  mkdirSync(SHOTS, { recursive: true });
-  await root.screenshot({ path: resolve(SHOTS, `${name}.png`), animations: 'disabled' });
 }
 
 test.describe('sd-calendar', () => {

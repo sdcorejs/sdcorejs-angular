@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-card` gets `behavior` (`static`, `link`, `select`) and five content layouts (`stat`, `option`, `entity`, `file`, `shortcut`) with shared `loading`, `error` and `size`; the score cards of `modules/pattern` use `layout: 'stat'`
 - `sd-timeline` (`@sdcorejs/angular/components/timeline`): activity timeline with comment, change and event layouts, day groups and cursor paging; it replaces `sd-history`
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`): month, week, day and agenda views with `dataSource.onLoad`, create by click/sweep/Enter and move by drag, edge or `Alt` + arrows through `onMove` (which can also answer `'cancel'`)
+- `sd-scheduler` (`@sdcorejs/angular/components/scheduler`): resource rows (rooms, vehicles, people) in day, week and month views, collapsible groups, create by sweeping a row, and move on two axes with `droppable` and `axis` through the same `onMove` pipeline as `sd-calendar`
 - `sd-kanban` new API: cards as `SdKanbanCard<T>`, a data source per column with cursor paging, totals and summaries, `droppable` checked while dragging, card selection and dragging by the whole card
 - `sd-query-bar`: one panel frame (the `sd-button` Action Popover) for the field picker, the chip popover and saved filters instead of `mat-menu`; saved filters with Undo and empty / error states; required fields always keep a chip and a value; an **Add condition** box in inline mode; `sd-table` saves its query-bar filters with `filter.queryBar.savedFilters`
 
@@ -174,7 +175,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`, `SdCalendar<T>`): month, week, day and agenda views of `SdCalendarEvent<T>` (`id`, `title`, `start`, `end`, `allDay`, `color`, `occurrence`, `data`).
   - `option.dataSource.onLoad({ from, to, view, signal })` per range, with abort of late results, `reload()`, a load-error band with Retry and the `sdLoadError` output.
   - `option.create = { creatable?, onCreate }`: click, sweep, tap or `Enter` on an empty slot; the dashed block waits for `onCreate`.
-  - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo.
+  - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo. `request.source` is `'drag'`, `'resize'` (bottom edge or `Alt` + `Shift` + ↑ ↓), `'keyboard'` or `'api'`; a block that has the focus keeps it after its move.
   - Recurring occurrences ask for the scope (`this`, `following`, `all`) before `onMove`.
   - Two-way `view`, `date`, `selectedId`; `step`, `firstDayOfWeek`, `hideWeekends`, `workingHours`, `holidays`, `minDate`/`maxDate`, `scrollTime`, `agendaDays`, `dimPast`, `transform`, `readonly`, `disabled`; `SD_CALENDAR_CONFIGURATION`.
   - Compact layout under 600px of host width, touch, print, forced colors and reduced motion; dates in `ISdCoreConfiguration.timeZone`.
@@ -218,6 +219,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `data-autoid` for the search box (`<autoId>-search`, `-search-clear`), the panels (`-panel-field-picker`, `-panel-chip`, `-panel-saved-filters`) and saved filters (`-saved-filters`, `-saved-filter-<i>`, `-saved-filter-<i>-delete`, `-saved-filters-save`).
 - `SdQueryBar.canSaveFilter()` and `isLocked(field)`.
 - i18n keys `core.component.query-bar.{saved-filters.heading,saved-filters.deleted,saved-filters.undo,saved-filters.read-error,saved-filters.write-error,search-clear,add-condition,required-min-one,remove-filter}` in the five locales.
+
+#### Scheduler
+
+- `sd-scheduler` (`@sdcorejs/angular/components/scheduler`, `SdScheduler<T, R>`): one row per `SdSchedulerResource<R>` (`id`, `title`, `description`, `group`, `icon`, `avatar`, `workingHours`, `data`), a day on the hour axis or a week or a month on the day axis, for `SdSchedulerEvent<T>` (the calendar event plus `resourceId`).
+  - `option.dataSource.onLoad({ from, to, view, resourceIds, signal })` per range; a `resources` array with other ids loads again (the same ids only redraw the rows), an empty one shows the empty state without a load.
+  - Resource groups (`group`) that collapse and stay collapsed across ranges; per-resource `workingHours`.
+  - `option.create = { creatable?, onCreate }`: sweep on one row, click, tap or `Enter`; the context carries `resource` and `resourceId`.
+  - `option.move = { movable?, droppable?, axis?, onMove }`: drag on two axes (row and time), the end handle and `Alt` + arrows (`Alt` + ↑ ↓ to the nearest resource `droppable` allows); `droppable({ event, to, resource })` is checked while dragging and for `move()`; `axis: 'time' | 'resource'` locks one axis. `onMove`, the recurring scope bar, `sdMove`, `sdMoveError` and `move(eventId, to, source)` behave as in `sd-calendar`.
+  - Templates: `sdSchedulerEventTemplate`, `sdSchedulerResourceTemplate`, `sdSchedulerEmptyTemplate` and `sdSchedulerCellTemplate` (week and month cells instead of blocks, with `sdCellSelect`).
+  - The grid is one tab stop with a cursor (`aria-activedescendant`); compact layout under 600px of host width, touch, forced colors and reduced motion. It reuses `SD_CALENDAR_CONFIGURATION` and the `--sd-calendar-*` tokens; the size variables `--sd-scheduler-*` take `px`.
+- i18n keys `core.component.scheduler.*` in the five locales.
 
 #### Search field
 

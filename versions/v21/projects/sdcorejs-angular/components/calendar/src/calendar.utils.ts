@@ -1,6 +1,15 @@
 import { ɵsdNormalizeCalendarDay, sdSerializeTemporalValue, type SdTemporalValueTransform } from '@sdcorejs/angular/forms/models';
 import { sdTimeToMinutes } from '@sdcorejs/angular/forms/time';
-import type { SdCalendarEvent, SdCalendarRange, SdCalendarView, SdCalendarVisibleRange, SdCalendarWorkingHours } from './calendar.model';
+import { ɵSD_CALENDAR_DEFAULTS, type ISdCalendarConfiguration } from './calendar.configuration';
+import type {
+  SdCalendarDateInput,
+  SdCalendarEvent,
+  SdCalendarHoliday,
+  SdCalendarRange,
+  SdCalendarView,
+  SdCalendarVisibleRange,
+  SdCalendarWorkingHours,
+} from './calendar.model';
 
 /**
  * Pure helpers of `sd-calendar`, shared with `sd-scheduler` through the `ɵ` exports of the entry point.
@@ -182,11 +191,14 @@ export function sdCalendarMoveStep(step: number): number {
   return Math.min(step, 15);
 }
 
-const daysBetween = (from: string, to: string): string[] => {
+/** Every day from `from` to `to`, both included. */
+export function sdCalendarDaysBetween(from: string, to: string): string[] {
   const days: string[] = [];
   for (let day = from; day <= to; day = sdCalendarAddDays(day, 1)) days.push(day);
   return days;
-};
+}
+
+const daysBetween = sdCalendarDaysBetween;
 
 /** Full weeks of the month view (4–6 rows), weekends left out when `hideWeekends`. */
 export function sdCalendarMonthWeeks(input: SdCalendarRangeInput): string[][] {
@@ -500,4 +512,201 @@ export function sdCalendarRangeOf(
     end: sdCalendarSerialize(placement.endDay, placement.endMinutes, clock, transform),
     allDay: false,
   };
+}
+
+// ---- configuration and small helpers shared with sd-scheduler ----
+
+/** Where an event should go: wall clock of its start and end in the zone. */
+export interface SdCalendarTarget {
+  readonly allDay: boolean;
+  readonly startDay: string;
+  readonly startMinutes: number;
+  readonly endDay: string;
+  readonly endMinutes: number;
+}
+
+/** The target of a placed event where it is now. */
+export function sdCalendarTargetOf(placement: SdCalendarTarget): SdCalendarTarget {
+  return {
+    allDay: placement.allDay,
+    startDay: placement.startDay,
+    startMinutes: placement.startMinutes,
+    endDay: placement.endDay,
+    endMinutes: placement.endMinutes,
+  };
+}
+
+/** The target of a placement moved by whole days, its times and kind kept. */
+export function sdCalendarShiftDays(placement: SdCalendarTarget, days: number): SdCalendarTarget {
+  return {
+    allDay: placement.allDay,
+    startDay: sdCalendarAddDays(placement.startDay, days),
+    startMinutes: placement.startMinutes,
+    endDay: sdCalendarAddDays(placement.endDay, days),
+    endMinutes: placement.endMinutes,
+  };
+}
+
+/**
+ * Target of `move(id, to)` (calendar.md §4.3): `to.allDay` (default `allDay`) picks the kind. All-day: the days of
+ * `to`, the duration in days kept without `to.end`. Timed: the span of `to`, or its start with the duration kept.
+ * `null` when a value cannot be read or the end is before the start.
+ */
+export function sdCalendarMoveTarget(
+  placement: Pick<SdCalendarPlacement, 'firstDay' | 'lastDay' | 'startInstant' | 'endInstant'>,
+  to: { readonly start: SdCalendarDateInput; readonly end?: SdCalendarDateInput | null; readonly allDay?: boolean },
+  allDay: boolean,
+  clock: SdCalendarClock
+): SdCalendarTarget | null {
+  if (to.allDay ?? allDay) {
+    const startDay = sdCalendarReadDay(to.start, clock);
+    if (!startDay) return null;
+    const endDay = to.end
+      ? sdCalendarReadDay(to.end, clock)
+      : sdCalendarAddDays(startDay, sdCalendarDayDiff(placement.firstDay, placement.lastDay));
+    return endDay && endDay >= startDay ? { allDay: true, startDay, startMinutes: 0, endDay, endMinutes: 1440 } : null;
+  }
+  if (to.end !== null && to.end !== undefined) {
+    const next = sdCalendarPlace({ id: 'move', title: 'move', start: to.start, end: to.end }, clock);
+    return next ? sdCalendarTargetOf(next) : null;
+  }
+  const start = sdCalendarReadWallClock(to.start, clock);
+  if (!start) return null;
+  const total = start.minutes + Math.round((placement.endInstant - placement.startInstant) / 60_000);
+  const days = Math.floor((total - 1) / MINUTES_PER_DAY);
+  return {
+    allDay: false,
+    startDay: start.day,
+    startMinutes: start.minutes,
+    endDay: sdCalendarAddDays(start.day, days),
+    endMinutes: total - days * MINUTES_PER_DAY,
+  };
+}
+
+/** Last calendar day a target covers (an end at 00:00 belongs to the day before). */
+export function sdCalendarLastDayOf(target: SdCalendarTarget): string {
+  if (target.allDay || target.endDay === target.startDay || target.endMinutes > 0) return target.endDay;
+  return sdCalendarAddDays(target.endDay, -1);
+}
+
+/** `step`: the input, then the configuration, then 30; a length that is not a divisor of 60 falls back to 30. */
+export function sdCalendarResolveStep(value: number | undefined, configuration: ISdCalendarConfiguration | null): number {
+  return sdCalendarNormalizeStep(value ?? configuration?.step ?? ɵSD_CALENDAR_DEFAULTS.step) ?? 30;
+}
+
+/** `firstDayOfWeek`: the input, then the configuration, then Monday; anything but 0–6 is Monday. */
+export function sdCalendarResolveFirstDayOfWeek(value: number | undefined, configuration: ISdCalendarConfiguration | null): number {
+  const day = value ?? configuration?.firstDayOfWeek ?? ɵSD_CALENDAR_DEFAULTS.firstDayOfWeek;
+  return Number.isInteger(day) && day >= 0 && day <= 6 ? day : ɵSD_CALENDAR_DEFAULTS.firstDayOfWeek;
+}
+
+/** `workingHours`: the input (`null` included), then the configuration, then Monday–Friday. */
+export function sdCalendarResolveWorkingHours(
+  value: SdCalendarWorkingHours | null | undefined,
+  configuration: ISdCalendarConfiguration | null
+): SdCalendarWorkingHours | null {
+  if (value !== undefined) return value;
+  const configured = configuration?.workingHours;
+  return configured !== undefined ? configured : ɵSD_CALENDAR_DEFAULTS.workingHours;
+}
+
+/** Holidays by calendar day (the input, then the configuration); an unreadable date is left out, the first one wins. */
+export function sdCalendarHolidayMap(
+  value: readonly SdCalendarHoliday[] | undefined,
+  configuration: ISdCalendarConfiguration | null,
+  clock: SdCalendarClock
+): Map<string, SdCalendarHoliday> {
+  const map = new Map<string, SdCalendarHoliday>();
+  for (const holiday of value ?? configuration?.holidays ?? []) {
+    const day = sdCalendarReadDay(holiday.date, clock);
+    if (day && !map.has(day)) map.set(day, holiday);
+  }
+  return map;
+}
+
+/** Day of `minDate` / `maxDate`: `'TODAY'` is `today`; an empty value is no bound. */
+export function sdCalendarBoundDay(
+  value: SdCalendarDateInput | 'TODAY' | null | undefined,
+  today: string,
+  clock: SdCalendarClock
+): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  return value === 'TODAY' ? today : sdCalendarReadDay(value, clock);
+}
+
+/** `day` is before `minDay` or after `maxDay` (a `null` bound does not limit). */
+export function sdCalendarOutOfRange(day: string, minDay: string | null, maxDay: string | null): boolean {
+  return (!!minDay && day < minDay) || (!!maxDay && day > maxDay);
+}
+
+/** `'yyyy/MM/dd'` of a carrier (a local `Date` whose fields are a wall clock of the zone). */
+export function sdCalendarCarrierDay(carrier: Date): string {
+  return sdCalendarDay(carrier.getFullYear(), carrier.getMonth() + 1, carrier.getDate());
+}
+
+/** Identity of a visible range; two ranges with the same key are the same range. */
+export function sdCalendarRangeKey(
+  range: SdCalendarVisibleRange | { readonly view: string; readonly from: string; readonly to: string }
+): string {
+  return `${range.view}|${range.from}|${range.to}`;
+}
+
+export function sdCalendarSameList(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/** Client point of a mouse or touch event (the first touch, or the first changed one on `touchend`). */
+export function sdCalendarPointOf(event: MouseEvent | TouchEvent): { x: number; y: number } | null {
+  if ('touches' in event) {
+    const touch = event.touches[0] ?? event.changedTouches[0];
+    return touch ? { x: touch.clientX, y: touch.clientY } : null;
+  }
+  return { x: event.clientX, y: event.clientY };
+}
+
+/** Duplicate, empty or non-string ids, or an empty title: the data set is refused (calendar §5, scheduler §12). */
+export function sdCalendarInvalidItems(items: readonly { readonly id: unknown; readonly title: unknown }[]): boolean {
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (typeof item.id !== 'string' || !item.id || seen.has(item.id) || typeof item.title !== 'string' || !item.title.trim()) return true;
+    seen.add(item.id);
+  }
+  return false;
+}
+
+const PALETTE = new Set(['primary', 'secondary', 'info', 'success', 'warning', 'error']);
+
+/** `data-color` of an item (§8.1): a palette name as is, any other CSS colour as `custom` with the value aside. */
+export function sdCalendarColor(color: string | undefined): { readonly color: string; readonly customColor: string | null } {
+  const value = color ?? 'primary';
+  return PALETTE.has(value) ? { color: value, customColor: null } : { color: 'custom', customColor: value };
+}
+
+/** A day off: an `off` holiday, or a weekday without working hours (never with `null` hours). */
+export function sdCalendarIsOffDay(
+  day: string,
+  holiday: SdCalendarHoliday | null | undefined,
+  hours: SdCalendarWorkingHours | null
+): boolean {
+  if (holiday?.type === 'off') return true;
+  const working = sdCalendarWorkingRanges(hours, sdCalendarWeekday(day));
+  return working !== null && working.length === 0;
+}
+
+/** Weekdays of `hours` with a range that `sdCalendarWorkingRanges` leaves out (a dev-mode warning). */
+export function sdCalendarBrokenWeekdays(hours: SdCalendarWorkingHours | null | undefined): number[] {
+  if (!hours) return [];
+  return Object.entries(hours)
+    .filter(([weekday, ranges]) => sdCalendarWorkingRanges(hours, Number(weekday))!.length !== (ranges ?? []).length)
+    .map(([weekday]) => Number(weekday));
+}
+
+/** SC-27: the selected id is no longer in the loaded items (only once the load settled). */
+export function sdCalendarSelectionGone(selected: string | null, phase: string, items: readonly { readonly id: string }[]): boolean {
+  return selected !== null && phase === 'idle' && !items.some(item => item.id === selected);
+}
+
+/** An id inside an attribute selector. */
+export function sdCalendarCssEscape(value: string): string {
+  return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, '\\$&');
 }

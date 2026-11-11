@@ -103,13 +103,13 @@
   <div class="sd-calendar__status sd-visually-hidden" role="status" aria-live="polite" aria-atomic="true">{{ announcement() }}</div>
   <span class="sd-visually-hidden" [id]="gridInstructionsId">{{ 'core.component.calendar.grid-instructions' | sdTranslate }}</span>
   <span class="sd-visually-hidden" [id]="eventInstructionsId">{{ 'core.component.calendar.event-instructions' | sdTranslate }}</span>
-  @if (asking(); as _ask) {
-    <div class="sd-calendar__scope" role="alertdialog" [attr.aria-labelledby]="scopeMessageId" (keydown)="onScopeKeydown($event)">
+  @if (scopeBar.asking(); as _ask) {
+    <div class="sd-calendar__scope" role="alertdialog" [attr.aria-labelledby]="scopeMessageId" (keydown)="scopeBar.onKeydown($event)">
       <p class="sd-calendar__scope-message" [id]="scopeMessageId">
         {{ 'core.component.calendar.scope-message' | sdTranslate: { title: _ask.title } }}
       </p>
       <div class="sd-calendar__scope-actions">
-        <button type="button" class="sd-calendar__scope-button" data-scope="this" [attr.data-autoid]="childAutoId('scope-this')" (click)="answerScope('this')">
+        <button type="button" class="sd-calendar__scope-button" data-scope="this" [attr.data-autoid]="childAutoId('scope-this')" (click)="scopeBar.answer('this')">
           {{ 'core.component.calendar.scope-this' | sdTranslate }}
         </button>
         <button
@@ -117,10 +117,10 @@
           class="sd-calendar__scope-button"
           data-scope="following"
           [attr.data-autoid]="childAutoId('scope-following')"
-          (click)="answerScope('following')">
+          (click)="scopeBar.answer('following')">
           {{ 'core.component.calendar.scope-following' | sdTranslate }}
         </button>
-        <button type="button" class="sd-calendar__scope-button" data-scope="all" [attr.data-autoid]="childAutoId('scope-all')" (click)="answerScope('all')">
+        <button type="button" class="sd-calendar__scope-button" data-scope="all" [attr.data-autoid]="childAutoId('scope-all')" (click)="scopeBar.answer('all')">
           {{ 'core.component.calendar.scope-all' | sdTranslate }}
         </button>
         <button
@@ -128,7 +128,7 @@
           class="sd-calendar__scope-button sd-calendar__scope-button--cancel"
           data-scope="cancel"
           [attr.data-autoid]="childAutoId('scope-cancel')"
-          (click)="answerScope(null)">
+          (click)="scopeBar.answer(null)">
           {{ 'core.common.cancel' | sdTranslate }}
         </button>
       </div>

@@ -12088,6 +12088,895 @@ export class QuickActionDemoComponent {
   gap: 8px;
 }`,
   },
+  "components/scheduler/example-cham-cong": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  SdScheduler,
+  SdSchedulerCellTemplateDirective,
+  SdSchedulerResourceTemplateDirective,
+  type SdSchedulerCellSelect,
+  type SdSchedulerEvent,
+  type SdSchedulerOption,
+} from '@sdcorejs/angular/components/scheduler';
+import { SHIFT_LEGEND, demoShifts, demoStaff, shiftTotal, type PersonDto, type ShiftDto } from './scheduler-demo.data';
+
+@Component({
+  selector: 'app-scheduler-timesheet-example',
+  standalone: true,
+  imports: [SdScheduler, SdSchedulerCellTemplateDirective, SdSchedulerResourceTemplateDirective],
+  templateUrl: './scheduler-timesheet.example.html',
+  styleUrl: './scheduler-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SchedulerTimesheetExampleComponent {
+  readonly staff = demoStaff();
+  readonly shifts = demoShifts();
+  readonly legend = SHIFT_LEGEND;
+  /** Days worked per person for the total column of the resource template ("4,5"). */
+  readonly totals = new Map(this.staff.map(person => [person.id, shiftTotal(this.shifts, person.id).toLocaleString('vi-VN')]));
+  readonly option: SdSchedulerOption<ShiftDto, PersonDto> = { dataSource: { onLoad: () => this.shifts } };
+  readonly picked = signal<string | null>(null);
+
+  codeOf(events: readonly SdSchedulerEvent<unknown>[]): string {
+    return (events[0]?.data as ShiftDto | undefined)?.code ?? '';
+  }
+
+  pick(cell: SdSchedulerCellSelect<ShiftDto, PersonDto>): void {
+    this.picked.set(\`\${cell.resource.title} · \${cell.date} · \${this.codeOf(cell.events)}\`);
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-layout {
+  // The scheduler takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .scheduler-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.scheduler-box {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 560px;
+
+  > sd-scheduler {
+    flex: 1 1 auto;
+  }
+}
+
+.scheduler-side {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.scheduler-detail {
+  margin: 0;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.scheduler-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.scheduler-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.scheduler-person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scheduler-person__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduler-person__total {
+  flex: none;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
+.scheduler-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
+  font-weight: 600;
+
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
+  }
+
+  &[data-code='P'] {
+    background: var(--sd-info-light, #dbe8f5);
+  }
+
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
+  }
+
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
+  }
+}`,
+  },
+  "components/scheduler/example-dat-phong-hop": {
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import {
+  SdScheduler,
+  type SdSchedulerCreateArgs,
+  type SdSchedulerMoveRequest,
+  type SdSchedulerOption,
+  type SdSchedulerView,
+} from '@sdcorejs/angular/components/scheduler';
+import {
+  DEMO_DAY,
+  DEMO_HOLIDAYS,
+  delay,
+  demoBookings,
+  demoRooms,
+  perfEvents,
+  perfResources,
+  type BookingDto,
+  type BookingEvent,
+  type RoomDto,
+  type RoomResource,
+} from './scheduler-demo.data';
+
+type MoveMode = 'accept' | 'reject' | 'cancel' | 'throw' | 'slow';
+const VIEWS: readonly SdSchedulerView[] = ['day', 'week', 'month'];
+const MODES: readonly MoveMode[] = ['accept', 'reject', 'cancel', 'throw', 'slow'];
+
+@Component({
+  selector: 'app-scheduler-booking-example',
+  standalone: true,
+  imports: [SdButton, SdScheduler],
+  templateUrl: './scheduler-booking.example.html',
+  styleUrl: './scheduler-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SchedulerBookingExampleComponent {
+  readonly view = signal<SdSchedulerView>('day');
+  readonly date = signal<string | null | undefined>(DEMO_DAY);
+  readonly step = signal(30);
+  readonly hideWeekends = signal(false);
+  readonly withHours = signal(true);
+  readonly showHolidays = signal(true);
+  readonly dimPast = signal(false);
+  readonly readonly = signal(false);
+  readonly disabled = signal(false);
+  readonly server = signal(false);
+  /** The next load throws once: the error band, then Retry loads again. */
+  readonly failNext = signal(false);
+  readonly moveMode = signal<MoveMode>('accept');
+  readonly noResources = signal(false);
+  /** 150 resources × 31 days × 3 events (TESTING §10). */
+  readonly perf = signal(false);
+
+  /** The consumer's store: the scheduler only reads it through onLoad. */
+  readonly events = signal<BookingEvent[]>(demoBookings());
+  readonly scheduler = viewChild.required(SdScheduler);
+  readonly selected = signal<BookingEvent | null>(null);
+  readonly log = signal<string[]>([]);
+  /** The demo dialog of a create; the scheduler keeps its dashed block until the promise settles. */
+  readonly dialog = signal<{ args: SdSchedulerCreateArgs<RoomDto>; title: string } | null>(null);
+  #answer: ((title: string | null) => void) | null = null;
+
+  readonly resources = computed<readonly RoomResource[]>(() => (this.noResources() ? [] : this.perf() ? perfResources() : demoRooms()));
+  readonly workingHours = computed(() => (this.withHours() ? undefined : null));
+  readonly holidays = computed(() => (this.showHolidays() ? DEMO_HOLIDAYS : []));
+
+  readonly option = computed<SdSchedulerOption<BookingDto, RoomDto>>(() => {
+    const server = this.server();
+    const perf = this.perf();
+    return {
+      dataSource: {
+        onLoad: async ({ signal }) => {
+          if (server) await delay(600, signal);
+          if (this.failNext()) {
+            this.failNext.set(false);
+            throw new Error('Máy chủ không phản hồi');
+          }
+          return perf ? perfEvents() : this.events();
+        },
+      },
+      create: { onCreate: args => this.#openCreate(args) },
+      move: {
+        // A room smaller than the meeting refuses the drop (§17).
+        droppable: ({ event, resource }) => (resource.data?.seats ?? 0) >= (event.data?.people ?? 0),
+        onMove: request => this.#onMove(request),
+      },
+    };
+  });
+
+  toggle(flag: { set(value: boolean): void; (): boolean }): void {
+    flag.set(!flag());
+  }
+
+  cycleView(): void {
+    this.view.set(VIEWS[(VIEWS.indexOf(this.view()) + 1) % VIEWS.length]);
+  }
+
+  cycleStep(): void {
+    this.step.set(this.step() === 15 ? 30 : this.step() === 30 ? 60 : 15);
+  }
+
+  failOnce(): void {
+    this.failNext.set(true);
+    this.scheduler().reload();
+  }
+
+  cycleMode(): void {
+    this.moveMode.set(MODES[(MODES.indexOf(this.moveMode()) + 1) % MODES.length]);
+  }
+
+  togglePerf(): void {
+    const next = !this.perf();
+    this.perf.set(next);
+    this.view.set(next ? 'month' : 'day');
+    this.date.set(next ? '2026/12/01' : DEMO_DAY);
+  }
+
+  record(name: string, value: unknown): void {
+    this.log.update(lines => [\`\${name} \${JSON.stringify(value, (key, item) => (key === 'signal' || key === 'data' ? undefined : item))}\`, ...lines].slice(0, 8));
+  }
+
+  answer(title: string | null): void {
+    this.#answer?.(title);
+    this.#answer = null;
+    this.dialog.set(null);
+  }
+
+  #openCreate(args: SdSchedulerCreateArgs<RoomDto>): Promise<BookingEvent | void> {
+    this.dialog.set({ args, title: \`Họp tại \${args.resource.title}\` });
+    return new Promise<string | null>(resolve => (this.#answer = resolve)).then(title => {
+      if (!title) return;
+      const created: BookingEvent = {
+        id: \`new-\${Date.now()}\`,
+        title,
+        resourceId: args.resourceId,
+        start: args.start,
+        end: args.end,
+        allDay: args.allDay,
+        data: { people: 2, host: 'Bạn' },
+      };
+      this.events.update(events => [...events, created]);
+      return created;
+    });
+  }
+
+  async #onMove(request: SdSchedulerMoveRequest<BookingDto, RoomDto>): Promise<boolean | 'cancel'> {
+    const mode = this.moveMode();
+    if (mode === 'reject') return false;
+    if (mode === 'cancel') return 'cancel';
+    if (mode === 'throw') throw new Error('Máy chủ từ chối');
+    if (mode === 'slow') await delay(2000, request.signal);
+    const { to } = request;
+    this.events.update(events =>
+      events.map(event =>
+        event.id === request.event.id ? { ...event, start: to.start, end: to.end, allDay: to.allDay, resourceId: to.resourceId } : event
+      )
+    );
+    return true;
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-layout {
+  // The scheduler takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .scheduler-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.scheduler-box {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 560px;
+
+  > sd-scheduler {
+    flex: 1 1 auto;
+  }
+}
+
+.scheduler-side {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.scheduler-detail {
+  margin: 0;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.scheduler-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.scheduler-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.scheduler-person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scheduler-person__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduler-person__total {
+  flex: none;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
+.scheduler-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
+  font-weight: 600;
+
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
+  }
+
+  &[data-code='P'] {
+    background: var(--sd-info-light, #dbe8f5);
+  }
+
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
+  }
+
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
+  }
+}`,
+  },
+  "components/scheduler/example-nghi-phep-phong-ban": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdScheduler, type SdSchedulerEvent, type SdSchedulerMoveRequest, type SdSchedulerOption } from '@sdcorejs/angular/components/scheduler';
+import { demoLeaves, demoPeople, type LeaveDto, type PersonDto } from './scheduler-demo.data';
+
+@Component({
+  selector: 'app-scheduler-leave-example',
+  standalone: true,
+  imports: [SdScheduler],
+  templateUrl: './scheduler-leave.example.html',
+  styleUrl: './scheduler-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SchedulerLeaveExampleComponent {
+  readonly people = demoPeople();
+  readonly leaves = signal<SdSchedulerEvent<LeaveDto>[]>(demoLeaves());
+
+  readonly option: SdSchedulerOption<LeaveDto, PersonDto> = {
+    dataSource: { onLoad: () => this.leaves() },
+    // A leave belongs to one person: it moves along the days only.
+    move: { axis: 'time', onMove: request => this.#onMove(request) },
+  };
+
+  #onMove(request: SdSchedulerMoveRequest<LeaveDto, PersonDto>): boolean {
+    const { to } = request;
+    this.leaves.update(leaves => leaves.map(leave => (leave.id === request.event.id ? { ...leave, start: to.start, end: to.end } : leave)));
+    return true;
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-layout {
+  // The scheduler takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .scheduler-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.scheduler-box {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 560px;
+
+  > sd-scheduler {
+    flex: 1 1 auto;
+  }
+}
+
+.scheduler-side {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.scheduler-detail {
+  margin: 0;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.scheduler-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.scheduler-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.scheduler-person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scheduler-person__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduler-person__total {
+  flex: none;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
+.scheduler-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
+  font-weight: 600;
+
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
+  }
+
+  &[data-code='P'] {
+    background: var(--sd-info-light, #dbe8f5);
+  }
+
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
+  }
+
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
+  }
+}`,
+  },
+  "components/scheduler/example-xe-giao-hang": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdScheduler, type SdSchedulerEvent, type SdSchedulerMoveRequest, type SdSchedulerOption } from '@sdcorejs/angular/components/scheduler';
+import { demoTrips, demoVehicles, type TripDto, type VehicleDto } from './scheduler-demo.data';
+
+@Component({
+  selector: 'app-scheduler-vehicles-example',
+  standalone: true,
+  imports: [SdScheduler],
+  templateUrl: './scheduler-vehicles.example.html',
+  styleUrl: './scheduler-example.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SchedulerVehiclesExampleComponent {
+  readonly resources = demoVehicles();
+  readonly trips = signal<SdSchedulerEvent<TripDto>[]>(demoTrips());
+
+  readonly option: SdSchedulerOption<TripDto, VehicleDto> = {
+    dataSource: { onLoad: () => this.trips() },
+    move: { onMove: request => this.#onMove(request) },
+  };
+
+  #onMove(request: SdSchedulerMoveRequest<TripDto, VehicleDto>): boolean {
+    const { to } = request;
+    this.trips.update(trips =>
+      trips.map(trip => (trip.id === request.event.id ? { ...trip, start: to.start, end: to.end, allDay: to.allDay, resourceId: to.resourceId } : trip))
+    );
+    return true;
+  }
+}`,
+    scss: `:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduler-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-layout {
+  // The scheduler takes the full width of the section; the detail and output panels go below it.
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  > .scheduler-box {
+    grid-column: 1 / -1;
+  }
+}
+
+.scheduler-box {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  height: 560px;
+
+  > sd-scheduler {
+    flex: 1 1 auto;
+  }
+}
+
+.scheduler-side {
+  padding: 12px;
+  border: 1px solid var(--sd-border, #c4c6d0);
+  border-radius: var(--sd-radius-12, 12px);
+  background: var(--sd-surface, #fdfbff);
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.scheduler-detail {
+  margin: 0;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 13px;
+}
+
+.scheduler-log {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.scheduler-dialog {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  padding: 12px;
+  border-radius: var(--sd-radius-10, 10px);
+  background: var(--sd-surface, #fdfbff);
+  box-shadow: var(--sd-shadow-lg);
+
+  p {
+    flex: 1 0 100%;
+    margin: 0;
+  }
+}
+
+.scheduler-person {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scheduler-person__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduler-person__total {
+  flex: none;
+  color: var(--sd-text-secondary, #44474f);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+// The codes and colours of the design (05): the consumer's, not the scheduler's.
+.scheduler-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 2px;
+  border-radius: var(--sd-radius-4, 4px);
+  color: var(--sd-text, #1a1b1f);
+  font-size: 11px;
+  font-weight: 600;
+
+  &[data-code='½'],
+  &[data-code='KL'] {
+    background: var(--sd-surface-muted, #ebecee);
+  }
+
+  &[data-code='P'] {
+    background: var(--sd-info-light, #dbe8f5);
+  }
+
+  &[data-code='Ô'] {
+    background: var(--sd-warning-light, #f3e9db);
+  }
+
+  &[data-code='!'] {
+    background: var(--sd-error-light, #f5dfdf);
+    color: var(--sd-error, #ba1a1a);
+  }
+}
+
+.scheduler-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scheduler-code {
+    border: 1px solid var(--sd-border, #c4c6d0);
+  }
+}`,
+  },
   "components/section": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -31539,6 +32428,105 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-button sdAction type="text" color="primary" prefixIcon="undo" title="Hoàn tác" (click)="undo()"></sd-button>
     </sd-quick-action>
   </demo-section>`,
+  },
+  "components/scheduler/example-cham-cong": {
+    ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-cham-cong"],
+    html: `<div class="scheduler-box">
+  <sd-scheduler autoId="timesheet" view="month" date="2026/11/09" resourceLabel="Nhân viên" [views]="['month']" [option]="option" [resources]="staff" (sdCellSelect)="pick($event)">
+    <ng-template sdSchedulerResourceTemplate let-resource>
+      <span class="scheduler-person">
+        <span class="scheduler-person__name">{{ resource.title }}</span>
+        <span class="scheduler-person__total" data-total>{{ totals.get(resource.id) }}</span>
+      </span>
+    </ng-template>
+    <ng-template sdSchedulerCellTemplate let-events="events">
+      @let _code = codeOf(events);
+      @if (_code) {
+        <span class="scheduler-code" [attr.data-code]="_code">{{ _code }}</span>
+      }
+    </ng-template>
+  </sd-scheduler>
+</div>
+<ul class="scheduler-legend">
+  @for (item of legend; track item.code) {
+    <li><span class="scheduler-code" [attr.data-code]="item.code">{{ item.code }}</span>{{ item.label }}</li>
+  }
+</ul>
+<p class="scheduler-detail" data-testid="timesheet-picked">{{ picked() ?? 'Bấm một ô có mã công.' }}</p>`,
+  },
+  "components/scheduler/example-dat-phong-hop": {
+    ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-dat-phong-hop"],
+    html: `<div class="scheduler-controls">
+  <sd-button type="outline" [title]="'view: ' + view()" autoId="booking-view" (click)="cycleView()" />
+  <sd-button type="outline" [title]="'step: ' + step()" (click)="cycleStep()" />
+  <sd-button type="outline" [title]="'hideWeekends: ' + hideWeekends()" (click)="toggle(hideWeekends)" />
+  <sd-button type="outline" [title]="'workingHours: ' + (withHours() ? 'mặc định' : 'null')" (click)="toggle(withHours)" />
+  <sd-button type="outline" [title]="'holidays: ' + showHolidays()" (click)="toggle(showHolidays)" />
+  <sd-button type="outline" [title]="'dimPast: ' + dimPast()" (click)="toggle(dimPast)" />
+  <sd-button type="outline" [title]="'readonly: ' + readonly()" (click)="toggle(readonly)" />
+  <sd-button type="outline" [title]="'disabled: ' + disabled()" (click)="toggle(disabled)" />
+  <sd-button type="outline" [title]="'nguồn: ' + (server() ? 'server 600ms' : 'client')" autoId="booking-source" (click)="toggle(server)" />
+  <sd-button type="outline" title="onLoad lỗi một lần" autoId="booking-load-error" (click)="failOnce()" />
+  <sd-button type="outline" [title]="'onMove: ' + moveMode()" autoId="booking-mode" (click)="cycleMode()" />
+  <sd-button type="outline" [title]="'resources rỗng: ' + noResources()" autoId="booking-empty" (click)="toggle(noResources)" />
+  <sd-button type="outline" title="150 tài nguyên × 31 ngày" autoId="booking-perf" (click)="togglePerf()" />
+</div>
+<div class="scheduler-layout">
+  <div class="scheduler-box">
+    <sd-scheduler
+      autoId="booking"
+      resourceLabel="Phòng"
+      [option]="option()"
+      [resources]="resources()"
+      [(view)]="view"
+      [(date)]="date"
+      [step]="step()"
+      [hideWeekends]="hideWeekends()"
+      [workingHours]="workingHours()"
+      [holidays]="holidays()"
+      [dimPast]="dimPast()"
+      [readonly]="readonly()"
+      [disabled]="disabled()"
+      (sdSelect)="selected.set($event); record('sdSelect', $event.id)"
+      (sdRangeChange)="record('sdRangeChange', $event)"
+      (sdMove)="record('sdMove', { id: $event.event.id, to: $event.to, scope: $event.scope, source: $event.source })"
+      (sdMoveError)="record('sdMoveError', { id: $event.request.event.id, reason: $event.reason })"
+      (sdLoadError)="record('sdLoadError', 'error')" />
+    @if (dialog(); as _dialog) {
+      <div class="scheduler-dialog" role="dialog" aria-modal="false" aria-label="Đặt phòng">
+        <p>{{ _dialog.title }} · {{ _dialog.args.start }} → {{ _dialog.args.end }}</p>
+        <sd-button type="fill" color="primary" title="Lưu" autoId="dialog-save" (click)="answer(_dialog.title)" />
+        <sd-button type="outline" title="Đóng" autoId="dialog-close" (click)="answer(null)" />
+      </div>
+    }
+  </div>
+  <aside class="scheduler-side">
+    <h4>Chi tiết</h4>
+    @if (selected(); as _event) {
+      <p class="scheduler-detail">{{ _event.title }}<br />{{ _event.data?.people }} người · {{ _event.data?.host }}</p>
+    } @else {
+      <p class="scheduler-detail">Chọn một lịch đặt.</p>
+    }
+    <h4>Output đã phát</h4>
+    <ol class="scheduler-log" data-testid="scheduler-log">
+      @for (line of log(); track $index) {
+        <li>{{ line }}</li>
+      }
+    </ol>
+  </aside>
+</div>`,
+  },
+  "components/scheduler/example-nghi-phep-phong-ban": {
+    ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-nghi-phep-phong-ban"],
+    html: `<div class="scheduler-box">
+  <sd-scheduler autoId="leave" view="month" date="2026/11/09" resourceLabel="Nhân viên" [views]="['week', 'month']" [option]="option" [resources]="people" />
+</div>`,
+  },
+  "components/scheduler/example-xe-giao-hang": {
+    ...SHOWCASE_PAGE_SOURCES["components/scheduler/example-xe-giao-hang"],
+    html: `<div class="scheduler-box">
+  <sd-scheduler autoId="vehicles" view="week" date="2026/11/09" resourceLabel="Xe" [option]="option" [resources]="resources" />
+</div>`,
   },
   "components/section/example-basic-info-rows": {
     ...SHOWCASE_PAGE_SOURCES["components/section"],

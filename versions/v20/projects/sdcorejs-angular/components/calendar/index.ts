@@ -14,14 +14,66 @@ export type {
   SdCalendarEventTemplateContext,
 } from './src/calendar.templates';
 // @internal Pipeline pieces and pure helpers shared with sd-scheduler. Not covered by SemVer.
+export {
+  SdCalendarEdgeScroller as ɵSdCalendarEdgeScroller,
+  sdCalendarEdgeSpeed as ɵsdCalendarEdgeSpeed,
+  type SdCalendarEdgeArea as ɵSdCalendarEdgeArea,
+} from './src/calendar-edge-scroll';
+export {
+  SdCalendarHostWidth as ɵSdCalendarHostWidth,
+  SdCalendarMinuteTimer as ɵSdCalendarMinuteTimer,
+  SdCalendarReporter as ɵSdCalendarReporter,
+  sdCalendarIsRtl as ɵsdCalendarIsRtl,
+} from './src/calendar-host';
+export {
+  sdCalendarDateText as ɵsdCalendarDateText,
+  sdCalendarFormats as ɵsdCalendarFormats,
+  sdCalendarMovedText as ɵsdCalendarMovedText,
+  sdCalendarTitle as ɵsdCalendarTitle,
+  sdCalendarUtcDay as ɵsdCalendarUtcDay,
+  sdCalendarWeekdayLong as ɵsdCalendarWeekdayLong,
+  type SdCalendarFormats as ɵSdCalendarFormats,
+  type SdCalendarTitleKind as ɵSdCalendarTitleKind,
+  type SdCalendarTranslate as ɵSdCalendarTranslate,
+} from './src/calendar-format';
 export { SdCalendarLoader as ɵSdCalendarLoader, type SdCalendarLoadPhase as ɵSdCalendarLoadPhase } from './src/calendar-loader';
 export {
+  SdCalendarAnnouncer as ɵSdCalendarAnnouncer,
+  SdCalendarCreateRunner as ɵSdCalendarCreateRunner,
+  SdCalendarFocusKeeper as ɵSdCalendarFocusKeeper,
+  SdCalendarMoveRunner as ɵSdCalendarMoveRunner,
   SdCalendarOperation as ɵSdCalendarOperation,
+  SdCalendarScopeBar as ɵSdCalendarScopeBar,
+  type SdCalendarCreateHost as ɵSdCalendarCreateHost,
+  type SdCalendarCreatePlan as ɵSdCalendarCreatePlan,
+  type SdCalendarMoveHost as ɵSdCalendarMoveHost,
+  type SdCalendarMovePlan as ɵSdCalendarMovePlan,
   sdCalendarAllows as ɵsdCalendarAllows,
   sdCalendarCallMove as ɵsdCalendarCallMove,
   type SdCalendarMoveOutcome as ɵSdCalendarMoveOutcome,
 } from './src/calendar-move';
 export {
+  sdCalendarBoundDay as ɵsdCalendarBoundDay,
+  sdCalendarBrokenWeekdays as ɵsdCalendarBrokenWeekdays,
+  sdCalendarCarrierDay as ɵsdCalendarCarrierDay,
+  sdCalendarColor as ɵsdCalendarColor,
+  sdCalendarInvalidItems as ɵsdCalendarInvalidItems,
+  sdCalendarIsOffDay as ɵsdCalendarIsOffDay,
+  sdCalendarSelectionGone as ɵsdCalendarSelectionGone,
+  sdCalendarMoveTarget as ɵsdCalendarMoveTarget,
+  sdCalendarOutOfRange as ɵsdCalendarOutOfRange,
+  sdCalendarShiftDays as ɵsdCalendarShiftDays,
+  sdCalendarCssEscape as ɵsdCalendarCssEscape,
+  sdCalendarDaysBetween as ɵsdCalendarDaysBetween,
+  sdCalendarHolidayMap as ɵsdCalendarHolidayMap,
+  sdCalendarLastDayOf as ɵsdCalendarLastDayOf,
+  sdCalendarPointOf as ɵsdCalendarPointOf,
+  sdCalendarRangeKey as ɵsdCalendarRangeKey,
+  sdCalendarResolveFirstDayOfWeek as ɵsdCalendarResolveFirstDayOfWeek,
+  sdCalendarResolveStep as ɵsdCalendarResolveStep,
+  sdCalendarResolveWorkingHours as ɵsdCalendarResolveWorkingHours,
+  sdCalendarSameList as ɵsdCalendarSameList,
+  sdCalendarTargetOf as ɵsdCalendarTargetOf,
   sdCalendarAddDays as ɵsdCalendarAddDays,
   sdCalendarAddMonths as ɵsdCalendarAddMonths,
   sdCalendarAddMonthsKeepDay as ɵsdCalendarAddMonthsKeepDay,
@@ -66,4 +118,5 @@ export type {
   SdCalendarRangeInput as ɵSdCalendarRangeInput,
   SdCalendarSpan as ɵSdCalendarSpan,
   SdCalendarStacked as ɵSdCalendarStacked,
+  SdCalendarTarget as ɵSdCalendarTarget,
 } from './src/calendar.utils';
