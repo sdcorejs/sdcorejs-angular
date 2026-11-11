@@ -47,6 +47,7 @@ import {
   SdKanbanColumnActionsTemplateDirective,
   SdKanbanColumnTemplateDirective,
 } from './kanban.templates';
+import { SdKanbanCardOutlet } from './kanban-card-outlet';
 import { KanbanColumnLoader, type KanbanColumnStatus } from './kanban-loader';
 import {
   kanbanApplyMove,
@@ -128,6 +129,7 @@ function allows<C>(state: SdKanbanState<C> | undefined, context: C): boolean {
     MatProgressSpinnerModule,
     SdIcon,
     SdDataState,
+    SdKanbanCardOutlet,
     SdTranslatePipe,
     ɵSdSearchField,
     ɵSdSearchFieldInputDirective,
@@ -138,6 +140,8 @@ function allows<C>(state: SdKanbanState<C> | undefined, context: C): boolean {
 })
 export class SdKanban<T = unknown> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** The last template context of each card on the board, by id (see `cardContext`). */
+  readonly #cardContexts = new Map<string, SdKanbanCardTemplateContext<T>>();
   readonly #injector = inject(Injector);
   readonly #i18n = inject(I18nService);
   readonly #zone = inject(NgZone);
@@ -270,6 +274,11 @@ export class SdKanban<T = unknown> {
     !this.moveBlocked() && !drop.data.column.disabled && !this.collapsed(drop.data.column.id) && !this.#blocked().has(drop.data.column.id);
 
   constructor() {
+    // why: forget the contexts of cards that left the board, so the map does not grow with every card ever shown.
+    effect(() => {
+      const ids = new Set(this.boardColumns().flatMap(column => column.cards.map(view => view.card.id)));
+      for (const id of this.#cardContexts.keys()) if (!ids.has(id)) this.#cardContexts.delete(id);
+    });
     effect(() => {
       const items = this.items();
       const option = this.option();
@@ -623,15 +632,27 @@ export class SdKanban<T = unknown> {
       collapsed: this.collapsed(view.column.id),
     };
   }
+  /**
+   * The context of a card's templates: the same object while the card, its column, its index, `pending` and `selected`
+   * stay the same, so the OnPush `sd-kanban-card-outlet` of the other cards is not checked again (A-15, PD 2026-11-11).
+   */
   protected cardContext(view: CardView<T>, column: ColumnView<T>): SdKanbanCardTemplateContext<T> {
-    return {
-      $implicit: view.card,
-      card: view.card,
-      column: column.column,
-      index: view.index,
-      pending: this.pendingId() === view.card.id,
-      selected: this.selectedId() === view.card.id,
-    };
+    const pending = this.pendingId() === view.card.id;
+    const selected = this.selectedId() === view.card.id;
+    const known = this.#cardContexts.get(view.card.id);
+    if (
+      known &&
+      known.card === view.card &&
+      known.column === column.column &&
+      known.index === view.index &&
+      known.pending === pending &&
+      known.selected === selected
+    ) {
+      return known;
+    }
+    const context = { $implicit: view.card, card: view.card, column: column.column, index: view.index, pending, selected };
+    this.#cardContexts.set(view.card.id, context);
+    return context;
   }
   protected token(id: string): string {
     return encodeURIComponent(id);
