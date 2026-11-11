@@ -203,7 +203,7 @@ Card content is clipped to the card (`contain: paint`, which keeps hit testing a
 
 ## Layout
 
-The board scrolls horizontally inside its container. Lanes are 280px (`flex: 1 0 280px`). Under 600px of **host** width (`ResizeObserver`, so a board in a narrow column of a desktop page counts) the board is compact: lanes of 260px (collapsed 64px); the root gets `data-compact`. There is no single-column mode. With a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 40px high.
+The board scrolls horizontally inside its container. Lanes are 280px (`flex: 1 0 280px`). Under 600px of **host** width (`ResizeObserver`, so a board in a narrow column of a desktop page counts) the board is compact: lanes of 260px (collapsed 64px); the root gets `data-compact`. There is no single-column mode. With a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 44px high (`--sd-control-height-coarse`), as in sd-calendar and sd-scheduler.
 
 Each lane has the neutral `--sd-kanban-lane-bg`; the column `color` marks an 8px dot before the label, or tints `prefixIcon`. The header shows the label, the `summary` line under it (12px, secondary, cut with an ellipsis) and the count. While dragging, the cursor is `grabbing`, only the lane under the pointer is highlighted, and lanes refused by `droppable` fade to 45% with a not-allowed cursor. With `reorder` off the old place of the card stays drawn at 40%. Cards use `--sd-surface` with a `--sd-kanban-card-border` outline and no shadow. The "⋯" button is transparent with a mouse until the card is hovered or focused, pending, failed or its menu is open; on touch it is always shown. The six `--sd-kanban-*` tokens are listed in `assets/THEME.md`.
 

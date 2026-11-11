@@ -45,7 +45,7 @@
       <!-- K3: the failure is read through the one status region below; the band is plain text. -->
       <div class="sd-kanban__failure">
         <span>{{ _failure }}</span>
-        <button type="button" (click)="dismissFailure()">{{ 'core.component.kanban.dismiss' | sdTranslate }}</button>
+        <button type="button" (click)="dismissFailure()">{{ 'core.common.dismiss' | sdTranslate }}</button>
       </div>
     }
     <p class="sd-kanban__sr-only" [id]="id + '-instructions'">
@@ -138,7 +138,7 @@
                 <sd-icon class="sd-kanban__load-error-icon" name="error" />
                 <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
                 <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
-                  {{ 'core.component.kanban.retry' | sdTranslate }}
+                  {{ 'core.common.retry' | sdTranslate }}
                 </button>
               </div>
             } @else if (!_collapsed) {
@@ -153,7 +153,7 @@
                   <div class="sd-kanban__card sd-kanban__origin" data-origin aria-hidden="true" inert [style.height.px]="originHeight()">
                     <div class="sd-kanban__card-body">
                       @if (_cardTemplate) {
-                        <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
+                        <sd-kanban-card-outlet [template]="_cardTemplate.template" [context]="cardContext(card, view)" />
                       } @else {
                         <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
                       }
@@ -194,7 +194,7 @@
                       (click)="select(card.card, $event)"
                       (keydown)="cardKeydown($event, card, view)">
                       @if (_cardTemplate) {
-                        <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
+                        <sd-kanban-card-outlet [template]="_cardTemplate.template" [context]="cardContext(card, view)" />
                       } @else {
                         <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
                       }
@@ -218,9 +218,7 @@
                   }
                   @if (_cardActionsTemplate) {
                     <div class="sd-kanban__card-actions" (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()">
-                      <ng-container
-                        [ngTemplateOutlet]="_cardActionsTemplate.template"
-                        [ngTemplateOutletContext]="cardContext(card, view)" />
+                      <sd-kanban-card-outlet [template]="_cardActionsTemplate.template" [context]="cardContext(card, view)" />
                     </div>
                   }
                   @if (_cardPending) {
@@ -233,7 +231,7 @@
                       <sd-icon name="error" size="sm" />
                       <span class="sd-kanban__card-status-text" [id]="_failureId">{{ _failure }}</span>
                       <button type="button" class="sd-kanban__text-button" (click)="dismissFailure(card.card.id)">
-                        {{ 'core.component.kanban.dismiss' | sdTranslate }}
+                        {{ 'core.common.dismiss' | sdTranslate }}
                       </button>
                     </div>
                   }
@@ -253,7 +251,7 @@
                 <div class="sd-kanban__load-error sd-kanban__load-error--row" data-load-error>
                   <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
                   <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
-                    {{ 'core.component.kanban.retry' | sdTranslate }}
+                    {{ 'core.common.retry' | sdTranslate }}
                   </button>
                 </div>
               } @else if (view.nextCursor !== null) {

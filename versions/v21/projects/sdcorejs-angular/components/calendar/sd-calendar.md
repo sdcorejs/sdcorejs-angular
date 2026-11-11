@@ -218,6 +218,7 @@ Do not write `?view=` from `sdRangeChange`: in the compact layout it reports `'d
 - Events are buttons named "{title}, {weekday} {date}, {start} to {end}[, repeats]"; month cells "{weekday} {date}[, {holiday}], {count} events".
 - The scope bar is an `alertdialog`. `prefers-reduced-motion` stops transitions and the sync icon; `forced-colors` uses `CanvasText` frames and `Highlight` for selected, pending and the now line.
 - Hover only adds visuals; everything works with the keyboard and with `pointer: coarse`.
+- A coarse pointer gets 44px targets (`--sd-control-height-coarse`) at every width, not only in the compact layout: Today, Previous, Next, the view switcher, Retry, Dismiss and the scope buttons. The "+N" of the all-day row keeps its 22px row: a taller target would cover the next row.
 
 ## Theming
 

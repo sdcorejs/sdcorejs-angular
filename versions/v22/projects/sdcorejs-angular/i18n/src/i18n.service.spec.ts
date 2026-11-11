@@ -6,6 +6,8 @@ import { Language } from '@sdcorejs/utils/models';
 
 describe('I18nService — initial resolution', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  // why: a language left in localStorage leaks into the specs that run after this file.
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('uses localStorage when valid', () => {
     localStorage.setItem(I18N_STORAGE_KEY, 'en');
@@ -38,6 +40,8 @@ describe('I18nService — initial resolution', () => {
 
 describe('I18nService — setLanguage', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  // why: a language left in localStorage leaks into the specs that run after this file.
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('updates signal', () => {
     TestBed.configureTestingModule({ providers: [] });
@@ -70,6 +74,8 @@ describe('I18nService — setLanguage', () => {
 
 describe('I18nService — t()', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  // why: a language left in localStorage leaks into the specs that run after this file.
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('returns value for existing key', () => {
     TestBed.configureTestingModule({ providers: [] });
@@ -103,6 +109,8 @@ describe('I18nService — t()', () => {
 
 describe('I18nService — custom language provider', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  // why: a language left in localStorage leaks into the specs that run after this file.
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('resolves sync custom catalog', () => {
     const customCatalog = { 'core.common.cancel': 'Annuler' } as Record<string, string>;

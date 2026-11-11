@@ -1066,6 +1066,40 @@ $hour: var(--sd-scheduler-hour-width);
   }
 }
 
+// SC-36, RX #7 (PD 2026-11-11): a coarse pointer gets 44px targets at every width, as the compact layout does under
+// 600px of host width. The compact layout itself still follows the host width.
+@media (pointer: coarse) {
+  .sd-scheduler__today,
+  .sd-scheduler__band-button,
+  .sd-scheduler__scope-button {
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-scheduler__icon-button {
+    min-width: var(--sd-control-height-coarse, 44px);
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
+  // why: the switcher has a 1px border around its options.
+  .sd-scheduler__view {
+    min-height: calc(var(--sd-control-height-coarse, 44px) - 2px);
+  }
+
+  .sd-scheduler {
+    --sd-scheduler-group-height: 44px;
+  }
+
+  .sd-scheduler[data-view='week'] .sd-scheduler__day-number {
+    position: relative;
+
+    &::after {
+      position: absolute;
+      inset: -8px;
+      content: '';
+    }
+  }
+}
+
 // ---- scope bar (§9.6, as sd-calendar) ----
 .sd-scheduler__scope {
   position: absolute;

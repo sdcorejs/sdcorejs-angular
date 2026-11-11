@@ -60,6 +60,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.common.back': '뒤로',
   'core.common.cancel': '취소',
   'core.common.close': '닫기',
+  'core.common.retry': '다시 시도',
+  'core.common.dismiss': '닫기',
   'core.common.reload': '페이지 새로고침',
   'core.test.greet': '안녕하세요 {name}님',
 
@@ -1382,12 +1384,13 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.label': '보드',
   'core.component.kanban.search': '카드 검색',
   'core.component.kanban.saving': '이동 저장 중…',
-  'core.component.kanban.pending': '{title} 이동 중',
+  'core.component.kanban.pending': '{title} 저장 중',
   'core.component.kanban.moved': '{title}을(를) {column}의 {position}번째 위치로 이동했습니다',
   'core.component.kanban.rejected': '이동이 거부되었습니다. 다른 열을 선택하세요.',
   'core.component.kanban.error': '카드를 이동할 수 없습니다. 다시 시도하세요.',
   'core.component.kanban.invalid-data':
     '카드와 열을 확인하세요. ID는 고유하고 비어 있지 않아야 하며, 모든 카드에 제목과 존재하는 열이 있어야 합니다.',
+  // Deprecated (RX #10): no longer read; sd-kanban uses core.common.dismiss. Kept for catalogs that set it.
   'core.component.kanban.dismiss': '닫기',
   'core.component.kanban.instructions':
     'Enter로 선택합니다. Alt + 왼쪽/오른쪽 화살표로 열을 바꾸고, Alt + 위/아래 화살표로 위치를 바꿉니다.',
@@ -1405,8 +1408,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.kanban.load-more': '{count}개 더 보기',
   'core.component.kanban.loading': '불러오는 중…',
   'core.component.kanban.load-error': '이 열을 불러오지 못했습니다.',
-  'core.component.kanban.retry': '다시 시도',
-  'core.component.kanban.cancelled': '{title} 이동을 취소했습니다',
+  'core.component.kanban.cancelled': '변경을 취소했습니다',
   'core.component.kanban.drop-blocked': '{column}(으)로 옮길 수 없습니다',
   'core.form.segmented.label': '선택 항목',
   'core.form.segmented.required': '항목을 선택하세요',
@@ -1724,8 +1726,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.calendar.invalid-data': '캘린더 데이터가 올바르지 않습니다.',
   'core.component.calendar.load-error': '캘린더를 불러올 수 없습니다.',
   'core.component.calendar.create-error': '일정을 만들 수 없습니다.',
-  'core.component.calendar.retry': '다시 시도',
-  'core.component.calendar.dismiss': '닫기',
   'core.component.scheduler.label': '리소스별 일정',
   'core.component.scheduler.resources': '리소스',
   'core.component.scheduler.group-count': '리소스 {count}개',

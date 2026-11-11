@@ -77,11 +77,11 @@ Thêm:
 | Mã | Quy tắc |
 | --- | --- |
 | SC-32 | Giao diện hẹp theo **bề rộng host** < 600px, đo bằng `ResizeObserver`; kiểm tra `typeof ResizeObserver` để chạy được SSR và test. Không dùng media query viewport cho ngưỡng này. |
-| SC-33 | Một live region `role="status" aria-live="polite" aria-atomic="true"` mỗi instance. |
+| SC-33 | Một live region `role="status" aria-live="polite" aria-atomic="true"` mỗi instance. Vùng live riêng của `sd-data-state` (trạng thái trống, dữ liệu không hợp lệ) được chấp nhận (RX #9, PD 2026-11-11). |
 | SC-34 | `prefers-reduced-motion: reduce`: không transition, icon đang lưu đứng yên. |
 | SC-35 | `forced-colors: active`: viền `CanvasText` cho khung, `Highlight` cho chọn và đang chờ. |
-| SC-36 | Hover chỉ là lớp bổ sung (`@media (hover: hover)`); mọi hành động làm được bằng bàn phím và `pointer: coarse`. Vùng chạm tối thiểu 40px (kanban) / 44px (calendar, scheduler) như spec riêng. |
-| SC-37 | i18n `core.component.<name>.*`, đủ vi/en/ja/ko/zh. Dùng lại key chung (Huỷ, Thử lại, Bỏ qua) nếu đã có. |
+| SC-36 | Hover chỉ là lớp bổ sung (`@media (hover: hover)`); mọi hành động làm được bằng bàn phím và `pointer: coarse`. Vùng chạm tối thiểu 44px (`--sd-control-height-coarse`) ở cả ba: theo `pointer: coarse` ở mọi bề rộng, và trong bố cục hẹp (host < 600px) của calendar, scheduler. Bố cục hẹp vẫn theo bề rộng host (RX #7, PD 2026-11-11; kanban trước đó 40px). |
+| SC-37 | i18n `core.component.<name>.*`, đủ vi/en/ja/ko/zh. Dùng lại key chung: `core.common.cancel`, `core.common.retry`, `core.common.dismiss` (hai key sau thêm ở RX #10, PD 2026-11-11; `core.component.kanban.dismiss` giữ lại, deprecated). Câu chung cùng chữ: "Đang lưu {title}", "Đã huỷ thay đổi"; động từ theo miền giữ riêng: "dời" (calendar, scheduler), "chuyển" (kanban, scheduler sang tài nguyên khác) (RX #11, PD). |
 | SC-38 | `data-autoid="components-<name>-{autoId}"` trên gốc; phần tử con `…-<kind>-{encodeURIComponent(id)}`. Chỉ phát khi có `autoId`. |
 | SC-39 | `disabled`, `readonly` dùng `booleanAttribute`; `ariaLabel`, `autoId` kiểu `string \| null \| undefined`. |
 

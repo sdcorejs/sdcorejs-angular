@@ -214,6 +214,8 @@ Kịch bản: ví dụ Công việc, nút "200 thẻ mỗi cột" (4 × 200 th�
 | Long task khi kéo, dev server, sau sửa R2 (chỗ cũ vẽ cả nội dung thẻ, KAN-B-18) | 5–6 task, 54–125 ms; lúc nhấc thẻ 168–174 ms | không task > 50 ms — **vượt** |
 | Dev server ở `f3f8b595` (máy đang chạy việc khác song song, số dao động) | render trung vị 1390–1520 ms; long task 50–210 ms | **vượt** |
 | Long task khi kéo, trước tối ưu (dev server và production build) | 15–17 task 55–210 ms | |
+| A-15 (PD 11/11/2026), dev server, cùng máy, 3 lần: trước `sd-kanban-card-outlet` | render trung vị 1038–1343 ms; long task `[54,182,118,120,79]`, `[154,79,92,66]`, `[127,87,91,66]` | **vượt** |
+| A-15, dev server, 3 lần: sau `sd-kanban-card-outlet` (template thẻ trong outlet OnPush, context ổn định) | render trung vị 1047–1348 ms; long task `[65,158,94,97,74]`, `[69,124,95,91,53]`, `[50,122,86,91,55]` | **vượt**; task lớn nhất giảm ~15%, các task khác gần mức dao động |
 
 Đã làm (commit `ffdf5515`):
 - Một `mat-menu` chung cho board thay vì một menu mỗi thẻ (thẻ truyền vào qua `matMenuTriggerData`); `movable` và token id tính sẵn trong `CardView`, template không gọi method theo thẻ. Render dev 2,1 s → 1,8 s.
@@ -228,6 +230,10 @@ Phân tích phần còn lại (trace Chrome, production build):
 2. `content-visibility: auto` + `contain-intrinsic-size` trên thẻ: bỏ style, layout, paint của thẻ ngoài màn hình. Cần kiểm CDK đo vị trí thẻ chưa vẽ khi tự cuộn lúc kéo.
 3. Virtual scroll theo làn (ngoài phạm vi `kanban.md` §0; TESTING §10 cấm tự thêm).
 4. Khuyến nghị cho consumer trong `sd-kanban.md`: cột dài dùng `dataSource` + `pageSize` (đã ghi ở "Limits").
+
+A-15 (PD 11/11/2026, nhánh `perf/kanban-card-outlet`): làm đề xuất 1 ở dạng ít rủi ro. `<article>` của thẻ và style vẫn ở board; template thẻ và template actions của consumer nằm trong `sd-kanban-card-outlet` (OnPush, `display: contents`), mỗi thẻ một object context ổn định (`[KAN-B-40]`). Số đo ở bảng trên: render không đổi (chi phí là tạo 800 view, OnPush không giảm), long task lớn nhất lúc nhấc thẻ giảm ~15%.
+
+Vì sao ít: listener trong template của kanban (`click`, `keydown`, `cdkDragStarted`, `cdkDragEnded`, `cdkDropListDropped`) đánh dấu dirty mọi view tổ tiên, cả component consumer. Khi consumer được check, Angular check lại mọi view được khai báo trong template của nó và chèn ở chỗ khác (transplanted view), tức 800 template thẻ, dù outlet là OnPush. Outlet chỉ tránh được lần check do signal của board (kết quả `onMove` trả về sau, `selectedId` đặt từ code, dữ liệu tải về). Bước tiếp, nếu PD muốn: nghe các sự kiện kéo trong code thay vì trong template, và đề xuất 2 (`content-visibility: auto`).
 
 ## Ảnh chụp (TESTING §9)
 Thư mục `reports/kanban-screens/`, chụp từ project `asia-bangkok`, Chromium, vi, light trừ khi ghi khác. So với `Kanban Review.dc.html` mục 02–05.
