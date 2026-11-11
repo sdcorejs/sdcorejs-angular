@@ -266,6 +266,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Kanban
 
 - On a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 44px high (`--sd-control-height-coarse`, was 40px), as in `sd-calendar` and `sd-scheduler`.
+- The card template and the card actions template render inside an `sd-kanban-card-outlet` element (`display: contents`, OnPush) with one context object per card, so a change of the board's own state (a saved move, a selection set through `selectedId`) checks only the cards it concerns. A style that reaches the template's root through a child combinator from `.sd-kanban__card-main` or `.sd-kanban__card-actions` must allow the extra element.
 - The live region says "Saving {title}" while `onMove` runs (was "Moving {title}") and "Change cancelled" after `'cancel'`, the words of `sd-calendar`; "{title} moved to {column}, position {position}" keeps its own wording.
 
 #### Pattern

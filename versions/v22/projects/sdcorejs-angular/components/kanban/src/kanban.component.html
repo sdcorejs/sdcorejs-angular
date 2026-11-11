@@ -153,7 +153,7 @@
                   <div class="sd-kanban__card sd-kanban__origin" data-origin aria-hidden="true" inert [style.height.px]="originHeight()">
                     <div class="sd-kanban__card-body">
                       @if (_cardTemplate) {
-                        <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
+                        <sd-kanban-card-outlet [template]="_cardTemplate.template" [context]="cardContext(card, view)" />
                       } @else {
                         <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
                       }
@@ -194,7 +194,7 @@
                       (click)="select(card.card, $event)"
                       (keydown)="cardKeydown($event, card, view)">
                       @if (_cardTemplate) {
-                        <ng-container [ngTemplateOutlet]="_cardTemplate.template" [ngTemplateOutletContext]="cardContext(card, view)" />
+                        <sd-kanban-card-outlet [template]="_cardTemplate.template" [context]="cardContext(card, view)" />
                       } @else {
                         <strong class="sd-kanban__card-title">{{ card.card.title }}</strong>
                       }
@@ -218,9 +218,7 @@
                   }
                   @if (_cardActionsTemplate) {
                     <div class="sd-kanban__card-actions" (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()">
-                      <ng-container
-                        [ngTemplateOutlet]="_cardActionsTemplate.template"
-                        [ngTemplateOutletContext]="cardContext(card, view)" />
+                      <sd-kanban-card-outlet [template]="_cardActionsTemplate.template" [context]="cardContext(card, view)" />
                     </div>
                   }
                   @if (_cardPending) {
