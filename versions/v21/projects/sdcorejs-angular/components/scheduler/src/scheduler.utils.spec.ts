@@ -11,7 +11,7 @@ import {
   sdSchedulerLanes,
   sdSchedulerLaneTop,
   sdSchedulerNextResource,
-  sdSchedulerResizeDays,
+  sdSchedulerResizeLastDay,
   sdSchedulerRowAt,
   sdSchedulerRowHeight,
   sdSchedulerVisibleDays,
@@ -230,9 +230,31 @@ describe('sd-scheduler utils', () => {
     });
 
     it('[SCH-C-10] ends an all-day resize between its first day and the last day on screen', () => {
-      expect(sdSchedulerResizeDays('2026/11/10', '2026/11/11', 2, '2026/11/15')).toBe('2026/11/13');
-      expect(sdSchedulerResizeDays('2026/11/10', '2026/11/11', -5, '2026/11/15')).toBe('2026/11/10');
-      expect(sdSchedulerResizeDays('2026/11/10', '2026/11/11', 9, '2026/11/15')).toBe('2026/11/15');
+      const week = sdSchedulerVisibleDays('week', '2026/11/09', 1);
+      const span = (firstDay: string, lastDay: string): { firstDay: string; lastDay: string } => ({ firstDay, lastDay });
+      expect(sdSchedulerResizeLastDay(span('2026/11/10', '2026/11/11'), week, 2)).toBe('2026/11/13');
+      expect(sdSchedulerResizeLastDay(span('2026/11/10', '2026/11/11'), week, -5)).toBe('2026/11/10');
+      expect(sdSchedulerResizeLastDay(span('2026/11/10', '2026/11/11'), week, 9)).toBe('2026/11/15');
+      expect(sdSchedulerResizeLastDay(span('2026/11/10', '2026/11/11'), week, 0)).toBe('2026/11/11');
+    });
+
+    it('[SCH-C-10] moves an all-day end along the columns on screen: hideWeekends skips the weekend', () => {
+      const weekdays = sdSchedulerColumns(sdSchedulerVisibleDays('month', '2026/11/09', 1), 'month', true);
+      // Thursday + 2 columns is Monday, not Saturday.
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/12', lastDay: '2026/11/12' }, weekdays, 2)).toBe('2026/11/16');
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/13', lastDay: '2026/11/13' }, weekdays, 1)).toBe('2026/11/16');
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/12', lastDay: '2026/11/17' }, weekdays, -2)).toBe('2026/11/13');
+    });
+
+    it('[SCH-C-10] has no all-day resize when the last day has no column: cut by the range or on a hidden day', () => {
+      const week = sdSchedulerVisibleDays('week', '2026/11/09', 1);
+      // Ends next Wednesday: the end is past the range, a resize must not pull it back to Sunday.
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/13', lastDay: '2026/11/18' }, week, 0)).toBeNull();
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/13', lastDay: '2026/11/18' }, week, 1)).toBeNull();
+      const weekdays = sdSchedulerColumns(week, 'week', true);
+      // Ends on Saturday, hidden: the block ends at Friday on screen.
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/12', lastDay: '2026/11/14' }, weekdays, 0)).toBeNull();
+      expect(sdSchedulerResizeLastDay({ firstDay: '2026/11/01', lastDay: '2026/11/02' }, week, 1)).toBeNull();
     });
 
     it('[SCH-C-06] finds the row and the column under the pointer', () => {

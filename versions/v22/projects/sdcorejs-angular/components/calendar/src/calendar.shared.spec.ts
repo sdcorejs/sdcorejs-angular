@@ -418,6 +418,30 @@ describe('sd-calendar shared pieces', () => {
       host.remove();
     });
 
+    it('[CAL-SC-15] answers Cancel and closes when the signal of its operation aborts', async () => {
+      const bar = new SdCalendarScopeBar(document.createElement('div'), TestBed.inject(Injector));
+      const first = new AbortController();
+      const asked = bar.ask('Stand-up', first.signal);
+      first.abort();
+      expect(await asked).toBeNull();
+      expect(bar.asking()).toBeNull();
+
+      const aborted = new AbortController();
+      aborted.abort();
+      expect(await bar.ask('Stand-up', aborted.signal))
+        .withContext('already aborted')
+        .toBeNull();
+      expect(bar.asking()).toBeNull();
+
+      const old = new AbortController();
+      const answered = bar.ask('Stand-up', old.signal);
+      bar.answer('this');
+      expect(await answered).toBe('this');
+      void bar.ask('Review');
+      old.abort();
+      expect(bar.asking()?.title).withContext('an old signal does not close a newer question').toBe('Review');
+    });
+
     it('[CAL-C-23] sdCalendarOutOfRange compares with each bound that is set', () => {
       expect(sdCalendarOutOfRange('2026/11/09', null, null)).toBeFalse();
       expect(sdCalendarOutOfRange('2026/11/09', '2026/11/10', null)).toBeTrue();

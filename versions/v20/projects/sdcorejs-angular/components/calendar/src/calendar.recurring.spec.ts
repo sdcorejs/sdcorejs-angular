@@ -92,6 +92,20 @@ describe('SdCalendar · recurring events', () => {
     }
   }));
 
+  it('[CAL-SC-15] closes the scope bar and stops watching the focus when destroyed while it asks', fakeAsync(() => {
+    const { fixture, calendar, host, onMove, settle } = mount();
+    let result: boolean | null = null;
+    void calendar.move('standup', { start: '2026/10/19 09:15:00' }, 'drag').then(value => (result = value));
+    settle();
+    expect(bar(host)).withContext('the scope bar').not.toBeNull();
+    const removed = spyOn(document, 'removeEventListener').and.callThrough();
+    fixture.destroy();
+    flushMicrotasks();
+    expect(result).withContext('move() settles').toBeFalse();
+    expect(removed).toHaveBeenCalledWith('focusin', jasmine.any(Function), true);
+    expect(onMove).not.toHaveBeenCalled();
+  }));
+
   // why: in the browser the continuation after the scope answer runs as a microtask before change detection removes
   // the bar, so the focus is still on a bar button when the calendar decides where it goes (R2 A-18).
   it('[CAL-B-05] puts the focus back on the block when the scope bar closes before change detection (SC-29)', fakeAsync(() => {

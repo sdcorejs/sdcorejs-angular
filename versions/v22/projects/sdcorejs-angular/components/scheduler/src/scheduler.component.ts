@@ -124,7 +124,7 @@ import {
   sdSchedulerLanes,
   sdSchedulerLaneTop,
   sdSchedulerNextResource,
-  sdSchedulerResizeDays,
+  sdSchedulerResizeLastDay,
   sdSchedulerRowAt,
   sdSchedulerRowHeight,
   sdSchedulerVisibleDays,
@@ -444,7 +444,7 @@ export class SdScheduler<T = unknown, R = unknown> {
     announcer: this.#announcer,
     focus: this.#focus,
     t: this.#t,
-    ask: title => this.scopeBar.ask(title),
+    ask: (title, signal) => this.scopeBar.ask(title, signal),
     band: failure => this.#failure.set(failure),
     reload: () => this.reload(),
   });
@@ -913,8 +913,8 @@ export class SdScheduler<T = unknown, R = unknown> {
         const end = ɵsdCalendarResizeEnd(placement.startMinutes, placement.endMinutes, ɵsdCalendarMoveStep(step) * forward, step);
         target = { ...ɵsdCalendarTargetOf(placement), endMinutes: end, resourceId: event.resourceId };
       } else if (!day && placement.allDay) {
-        const lastDay = sdSchedulerResizeDays(placement.firstDay, placement.lastDay, forward, this.visible().to);
-        target = { ...ɵsdCalendarTargetOf(placement), endDay: lastDay, resourceId: event.resourceId };
+        const lastDay = sdSchedulerResizeLastDay(placement, this.columns(), forward);
+        if (lastDay) target = { ...ɵsdCalendarTargetOf(placement), endDay: lastDay, resourceId: event.resourceId };
       }
     } else if (day && placement.inGrid) {
       target = this.#shiftTarget(placement, (forward * ɵsdCalendarMoveStep(step)) / 60, event.resourceId);
@@ -1532,8 +1532,8 @@ export class SdScheduler<T = unknown, R = unknown> {
       this.#resize.set({ id: session.id, endMinutes: end, lastDay: placement.lastDay });
       return;
     }
-    const days = Math.round(dx / session.columnWidth);
-    const lastDay = sdSchedulerResizeDays(placement.firstDay, placement.lastDay, days, untracked(this.visible).to);
+    // Whole columns on screen, not calendar days: with hideWeekends Thursday + 2 columns is Monday.
+    const lastDay = sdSchedulerResizeLastDay(placement, this.columns(), Math.round(dx / session.columnWidth)) ?? placement.lastDay;
     this.#resize.set({ id: session.id, endMinutes: placement.endMinutes, lastDay });
   }
 
@@ -1930,7 +1930,11 @@ export class SdScheduler<T = unknown, R = unknown> {
     const move = this.option().move;
     const label = this.#eventLabel(event, placement, resource);
     const movable = !!move && !this.locked() && !this.cellTemplateActive() && ɵsdCalendarAllows(move.movable, event);
-    const resizable = movable && (move?.axis ?? 'both') !== 'resource' && (view === 'day' ? placement.inGrid : placement.allDay);
+    // Week and month: the handle sits on the last day, so a block whose last day has no column has none (§9.4).
+    const resizable =
+      movable &&
+      (move?.axis ?? 'both') !== 'resource' &&
+      (view === 'day' ? placement.inGrid : placement.allDay && sdSchedulerResizeLastDay(placement, this.columns(), 0) !== null);
     return {
       key: event.id,
       event,
