@@ -186,11 +186,21 @@ export function sdSchedulerNextResource(
   return null;
 }
 
-/** New last day of an all-day event whose end moved by `days`: at least its first day, at most `maxDay` (§9.4). */
-export function sdSchedulerResizeDays(firstDay: string, lastDay: string, days: number, maxDay: string): string {
-  const next = ɵsdCalendarAddDays(lastDay, days);
-  if (next < firstDay) return firstDay;
-  return next > maxDay ? maxDay : next;
+/**
+ * New last day of an all-day event whose end moved by `shift` columns (§9.4): along the columns on screen, so
+ * `hideWeekends` skips the weekend; at least its first column, at most the last column. `null` when the last day has no
+ * column (cut by the end of the range, or on a hidden weekend day): the end on screen is not the event's end, so that
+ * block has no end handle and a resize there would cut the event short.
+ */
+export function sdSchedulerResizeLastDay(
+  placement: Pick<SdSchedulerPlacement, 'firstDay' | 'lastDay'>,
+  columns: readonly string[],
+  shift: number
+): string | null {
+  const end = columns.indexOf(placement.lastDay);
+  if (end < 0) return null;
+  const first = columns.findIndex(day => day >= placement.firstDay);
+  return columns[Math.min(columns.length - 1, Math.max(first, end + shift))];
 }
 
 /** Resources in row order (§10): those without a group first, then each group in the order of its first resource. */

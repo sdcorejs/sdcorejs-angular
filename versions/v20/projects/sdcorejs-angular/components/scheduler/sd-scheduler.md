@@ -260,7 +260,7 @@ With `option.move`, on every view not drawn by a cell template: drag a block on 
 
 ### End handle
 
-- The 8px area at the inline end of a block, with the `ew-resize` cursor. Day view: timed events that stay in their day, by `min(step, 15)` minutes, at least `min(step, 15)` minutes long, up to 24:00. Week and month: all-day events only, by whole days, at least one day, up to the last day of the range; timed blocks have no handle.
+- The 8px area at the inline end of a block, with the `ew-resize` cursor. Day view: timed events that stay in their day, by `min(step, 15)` minutes, at least `min(step, 15)` minutes long, up to 24:00. Week and month: all-day events only, by whole columns on screen (with `hideWeekends` the end skips the weekend), at least one day, up to the last column; timed blocks have no handle, nor has an all-day block whose last day is not on screen (after the range, or a hidden Saturday or Sunday), so its end is never cut back to the screen.
 - No handle with `axis: 'resource'` or a refused `movable`. On a coarse pointer only the selected block has it (see Compact layout and touch).
 - While resizing, the block follows the pointer and a floating label shows the new span ("10:00 – 12:30", or the dates), placed as the drag label.
 - `Esc` or a `pointercancel` drops a live resize; nothing is called. `request.source` is `'resize'`.
@@ -365,7 +365,7 @@ The cell template applies to the views in its `views` input (`readonly SdSchedul
 | Grid | `Enter`/`Space` create one step or one day on the resource under the cursor (a cell with events: `sdCellSelect`). `Alt` + `Enter` collapse the group of the resource under the cursor, or open the collapsed group under it. |
 | Event | `Enter`/`Space` select, `Esc` clear and back to the grid. Arrows without `Alt` do nothing. |
 | Event | `Alt` + `←` `→`: `min(step, 15)` minutes for a timed event of the day on the day view, otherwise one day (into the next range, which the view follows). Reversed in RTL. |
-| Event | `Alt` + `Shift` + `←` `→` change the end where the end handle is: timed events of the day on the day view by `min(step, 15)` minutes, all-day events on week and month by one day. |
+| Event | `Alt` + `Shift` + `←` `→` change the end where the end handle is: timed events of the day on the day view by `min(step, 15)` minutes, all-day events on week and month by one column. |
 | Event | `Alt` + `↑` `↓` the nearest resource above or below that `droppable` allows, collapsed groups included. |
 
 Group buttons and the day numbers of the axis have `tabindex="-1"`: they add no tab stop.

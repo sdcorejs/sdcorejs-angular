@@ -99,8 +99,8 @@ export interface SdCalendarMoveHost {
   readonly announcer: SdCalendarAnnouncer;
   readonly focus: SdCalendarFocusKeeper;
   readonly t: (key: string, params?: Record<string, string | number>) => string;
-  /** Opens the scope bar and resolves with the answer; `null` is Cancel. */
-  readonly ask: (title: string) => Promise<SdCalendarMoveScope | null>;
+  /** Opens the scope bar and resolves with the answer; `null` is Cancel, also when `signal` (the move's) aborts. */
+  readonly ask: (title: string, signal: AbortSignal) => Promise<SdCalendarMoveScope | null>;
   /** Shows the failure band of an item, or clears it with `null`. */
   readonly band: (failure: { readonly id: string; readonly message: string } | null) => void;
   readonly reload: () => void;
@@ -143,7 +143,7 @@ export class SdCalendarMoveRunner {
       restore = true;
       // §9.6: an occurrence waits at the proposal (dashed, no sync icon) until the user picks a scope.
       plan.show(false);
-      scope = await this.host.ask(plan.title);
+      scope = await this.host.ask(plan.title, signal);
       if (signal.aborted) return false;
       if (scope === null) {
         operation.end(signal);
@@ -258,9 +258,19 @@ export class SdCalendarScopeBar {
     );
   }
 
-  /** Opens the bar; resolves with the answer, `null` for Cancel. */
-  ask(title: string): Promise<SdCalendarMoveScope | null> {
-    return new Promise(answer => this.#asking.set({ title, answer }));
+  /** Opens the bar; resolves with the answer, `null` for Cancel. An abort of `signal` (its operation) is Cancel. */
+  ask(title: string, signal?: AbortSignal): Promise<SdCalendarMoveScope | null> {
+    return new Promise(answer => {
+      const asking = { title, answer };
+      this.#asking.set(asking);
+      // why: an operation aborted while the bar asks (the component destroyed included) must settle, or the move never
+      // ends and its focus watch stays on document. An old signal does not close a newer question.
+      const cancel = (): void => {
+        if (untracked(this.#asking) === asking) this.answer(null);
+      };
+      if (signal?.aborted) cancel();
+      else signal?.addEventListener('abort', cancel, { once: true });
+    });
   }
 
   /** Answers and closes the bar; `null` is Cancel. Nothing happens while the bar is closed. */

@@ -271,6 +271,25 @@ describe('SdScheduler · move pipeline', () => {
         expect(status(host)).toBe('Đã huỷ thay đổi');
       })
     );
+
+    it(
+      '[SCH-SC-15] closes the scope bar and stops watching the focus when destroyed while it asks',
+      run(() => {
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        const rendered = renderScheduler({ option: { dataSource: { onLoad: () => recurring() }, move: { onMove } } });
+        const { fixture, host, scheduler, settle } = rendered;
+        let result: boolean | null = null;
+        void scheduler.move('client', { start: '2026/11/09 14:00:00' }, 'drag').then(value => (result = value));
+        settle();
+        expect(q(host, '[role="alertdialog"]')).withContext('the scope bar').not.toBeNull();
+        const removed = spyOn(document, 'removeEventListener').and.callThrough();
+        fixture.destroy();
+        flushMicrotasks();
+        expect(result).withContext('move() settles').toBeFalse();
+        expect(removed).toHaveBeenCalledWith('focusin', jasmine.any(Function), true);
+        expect(onMove).not.toHaveBeenCalled();
+      })
+    );
   });
 
   describe('onMove results (SC-09 … SC-13)', () => {
@@ -729,6 +748,65 @@ describe('SdScheduler · move pipeline', () => {
         pointer(handle, 'pointercancel', from);
         fixture.detectChanges();
         expect(q(host, '[data-resize-label]')).toBeNull();
+      })
+    );
+
+    it(
+      '[SCH-C-10] keeps the end of an all-day event the range cuts: no end handle, Alt + Shift + ← → do nothing',
+      run(() => {
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        // Friday to next Wednesday: the week shows Friday to Sunday, the end is past the range.
+        const fair = {
+          id: 'fair',
+          title: 'Hội chợ',
+          resourceId: 'hall',
+          start: '2026/11/13',
+          end: '2026/11/18',
+          allDay: true,
+          data: { people: 50 },
+        };
+        const rendered = render({ onMove }, { view: 'week' }, () => [...bookings(), fair]);
+        const { host, settle } = rendered;
+        expect(block(host, 'fair')!.dataset['clippedEnd']).toBe('true');
+        expect(q(block(host, 'fair')!, '[data-resize-handle]'))
+          .withContext('no end handle')
+          .toBeNull();
+        for (const name of ['ArrowRight', 'ArrowLeft']) {
+          press(block(host, 'fair')!, name, { alt: true, shift: true });
+          settle();
+        }
+        expect(onMove).not.toHaveBeenCalled();
+        expect(block(host, 'fair')!.dataset['end']).toBe('2026/11/18');
+      })
+    );
+
+    it(
+      '[SCH-C-10] resizes an all-day block along the columns on screen with hideWeekends, by pointer and by keys',
+      run(() => {
+        const onMove = jasmine.createSpy('onMove').and.returnValue(true);
+        const extra = [
+          { id: 'thu', title: 'Kiểm kê', resourceId: 'hall', start: '2026/11/12', end: '2026/11/12', allDay: true, data: { people: 5 } },
+          { id: 'fri', title: 'Tổng kết', resourceId: 'hue', start: '2026/11/13', end: '2026/11/13', allDay: true, data: { people: 5 } },
+        ];
+        const rendered = render({ onMove }, { view: 'month', hideWeekends: true }, () => [...bookings(), ...extra]);
+        const { host, fixture, settle } = rendered;
+        const handle = q(block(host, 'thu')!, '[data-resize-handle]')!;
+        const from = centerOf(handle);
+        // November 2026 has 21 weekdays.
+        const column = track(host, 'hall').getBoundingClientRect().width / 21;
+        pointer(handle, 'pointerdown', from);
+        pointer(handle, 'pointermove', { x: from.x + column * 2, y: from.y });
+        fixture.detectChanges();
+        // Thursday and two more columns: Friday and Monday, the weekend is not on screen.
+        expect(text(q(host, '[data-resize-label]'))).toBe('12/11 – 16/11');
+        pointer(handle, 'pointerup', { x: from.x + column * 2, y: from.y });
+        settle();
+        const resized = onMove.calls.mostRecent().args[0] as SdSchedulerMoveRequest<Booking, Room>;
+        expect([resized.source, resized.to.start, resized.to.end]).toEqual(['resize', '2026/11/12', '2026/11/16']);
+        press(block(host, 'fri')!, 'ArrowRight', { alt: true, shift: true });
+        settle();
+        const keyed = onMove.calls.mostRecent().args[0] as SdSchedulerMoveRequest<Booking, Room>;
+        expect([keyed.event.id, keyed.to.end]).toEqual(['fri', '2026/11/16']);
       })
     );
 

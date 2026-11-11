@@ -341,7 +341,7 @@ export class SdCalendar<T = unknown> {
     announcer: this.#announcer,
     focus: this.#focus,
     t: this.#t,
-    ask: title => this.scopeBar.ask(title),
+    ask: (title, signal) => this.scopeBar.ask(title, signal),
     band: failure => this.#failure.set(failure),
     reload: () => this.reload(),
   });
