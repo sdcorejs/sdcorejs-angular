@@ -320,6 +320,7 @@ Under 600px of **host** width (`ResizeObserver` on the host, not a media query, 
 - The title of Day and Week uses short dates, which fit one line: "Nov 9, 2026" (vi "09/11/2026") and "Nov 9 – Nov 15, 2026" (vi "09/11 – 15/11/2026"). Month keeps "November 2026".
 - The resource column is 120px wide: icon or avatar 24px, the title on up to two lines, no description. The resource template receives `compact: true`.
 - `--sd-scheduler-hour-width` is 64px and `--sd-scheduler-day-min-width` 96px; the month keeps 28px. Group rows are 44px tall.
+- A coarse pointer (`pointer: coarse`) gets the same 44px targets at every width: the toolbar buttons, the view switcher, Retry, Dismiss, the scope buttons, group rows and the day numbers of the week. Only the layout waits for 600px of host width.
 - The week stays a week: `view`, `onLoad` and `sdRangeChange` keep the view on screen. There is no swipe between days.
 
 On touch:
@@ -410,7 +411,7 @@ Sizes on the host:
 | `--sd-scheduler-month-day-min-width` | `28px` | `28px` | The narrowest column of the month. |
 | `--sd-scheduler-row-min-height` | `48px` | — | The CSS minimum height of a resource row. |
 | `--sd-scheduler-lane-height` | `28px` | — | The height of a block, the dashed create block and the drag proposal. |
-| `--sd-scheduler-group-height` | `32px` | `44px` | The height of a group row. |
+| `--sd-scheduler-group-height` | `32px` | `44px` | The height of a group row (44px on a coarse pointer too). |
 | `--sd-scheduler-event-radius` | `var(--sd-radius-6, 6px)` | — | The corners of a block. |
 
 **Set the four width variables in `px`.** The scheduler reads them with `getComputedStyle` to choose the content of a block, to turn pointer positions into minutes and columns, to skip the sticky column while dragging and to scroll to `scrollTime`. A value in `rem` is read as a number of pixels, and a `calc()` falls back to the default. They are read after the first render and when the compact layout turns on or off.

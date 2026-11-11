@@ -104,12 +104,12 @@ describe('SdKanban · compact layout, live region and themes', () => {
     expect(findCssRule(/sd-kanban__column/, /forced-colors/)?.getPropertyValue('border-color')).toBe('canvastext');
   });
 
-  it('[KAN-SC-36] gives every control a 40px target on a coarse pointer', () => {
+  it('[KAN-SC-36] gives every control a 44px target on a coarse pointer, as calendar and scheduler (RX #7)', () => {
     TestBed.createComponent(SdKanban<never>);
-    for (const selector of [/sd-kanban__icon-button/, /sd-kanban__load-more/, /sd-kanban__retry/]) {
+    for (const selector of [/sd-kanban__icon-button/, /sd-kanban__text-button/, /sd-kanban__load-more/, /sd-kanban__retry/]) {
       expect(findCssRule(selector, /pointer:\s*coarse/)?.getPropertyValue('min-height'))
         .withContext(String(selector))
-        .toBe('40px');
+        .toBe('var(--sd-control-height-coarse, 44px)');
     }
   });
 

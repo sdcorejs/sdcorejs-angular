@@ -11,6 +11,8 @@ class Host {
 
 describe('SdTranslatePipe', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+  // why: a language left in localStorage leaks into the specs that run after this file.
+  afterEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('renders translation', () => {
     const fix = TestBed.createComponent(Host);

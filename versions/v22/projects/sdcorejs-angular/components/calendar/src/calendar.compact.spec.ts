@@ -203,6 +203,17 @@ describe('SdCalendar · compact, touch and print', () => {
     expect(findCssRule(/sd-calendar__event/, /prefers-reduced-motion/)?.getPropertyValue('transition-property')).toBe('none');
   }));
 
+  it('[CAL-SC-36] gives the toolbar, band and scope buttons 44px targets on a coarse pointer at every width, RX #7', fakeAsync(() => {
+    mount();
+    const coarse = (selector: RegExp, property = 'min-height'): string | undefined =>
+      findCssRule(selector, /pointer:\s*coarse/)?.getPropertyValue(property);
+    for (const selector of [/^\.sd-calendar__today/, /sd-calendar__band-button/, /sd-calendar__scope-button/]) {
+      expect(coarse(selector)).withContext(String(selector)).toBe('var(--sd-control-height-coarse, 44px)');
+    }
+    expect(coarse(/sd-calendar__icon-button/, 'min-width')).toBe('var(--sd-control-height-coarse, 44px)');
+    expect(coarse(/^\.sd-calendar__view$/)).toBe('calc(var(--sd-control-height-coarse, 44px) - 2px)');
+  }));
+
   it('[CAL-SC-35] uses CanvasText frames and Highlight for selected, pending and now under forced-colors', fakeAsync(() => {
     mount();
     expect(

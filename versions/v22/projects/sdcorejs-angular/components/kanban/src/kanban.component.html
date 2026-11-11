@@ -45,7 +45,7 @@
       <!-- K3: the failure is read through the one status region below; the band is plain text. -->
       <div class="sd-kanban__failure">
         <span>{{ _failure }}</span>
-        <button type="button" (click)="dismissFailure()">{{ 'core.component.kanban.dismiss' | sdTranslate }}</button>
+        <button type="button" (click)="dismissFailure()">{{ 'core.common.dismiss' | sdTranslate }}</button>
       </div>
     }
     <p class="sd-kanban__sr-only" [id]="id + '-instructions'">
@@ -138,7 +138,7 @@
                 <sd-icon class="sd-kanban__load-error-icon" name="error" />
                 <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
                 <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
-                  {{ 'core.component.kanban.retry' | sdTranslate }}
+                  {{ 'core.common.retry' | sdTranslate }}
                 </button>
               </div>
             } @else if (!_collapsed) {
@@ -233,7 +233,7 @@
                       <sd-icon name="error" size="sm" />
                       <span class="sd-kanban__card-status-text" [id]="_failureId">{{ _failure }}</span>
                       <button type="button" class="sd-kanban__text-button" (click)="dismissFailure(card.card.id)">
-                        {{ 'core.component.kanban.dismiss' | sdTranslate }}
+                        {{ 'core.common.dismiss' | sdTranslate }}
                       </button>
                     </div>
                   }
@@ -253,7 +253,7 @@
                 <div class="sd-kanban__load-error sd-kanban__load-error--row" data-load-error>
                   <span>{{ 'core.component.kanban.load-error' | sdTranslate }}</span>
                   <button type="button" class="sd-kanban__retry" data-action="retry" (click)="retry(view.column.id)">
-                    {{ 'core.component.kanban.retry' | sdTranslate }}
+                    {{ 'core.common.retry' | sdTranslate }}
                   </button>
                 </div>
               } @else if (view.nextCursor !== null) {

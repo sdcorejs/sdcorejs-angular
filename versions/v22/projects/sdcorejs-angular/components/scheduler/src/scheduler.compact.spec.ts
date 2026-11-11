@@ -241,6 +241,21 @@ describe('SdScheduler · compact, touch, cell template and media', () => {
     );
 
     it(
+      '[SCH-SC-36] gives the toolbar, band, scope and group buttons 44px targets on a coarse pointer at every width, RX #7',
+      run(() => {
+        renderScheduler();
+        const coarse = (selector: RegExp, property = 'min-height'): string | undefined =>
+          findCssRule(selector, /pointer:\s*coarse/)?.getPropertyValue(property);
+        for (const selector of [/^\.sd-scheduler__today/, /sd-scheduler__band-button/, /sd-scheduler__scope-button/]) {
+          expect(coarse(selector)).withContext(String(selector)).toBe('var(--sd-control-height-coarse, 44px)');
+        }
+        expect(coarse(/sd-scheduler__icon-button/, 'min-width')).toBe('var(--sd-control-height-coarse, 44px)');
+        expect(coarse(/^\.sd-scheduler$/, '--sd-scheduler-group-height')?.trim()).toBe('44px');
+        expect(coarse(/data-view="week"]\s*\.sd-scheduler__day-number::after/, 'inset')).toBe('-8px');
+      })
+    );
+
+    it(
       '[SCH-SC-36] keeps hover additive and gives touch a 24px resize target',
       run(() => {
         renderScheduler();

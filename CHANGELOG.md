@@ -178,7 +178,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `option.move = { movable?, onMove }`: drag, bottom edge and `Alt` + arrows; `onMove` answers `true`/nothing (accept), `false` (reject), `'cancel'` (silent) or throws; `sdMove`, `sdMoveError` and the public `move(eventId, to, source)` for undo. `request.source` is `'drag'`, `'resize'` (bottom edge or `Alt` + `Shift` + ↑ ↓), `'keyboard'` or `'api'`; a block that has the focus keeps it after its move.
   - Recurring occurrences ask for the scope (`this`, `following`, `all`) before `onMove`.
   - Two-way `view`, `date`, `selectedId`; `step`, `firstDayOfWeek`, `hideWeekends`, `workingHours`, `holidays`, `minDate`/`maxDate`, `scrollTime`, `agendaDays`, `dimPast`, `transform`, `readonly`, `disabled`; `SD_CALENDAR_CONFIGURATION`.
-  - Compact layout under 600px of host width, touch, print, forced colors and reduced motion; dates in `ISdCoreConfiguration.timeZone`.
+  - Compact layout under 600px of host width, 44px targets on a coarse pointer at every width, touch, print, forced colors and reduced motion; dates in `ISdCoreConfiguration.timeZone`.
 - Theme tokens `--sd-calendar-line`, `--sd-calendar-line-half`, `--sd-calendar-off-hours`, `--sd-calendar-now`, `--sd-calendar-today`, and the i18n keys `core.component.calendar.*` in the five locales.
 
 #### Card
@@ -207,11 +207,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `keyword` reloads the loaded columns after 300ms; a new `option` reloads every column; a new `columns` loads only the new ones. Late results, cards of another column, cards without a title and duplicate ids are dropped (dev-mode warning).
   - An accepted move updates both columns and their totals without calling `onLoad` again. A column without its first page (collapsed and never opened, loading, failed) is not a destination until it loads, and the cards of a column that loads its first page again cannot move until it is back.
 - `option.move.droppable({ card, from, to })` runs when a drag starts: refused lanes fade, get `data-blocked` and `aria-disabled`, and refuse the drop ("Can't move to {column}" is announced). The menu disables those destinations and `Alt` + `←` `→` skips them.
-- `option.move.onMove` may return `'cancel'`: the card goes back without an error or `sdMoveError`, and "Move of {title} cancelled" is announced.
+- `option.move.onMove` may return `'cancel'`: the card goes back without an error or `sdMoveError`, and "Change cancelled" is announced.
 - Card selection: `selectedId` (two-way, back to `null` when the card leaves the data) and `sdSelect`, from a click, tap, `Enter` or `Space`; `Esc` clears it. The selected card has a primary outline and `aria-current="true"`; the card template context has `selected`.
 - With `reorder` off the old place of a dragged card stays drawn at 40% instead of a drop slot; the cursor is `grabbing` while dragging.
 - E2E hooks: `data-status`, `data-blocked`, `data-summary`, `data-selected`, `data-pending`, `data-movable`, `data-kanban-card-main`, `data-kanban-menu`, `data-skeleton`, `data-load-error`, `data-load-more`, `data-action="retry"`, `data-compact`, and a `data-autoid` on each column.
-- i18n keys `core.component.kanban.{load-more,loading,load-error,retry,drop-blocked,cancelled,instructions-column,selected}` in the five locales.
+- i18n keys `core.component.kanban.{load-more,loading,load-error,drop-blocked,cancelled,instructions-column,selected}` in the five locales; Retry and Dismiss use `core.common.retry` and `core.common.dismiss`.
 
 #### Query bar
 
@@ -228,7 +228,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `option.create = { creatable?, onCreate }`: sweep on one row, click, tap or `Enter`; the context carries `resource` and `resourceId`.
   - `option.move = { movable?, droppable?, axis?, onMove }`: drag on two axes (row and time), the end handle and `Alt` + arrows (`Alt` + ↑ ↓ to the nearest resource `droppable` allows); `droppable({ event, to, resource })` is checked while dragging and for `move()`; `axis: 'time' | 'resource'` locks one axis. `onMove`, the recurring scope bar, `sdMove`, `sdMoveError` and `move(eventId, to, source)` behave as in `sd-calendar`.
   - Templates: `sdSchedulerEventTemplate`, `sdSchedulerResourceTemplate`, `sdSchedulerEmptyTemplate` and `sdSchedulerCellTemplate` (week and month cells instead of blocks, with `sdCellSelect`).
-  - The grid is one tab stop with a cursor (`aria-activedescendant`); compact layout under 600px of host width, touch, forced colors and reduced motion. It reuses `SD_CALENDAR_CONFIGURATION` and the `--sd-calendar-*` tokens; the size variables `--sd-scheduler-*` take `px`.
+  - The grid is one tab stop with a cursor (`aria-activedescendant`); compact layout under 600px of host width, 44px targets on a coarse pointer at every width, touch, forced colors and reduced motion. It reuses `SD_CALENDAR_CONFIGURATION` and the `--sd-calendar-*` tokens; the size variables `--sd-scheduler-*` take `px`.
 - i18n keys `core.component.scheduler.*` in the five locales.
 
 #### Search field
@@ -258,9 +258,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### General
 
+- i18n keys `core.common.retry` and `core.common.dismiss` in the five locales, shared by the Retry and Dismiss buttons of `sd-calendar`, `sd-scheduler` and `sd-kanban`.
 - The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.
 
 ### Changed
+
+#### Kanban
+
+- On a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 44px high (`--sd-control-height-coarse`, was 40px), as in `sd-calendar` and `sd-scheduler`.
+- The live region says "Saving {title}" while `onMove` runs (was "Moving {title}") and "Change cancelled" after `'cancel'`, the words of `sd-calendar`; "{title} moved to {column}, position {position}" keeps its own wording.
 
 #### Pattern
 
@@ -304,6 +310,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
       --sd-control-border: color-mix(in srgb, var(--sd-border-strong) 82%, var(--sd-surface));
     }
     ```
+
+### Deprecated
+
+#### Kanban
+
+- `core.component.kanban.dismiss` is no longer read: Dismiss uses `core.common.dismiss`. The key stays in the five catalogs so a custom catalog that sets it still compiles; move an override to `core.common.dismiss`.
 
 ### Removed
 

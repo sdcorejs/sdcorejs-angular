@@ -65,7 +65,7 @@
       <sd-icon class="sd-calendar__band-icon" name="error" size="18px" aria-hidden="true" />
       <span class="sd-calendar__band-text">{{ 'core.component.calendar.load-error' | sdTranslate }}</span>
       <button type="button" class="sd-calendar__band-button" data-action="retry" [attr.data-autoid]="childAutoId('retry')" (click)="reload()">
-        {{ 'core.component.calendar.retry' | sdTranslate }}
+        {{ 'core.common.retry' | sdTranslate }}
       </button>
     </div>
   }
@@ -74,7 +74,7 @@
       <sd-icon class="sd-calendar__band-icon" name="error" size="18px" aria-hidden="true" />
       <span class="sd-calendar__band-text">{{ _failure.message }}</span>
       <button type="button" class="sd-calendar__band-button" data-action="dismiss" [attr.data-autoid]="childAutoId('dismiss')" (click)="dismissFailure()">
-        {{ 'core.component.calendar.dismiss' | sdTranslate }}
+        {{ 'core.common.dismiss' | sdTranslate }}
       </button>
     </div>
   }

@@ -478,10 +478,11 @@
     outline-offset: 2px;
   }
 }
+// SC-36, RX #7 (PD 2026-11-11): 44px targets on a coarse pointer, as sd-calendar and sd-scheduler.
 @media (pointer: coarse) {
   .sd-kanban__load-more,
   .sd-kanban__retry {
-    min-height: 40px;
+    min-height: var(--sd-control-height-coarse, 44px);
   }
 }
 // `reorder` off (kanban.md §6): no drop slot; the old place stays faded in the source lane.
@@ -537,11 +538,11 @@
 }
 @media (pointer: coarse) {
   .sd-kanban__icon-button {
-    width: 40px;
-    min-height: 40px;
+    width: var(--sd-control-height-coarse, 44px);
+    min-height: var(--sd-control-height-coarse, 44px);
   }
   .sd-kanban__text-button {
-    min-height: 40px;
+    min-height: var(--sd-control-height-coarse, 44px);
   }
 }
 @media (forced-colors: active) {

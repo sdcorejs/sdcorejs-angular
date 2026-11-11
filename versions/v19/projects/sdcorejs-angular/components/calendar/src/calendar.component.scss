@@ -1163,6 +1163,26 @@ $hour: var(--sd-calendar-hour-height);
   }
 }
 
+// SC-36, RX #7 (PD 2026-11-11): a coarse pointer gets 44px targets at every width, as the compact layout does under
+// 600px of host width. The compact layout itself still follows the host width.
+@media (pointer: coarse) {
+  .sd-calendar__today,
+  .sd-calendar__band-button,
+  .sd-calendar__scope-button {
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
+  .sd-calendar__icon-button {
+    min-width: var(--sd-control-height-coarse, 44px);
+    min-height: var(--sd-control-height-coarse, 44px);
+  }
+
+  // why: the switcher has a 1px border around its options.
+  .sd-calendar__view {
+    min-height: calc(var(--sd-control-height-coarse, 44px) - 2px);
+  }
+}
+
 // ---- compact (§12) ----
 .sd-calendar--compact {
   --sd-calendar-gutter-width: 48px;
