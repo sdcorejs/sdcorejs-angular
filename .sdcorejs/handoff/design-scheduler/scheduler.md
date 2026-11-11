@@ -182,7 +182,7 @@ Thay `option` hoặc `resources` bằng tham chiếu mới thì tải lại (g�
 | Input | Kiểu | Mặc định | Ghi chú |
 | --- | --- | --- | --- |
 | `option` | `SdSchedulerOption<T, R>` | bắt buộc | |
-| `resources` | `readonly SdSchedulerResource<R>[]` | bắt buộc | Rỗng: trạng thái trống, không gọi `onLoad`. |
+| `resources` | `readonly SdSchedulerResource<R>[]` | bắt buộc | Rỗng: trạng thái trống, không gọi `onLoad`. Mảng mới có danh sách id khác (id hoặc thứ tự): tải lại, xoá lưới tới khi có kết quả. Mảng mới cùng danh sách id: chỉ vẽ lại hàng, không gọi `onLoad`, không huỷ thao tác đang chờ (R1 #7, PD 2026-11-11). |
 | `view` | `SdSchedulerView` | `'day'` | `model()`. Không thuộc `views` thì lấy phần tử đầu. |
 | `views` | `readonly SdSchedulerView[]` | `['day','week','month']` | |
 | `resourceLabel` | `string \| null \| undefined` | `core.component.scheduler.resources` | Chữ ở ô góc. |
@@ -216,18 +216,19 @@ Như calendar 5. Thêm: sau khi dời được chấp nhận, sự kiện đư�
 
 | Chế độ | Khoảng | ‹ › | Tiêu đề (vi) |
 | --- | --- | --- | --- |
-| Ngày | ngày `date` | ±1 ngày | “Thứ Hai, 09 tháng 11, 2026” |
-| Tuần | 7 ngày từ `firstDayOfWeek` chứa `date`; `hideWeekends` bỏ cột T7, CN nhưng `from`/`to` vẫn là cả tuần | ±1 tuần | như Tuần của calendar |
+| Ngày | ngày `date` | ±1 ngày | “Thứ Hai, 9 tháng 11, 2026” (số ngày theo định dạng calendar, R2 #9, PD 2026-11-11) |
+| Tuần | 7 ngày từ `firstDayOfWeek` chứa `date`; `hideWeekends` bỏ cột T7, CN nhưng `from`/`to` vẫn là cả tuần | ±1 tuần | như Tuần của calendar, theo cột hiển thị: `hideWeekends` → “9 – 13 tháng 11, 2026” (R2 #12, PD 2026-11-11) |
 | Tháng | ngày 1 tới ngày cuối tháng của `date` (28–31 cột), không có ngày của tháng kề | ±1 tháng | “Tháng 11, 2026” |
 
-Định dạng tiêu đề lấy từ hàm của calendar. Cuộn ban đầu:
+Định dạng tiêu đề lấy từ hàm của calendar. Hẹp (mục 11): Ngày “09/11/2026”, Tuần “09/11 – 15/11/2026” (dạng khoảng của calendar, đúng thứ tự ngày tháng của mọi locale), Tháng giữ “Tháng 11, 2026” (R2 #5, PD 2026-11-11). Cuộn ban đầu:
 - Ngày: `scrollLeft = phút(scrollTime) / 60 × hourWidth`. Chạy khi khởi tạo, khi vào Ngày từ chế độ khác; không chạy khi chỉ chuyển ngày.
 - Tuần, Tháng: nếu hôm nay nằm trong khoảng và cột hôm nay bị khuất thì cuộn để cột đó nằm sát mép trái vùng lưới.
 - Dọc: giữ `scrollTop` khi chuyển khoảng và chế độ.
+- ‹ › ở Tuần, Tháng không đặt lại `scrollLeft` ngoài hai trường hợp trên (R1 #15, PD 2026-11-11).
 
 ## 7. Bố cục và kích thước
 
-Font, quy tắc literal và token như calendar 7. Biến trên `:host`: `--sd-scheduler-resource-width: 240px`, `--sd-scheduler-hour-width: 80px`, `--sd-scheduler-day-min-width: 120px` (Tuần), `--sd-scheduler-month-day-min-width: 28px`, `--sd-scheduler-row-min-height: 48px`, `--sd-scheduler-lane-height: 28px`, `--sd-scheduler-event-radius: 6px` (theo thang nếu có `6`). Giao diện hẹp ghi đè ở mục 11.
+Font, quy tắc literal và token như calendar 7. Biến trên `:host`: `--sd-scheduler-resource-width: 240px`, `--sd-scheduler-hour-width: 80px`, `--sd-scheduler-day-min-width: 120px` (Tuần), `--sd-scheduler-month-day-min-width: 28px`, `--sd-scheduler-row-min-height: 48px`, `--sd-scheduler-lane-height: 28px`, `--sd-scheduler-event-radius: 6px` (theo thang nếu có `6`). Giao diện hẹp ghi đè ở mục 11. Biến kích thước chỉ nhận `px`: component đọc bằng `getComputedStyle` (R1 #8, PD 2026-11-11).
 
 | Phần | Thông số |
 | --- | --- |
@@ -279,7 +280,7 @@ Cho từng tài nguyên, trên khoảng đang xem:
 2. Sắp theo `start` tăng; cùng `start` thì cả ngày trước, rồi `end` giảm.
 3. Đặt mỗi sự kiện vào lane đầu tiên có `end` cuối cùng ≤ `start` của nó; không có thì mở lane mới.
 4. Số lane của hàng = số lane đã mở, tối thiểu 1. Không giới hạn số lane.
-5. Khối đang kéo, đang chờ, đang lưu không tham gia xếp lane của hàng đích; vẽ ở lane 0 của hàng đích, phía trên các khối khác. Hàng gốc giữ khung nét đứt ở lane cũ.
+5. Khối đang kéo, đang chờ, đang lưu không tham gia xếp lane của hàng đích; vẽ ở lane 0 của hàng đích, phía trên các khối khác. Trong lúc kéo, hàng gốc giữ khung nét đứt ở lane cũ; khi chờ phạm vi và khi đang lưu, vị trí cũ không hiện, như calendar 8.3 (R2 #10, PD 2026-11-11).
 6. Thứ tự DOM: theo tài nguyên, rồi theo bước 2.
 
 ### 8.5 Template
@@ -288,7 +289,7 @@ Cho từng tài nguyên, trên khoảng đang xem:
 | --- | --- | --- |
 | `SdSchedulerEventTemplateDirective` | `ng-template[sdSchedulerEventTemplate]` | `$implicit`, `event`, `range: SdSchedulerRange`, `resource`, `view`, `compact` (khối < 48px), `pending` |
 | `SdSchedulerResourceTemplateDirective` | `ng-template[sdSchedulerResourceTemplate]` | `$implicit`, `resource`, `group: string \| null`, `compact` (giao diện hẹp) |
-| `SdSchedulerCellTemplateDirective` | `ng-template[sdSchedulerCellTemplate]` | `$implicit` (`'yyyy/MM/dd'`), `date`, `resource`, `events`, `holiday`, `today`, `off`. Thuộc tính `views` của directive (mặc định `['week','month']`, không nhận `'day'`) chọn chế độ áp dụng. |
+| `SdSchedulerCellTemplateDirective` | `ng-template[sdSchedulerCellTemplate]` | `$implicit` (`'yyyy/MM/dd'`), `date`, `resource`, `events`, `holiday`, `today`, `off`. Thuộc tính `views` của directive (mặc định `['week','month']`, không nhận `'day'`, kiểu public `SdSchedulerCellView`, R1 #9, PD 2026-11-11) chọn chế độ áp dụng. |
 | `SdSchedulerEmptyTemplateDirective` | `ng-template[sdSchedulerEmptyTemplate]` | `$implicit: SdSchedulerVisibleRange` |
 
 Mỗi directive có `static ngTemplateContextGuard`. Template sự kiện thay phần bên trong khối (như calendar 8.5). Template tài nguyên thay nội dung ô bên trái; khung, chiều rộng, phần dính vẫn do component vẽ. Template ô: ở chế độ được áp dụng, component không vẽ khối, không kéo, không kéo mép; ô là `role="gridcell"` bấm được (9.1, 9.2).
@@ -371,7 +372,7 @@ Hàng nhóm là `button` có `tabindex="-1"`, nên không thêm điểm Tab. Bà
 - `--sd-scheduler-hour-width: 64px`; `--sd-scheduler-day-min-width: 96px`; Tháng giữ 28px.
 - Kéo một ngón là cuộn. Chạm ô trống tạo một slot. Chạm giữ 400ms trên khối để nhấc lên, kéo theo hai trục như 9.3.
 - Không có vuốt để chuyển ngày.
-- Vùng chạm tối thiểu 44×44px cho nút. Hàng nhóm cao 44px.
+- Vùng chạm tối thiểu 44×44px cho nút. Hàng nhóm cao 44px. Ô số ngày của Tháng giữ 28px: đủ 24×24px của WCAG 2.2 AA 2.5.8 (R2 #7, PD 2026-11-11).
 
 ## 12. Trạng thái của component
 
@@ -389,7 +390,7 @@ Không thêm token màu. Dùng lại `--sd-calendar-line`, `--sd-calendar-line-h
 ## 14. Trợ năng và i18n
 
 - Gốc `<section role="region">`, live region, `prefers-reduced-motion`, `forced-colors` như calendar 15.
-- Vùng cuộn có `aria-label` = `ariaLabel`. Ô tài nguyên `role="rowheader"`, `id` để khối dùng trong `aria-describedby`.
+- Lưới `role="grid"` có `aria-label` = “{ariaLabel}, {tiêu đề}”; vùng cuộn là `div` không role nên không mang nhãn (ARIA 1.2 cấm `aria-label` trên phần tử generic; R1 #10, PD 2026-11-11). Ô tài nguyên `role="rowheader"`, `id` để khối dùng trong `aria-describedby`.
 - Nhãn khối: “{title}, {resource}, {weekday} {date}, {start} đến {end}[, lặp lại]”; cả ngày: “{title}, {resource}, cả ngày, {from} đến {to}”.
 - Nhãn con trỏ: “{resource}, {weekday} {date}, {time}” (Ngày) hoặc “{resource}, {weekday} {date}” (Tuần, Tháng).
 - Hàng nhóm: `aria-expanded`, `aria-label` “{group}, {count} tài nguyên”.
@@ -414,7 +415,7 @@ Dùng lại key `core.component.calendar.*` cho: `today`, `views`, `view-day`, `
 
 ## 15. E2E
 
-Gốc: `data-autoid="components-scheduler-{autoId}"`, `data-view`, `data-from`, `data-to`. Hàng: `data-autoid="components-scheduler-{autoId}-resource-{token}"`, `data-resource-id`. Khối: `…-event-{token}`, `data-resource-id`, `data-start`, `data-end`, `data-all-day`, `data-pending`, `data-selected`. Ô (Tuần, Tháng): `data-date`, `data-resource-id`. Token = `encodeURIComponent(id)`. Chỉ phát khi có `autoId`.
+Gốc: `data-autoid="components-scheduler-{autoId}"`, `data-view`, `data-from`, `data-to`. Hàng: `data-autoid="components-scheduler-{autoId}-resource-{token}"`, `data-resource-id`. Khối: `…-event-{token}`, `data-resource-id`, `data-start`, `data-end`, `data-all-day`, `data-pending`, `data-selected`. Ô (Tuần, Tháng, chỉ khi có `sdSchedulerCellTemplate`; không template thì không có phần tử ô, SC-44): `data-date`, `data-resource-id` (R2 #11, PD 2026-11-11). Token = `encodeURIComponent(id)`. Chỉ phát khi có `autoId`.
 
 ## 16. Spec phải viết trước (RED)
 

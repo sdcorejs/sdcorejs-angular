@@ -207,7 +207,7 @@ Thư mục `reports/scheduler-screens/`, chụp từ project `asia-bangkok`, Chr
 
 Lệch có chủ đích (ghi trong PR):
 - Số ngày trên trục Tuần “9” thay vì “09”, tiêu đề Ngày “9 tháng 11”: định dạng của calendar (Bước 0 L5).
-- Số đếm hàng nhóm “3 tài nguyên” thay vì “3 phòng”: chỉ đổi qua key i18n `group-count` (R1 #7, chờ PD).
+- Số đếm hàng nhóm “3 tài nguyên” thay vì “3 phòng”: lệch đã ghi, không phải mục chờ PD; app muốn chữ khác thì đổi key i18n `group-count`. (Bản trước ghi nhầm “R1 #7”: R1 #7 là việc tải lại theo `resources`, PD chốt ngày 11/11/2026.)
 - Tiêu đề hẹp xuống dòng thay vì “09/11/2026” (R2 #5, chờ PD).
 - Ví dụ Chấm công không có avatar như HTML (template tài nguyên của ví dụ chỉ có tên và cột tổng).
 - Vạch giờ hiện tại vẽ trên nhãn nổi khi kéo qua nó (vạch nằm trên khối, dưới phần dính, §7).

@@ -70,7 +70,7 @@ Thêm:
 | --- | --- |
 | SC-29 | Thao tác bắt đầu từ bàn phím hoặc menu: khi xong (chấp nhận, từ chối, `'cancel'`, huỷ phạm vi), focus về item đó, kể cả khi item đã sang khoảng hoặc cột khác. |
 | SC-30 | Trong lúc chờ, người dùng chủ động focus chỗ khác thì giữ nguyên chỗ đó. |
-| SC-31 | `move()` với `source: 'api'` không lấy focus. |
+| SC-31 | `move()` với `source: 'api'` không lấy focus từ chỗ khác. Focus đang ở chính item khi thao tác bắt đầu (mọi `source`) thì đi theo item, kể cả khi item sang ngày, hàng hoặc cột khác, như kanban (RX #6, PD 2026-11-11). Calendar, scheduler: đổi giờ kết thúc (mép, `Alt` + `Shift` + mũi tên) có `source: 'resize'` (RX #2, PD 2026-11-11). |
 
 ## 8. Bố cục, trợ năng, i18n, E2E
 
@@ -92,6 +92,6 @@ Thêm:
 | SC-40 | Standalone, `ChangeDetectionStrategy.OnPush`, signal `input()`/`model()`/`output()`, `@if`/`@for` với `track` theo id. |
 | SC-41 | Ngày giờ chỉ qua `SdDateTimeService`. Không `new Date(string)`, không getter local trên giá trị model, không cộng 24 giờ để sang ngày. |
 | SC-42 | Không thêm dependency. Kéo thả bằng `@angular/cdk/drag-drop`. |
-| SC-43 | Màu chỉ bằng token `--sd-*` có fallback; không hex mới (`check:scss-hex`). Không `!important`, không `::ng-deep`. |
+| SC-43 | Màu chỉ bằng token `--sd-*`; không hex mới (`check:scss-hex`). Token của component (`--sd-calendar-*`, `--sd-scheduler-*`, `--sd-kanban-*`) phải có fallback; token lõi (`--sd-*` của theme, kể cả `--sd-shadow-*`) không cần, theo quy ước trên main; fallback đang có thì giữ (RX #8, PD 2026-11-11). Không `!important`, không `::ng-deep`. |
 | SC-44 | Không render phần tử cho từng slot thời gian; vạch lưới vẽ bằng gradient. |
 | SC-45 | Comment `why:` cho quyết định không hiển nhiên, như code hiện có. |
