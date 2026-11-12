@@ -1,16 +1,39 @@
 import { inject, Injectable } from '@angular/core';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
-import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
+import { DialogConfirmComponent, DialogData } from './components/dialog-confirm/dialog-confirm.component';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Color } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import type { SdIconShape } from '@sdcorejs/angular/modules/icon';
+
+/** Options shared by every `SdConfirmService` method. */
+interface SdConfirmDisplayOption {
+  /** Force the presentation. Omitted: a bottom sheet on mobile, a dialog on desktop. */
+  view?: 'dialog' | 'bottom-sheet';
+  /**
+   * Allow closing by a backdrop click or the Esc key. Omitted = `false`. When passed, it decides and
+   * `disableBackdropClose` is ignored. Closing this way rejects the promise with `'CANCEL'`.
+   */
+  enableBackdropClose?: boolean;
+  /**
+   * Block closing by a backdrop click and the Esc key. Default `true`.
+   * @deprecated Use `enableBackdropClose` (the opposite meaning). Only applies when `enableBackdropClose` is omitted.
+   */
+  disableBackdropClose?: boolean;
+}
+
+const BOTTOM_SHEET_PANEL_CLASS = 'sd-confirm-bottom-sheet';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SdConfirmService {
   private dialog = inject(MatDialog);
+  readonly #bottomSheet = inject(MatBottomSheet);
+  // why: đọc một lần, cùng nguồn nhận diện mobile với sd-modal để hai nơi chọn kiểu hiển thị giống nhau.
+  readonly #isMobile = BrowserUtilities.isMobile();
 
   readonly #i18n = inject(I18nService);
 
@@ -37,9 +60,46 @@ export class SdConfirmService {
       });
     });
 
+  /**
+   * Đường mở duy nhất của cả 6 API: chọn dialog hay bottom sheet, tính quyền đóng bằng nền/Esc rồi trả về stream đóng
+   * để `#settleOnClose` biến thành Promise.
+   *
+   * why: mỗi API trước đây tự gọi `dialog.open` với cùng một khối cấu hình. Gom lại để kiểu hiển thị và quy tắc cờ
+   * (`enableBackdropClose` thắng `disableBackdropClose`) không thể lệch nhau giữa các API.
+   */
+  #open(option: SdConfirmDisplayOption | undefined, width: string, autoFocus: string, data: DialogData): Observable<any> {
+    const closeAllowed = option?.enableBackdropClose ?? option?.disableBackdropClose === false;
+    const disableClose = !closeAllowed;
+    const view = option?.view ?? (this.#isMobile ? 'bottom-sheet' : 'dialog');
+
+    if (view === 'bottom-sheet') {
+      return this.#bottomSheet
+        .open(DialogConfirmComponent, {
+          panelClass: BOTTOM_SHEET_PANEL_CLASS,
+          // why: tiêu đề cho phép HTML (innerHtml) nhưng tên cho trình đọc màn hình phải là text thuần.
+          ariaLabel: (data.title ?? '').replace(/<[^>]*>/g, '').trim(),
+          autoFocus,
+          disableClose,
+          data,
+        })
+        .afterDismissed();
+    }
+    return this.dialog
+      .open(DialogConfirmComponent, {
+        width,
+        panelClass: 'sd-confirm-panel',
+        maxWidth: 'calc(100vw - 32px)',
+        maxHeight: 'calc(100dvh - 32px)',
+        autoFocus,
+        disableClose,
+        data,
+      })
+      .afterClosed();
+  }
+
   confirm = (
     message: string,
-    option: {
+    option: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -48,18 +108,12 @@ export class SdConfirmService {
       noTitle?: string;
       yesButtonColor?: Color;
       noButtonColor?: Color;
+      /** Dialog width. Not applied to the bottom sheet, which is always full-width. */
       width?: string;
-      disableBackdropClose?: boolean;
     } = {}
   ) => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: option?.width || '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: '[data-confirm-cancel] button',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, option?.width || '440px', '[data-confirm-cancel] button', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -68,14 +122,13 @@ export class SdConfirmService {
         noTitle: option?.noTitle || this.#i18n.t('core.confirm.no'),
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 
   withInput = (
     message?: string,
-    option?: {
+    option?: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -89,17 +142,10 @@ export class SdConfirmService {
       yesButtonColor?: Color;
       noButtonColor?: Color;
       defaultValue?: string;
-      disableBackdropClose?: boolean;
     }
   ): Promise<string> => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: 'textarea',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, '440px', 'textarea', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -115,14 +161,13 @@ export class SdConfirmService {
           required: option?.required,
           defaultValue: option?.defaultValue || '',
         },
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 
   withRadio = (
     message?: string,
-    option?: {
+    option?: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -137,17 +182,10 @@ export class SdConfirmService {
       valueField: string;
       displayField: string;
       display?: 'row' | 'column';
-      disableBackdropClose?: boolean;
     }
   ): Promise<string> => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: 'first-tabbable',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, '440px', 'first-tabbable', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -164,14 +202,13 @@ export class SdConfirmService {
           required: option?.required,
           defaultValue: option?.defaultValue,
         },
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 
   withSelect = (
     message?: string,
-    option?: {
+    option?: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -187,17 +224,10 @@ export class SdConfirmService {
       displayField: string;
       placeholder?: string;
       multiple?: boolean;
-      disableBackdropClose?: boolean;
     }
   ): Promise<string | number | (string | number)[]> => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: 'first-tabbable',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, '440px', 'first-tabbable', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -215,14 +245,13 @@ export class SdConfirmService {
           required: option?.required,
           defaultValue: option?.defaultValue,
         },
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 
   withDate = (
     message?: string,
-    option?: {
+    option?: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -237,17 +266,10 @@ export class SdConfirmService {
       placeholder?: string;
       min?: string | Date;
       max?: string | Date;
-      disableBackdropClose?: boolean;
     }
   ): Promise<string | Date> => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: 'first-tabbable',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, '440px', 'first-tabbable', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -263,14 +285,13 @@ export class SdConfirmService {
           min: option?.min,
           max: option?.max,
         },
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 
   withDatetime = (
     message?: string,
-    option?: {
+    option?: SdConfirmDisplayOption & {
       title?: string;
       icon?: string;
       /** Hình nền ô icon; bỏ trống thì dùng `defaultShape` của `provideSdIcon`. */
@@ -286,17 +307,10 @@ export class SdConfirmService {
       min?: string | Date;
       max?: string | Date;
       showSeconds?: boolean;
-      disableBackdropClose?: boolean;
     }
   ): Promise<string | Date> => {
-    const dialogRef = this.dialog.open(DialogConfirmComponent, {
-      width: '440px',
-      panelClass: 'sd-confirm-panel',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: 'calc(100dvh - 32px)',
-      autoFocus: 'first-tabbable',
-      disableClose: option?.disableBackdropClose ?? true,
-      data: {
+    return this.#settleOnClose(
+      this.#open(option, '440px', 'first-tabbable', {
         icon: option?.icon,
         iconShape: option?.iconShape,
         title: option?.title || this.#i18n.t('core.confirm.title'),
@@ -313,8 +327,7 @@ export class SdConfirmService {
           max: option?.max,
           showSeconds: option?.showSeconds,
         },
-      },
-    });
-    return this.#settleOnClose(dialogRef.afterClosed());
+      })
+    );
   };
 }

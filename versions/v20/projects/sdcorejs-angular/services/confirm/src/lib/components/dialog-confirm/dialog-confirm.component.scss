@@ -165,3 +165,37 @@
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
+
+// ─── Bottom sheet ────────────────────────────────────────────────────────────
+// why: container của MatBottomSheet đã có padding ngang và giới hạn 80vh; host chỉ thêm khoảng trên/dưới và để vùng
+// nội dung cuộn riêng, nhờ đó hai nút luôn nằm trong viewport khi message hoặc danh sách dài.
+:host(.sd-dialog-confirm--sheet) {
+  max-height: calc(80vh - 16px);
+  padding: 12px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.sd-dialog-confirm__content--sheet {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+// why: nút chính đứng trên, cả hai full-width; chiều cao 48px lấy từ size="lg" của sd-button (>= 44px vùng chạm).
+.sd-dialog-confirm__actions--sheet {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+::ng-deep .sd-confirm-bottom-sheet {
+  .sd-dialog-confirm__actions button:focus-visible {
+    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color, var(--sd-primary));
+    outline-offset: 3px;
+  }
+
+  .sd-dialog-confirm__message > :first-child {
+    margin-top: 0;
+  }
+  .sd-dialog-confirm__message > :last-child {
+    margin-bottom: 0;
+  }
+}

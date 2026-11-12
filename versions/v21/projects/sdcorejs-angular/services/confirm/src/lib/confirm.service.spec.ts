@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Subject } from 'rxjs';
+import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
 import { SdConfirmService } from './confirm.service';
 
 describe('SdConfirmService', () => {
@@ -270,4 +273,155 @@ describe('SdConfirmService', () => {
     (service.confirm('x') as Promise<unknown>).catch(() => undefined);
     expect(dialogOpenSpy.calls.mostRecent().args[1].data.iconShape).toBeUndefined();
   });
+});
+
+// ─── View selection and backdrop flags ───────────────────────────────────────
+
+type ConfirmMethod = 'confirm' | 'withInput' | 'withRadio' | 'withSelect' | 'withDate' | 'withDatetime';
+const METHODS: { name: ConfirmMethod; autoFocus: string }[] = [
+  { name: 'confirm', autoFocus: '[data-confirm-cancel] button' },
+  { name: 'withInput', autoFocus: 'textarea' },
+  { name: 'withRadio', autoFocus: 'first-tabbable' },
+  { name: 'withSelect', autoFocus: 'first-tabbable' },
+  { name: 'withDate', autoFocus: 'first-tabbable' },
+  { name: 'withDatetime', autoFocus: 'first-tabbable' },
+];
+
+describe('SdConfirmService — view and backdrop flags', () => {
+  function setup(isMobile: boolean) {
+    localStorage.setItem('sd-core.language', 'vi');
+    spyOn(BrowserUtilities, 'isMobile').and.returnValue(isMobile);
+    const dialogClosed$ = new Subject<any>();
+    const sheetDismissed$ = new Subject<any>();
+    const dialog = jasmine.createSpyObj('MatDialog', ['open']);
+    dialog.open.and.returnValue({ afterClosed: () => dialogClosed$.asObservable() });
+    const sheet = jasmine.createSpyObj('MatBottomSheet', ['open']);
+    sheet.open.and.returnValue({ afterDismissed: () => sheetDismissed$.asObservable() });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: MatDialog, useValue: dialog },
+        { provide: MatBottomSheet, useValue: sheet },
+      ],
+    });
+    return { service: TestBed.inject(SdConfirmService), dialog, sheet, dialogClosed$, sheetDismissed$ };
+  }
+
+  // why: option được ép `any` để ca đỏ phản ánh hành vi, không phải lỗi biên dịch khi option chưa tồn tại.
+  function call(service: SdConfirmService, method: ConfirmMethod, option: any = {}): Promise<unknown> {
+    const listOption = { items: [{ value: 'A', label: 'A' }], valueField: 'value', displayField: 'label', ...option };
+    const invoke = service[method] as (message: string, option: any) => Promise<unknown>;
+    return invoke('Message', method === 'withRadio' || method === 'withSelect' ? listOption : option);
+  }
+
+  for (const { name, autoFocus } of METHODS) {
+    it(`${name}() opens a MatBottomSheet on mobile when view is not passed`, () => {
+      const { service, dialog, sheet } = setup(true);
+      call(service, name).catch(() => undefined);
+      expect(sheet.open).toHaveBeenCalledTimes(1);
+      expect(dialog.open).not.toHaveBeenCalled();
+      const [component, config] = sheet.open.calls.mostRecent().args;
+      expect(component).toBe(DialogConfirmComponent);
+      expect(config.data.message).toBe('Message');
+      expect(config.panelClass).toBe('sd-confirm-bottom-sheet');
+      expect(config.autoFocus).toBe(autoFocus);
+      expect(config.disableClose).toBeTrue();
+    });
+
+    it(`${name}() opens a MatDialog on desktop with the existing dialog config`, () => {
+      const { service, dialog, sheet } = setup(false);
+      call(service, name).catch(() => undefined);
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+      expect(sheet.open).not.toHaveBeenCalled();
+      const [component, config] = dialog.open.calls.mostRecent().args;
+      expect(component).toBe(DialogConfirmComponent);
+      expect(config.width).toBe('440px');
+      expect(config.panelClass).toBe('sd-confirm-panel');
+      expect(config.maxWidth).toBe('calc(100vw - 32px)');
+      expect(config.maxHeight).toBe('calc(100dvh - 32px)');
+      expect(config.autoFocus).toBe(autoFocus);
+      expect(config.disableClose).toBeTrue();
+    });
+
+    it(`${name}() with view 'dialog' still opens a MatDialog on mobile`, () => {
+      const { service, dialog, sheet } = setup(true);
+      call(service, name, { view: 'dialog' }).catch(() => undefined);
+      expect(dialog.open).toHaveBeenCalledTimes(1);
+      expect(sheet.open).not.toHaveBeenCalled();
+    });
+
+    it(`${name}() with view 'bottom-sheet' opens a MatBottomSheet on desktop`, () => {
+      const { service, dialog, sheet } = setup(false);
+      call(service, name, { view: 'bottom-sheet' }).catch(() => undefined);
+      expect(sheet.open).toHaveBeenCalledTimes(1);
+      expect(dialog.open).not.toHaveBeenCalled();
+    });
+
+    it(`${name}() rejects 'CANCEL' when the bottom sheet is dismissed without a choice`, async () => {
+      const { service, sheetDismissed$ } = setup(true);
+      const settled = call(service, name);
+      sheetDismissed$.next(undefined);
+      sheetDismissed$.complete();
+      await expectAsync(settled).toBeRejectedWith('CANCEL');
+    });
+  }
+
+  it('bottom sheet resolves the value on ACCEPT', async () => {
+    const { service, sheetDismissed$ } = setup(true);
+    const promise = service.withInput('Enter value');
+    sheetDismissed$.next({ action: 'ACCEPT', value: 'user text' });
+    await expectAsync(promise).toBeResolvedTo('user text');
+  });
+
+  it("bottom sheet rejects 'CANCEL' on an explicit CANCEL", async () => {
+    const { service, sheetDismissed$ } = setup(true);
+    const promise = service.confirm('Confirm?') as Promise<unknown>;
+    sheetDismissed$.next({ action: 'CANCEL', value: null });
+    await expectAsync(promise).toBeRejectedWith('CANCEL');
+  });
+
+  it('confirm() keeps a custom width for the dialog and gives the bottom sheet a plain-text ariaLabel', () => {
+    const desktop = setup(false);
+    (desktop.service.confirm('Message', { width: '600px' }) as Promise<unknown>).catch(() => undefined);
+    expect(desktop.dialog.open.calls.mostRecent().args[1].width).toBe('600px');
+
+    (desktop.service.confirm('Message', { title: 'Xóa <b>bản ghi</b>?', view: 'bottom-sheet' } as any) as Promise<unknown>).catch(
+      () => undefined
+    );
+    const [, config] = desktop.sheet.open.calls.mostRecent().args;
+    expect(config.ariaLabel).toBe('Xóa bản ghi?');
+    expect(config.width).toBeUndefined();
+  });
+
+  const FLAG_TABLE: { name: string; option: any; disableClose: boolean }[] = [
+    { name: 'no flag', option: {}, disableClose: true },
+    { name: 'only disableBackdropClose false', option: { disableBackdropClose: false }, disableClose: false },
+    { name: 'only disableBackdropClose true', option: { disableBackdropClose: true }, disableClose: true },
+    { name: 'only enableBackdropClose true', option: { enableBackdropClose: true }, disableClose: false },
+    {
+      name: 'enableBackdropClose true wins over disableBackdropClose true',
+      option: { enableBackdropClose: true, disableBackdropClose: true },
+      disableClose: false,
+    },
+    {
+      name: 'enableBackdropClose false wins over disableBackdropClose false',
+      option: { enableBackdropClose: false, disableBackdropClose: false },
+      disableClose: true,
+    },
+  ];
+
+  for (const row of FLAG_TABLE) {
+    for (const { name } of METHODS) {
+      it(`${name}() dialog: ${row.name} → disableClose ${row.disableClose}`, () => {
+        const { service, dialog } = setup(false);
+        call(service, name, row.option).catch(() => undefined);
+        expect(dialog.open.calls.mostRecent().args[1].disableClose).toBe(row.disableClose);
+      });
+
+      it(`${name}() bottom sheet: ${row.name} → disableClose ${row.disableClose}`, () => {
+        const { service, sheet } = setup(true);
+        call(service, name, row.option).catch(() => undefined);
+        expect(sheet.open.calls.mostRecent().args[1].disableClose).toBe(row.disableClose);
+      });
+    }
+  }
 });

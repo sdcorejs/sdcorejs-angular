@@ -21,7 +21,8 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | `modalClass`           | `string \| string[] \| Record<string, boolean>` | `''`        | Extra Material panel class(es).                                                 |
 | `lazyLoadContent`      | `boolean`                                       | `true`      | Renders projected content only after first open.                                |
 | `hideClose`            | `boolean`                                       | `false`     | Hides the built-in close button. Bare attribute = true.                         |
-| `disableBackdropClose` | `boolean`                                       | `true`      | Prevents backdrop/ESC close. Bare attribute = true.                             |
+| `enableBackdropClose`  | `boolean \| undefined`                          | `undefined` | `true` lets a backdrop click or ESC close the modal, `false` blocks both. Not passed (`undefined`/`null`), `disableBackdropClose` decides; when passed, it wins. With `beforeClose`, an allowed backdrop click or ESC still goes through the guard. Bare attribute = true. |
+| `disableBackdropClose` | `boolean`                                       | `true`      | **Deprecated — use `enableBackdropClose`.** Prevents backdrop/ESC close. Only applies while `enableBackdropClose` is not passed. Bare attribute = true. |
 | `beforeClose`          | `SdModalBeforeClose \| undefined`               | `undefined` | Optional sync/async guard. Only `true` closes; errors fail closed.              |
 | `closeOnNavigation`    | `boolean`                                       | `true`      | Close on a browser history event (`popstate` / `hashchange`: Back, Forward, `history.go`); a router link that pushes a URL does not close it. Set `false` when the content handles Back itself, e.g. a sheet with pages. Same name as Material's `closeOnNavigation`. Bare attribute = true. |
 

@@ -932,3 +932,118 @@ describe('SdModal — real overlay teardown', () => {
     expect(overlayBackdrops().length).toBe(0);
   }));
 });
+
+// ---------------------------------------------------------------------------
+// enableBackdropClose
+// ---------------------------------------------------------------------------
+
+describe('SdModal — enableBackdropClose', () => {
+  const FLAG_TABLE: { name: string; attrs: string; disableClose: boolean }[] = [
+    { name: 'no flag', attrs: '', disableClose: true },
+    { name: 'only disableBackdropClose false', attrs: '[disableBackdropClose]="false"', disableClose: false },
+    { name: 'only disableBackdropClose true', attrs: '[disableBackdropClose]="true"', disableClose: true },
+    { name: 'only enableBackdropClose true', attrs: '[enableBackdropClose]="true"', disableClose: false },
+    {
+      name: 'enableBackdropClose true wins over disableBackdropClose true',
+      attrs: '[enableBackdropClose]="true" [disableBackdropClose]="true"',
+      disableClose: false,
+    },
+    {
+      name: 'enableBackdropClose false wins over disableBackdropClose false',
+      attrs: '[enableBackdropClose]="false" [disableBackdropClose]="false"',
+      disableClose: true,
+    },
+    { name: 'bare enableBackdropClose attribute is true', attrs: 'enableBackdropClose', disableClose: false },
+    {
+      name: 'enableBackdropClose undefined counts as not passed',
+      attrs: '[enableBackdropClose]="undefined" [disableBackdropClose]="false"',
+      disableClose: false,
+    },
+    { name: 'enableBackdropClose null counts as not passed', attrs: '[enableBackdropClose]="null"', disableClose: true },
+  ];
+
+  function openWith(view: 'dialog' | 'bottom-sheet', attrs: string): { dialogOpen: jasmine.Spy; sheetOpen: jasmine.Spy } {
+    @Component({
+      standalone: true,
+      imports: [SdModal],
+      template: `<sd-modal view="${view}" ${attrs}><span>body</span></sd-modal>`,
+    })
+    class FlagHostComponent {}
+
+    TestBed.configureTestingModule({ imports: [FlagHostComponent, NoopAnimationsModule] });
+    const fixture = TestBed.createComponent(FlagHostComponent);
+    fixture.detectChanges();
+    const modalDe = fixture.debugElement.query(By.directive(SdModal));
+    const dialogOpen = spyOn(modalDe.injector.get(MatDialog), 'open').and.returnValue(makeFakeDialogRef().ref);
+    const sheetOpen = spyOn(modalDe.injector.get(MatBottomSheet), 'open').and.returnValue(makeFakeBottomSheetRef().ref);
+    (modalDe.componentInstance as SdModal).open();
+    return { dialogOpen, sheetOpen };
+  }
+
+  for (const row of FLAG_TABLE) {
+    it(`dialog: ${row.name} → disableClose ${row.disableClose}`, () => {
+      const { dialogOpen } = openWith('dialog', row.attrs);
+      expect((dialogOpen.calls.mostRecent().args[1] as any).disableClose).toBe(row.disableClose);
+    });
+
+    it(`bottom sheet: ${row.name} → disableClose ${row.disableClose}`, () => {
+      const { sheetOpen } = openWith('bottom-sheet', row.attrs);
+      expect((sheetOpen.calls.mostRecent().args[1] as any).disableClose).toBe(row.disableClose);
+    });
+  }
+
+  it('defaults enableBackdropClose to undefined and keeps disableBackdropClose true', () => {
+    @Component({ standalone: true, imports: [SdModal], template: `<sd-modal view="dialog"></sd-modal>` })
+    class DefaultHostComponent {}
+    TestBed.configureTestingModule({ imports: [DefaultHostComponent, NoopAnimationsModule] });
+    const fixture = TestBed.createComponent(DefaultHostComponent);
+    fixture.detectChanges();
+    const modal = fixture.debugElement.query(By.directive(SdModal)).componentInstance as SdModal;
+    expect(modal.enableBackdropClose()).toBeUndefined();
+    expect(modal.disableBackdropClose()).toBeTrue();
+  });
+
+  // beforeClose keeps owning the close decision; the new flag only decides whether backdrop/Esc reach the guard.
+  @Component({
+    standalone: true,
+    imports: [SdModal],
+    template: `<sd-modal view="dialog" [enableBackdropClose]="enable" [disableBackdropClose]="disable" [beforeClose]="guard"></sd-modal>`,
+  })
+  class GuardHostComponent {
+    enable: boolean | undefined;
+    disable = true;
+    guard = jasmine.createSpy('beforeClose').and.returnValue(false);
+  }
+
+  async function openGuarded(enable: boolean | undefined, disable: boolean) {
+    TestBed.configureTestingModule({ imports: [GuardHostComponent, NoopAnimationsModule] });
+    const fixture = TestBed.createComponent(GuardHostComponent);
+    fixture.componentInstance.enable = enable;
+    fixture.componentInstance.disable = disable;
+    fixture.detectChanges();
+    const modalDe = fixture.debugElement.query(By.directive(SdModal));
+    const fake = makeFakeDialogRef();
+    const dialogOpen = spyOn(modalDe.injector.get(MatDialog), 'open').and.returnValue(fake.ref);
+    (modalDe.componentInstance as SdModal).open();
+    fake.backdropClick$.next(new MouseEvent('click'));
+    await fixture.whenStable();
+    return { guard: fixture.componentInstance.guard, disableClose: (dialogOpen.calls.mostRecent().args[1] as any).disableClose };
+  }
+
+  it('with beforeClose, enableBackdropClose true routes a backdrop click through the guard', async () => {
+    const { guard, disableClose } = await openGuarded(true, true);
+    expect(disableClose).toBeTrue();
+    expect(guard).toHaveBeenCalledTimes(1);
+  });
+
+  it('with beforeClose, enableBackdropClose false keeps backdrop clicks away from the guard', async () => {
+    const { guard, disableClose } = await openGuarded(false, false);
+    expect(disableClose).toBeTrue();
+    expect(guard).not.toHaveBeenCalled();
+  });
+
+  it('with beforeClose and no new flag, disableBackdropClose false still routes a backdrop click through the guard', async () => {
+    const { guard } = await openGuarded(undefined, false);
+    expect(guard).toHaveBeenCalledTimes(1);
+  });
+});
