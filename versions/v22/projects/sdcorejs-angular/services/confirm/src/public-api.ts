@@ -2,5 +2,5 @@
  * Public API Surface of superdev-angular-core
  */
 
-export * from './lib/components/dialog-confirm/dialog-confirm.component';
+// why: DialogConfirmComponent và DialogData là chi tiết nội bộ của SdConfirmService; consumer chỉ dùng service.
 export * from './lib/confirm.service';

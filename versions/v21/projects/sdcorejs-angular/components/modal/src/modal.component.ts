@@ -70,7 +70,19 @@ export class SdModal implements OnDestroy {
   });
   lazyLoadContent = input(true, { transform: booleanAttribute });
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
-  disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute }); // default to true to keep backward compatibility
+  /**
+   * Allow closing by a backdrop click or the Esc key. Not passed (`undefined`/`null`): `disableBackdropClose` decides.
+   * When passed, it decides. A bare attribute means `true`. With `beforeClose`, an allowed close still goes through the guard.
+   */
+  enableBackdropClose = input<boolean | undefined, boolean | '' | null | undefined>(undefined, {
+    // why: phải giữ được trạng thái "không truyền" nên không dùng booleanAttribute trực tiếp (nó ép undefined thành false).
+    transform: v => (v === undefined || v === null ? undefined : booleanAttribute(v)),
+  });
+  /**
+   * Block closing by a backdrop click and the Esc key. Default `true` to keep backward compatibility.
+   * @deprecated Use `enableBackdropClose` (the opposite meaning). Only applies when `enableBackdropClose` is not passed.
+   */
+  disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute });
   beforeClose = input<SdModalBeforeClose | undefined>(undefined);
   /**
    * Close when the browser history changes (Back, a route change). `false` lets the content handle Back itself, e.g.
@@ -157,6 +169,12 @@ export class SdModal implements OnDestroy {
     this.sdClosed.emit();
   };
 
+  // why: một chỗ duy nhất quyết định nền/Esc có được đóng hay không, dùng cho cả `disableClose` lẫn điều kiện gắn guard
+  // `beforeClose`; cùng công thức với SdConfirmService — có truyền enableBackdropClose thì theo nó, không thì theo cờ cũ.
+  #backdropCloseAllowed(): boolean {
+    return this.enableBackdropClose() ?? !this.disableBackdropClose();
+  }
+
   #resolveWidth(): string {
     const w = this.width() || '80vw';
     if (this.#isMobile) return w;
@@ -186,7 +204,7 @@ export class SdModal implements OnDestroy {
       this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
         panelClass: this.#resolvePanelClass('sd-modal-bottom-sheet-panel'),
         ariaLabel: this.title() || undefined,
-        disableClose: this.disableBackdropClose() || !!this.beforeClose(),
+        disableClose: !this.#backdropCloseAllowed() || !!this.beforeClose(),
         closeOnNavigation: this.closeOnNavigation(),
       });
       this.#bindGuardedDismiss(this.#bottomSheetRef);
@@ -197,7 +215,7 @@ export class SdModal implements OnDestroy {
         maxWidth: 'calc(100vw - 32px)',
         panelClass: this.#resolvePanelClass('sd-modal-panel'),
         ariaLabelledBy: this.title() ? this.titleId : undefined,
-        disableClose: this.disableBackdropClose() || !!this.beforeClose(),
+        disableClose: !this.#backdropCloseAllowed() || !!this.beforeClose(),
         closeOnNavigation: this.closeOnNavigation(),
       });
       this.#bindGuardedDismiss(this.#dialogRef);
@@ -246,7 +264,7 @@ export class SdModal implements OnDestroy {
   };
 
   #bindGuardedDismiss(ref: MatDialogRef<any> | MatBottomSheetRef<any>): void {
-    if (!this.beforeClose() || this.disableBackdropClose()) return;
+    if (!this.beforeClose() || !this.#backdropCloseAllowed()) return;
 
     const dismissRef = ref as SdModalDismissRef;
     dismissRef

@@ -1,5 +1,8 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { ApplicationRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatBottomSheet, MatBottomSheetRef, MAT_BOTTOM_SHEET_DATA } from '@angular/material/bottom-sheet';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Color } from '@sdcorejs/utils/models';
 import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
@@ -324,5 +327,161 @@ describe('DialogConfirmComponent icon shape', () => {
         .withContext(tone)
         .toEqual(squareSize);
     }
+  });
+});
+
+// ─── Dialog layout stays as before ───────────────────────────────────────────
+
+describe('DialogConfirmComponent — dialog layout', () => {
+  it('keeps the mat-dialog layout with the cancel button before the accept button', () => {
+    const { fix } = setup({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
+    const root: HTMLElement = fix.nativeElement;
+    expect(fix.componentInstance.isBottomSheet).toBeFalse();
+    expect(root.classList.contains('sd-dialog-confirm--sheet')).toBeFalse();
+    expect(root.querySelector('[mat-dialog-content]')).not.toBeNull();
+    expect(root.querySelector('h2[mat-dialog-title]')).not.toBeNull();
+    expect(root.querySelector('[mat-dialog-actions]')).not.toBeNull();
+    const buttons = Array.from(root.querySelectorAll('.sd-dialog-confirm__actions sd-button'));
+    expect(buttons.map(button => button.textContent?.trim())).toEqual(['No', 'Yes']);
+    expect(buttons.some(button => button.classList.contains('sd-block'))).toBeFalse();
+  });
+});
+
+// ─── Bottom sheet host ───────────────────────────────────────────────────────
+
+function setupSheet(data: DialogData): {
+  fix: ComponentFixture<DialogConfirmComponent>;
+  ref: jasmine.SpyObj<MatBottomSheetRef<DialogConfirmComponent>>;
+} {
+  const ref = jasmine.createSpyObj<MatBottomSheetRef<DialogConfirmComponent>>('MatBottomSheetRef', ['dismiss']);
+
+  TestBed.resetTestingModule();
+  TestBed.configureTestingModule({
+    imports: [NoopAnimationsModule, DialogConfirmComponent],
+    providers: [
+      { provide: MatBottomSheetRef, useValue: ref },
+      { provide: MAT_BOTTOM_SHEET_DATA, useValue: data },
+    ],
+  });
+
+  const fix = TestBed.createComponent(DialogConfirmComponent);
+  fix.detectChanges();
+  return { fix, ref };
+}
+
+describe('DialogConfirmComponent — bottom sheet', () => {
+  it('reads data from MAT_BOTTOM_SHEET_DATA and reports isBottomSheet', () => {
+    const { fix } = setupSheet({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      input: { defaultValue: 'preset', required: true },
+    });
+    expect(fix.componentInstance.isBottomSheet).toBeTrue();
+    expect((fix.nativeElement as HTMLElement).classList.contains('sd-dialog-confirm--sheet')).toBeTrue();
+    expect(fix.componentInstance.data.title).toBe('T');
+    expect(fix.componentInstance.value).toBe('preset');
+    expect(fix.componentInstance.required).toBeTrue();
+  });
+
+  it('onCancel dismisses the sheet with { action: CANCEL, value: null }', () => {
+    const { fix, ref } = setupSheet({ title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N' });
+    fix.componentInstance.onCancel();
+    expect(ref.dismiss).toHaveBeenCalledWith({ action: 'CANCEL', value: null });
+  });
+
+  it('onAccept dismisses the sheet with the current value', () => {
+    const { fix, ref } = setupSheet({ title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N', input: {} });
+    fix.componentInstance.value = 'user typed';
+    fix.componentInstance.onAccept();
+    expect(ref.dismiss).toHaveBeenCalledWith({ action: 'ACCEPT', value: 'user typed' });
+  });
+
+  it('renders the same header and fields without mat-dialog directives', () => {
+    const { fix } = setupSheet({ title: 'My <em>Title</em>', message: 'Body', yesTitle: 'Y', noTitle: 'N', input: {} });
+    const root: HTMLElement = fix.nativeElement;
+    expect(root.querySelector('[mat-dialog-content]')).toBeNull();
+    expect(root.querySelector('[mat-dialog-title]')).toBeNull();
+    expect(root.querySelector('[mat-dialog-actions]')).toBeNull();
+    expect(root.querySelector('.sd-dialog-confirm__icon')?.getAttribute('data-icon')).toBe('edit_note');
+    expect(root.querySelector('h2.sd-dialog-confirm__title')?.innerHTML).toContain('<em>Title</em>');
+    expect(root.querySelector('.sd-dialog-confirm__message')?.textContent).toContain('Body');
+    expect(root.querySelector('sd-textarea')).not.toBeNull();
+  });
+
+  it('puts the accept button first and makes both buttons block-level', () => {
+    const { fix } = setupSheet({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
+    const buttons = Array.from((fix.nativeElement as HTMLElement).querySelectorAll('.sd-dialog-confirm__actions sd-button'));
+    expect(buttons.map(button => button.textContent?.trim())).toEqual(['Yes', 'No']);
+    expect(buttons[0].hasAttribute('data-confirm-accept')).toBeTrue();
+    expect(buttons[1].hasAttribute('data-confirm-cancel')).toBeTrue();
+    expect(buttons.every(button => button.classList.contains('sd-block'))).toBeTrue();
+  });
+
+  it('keeps the accept button disabled for a required input that is empty or whitespace', () => {
+    const acceptDisabled = (defaultValue: string) => {
+      const { fix } = setupSheet({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No', input: { required: true, defaultValue } });
+      return ((fix.nativeElement as HTMLElement).querySelector('[data-confirm-accept] button') as HTMLButtonElement).disabled;
+    };
+    expect(acceptDisabled('')).toBeTrue();
+    expect(acceptDisabled('   ')).toBeTrue();
+    expect(acceptDisabled('reason')).toBeFalse();
+  });
+});
+
+// ─── Real MatBottomSheet ─────────────────────────────────────────────────────
+
+describe('DialogConfirmComponent — real MatBottomSheet', () => {
+  let sheet: MatBottomSheet;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [NoopAnimationsModule] });
+    sheet = TestBed.inject(MatBottomSheet);
+  });
+
+  afterEach(() => {
+    TestBed.inject(OverlayContainer).ngOnDestroy();
+  });
+
+  async function open(data: DialogData) {
+    const ref = sheet.open(DialogConfirmComponent, { data, panelClass: 'sd-confirm-bottom-sheet' });
+    TestBed.inject(ApplicationRef).tick();
+    await new Promise(resolve => setTimeout(resolve));
+    TestBed.inject(ApplicationRef).tick();
+    const container = document.querySelector('mat-bottom-sheet-container') as HTMLElement;
+    return { ref, container };
+  }
+
+  it('lays out two full-width buttons at least 44px tall with the accept button on top', async () => {
+    const { container } = await open({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
+    const actions = container.querySelector('.sd-dialog-confirm__actions') as HTMLElement;
+    const accept = (actions.querySelector('[data-confirm-accept] button') as HTMLElement).getBoundingClientRect();
+    const cancel = (actions.querySelector('[data-confirm-cancel] button') as HTMLElement).getBoundingClientRect();
+    const style = getComputedStyle(actions);
+    const innerWidth = actions.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+    expect(accept.height).toBeGreaterThanOrEqual(44);
+    expect(cancel.height).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(accept.width - innerWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cancel.width - innerWidth)).toBeLessThanOrEqual(1);
+    expect(cancel.top).toBeGreaterThanOrEqual(accept.bottom);
+  });
+
+  it('clicking the accept button dismisses the sheet with ACCEPT', async () => {
+    const { ref, container } = await open({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
+    const dismissed = new Promise(resolve => ref.afterDismissed().subscribe(resolve));
+    (container.querySelector('[data-confirm-accept] button') as HTMLElement).click();
+    TestBed.inject(ApplicationRef).tick();
+    expect(await dismissed).toEqual({ action: 'ACCEPT', value: null });
+  });
+
+  it('clicking the cancel button dismisses the sheet with CANCEL', async () => {
+    const { ref, container } = await open({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
+    const dismissed = new Promise(resolve => ref.afterDismissed().subscribe(resolve));
+    (container.querySelector('[data-confirm-cancel] button') as HTMLElement).click();
+    TestBed.inject(ApplicationRef).tick();
+    expect(await dismissed).toEqual({ action: 'CANCEL', value: null });
   });
 });

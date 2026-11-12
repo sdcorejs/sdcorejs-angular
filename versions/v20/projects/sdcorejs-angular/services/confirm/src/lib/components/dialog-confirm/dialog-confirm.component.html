@@ -1,10 +1,14 @@
-<div mat-dialog-content class="sd-dialog-confirm__content" [class.sd-dialog-confirm__content--radio]="data.radio">
+<ng-template #body>
   <div class="sd-dialog-confirm__header">
     <span class="sd-dialog-confirm__icon" aria-hidden="true" [attr.data-icon]="resolvedIcon" [attr.data-tone]="iconTone" [attr.data-icon-shape]="iconShape">
       <sd-icon [name]="resolvedIcon" size="22px"></sd-icon>
     </span>
     <div class="sd-dialog-confirm__copy">
-      <h2 mat-dialog-title class="sd-dialog-confirm__title" [innerHtml]="data.title || 'Confirm'"></h2>
+      @if (isBottomSheet) {
+        <h2 class="sd-dialog-confirm__title" [innerHtml]="data.title || 'Confirm'"></h2>
+      } @else {
+        <h2 mat-dialog-title class="sd-dialog-confirm__title" [innerHtml]="data.title || 'Confirm'"></h2>
+      }
       @if (data.message) {
         <div class="sd-dialog-confirm__message" [innerHtml]="data.message"></div>
       }
@@ -64,34 +68,63 @@
       }
     </div>
   }
-</div>
-<div mat-dialog-actions align="end" class="sd-dialog-confirm__actions">
-  @if (data.noTitle) {
-    <sd-button
-      data-confirm-cancel
-      size="sm"
-      type="light"
-      htmlType="button"
-      [color]="data.noButtonColor || 'secondary'"
-      [title]="data.noTitle"
-      (click)="onCancel()"></sd-button>
-  }
-  @if (data.yesTitle) {
-    <sd-button
-      data-confirm-accept
-      size="sm"
-      type="fill"
-      htmlType="button"
-      [color]="data.yesButtonColor || 'primary'"
-      [disabled]="
-        required &&
-        (value === undefined ||
-          value === null ||
-          value === '' ||
-          (data.input && !value.trim()) ||
-          (value.length !== undefined && value.length === 0))
-      "
-      [title]="data.yesTitle"
-      (click)="onAccept()"></sd-button>
-  }
-</div>
+</ng-template>
+
+@if (isBottomSheet) {
+  <!-- why: bottom sheet không có MatDialogRef nên không dùng directive mat-dialog-*; nút chính đứng trên, full-width, cao 48px. -->
+  <div class="sd-dialog-confirm__content sd-dialog-confirm__content--sheet" [class.sd-dialog-confirm__content--radio]="data.radio">
+    <ng-container [ngTemplateOutlet]="body" />
+  </div>
+  <div class="sd-dialog-confirm__actions sd-dialog-confirm__actions--sheet">
+    @if (data.yesTitle) {
+      <sd-button
+        data-confirm-accept
+        block
+        size="lg"
+        type="fill"
+        htmlType="button"
+        [color]="data.yesButtonColor || 'primary'"
+        [disabled]="acceptDisabled"
+        [title]="data.yesTitle"
+        (click)="onAccept()"></sd-button>
+    }
+    @if (data.noTitle) {
+      <sd-button
+        data-confirm-cancel
+        block
+        size="lg"
+        type="light"
+        htmlType="button"
+        [color]="data.noButtonColor || 'secondary'"
+        [title]="data.noTitle"
+        (click)="onCancel()"></sd-button>
+    }
+  </div>
+} @else {
+  <div mat-dialog-content class="sd-dialog-confirm__content" [class.sd-dialog-confirm__content--radio]="data.radio">
+    <ng-container [ngTemplateOutlet]="body" />
+  </div>
+  <div mat-dialog-actions align="end" class="sd-dialog-confirm__actions">
+    @if (data.noTitle) {
+      <sd-button
+        data-confirm-cancel
+        size="sm"
+        type="light"
+        htmlType="button"
+        [color]="data.noButtonColor || 'secondary'"
+        [title]="data.noTitle"
+        (click)="onCancel()"></sd-button>
+    }
+    @if (data.yesTitle) {
+      <sd-button
+        data-confirm-accept
+        size="sm"
+        type="fill"
+        htmlType="button"
+        [color]="data.yesButtonColor || 'primary'"
+        [disabled]="acceptDisabled"
+        [title]="data.yesTitle"
+        (click)="onAccept()"></sd-button>
+    }
+  </div>
+}

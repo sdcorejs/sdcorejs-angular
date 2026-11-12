@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`; `@sdcorejs/angular/services/confirm` no longer exports `DialogConfirmComponent` and `DialogData` — open confirm prompts through `SdConfirmService`.
 
 **Highlights**
 
@@ -60,6 +60,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     ```
 
 - `value` is optional (`NonNullable<T> | undefined`). It is still required for a `select` card inside a group: without it the card logs a dev-mode error and ignores clicks. `SdCard<T>` infers `T` from `[value]` only when it is bound.
+
+#### Confirm
+
+- `@sdcorejs/angular/services/confirm` no longer exports `DialogConfirmComponent` and the `DialogData` interface. The component is an internal detail of `SdConfirmService`; it now also runs inside a bottom sheet, so its `dialogRef` can be absent.
+  - **Migration:** open confirm prompts through `SdConfirmService` instead of `MatDialog.open(DialogConfirmComponent, …)`.
+
+    ```diff
+    - import { DialogConfirmComponent } from '@sdcorejs/angular/services/confirm';
+    - this.dialog.open(DialogConfirmComponent, { data: { title, message, yesTitle, noTitle } });
+    + import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
+    + await this.confirm.confirm(message, { title, yesTitle, noTitle });
+    ```
 
 #### History
 
@@ -199,6 +211,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Global classes `sd-card-grid` (auto-fit columns of at least 200px, 12px gap) and `sd-card-grid--sm` (wrapping row, 8px gap).
 - i18n keys `core.component.card.{error,retry,delta-unchanged,delta-up,delta-down,loading}` in the five locales.
 
+#### Confirm
+
+- `view?: 'dialog' | 'bottom-sheet'` on every `SdConfirmService` method (`confirm`, `withInput`, `withRadio`, `withSelect`, `withDate`, `withDatetime`) forces the presentation; omitted, it follows the device. Same name and values as the `view` input of `sd-modal`.
+- `enableBackdropClose?: boolean` on every method: `true` lets a backdrop click or the Esc key close the prompt (the promise rejects with `'CANCEL'`). Omitted = `false`. When passed, it decides and `disableBackdropClose` is ignored.
+
 #### Kanban
 
 - `option.dataSource.onLoad({ columnId, cursor, pageSize, keyword, signal })` loads each column on its own, with `pageSize` (20) and `loadMore: 'button' | 'auto'`.
@@ -212,6 +229,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - With `reorder` off the old place of a dragged card stays drawn at 40% instead of a drop slot; the cursor is `grabbing` while dragging.
 - E2E hooks: `data-status`, `data-blocked`, `data-summary`, `data-selected`, `data-pending`, `data-movable`, `data-kanban-card-main`, `data-kanban-menu`, `data-skeleton`, `data-load-error`, `data-load-more`, `data-action="retry"`, `data-compact`, and a `data-autoid` on each column.
 - i18n keys `core.component.kanban.{load-more,loading,load-error,drop-blocked,cancelled,instructions-column,selected}` in the five locales; Retry and Dismiss use `core.common.retry` and `core.common.dismiss`.
+
+#### Modal
+
+- `enableBackdropClose` input on `sd-modal`: `true` lets a backdrop click or the Esc key close the modal, `false` blocks both. Not passed (`undefined`/`null`), `disableBackdropClose` decides as before; when passed, `enableBackdropClose` decides. A bare attribute means `true`. With `beforeClose`, an allowed backdrop click or Esc still goes through the guard.
 
 #### Query bar
 
@@ -262,6 +283,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.
 
 ### Changed
+
+#### Confirm
+
+- On mobile (`BrowserUtilities.isMobile()`, read once when the service is created — the source `sd-modal` uses) every `SdConfirmService` method opens a Material bottom sheet instead of a dialog. The two actions are full-width, 48px tall and stacked, with the accept button on top. Desktop keeps the dialog unchanged. Pass `view: 'dialog'` to keep the dialog on mobile.
+  - The bottom sheet uses the panel class `sd-confirm-bottom-sheet`, takes its accessible name from the title as plain text, and keeps each method's initial focus target.
+  - `width` of `confirm()` applies to the dialog only; the bottom sheet is always full-width.
 
 #### Kanban
 
@@ -314,9 +341,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+#### Confirm
+
+- `disableBackdropClose` on every `SdConfirmService` method: use `enableBackdropClose` (the opposite meaning). It keeps working while `enableBackdropClose` is not passed.
+
 #### Kanban
 
 - `core.component.kanban.dismiss` is no longer read: Dismiss uses `core.common.dismiss`. The key stays in the five catalogs so a custom catalog that sets it still compiles; move an override to `core.common.dismiss`.
+
+#### Modal
+
+- `disableBackdropClose` on `sd-modal`: use `enableBackdropClose`. It keeps working while `enableBackdropClose` is not passed.
 
 ### Removed
 

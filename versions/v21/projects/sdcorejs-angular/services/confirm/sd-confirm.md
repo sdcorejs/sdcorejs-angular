@@ -6,7 +6,7 @@
 **Import path**: `@sdcorejs/angular/services/confirm`
 
 ## One-line purpose
-Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/select/date/datetime prompts and returns a `Promise` that resolves on Accept and rejects on Cancel.
+Opens a confirm/input/radio/select/date/datetime prompt — a Material dialog on desktop, a Material bottom sheet on mobile — and returns a `Promise` that resolves on Accept and rejects on every other way of closing.
 
 ## When to use
 - Confirming destructive actions ("Are you sure you want to delete?").
@@ -18,7 +18,7 @@ Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/selec
 
 ## Dismissal always settles the promise
 
-Every method settles on every close path. Anything that is not an explicit Accept — the Cancel button, the ESC key, a backdrop click (when `disableBackdropClose: false`), or a programmatic `dialogRef.close()` — **rejects with the string `'CANCEL'`**.
+Every method settles on every close path. Anything that is not an explicit Accept — the Cancel button, the ESC key or a backdrop click (when `enableBackdropClose: true`), or a programmatic close — **rejects with the string `'CANCEL'`**. This holds for the dialog and the bottom sheet alike.
 
 This changed in release 1.7. Previously the result was only inspected via `if (result) { … }`, so any close that did not come from one of the two buttons produced `undefined` and the promise **never settled**: `await` hung forever and the caller's closure (plus everything it captured) stayed pinned for the rest of the session. If you were relying on that hang, you were relying on a leak.
 
@@ -53,7 +53,9 @@ confirm(
     yesButtonColor?: Color;        // default: 'primary'
     noButtonColor?: Color;         // default: 'secondary'
     width?: string;                  // default: '440px'
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<unknown>;
 ```
@@ -77,7 +79,9 @@ withInput(
     yesButtonColor?: Color;
     noButtonColor?: Color;
     defaultValue?: string;
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<string>;
 ```
@@ -102,7 +106,9 @@ withRadio(
     valueField: string;              // key in items used as value (default 'value')
     displayField: string;            // key in items used as label (default 'label')
     display?: 'row' | 'column';      // default: 'row'
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<string>;
 ```
@@ -126,7 +132,9 @@ withDate(
     placeholder?: string;
     min?: string | Date;
     max?: string | Date;
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<string | Date>;
 ```
@@ -152,7 +160,9 @@ withSelect(
     displayField: string;            // default: 'label'
     placeholder?: string;
     multiple?: boolean;
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<string | number | (string | number)[]>;
 ```
@@ -177,19 +187,31 @@ withDatetime(
     min?: string | Date;
     max?: string | Date;
     showSeconds?: boolean;
-    disableBackdropClose?: boolean;  // default: true
+    view?: 'dialog' | 'bottom-sheet'; // default: auto (bottom-sheet on mobile, dialog on desktop)
+    enableBackdropClose?: boolean;   // default: false; when passed it wins over disableBackdropClose
+    disableBackdropClose?: boolean;  // @deprecated — use enableBackdropClose; default: true
   }
 ): Promise<string | Date>;
 ```
 
 ## Configuration / DI tokens
-None. The service depends on `MatDialog` from `@angular/material/dialog`, so the host app must include Angular Material's animation and dialog modules in its bootstrap (typically already done by the SD shell).
+None. The service depends on `MatDialog` from `@angular/material/dialog` and `MatBottomSheet` from `@angular/material/bottom-sheet` (both provided in root), so the host app must include Angular Material's animation setup in its bootstrap (typically already done by the SD shell).
 
 ## Behavior notes
 - **Default labels are Vietnamese**: "Xác nhận", "Đồng ý", "Hủy bỏ", "Có", "Không". Override with `title` / `yesTitle` / `noTitle`.
-- **Backdrop click**: disabled by default (`disableBackdropClose: true`). Pass `false` to allow clicking outside to dismiss.
+- **Mobile uses a bottom sheet**: when `BrowserUtilities.isMobile()` is true (read once when the service is created, the same source `sd-modal` uses) every method opens a `MatBottomSheet` instead of a dialog. Pass `view: 'dialog'` or `view: 'bottom-sheet'` to force one. In the bottom sheet the two actions are full-width, 48px tall and stacked, with the accept button on top; the panel class is `sd-confirm-bottom-sheet`, and each method keeps its initial focus target.
+- **Backdrop click and Esc**: blocked by default. Pass `enableBackdropClose: true` to allow both. The flag controls the backdrop click **and** the Esc key, for the dialog and the bottom sheet.
+- **`disableBackdropClose` is deprecated**: it still works while `enableBackdropClose` is not passed. When both are passed, `enableBackdropClose` decides.
+
+  | `enableBackdropClose` | `disableBackdropClose` | Backdrop / Esc closes |
+  | --- | --- | --- |
+  | not passed | not passed | No |
+  | not passed | `false` | Yes |
+  | not passed | `true` | No |
+  | `true` | any | Yes |
+  | `false` | any | No |
 - **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels — wrap calls in `try/catch` (or `.then(...).catch(...)`).
-- **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'440px'`.
+- **Width**: only `confirm()` exposes `width`, and it applies to the dialog only (the bottom sheet is always full-width). The other variants are fixed at `'440px'`.
 - **Icon tile shape**: `iconShape` (`SdIconShape` from `@sdcorejs/angular/modules/icon`) picks `square` (8px radius), `circle` or `none`; see [icon tile shape](../../modules/icon/sd-icon.md#icon-tile-shape).
 - **`Color`** comes from `@sdcorejs/utils/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
 
@@ -276,7 +298,7 @@ const scheduledAt = await confirmSvc.withDatetime('Schedule at', {
 
 ### In unit / integration tests
 
-`SdConfirmService` delegates to `MatDialog.open(DialogConfirmComponent, ...)` and wraps `afterClosed()` in a `Promise`. No real component or DOM is needed — replace `MatDialog` with a spy:
+`SdConfirmService` opens its internal confirm component through `MatDialog.open(...)` (or `MatBottomSheet.open(...)` on mobile / `view: 'bottom-sheet'`) and wraps `afterClosed()` / `afterDismissed()` in a `Promise`. No real component or DOM is needed — replace `MatDialog` with a spy. To exercise the bottom-sheet path, also provide a `MatBottomSheet` spy and stub `BrowserUtilities.isMobile` **before** `TestBed.inject(SdConfirmService)`, because the service reads it once at creation:
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
