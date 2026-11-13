@@ -12,8 +12,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { ɵSdQueryChipLabels, type SdQueryField } from '@sdcorejs/angular/components/query-bar';
 import { ɵsdOperatorResolver } from '@sdcorejs/angular/components/operator';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
@@ -53,8 +52,8 @@ interface Option {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     NgTemplateOutlet,
-    MatButtonModule,
-    MatMenuModule,
+    SdButton,
+    SdButtonItem,
     SdCheckbox,
     SdDate,
     SdDatetime,

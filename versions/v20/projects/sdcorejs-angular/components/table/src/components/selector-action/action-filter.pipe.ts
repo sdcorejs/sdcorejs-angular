@@ -3,8 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableAction, SdTableActionNormal } from '../../models/table-option-selector.model';
 import { SdTableItem } from '../../models/table-item.model';
-import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
+import { type ɵSdSelectionBarAction } from '@sdcorejs/angular/components/quick-action';
 /**
  * Resolves the bulk actions a selection is allowed to run.
  *
@@ -81,26 +80,5 @@ export class ActionFilterPipe implements PipeTransform {
     sdResolveTableActions(selectedItems, actions);
 }
 
-export type Action<T = any> = ActionNormal<T> | ActionChildren<T>;
-
-interface ActionNormal<T = any> {
-  variant: 'normal';
-  icon?: string;
-  fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
-  tooltip?: SdUnwrapSignal<SdButton['tooltip']>;
-  title?: SdUnwrapSignal<SdButton['title']>;
-  color?: SdUnwrapSignal<SdButton['color']>;
-  type?: SdUnwrapSignal<SdButton['type']>;
-  click: (selectedItems?: T[]) => void;
-}
-
-interface ActionChildren<T = any> {
-  variant: 'children';
-  icon?: string;
-  fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
-  tooltip?: SdUnwrapSignal<SdButton['tooltip']>;
-  title?: SdUnwrapSignal<SdButton['title']>;
-  color?: SdUnwrapSignal<SdButton['color']>;
-  type?: SdUnwrapSignal<SdButton['type']>;
-  children: ActionNormal<T>[];
-}
+/** Lệnh đã lọc theo lựa chọn, đúng shape mà thanh chọn dùng chung nhận. */
+export type Action<T = any> = ɵSdSelectionBarAction<T>;

@@ -311,6 +311,7 @@ export type ShowcaseExampleSourceKey =
   | "components/tree/example-lazy-tree"
   | "components/tree/example-selection-va-command"
   | "components/tree/example-static-tree"
+  | "components/tree/example-tree-detail"
   | "components/upload-file/example-anh-va-tai-lieu-xem-truoc"
   | "components/upload-file/example-inline-trong-bang"
   | "components/upload-file/example-tai-nhieu-anh-co-gioi-han"
@@ -2674,7 +2675,14 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "components/tree",
     sectionId: "example-selection-va-command",
     title: "Selection và command",
-    description: "Checkbox chọn nhiều dòng. Command ở cuối dòng, hover vào row mới thấy nút ba chấm.",
+    description: "Checkbox chọn nhiều dòng. Thanh chọn nằm trong khung của cây (cùng thanh với sd-table): hai lệnh đầu là nút, phần còn lại gom vào nút Thêm. Command ở cuối dòng hiện khi hover hoặc khi hàng có focus.",
+  },
+  {
+    sourceKey: "components/tree/example-tree-detail",
+    pageKey: "components/tree",
+    sectionId: "example-tree-detail",
+    title: "Tree detail",
+    description: "Chế độ điều hướng: bấm hàng hoặc Enter mở danh mục, activeId gắn hai chiều với ?category= trên URL (mở lại link là cây tự mở tới nút đó). Số đếm sau nhãn, tìm trên server có tô phần khớp, thêm danh mục con bằng reloadNode → expand → activeId.",
   },
   {
     sourceKey: "components/tree/example-lazy-tree",

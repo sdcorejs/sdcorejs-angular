@@ -876,7 +876,10 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.expand': '展开树节点',
   'core.component.tree.collapse': '折叠树节点',
   'core.component.tree.retry-item': '重新加载树节点',
-  'core.component.tree.load-error': '无法加载树数据',
+  'core.component.tree.load-error': '无法加载列表。',
+  'core.component.tree.empty': '暂无项目',
+  'core.component.tree.no-match': '没有与“{text}”匹配的项目',
+  'core.component.tree.open-menu': '{label} 的操作',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': '全部文件',

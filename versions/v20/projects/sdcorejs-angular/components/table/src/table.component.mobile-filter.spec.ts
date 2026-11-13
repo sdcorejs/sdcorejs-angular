@@ -265,9 +265,9 @@ describe('SdTable mobile filter chips', () => {
       apply({ columnFilter: { status: ['s2'] }, externalFilter: { customer: 'An' } });
       chip('code').click();
       settle();
-      overlay().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter-code-operator"]')!.click();
+      overlay().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter-code-operator"] button')!.click();
       settle();
-      overlay().querySelectorAll<HTMLButtonElement>('.sd-table-mobile-operator-menu [mat-menu-item]')[1].click();
+      overlay().querySelectorAll<HTMLButtonElement>('.sd-action-popover .sd-action-item')[1].click();
       settle();
       const input = overlay().querySelector<HTMLInputElement>('.sd-mobile-sheet-body input')!;
       input.value = 'DH';

@@ -277,6 +277,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Relative times ("just now", "N min ago") within the last hour of today; `<time datetime>` with a zone title.
   - Templates `sdTimelineItemContent`, `sdTimelineItemActions`, `sdTimelineEmpty`; i18n keys `core.component.timeline.*` in five locales.
 
+#### Tree
+
+- `option.navigation` (default `false`): navigation mode for a tree-detail screen. A row click or Enter opens the node; the open node gets the selected background, a primary icon and `aria-selected`; a ticked checkbox no longer paints the row in this mode.
+  - `activeId` (model on the component) holds the open node; `activeChange` and `option.onActivate` fire each time the user opens a node.
+  - `reveal(id)` opens every ancestor and scrolls to the node with `scrollTop` without taking focus; lazy trees use the new `tree.onResolvePath`. Setting `activeId` from outside reveals the node; a newer change or a row click aborts the reveal in flight.
+  - `expandedIds` (model on the component): when defined it is the source of the open state, both ways.
+  - `reloadNode(id)`, `expand(id)`, `collapse(id)`, `focusNode(id)`.
+- `count` on tree items: a number after the label, grouped by the active locale and read as "{label}, {count}".
+- The row command trigger shows on focus, on the open node and always on touch screens; Shift+F10 or the ContextMenu key opens the menu of the focused row in navigation mode, and closing it returns focus to the row. i18n key `core.component.tree.open-menu`.
+- `tree.onSearch` (lazy): `filter(text)` searches on the server (300ms debounce, the previous request is aborted) and shows the merged result paths in place of the tree, with nodes that are only on the way to a match muted. Clearing the text restores the previous open state. Selection made before or during the search is kept.
+- The matching part of a label is highlighted while filtering, in static and lazy trees.
+- Root states: an empty tree shows `core.component.tree.empty`, a search without a match shows `core.component.tree.no-match`; `sdTreeEmptyDef` (`SdTreeEmptyDefDirective`) replaces both with a template that receives `{ searching, text }`.
+
 #### General
 
 - i18n keys `core.common.retry` and `core.common.dismiss` in the five locales, shared by the Retry and Dismiss buttons of `sd-calendar`, `sd-scheduler` and `sd-kanban`.
@@ -325,6 +338,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Table
 
+- The icon cell of the selection bar uses the primary colours (`--sd-primary-light` / `--sd-primary`) instead of success. The bar now stacks below 600px of its own width instead of below a 600px viewport, so a table in a narrow column or drawer also gets the stacked layout.
+- The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`. Entries, their order and their autoIds are kept (the `…-external-setting-menu` autoId of the old `mat-menu` element is gone); the operator in use has a check. In the settings menu, clicking a checkbox keeps the menu open as before, while activating an entry with the keyboard toggles it and closes the menu. The operator trigger keeps its `data-autoid`, now on the `sd-button` host.
 - Query-bar mode: the clear button keeps the values of `required` quick filters and external filters (hidden ones included), like `SdQueryBar.clearAll()`, and is no longer enabled by required values alone. The search box of the bar is `sd-search-field`.
 
 #### Theme
@@ -339,6 +354,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     }
     ```
 
+#### Tree
+
+- The root error state no longer shows `error.message`: it shows `core.component.tree.load-error` (now "The list couldn't be loaded.") with an error icon and an `sd-button` Retry. Read the error from `loadError` or `rootError()`.
+- The selection bar is the bar of `sd-table` and sits inside the tree host, sticky at the bottom of the nearest scroll area, instead of a floating `sd-quick-action`. Up to two actions are buttons and the rest go under "More"; an action without `color` follows `sd-button` (it was `primary`). The classes `.c-bg-length`, `.c-length`, `.c-message` and `.sd-tree__qa-*` are gone. The autoIds of the first two actions and of the clear button are unchanged; from the third action on, an action is an entry of "More" with `data-autoid="components-tree-<autoId>-selection-action-<index>"` (no `components-button-` prefix, present only while the menu is open).
+
 ### Deprecated
 
 #### Confirm
@@ -352,6 +372,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Modal
 
 - `disableBackdropClose` on `sd-modal`: use `enableBackdropClose`. It keeps working while `enableBackdropClose` is not passed.
+
+#### Tree
+
+- `SdTree.errorMessage()`: the tree no longer uses it for its own UI.
 
 ### Removed
 

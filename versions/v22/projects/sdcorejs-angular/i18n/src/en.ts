@@ -879,7 +879,10 @@ export const EN_MESSAGES = {
   'core.component.tree.expand': 'Expand tree item',
   'core.component.tree.collapse': 'Collapse tree item',
   'core.component.tree.retry-item': 'Retry loading tree item',
-  'core.component.tree.load-error': 'Unable to load tree data',
+  'core.component.tree.load-error': "The list couldn't be loaded.",
+  'core.component.tree.empty': 'Nothing here yet',
+  'core.component.tree.no-match': 'No items match “{text}”',
+  'core.component.tree.open-menu': 'Actions for {label}',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': 'All files',

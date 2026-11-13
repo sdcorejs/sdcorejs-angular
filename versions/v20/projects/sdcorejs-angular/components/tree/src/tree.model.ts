@@ -30,6 +30,8 @@ export interface SdTreeItemBase<T = unknown> {
   icon?: string | null;
   /** Consumer payload. Commands, selection callbacks, and `$implicit` template context receive this value. */
   data: T;
+  /** Số đếm hiện sau nhãn (số nguyên ≥ 0, định dạng theo locale). `null` hoặc bỏ trống: không vẽ. */
+  count?: number | null;
   /** Initial expansion state for this node. Component state wins after the user toggles. */
   expanded?: boolean;
 }
@@ -66,6 +68,16 @@ export interface SdTreeLazyOption<T = unknown> extends SdTreeBaseOption {
    * not raw data, so each child has a stable id/label/icon contract.
    */
   onExpandChildren: (item: SdTreeItemLazy<T>) => Promise<SdTreeItemLazy<T>[]> | SdTreeItemLazy<T>[];
+  /**
+   * Trả về id các nút cha của `id`, từ gốc tới cha trực tiếp. `reveal(id)` gọi khi nút chưa được tải, rồi mở
+   * lần lượt từng nút trên đường đi. `signal` bị huỷ khi có lần `reveal` mới hoặc người dùng mở nút khác.
+   */
+  onResolvePath?: (id: string, signal: AbortSignal) => Promise<readonly string[]>;
+  /**
+   * Tìm trên server. Có callback này thì `filter(text)` gọi nó (debounce, huỷ lần trước) thay cho việc lọc các
+   * nút đã tải. Mỗi kết quả là một đường đi từ gốc tới nút khớp; cây hiện các đường đi đã gộp, mở hết.
+   */
+  onSearch?: (text: string, signal: AbortSignal) => Promise<readonly { path: readonly SdTreeItemLazy<T>[] }[]>;
 }
 
 export interface SdTreeCommand<T = unknown> {
@@ -111,6 +123,13 @@ export interface SdTreeComponentOptionBase<T = unknown, TItem extends SdTreeItem
   itemTemplate?: SdTreeItemTemplate<T> | null;
   selectable?: boolean;
   showLines?: boolean;
+  /**
+   * Chế độ điều hướng (tree-detail): bấm hàng hoặc Enter mở nút (`activeId`), checkbox không tô nền hàng.
+   * Mặc định `false`: cây chạy như cũ.
+   */
+  navigation?: boolean;
+  /** Gọi mỗi lần người dùng mở một nút, kể cả nút đang mở. */
+  onActivate?: (event: { item: T; node: SdTreeNode<T> }) => void;
   onSelectedItemsChange?: (items: T[]) => void;
   onSelect?: (event: SdTreeSelectionEvent<T>) => void;
   onExpand?: (event: SdTreeToggleEvent<T>) => void;
@@ -168,6 +187,12 @@ export interface SdTreeItemContext<T = unknown> {
 }
 
 export type SdTreeItemTemplate<T = unknown> = TemplateRef<SdTreeItemContext<T>>;
+
+/** Context của `sdTreeEmptyDef`: cây rỗng (`searching: false`) hoặc không có mục khớp `text`. */
+export interface SdTreeEmptyContext {
+  searching: boolean;
+  text: string;
+}
 
 export interface SdTreeSelectionEvent<T = unknown> {
   item: T;

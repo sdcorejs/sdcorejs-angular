@@ -7,8 +7,10 @@
   // Each grid column adds 8px, matching the section header's 16px inset.
   padding: 16px 8px;
 }
-::ng-deep .sd-custom-panel-filter-configuration {
-  width: 240px; // đặt chiều rộng
-  max-height: 550px; // hoặc height cố định: height: 200px;
-  overflow-y: auto; // bật scroll nếu nội dung vượt quá
+// Ô chọn trong menu thiết lập chiếm trọn chiều ngang của mục, để bấm vào đâu trên dòng cũng là bấm vào nó.
+.sd-external-filter-setting {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
 }
