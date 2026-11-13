@@ -25,7 +25,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdHighlight } from '@sdcorejs/angular/components/highlight';
-import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
+import { ɵSdSelectionBar, type ɵSdSelectionBarActionNormal } from '@sdcorejs/angular/components/quick-action';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeEmptyDefDirective } from './tree-empty-def.directive';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
@@ -130,7 +130,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     SdButton,
     SdButtonItem,
     SdHighlight,
-    SdQuickAction,
+    ɵSdSelectionBar,
     SdTranslatePipe,
   ],
   templateUrl: './tree.component.html',
@@ -333,15 +333,28 @@ export class SdTree<T = unknown> {
       autoId: this.#selectionActionAutoId(index),
     }));
   });
+  /** `selector.actions` (đã bỏ lệnh ẩn) theo shape của thanh chọn dùng chung; index khớp `selectionActionViews`. */
+  readonly selectionBarActions = computed<ɵSdSelectionBarActionNormal[]>(() =>
+    this.visibleSelectionActions().map(action => ({
+      variant: 'normal',
+      icon: action.icon,
+      fontSet: action.fontSet,
+      tooltip: action.tooltip,
+      title: action.title,
+      color: action.color,
+      type: action.type,
+      click: () => this.onSelectionAction(action),
+    }))
+  );
   readonly clearSelectionAutoId = computed(() => {
     const base = this.autoId();
     return base ? `${base}-clear-selection` : null;
   });
 
   /**
-   * why: chọn node mà selector KHÔNG khai action nào thì thanh quick-action chỉ còn bộ đếm + nút ✕.
-   * Nó nổi đè lên cây để nói lại đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` —
-   * vốn chỉ chọn rồi bấm "Áp dụng" ở footer modal, không có action nào — không còn thấy thanh này.
+   * why: chọn node mà selector KHÔNG khai action nào thì thanh chọn chỉ còn message + nút ✕, tức nói lại
+   * đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` — vốn chỉ chọn rồi bấm "Áp dụng" ở
+   * footer modal, không có action nào — không có thanh này.
    */
   readonly selectionQuickActionOpened = computed(() => this.selectedCount() > 0 && this.selectionActionViews().length > 0);
 

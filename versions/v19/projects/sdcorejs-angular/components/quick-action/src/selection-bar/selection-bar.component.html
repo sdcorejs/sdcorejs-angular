@@ -1,0 +1,99 @@
+@let _autoId = autoId();
+@let _moreLabel = moreLabel();
+@let _direct = directActions();
+@let _overflow = overflowActions();
+@if (opened()) {
+  <sd-quick-action opened contained>
+    <div class="sd-selection-message" sdMessage role="status">
+      <span class="sd-selection-icon" aria-hidden="true"><sd-icon name="check_circle_outline" /></span>
+      <span>{{ message() }}</span>
+    </div>
+    <div class="sd-selection-actions" sdAction>
+      @for (entry of _direct; track entry.index) {
+        @let action = entry.action;
+        @if (action.variant === 'normal') {
+          <sd-button
+            class="sd-selection-direct"
+            size="sm"
+            [autoId]="actionAutoId(entry.index)"
+            [tooltip]="action.tooltip"
+            [prefixIcon]="action.icon"
+            [color]="action.color"
+            [type]="action.type || 'light'"
+            [fontSet]="action.fontSet"
+            [title]="action.title"
+            (click)="this.action.emit(action)" />
+        } @else {
+          <sd-button
+            class="sd-selection-direct"
+            size="sm"
+            [autoId]="actionAutoId(entry.index)"
+            [tooltip]="action.tooltip"
+            [prefixIcon]="action.icon || 'more_horiz'"
+            [color]="action.color || 'secondary'"
+            [type]="action.type || 'light'"
+            [fontSet]="action.fontSet"
+            [title]="action.title">
+            @for (child of action.children; track $index) {
+              <sd-button-item
+                [autoId]="actionAutoId(entry.index, $index)"
+                [prefixIcon]="child.icon"
+                [fontSet]="child.fontSet"
+                [color]="child.color"
+                [tooltip]="child.tooltip"
+                (click)="this.action.emit(child)"
+                >{{ child.title }}</sd-button-item
+              >
+            }
+          </sd-button>
+        }
+      }
+      @if (_overflow.length) {
+        <sd-button
+          class="sd-selection-more"
+          size="sm"
+          suffixIcon="more_horiz"
+          [title]="_moreLabel"
+          color="secondary"
+          type="light"
+          [autoId]="_autoId ? _autoId + '-more-actions' : null">
+          @for (entry of _overflow; track entry.index) {
+            @let action = entry.action;
+            @if (action.variant === 'normal') {
+              <sd-button-item
+                [autoId]="actionAutoId(entry.index)"
+                [prefixIcon]="action.icon"
+                [fontSet]="action.fontSet"
+                [color]="action.color"
+                [tooltip]="action.tooltip"
+                (click)="this.action.emit(action)"
+                >{{ action.title }}</sd-button-item
+              >
+            } @else {
+              <sd-button-item-divider [title]="action.title" />
+              @for (child of action.children; track $index) {
+                <sd-button-item
+                  [autoId]="actionAutoId(entry.index, $index)"
+                  [prefixIcon]="child.icon"
+                  [fontSet]="child.fontSet"
+                  [color]="child.color"
+                  [tooltip]="child.tooltip"
+                  (click)="this.action.emit(child)"
+                  >{{ child.title }}</sd-button-item
+                >
+              }
+            }
+          }
+        </sd-button>
+      }
+      <button
+        type="button"
+        class="sd-selection-clear"
+        [attr.aria-label]="clearLabel()"
+        [attr.data-autoid]="_autoId ? 'components-button-' + _autoId + '-clear-selection' : null"
+        (click)="clear.emit()">
+        <sd-icon name="close" aria-hidden="true" />
+      </button>
+    </div>
+  </sd-quick-action>
+}

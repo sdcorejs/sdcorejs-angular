@@ -2,7 +2,6 @@
 @let _selectionVisible = selectionVisible();
 @let _selectionSingle = selectionSingle();
 @let _selectionMessage = selectionMessage();
-@let _selectionActionViews = selectionActionViews();
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
 @let _emptyState = emptyState();
@@ -167,36 +166,14 @@
   </div>
 }
 
-<sd-quick-action [opened]="_selectionQuickActionOpened">
-  <div class="d-flex align-items-center" sdMessage>
-    <div class="c-bg-length">
-      <span class="c-length sd-tree__qa-count">{{ selectedCount() }}</span>
-    </div>
-    <div class="c-message">
-      {{ _selectionMessage }}
-    </div>
-  </div>
-
-  <div class="d-flex align-items-center mr-8 sd-tree__qa-actions" sdAction>
-    @for (actionView of _selectionActionViews; track $index) {
-      <sd-button
-        [autoId]="actionView.autoId"
-        class="ml-4"
-        [tooltip]="actionView.action.tooltip"
-        [prefixIcon]="actionView.action.icon"
-        [color]="actionView.action.color || 'primary'"
-        [type]="actionView.action.type || 'light'"
-        [fontSet]="actionView.action.fontSet"
-        [title]="actionView.action.title"
-        (click)="onSelectionAction(actionView.action)" />
-    }
-    <sd-button
-      [autoId]="clearSelectionAutoId()"
-      class="ml-4"
-      prefixIcon="close"
-      color="secondary"
-      type="outline"
-      width="35px"
-      (click)="clearSelection()" />
-  </div>
-</sd-quick-action>
+<!-- SB: thanh chọn nhiều dùng chung với sd-table, nằm trong host sau các hàng và dính đáy vùng cuộn gần nhất.
+     Vì thanh nằm trong luồng, host tự cao thêm đúng bằng thanh khi nó mở: hàng cuối không bị che. -->
+<sd-selection-bar
+  class="sd-tree__selection-bar"
+  [opened]="_selectionQuickActionOpened"
+  [message]="_selectionMessage"
+  [actions]="selectionBarActions()"
+  [autoId]="autoId()"
+  actionAutoIdPrefix="selection-action"
+  (action)="$event.click()"
+  (clear)="clearSelection()" />
