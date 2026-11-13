@@ -45,7 +45,8 @@
   outline-offset: -2px;
 }
 
-.sd-tree__row--selected {
+.sd-tree__row--selected,
+.sd-tree__row--active {
   background: var(--sd-tree-selected-bg);
 }
 
@@ -243,6 +244,17 @@
   font-weight: var(--sd-font-weight-semibold, 600);
 }
 
+// Số đếm (R3): bám dòng đầu như các control khác. ⋯ luôn giữ chỗ bằng opacity nên số không nhảy khi hover.
+.sd-tree__count {
+  flex: 0 0 auto;
+  padding: 6px 0 0 8px;
+  color: var(--sd-tree-muted, #5f6f89);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .sd-tree__command-trigger {
   display: inline-flex;
   align-items: center;
@@ -259,10 +271,20 @@
   transition: opacity var(--sd-duration-fast, 120ms) ease;
 }
 
+// R4: hàng có focus (chính nó hoặc phần tử bên trong) và nút đang mở cũng hiện ⋯, để bàn phím dùng được.
 .sd-tree__row:hover .sd-tree__command-trigger,
+.sd-tree__row:focus-within .sd-tree__command-trigger,
+.sd-tree__row--active .sd-tree__command-trigger,
 .sd-tree__command-trigger:focus-within,
 .sd-tree__command-trigger:has(button[aria-expanded='true']) {
   opacity: 1;
+}
+
+// Màn cảm ứng không có hover: ⋯ luôn hiện.
+@media (pointer: coarse) {
+  .sd-tree__command-trigger {
+    opacity: 1;
+  }
 }
 
 :host ::ng-deep .sd-tree__command-trigger button.c-button {

@@ -884,6 +884,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.collapse': 'ツリー項目を折りたたむ',
   'core.component.tree.retry-item': 'ツリー項目を再読み込み',
   'core.component.tree.load-error': 'ツリーデータを読み込めません',
+  'core.component.tree.open-menu': '{label} の操作',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': 'すべてのファイル',

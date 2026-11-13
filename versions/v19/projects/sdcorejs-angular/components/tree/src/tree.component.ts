@@ -11,9 +11,11 @@ import {
   inject,
   input,
   isSignal,
+  model,
   output,
   signal,
   untracked,
+  viewChildren,
 } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
@@ -65,6 +67,16 @@ export interface SdTreeViewCommand<T = unknown> {
 export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   icon?: string;
   selected: boolean;
+  /** Nút đang mở (chỉ khi `navigation` bật). */
+  active: boolean;
+  /** Hàng được tô nền: nút đang mở khi `navigation` bật, ngược lại là hàng đã chọn. */
+  highlighted: boolean;
+  ariaSelected: boolean | null;
+  /** Tên đọc "{label}, {count}" khi có số đếm; `null` để hàng lấy tên từ nội dung. */
+  ariaLabel: string | null;
+  /** Số đếm đã định dạng theo locale; `null`: không vẽ. */
+  count: string | null;
+  menuLabel: string;
   selectionDisabled: boolean;
   selectionIndeterminate: boolean;
   toggleDisabled: boolean;
@@ -129,6 +141,13 @@ export class SdTree<T = unknown> {
   readonly expandChange = output<SdTreeToggleEvent<T>>();
   readonly collapseChange = output<SdTreeToggleEvent<T>>();
   readonly loadError = output<SdTreeLoadErrorEvent<T>>();
+  /**
+   * Id của nút đang mở (chế độ `navigation`). Là model trên component, không nằm trong `[option]`, để gắn hai
+   * chiều với URL.
+   */
+  readonly activeId = model<string | null>(null);
+  /** Phát mỗi lần người dùng mở một nút, kể cả nút đang mở. */
+  readonly activeChange = output<{ item: T; node: SdTreeNode<T> }>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
   readonly resolvedItemsSource = computed<SdTreeDataSource<SdTreeItem<T>>>(() => {
@@ -139,6 +158,7 @@ export class SdTree<T = unknown> {
   readonly resolvedCommands = computed(() => this.option()?.commands ?? this.commands() ?? []);
   readonly resolvedSelectable = computed(() => this.option()?.selectable ?? this.selectable());
   readonly resolvedShowLines = computed(() => this.option()?.showLines ?? this.showLines());
+  readonly navigation = computed(() => this.option()?.navigation === true);
   readonly autoId = computed(() => {
     const scope = this.option()?.autoId ?? this.autoIdInput();
     return scope ? `components-tree-${scope}` : undefined;
@@ -159,6 +179,9 @@ export class SdTree<T = unknown> {
   readonly rootLoading = signal(false);
   readonly rootError = signal<unknown | null>(null);
   readonly activeNodeId = signal<string | null>(null);
+  private readonly buttons = viewChildren(SdButton);
+  /** Hàng đã mở menu ⋯ bằng bàn phím; menu đóng thì focus quay về đây. */
+  #keyboardMenuRow: HTMLElement | null = null;
 
   #rootLoadId = 0;
   #lastSource?: SdTreeDataSource<SdTreeItem<T>>;
@@ -270,14 +293,27 @@ export class SdTree<T = unknown> {
     const nodes = this.visibleNodes();
     const requestedActiveId = this.activeNodeId();
     const activeId = nodes.some(node => node.id === requestedActiveId) ? requestedActiveId : nodes[0]?.id;
+    const navigation = this.navigation();
+    const openId = navigation ? this.activeId() : null;
+    const selectionVisible = this.selectionVisible();
+    const numberFormat = new Intl.NumberFormat(this.#i18n.locale());
     // why: đếm 1 lượt bottom-up cho CẢ cây rồi tra theo id. Bản cũ gọi `#flattenAll(node.children)`
     // cho TỪNG node hiển thị ngay trong map này → O(n²) kèm một mảng mới mỗi node mỗi lần
     // recompute. Chỉ cascade 'descendants' mới cần số liệu này nên các chế độ khác bỏ qua hẳn.
     const selectedDescendants =
       selector?.cascade === 'descendants' ? this.#countSelectedDescendants(this.rootNodes(), selectedIds) : EMPTY_DESCENDANT_COUNTS;
-    return nodes.map(node =>
-      this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId, selectedDescendants)
-    );
+    return nodes.map(node => {
+      const view = this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId, selectedDescendants);
+      const count = formatCount(node.treeItem.count, numberFormat);
+      view.active = navigation && node.id === openId;
+      // Q2: khi điều hướng, checkbox tự thể hiện lựa chọn; nền hàng chỉ dành cho nút đang mở.
+      view.highlighted = navigation ? view.active : view.selected;
+      // Q3: `aria-selected` là nút đang mở; lựa chọn của checkbox đi qua `aria-checked`.
+      view.ariaSelected = navigation ? view.active : selectionVisible ? view.selected : null;
+      view.count = count;
+      view.ariaLabel = count === null ? null : `${node.label}, ${count}`;
+      return view;
+    });
   });
 
   readonly trackByNode = (_index: number, node: SdTreeNode<T>): string => node.id;
@@ -302,6 +338,17 @@ export class SdTree<T = unknown> {
         this.#lastSourceValue = undefined;
         this.#lastReloadTick = reloadTick;
         this.#loadRootItems(source);
+      });
+    });
+
+    effect(() => {
+      const opened = this.buttons().some(button => button.popover.opened());
+      untracked(() => {
+        const row = this.#keyboardMenuRow;
+        if (opened || !row) return;
+        this.#keyboardMenuRow = null;
+        // Action Popover trả focus về nút ⋯; menu mở từ hàng thì hàng mới là nơi người dùng đang đứng.
+        if (row.isConnected && row.contains(document.activeElement)) row.focus();
       });
     });
   }
@@ -430,6 +477,14 @@ export class SdTree<T = unknown> {
     this.activeNodeId.set(node.id);
   }
 
+  /** Chế độ điều hướng: bấm vào hàng (trừ chevron, checkbox/radio, ⋯) mở nút. */
+  onRowClick(node: SdTreeNode<T>, event: Event): void {
+    if (!this.navigation()) return;
+    const target = event.target as Element | null;
+    if (target?.closest?.('.sd-tree__toggle, .sd-tree__checkbox, .sd-tree__radio, .sd-tree__command-trigger')) return;
+    this.#activate(node);
+  }
+
   onRowKeydown(node: SdTreeNode<T>, event: KeyboardEvent): void {
     if (event.target !== event.currentTarget) return;
     const nodes = this.visibleNodes();
@@ -465,12 +520,40 @@ export class SdTree<T = unknown> {
         if (node.isExpanded) void this.toggle(node);
         else this.#focusVisibleNode(nodes.findIndex(item => item.id === node.parent?.id));
         return;
+      case 'F10':
+      case 'ContextMenu':
+        // R4: Shift+F10 hoặc phím ContextMenu mở menu ⋯ của hàng đang focus.
+        if (!this.navigation() || (event.key === 'F10' && !event.shiftKey)) return;
+        if (this.#openRowMenu(event.currentTarget as HTMLElement)) event.preventDefault();
+        return;
       case 'Enter':
       case ' ':
+        if (this.navigation() && event.key === 'Enter') {
+          event.preventDefault();
+          this.#activate(node);
+          return;
+        }
         if (!this.selectionVisible()) return;
         event.preventDefault();
         this.toggleSelection(node);
     }
+  }
+
+  #activate(node: SdTreeNode<T>): void {
+    const current = this.#findNode(node.id) ?? node;
+    this.activeNodeId.set(current.id);
+    this.activeId.set(current.id);
+    const event = { item: current.data, node: current };
+    this.option()?.onActivate?.(event);
+    this.activeChange.emit(event);
+  }
+
+  #openRowMenu(row: HTMLElement): boolean {
+    const trigger = row.querySelector<HTMLButtonElement>('.sd-tree__command-trigger button');
+    if (!trigger || trigger.disabled) return false;
+    this.#keyboardMenuRow = row;
+    if (trigger.getAttribute('aria-expanded') !== 'true') trigger.click();
+    return true;
   }
 
   createContext(node: SdTreeNode<T>): SdTreeItemContext<T> {
@@ -570,6 +653,12 @@ export class SdTree<T = unknown> {
       ...node,
       icon: this.#iconOf(node),
       selected,
+      active: false,
+      highlighted: selected,
+      ariaSelected: null as boolean | null,
+      ariaLabel: null as string | null,
+      count: null as string | null,
+      menuLabel: this.#i18n.t('core.component.tree.open-menu', { label: node.label }),
       selectionDisabled,
       selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector, selectedDescendants),
       toggleDisabled: !node.hasChildren || node.isLoading,
@@ -867,6 +956,11 @@ function normalizeText(value: string): string {
     .replace(/[\u0111\u0110]/g, match => (match === '\u0110' ? 'D' : 'd'))
     .toLowerCase()
     .trim();
+}
+
+function formatCount(value: number | null | undefined, format: Intl.NumberFormat): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
+  return format.format(Math.floor(value));
 }
 
 function sanitizeId(value: string): string {

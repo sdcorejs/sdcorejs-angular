@@ -30,6 +30,8 @@ export interface SdTreeItemBase<T = unknown> {
   icon?: string | null;
   /** Consumer payload. Commands, selection callbacks, and `$implicit` template context receive this value. */
   data: T;
+  /** Số đếm hiện sau nhãn (số nguyên ≥ 0, định dạng theo locale). `null` hoặc bỏ trống: không vẽ. */
+  count?: number | null;
   /** Initial expansion state for this node. Component state wins after the user toggles. */
   expanded?: boolean;
 }
@@ -111,6 +113,13 @@ export interface SdTreeComponentOptionBase<T = unknown, TItem extends SdTreeItem
   itemTemplate?: SdTreeItemTemplate<T> | null;
   selectable?: boolean;
   showLines?: boolean;
+  /**
+   * Chế độ điều hướng (tree-detail): bấm hàng hoặc Enter mở nút (`activeId`), checkbox không tô nền hàng.
+   * Mặc định `false`: cây chạy như cũ.
+   */
+  navigation?: boolean;
+  /** Gọi mỗi lần người dùng mở một nút, kể cả nút đang mở. */
+  onActivate?: (event: { item: T; node: SdTreeNode<T> }) => void;
   onSelectedItemsChange?: (items: T[]) => void;
   onSelect?: (event: SdTreeSelectionEvent<T>) => void;
   onExpand?: (event: SdTreeToggleEvent<T>) => void;

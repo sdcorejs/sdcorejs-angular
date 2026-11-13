@@ -27,14 +27,17 @@
         class="sd-tree__row"
         role="treeitem"
         [attr.tabindex]="node.tabIndex"
-        [class.sd-tree__row--selected]="node.selected"
+        [class.sd-tree__row--selected]="node.highlighted && !node.active"
+        [class.sd-tree__row--active]="node.active"
         [class.sd-tree__row--parent]="node.hasChildren"
         [style.--sd-tree-level]="node.level"
         [attr.aria-level]="node.level + 1"
         [attr.aria-expanded]="node.ariaExpanded"
-        [attr.aria-selected]="_selectionVisible ? node.selected : null"
+        [attr.aria-selected]="node.ariaSelected"
+        [attr.aria-label]="node.ariaLabel"
         [attr.aria-checked]="_selectionVisible ? (node.selectionIndeterminate ? 'mixed' : node.selected) : null"
         [attr.data-autoid]="node.autoIds.row"
+        (click)="onRowClick(node, $event)"
         (focus)="onRowFocus(node)"
         (keydown)="onRowKeydown(node, $event)">
         @if (_lines) {
@@ -98,7 +101,7 @@
           @if (node.icon) {
             <sd-icon
               class="sd-tree__item-icon"
-              [color]="node.selected ? 'primary' : undefined"
+              [color]="node.highlighted ? 'primary' : undefined"
               [attr.data-autoid]="node.autoIds.icon"
               [name]="node.icon"></sd-icon>
           }
@@ -112,13 +115,17 @@
           </div>
         </div>
 
+        @if (node.count !== null) {
+          <span class="sd-tree__count">{{ node.count }}</span>
+        }
+
         @if (node.commands.length) {
           <sd-button
             class="sd-tree__command-trigger"
             type="text"
             size="sm"
             prefixIcon="more_vert"
-            [tooltip]="node.label"
+            [tooltip]="node.menuLabel"
             [attr.data-autoid]="node.autoIds.command">
             @for (command of node.commands; track command.key) {
               <sd-button-item

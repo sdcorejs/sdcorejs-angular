@@ -880,6 +880,7 @@ export const EN_MESSAGES = {
   'core.component.tree.collapse': 'Collapse tree item',
   'core.component.tree.retry-item': 'Retry loading tree item',
   'core.component.tree.load-error': 'Unable to load tree data',
+  'core.component.tree.open-menu': 'Actions for {label}',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': 'All files',

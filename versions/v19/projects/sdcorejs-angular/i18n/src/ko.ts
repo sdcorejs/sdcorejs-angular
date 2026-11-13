@@ -881,6 +881,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.collapse': '트리 항목 접기',
   'core.component.tree.retry-item': '트리 항목 다시 불러오기',
   'core.component.tree.load-error': '트리 데이터를 불러올 수 없습니다',
+  'core.component.tree.open-menu': '{label} 작업',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': '모든 파일',

@@ -881,6 +881,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.collapse': 'Thu gọn mục',
   'core.component.tree.retry-item': 'Tải lại mục',
   'core.component.tree.load-error': 'Không tải được dữ liệu cây',
+  'core.component.tree.open-menu': 'Thao tác với {label}',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': 'Tất cả tệp',
