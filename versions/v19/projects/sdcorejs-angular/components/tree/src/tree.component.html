@@ -37,6 +37,7 @@
         [attr.aria-label]="node.ariaLabel"
         [attr.aria-checked]="_selectionVisible ? (node.selectionIndeterminate ? 'mixed' : node.selected) : null"
         [attr.data-autoid]="node.autoIds.row"
+        [attr.data-tree-node]="node.id"
         (click)="onRowClick(node, $event)"
         (focus)="onRowFocus(node)"
         (keydown)="onRowKeydown(node, $event)">

@@ -68,6 +68,11 @@ export interface SdTreeLazyOption<T = unknown> extends SdTreeBaseOption {
    * not raw data, so each child has a stable id/label/icon contract.
    */
   onExpandChildren: (item: SdTreeItemLazy<T>) => Promise<SdTreeItemLazy<T>[]> | SdTreeItemLazy<T>[];
+  /**
+   * Trả về id các nút cha của `id`, từ gốc tới cha trực tiếp. `reveal(id)` gọi khi nút chưa được tải, rồi mở
+   * lần lượt từng nút trên đường đi. `signal` bị huỷ khi có lần `reveal` mới hoặc người dùng mở nút khác.
+   */
+  onResolvePath?: (id: string, signal: AbortSignal) => Promise<readonly string[]>;
 }
 
 export interface SdTreeCommand<T = unknown> {
