@@ -173,7 +173,7 @@ describe('SdTree root states (R8)', () => {
       // Still waiting for the server: the loaded tree stays.
       expect(empty()).toBeNull();
 
-      jasmine.clock().tick(700);
+      jasmine.clock().tick(300);
       await settle();
       expect(empty()!.textContent!.trim()).toBe('Không tìm thấy mục khớp “abc”');
     } finally {

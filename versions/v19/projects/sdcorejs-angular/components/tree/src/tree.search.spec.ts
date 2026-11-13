@@ -24,7 +24,7 @@ const CHILDREN: Record<string, SdTreeItemLazy<Category>[]> = {
   r1: [lazy('c1'), lazy('c2', false)],
   c1: [lazy('g1', false), lazy('g2', false)],
 };
-const DEBOUNCE_MS = 700;
+const DEBOUNCE_MS = 300;
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
