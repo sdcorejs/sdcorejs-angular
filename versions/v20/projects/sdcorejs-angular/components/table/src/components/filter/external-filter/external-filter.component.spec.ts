@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SdSection } from '@sdcorejs/angular/components/section';
@@ -118,6 +119,83 @@ describe('ExternalFilterComponent — OOM regression (effect + startWith)', () =
 
     const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
     expect(section.collapsible()).toBeFalse();
+  });
+
+  describe('MM-01 settings menu', () => {
+    const filters = [
+      { field: 'name', title: 'Name', type: 'string' as const, required: true },
+      { field: 'age', title: 'Age', type: 'number' as const },
+      { field: 'birthday', title: 'Birthday', type: 'date' as const },
+    ];
+    let configuration: jasmine.Spy;
+    const overlay = () => TestBed.inject(OverlayContainer).getContainerElement();
+    const trigger = () => fixture.nativeElement.querySelector('[data-autoid="components-button-t-external-setting"]') as HTMLButtonElement;
+    const item = (field: string) => overlay().querySelector<HTMLButtonElement>(`[data-autoid="t-external-setting-${field}"]`)!;
+
+    beforeEach(() => {
+      const { register } = createMockRegister();
+      configuration = spyOn(register.configuration, 'set').and.callThrough();
+      component.isMobileOrTablet = false;
+      fixture.componentRef.setInput('autoId', 't');
+      fixture.componentRef.setInput('filter', {});
+      fixture.componentRef.setInput('externalFilters', filters);
+      fixture.componentRef.setInput('filterRegister', register);
+      fixture.detectChanges();
+      component.inlineExternal.set({ name: true, age: true, birthday: false });
+      fixture.detectChanges();
+    });
+
+    it('MM-01 is an Action Popover on the settings sd-button: every field, in order, with the autoIds kept', () => {
+      expect(trigger().getAttribute('aria-haspopup')).toBe('menu');
+      expect(trigger().querySelector('sd-icon')?.textContent?.trim()).toBe('settings');
+      trigger().click();
+      fixture.detectChanges();
+
+      expect(overlay().querySelector('.sd-action-popover')).not.toBeNull();
+      const items = Array.from(overlay().querySelectorAll<HTMLButtonElement>('.sd-action-item'));
+      expect(items.map(entry => entry.getAttribute('data-autoid'))).toEqual(filters.map(entry => 't-external-setting-' + entry.field));
+      expect(items.map(entry => entry.querySelector('.sd-action-label')?.textContent?.trim())).toEqual(['Name', 'Age', 'Birthday']);
+      for (const entry of filters) {
+        expect(item(entry.field).querySelector(`[data-autoid$="t-external-setting-${entry.field}-checkbox"]`))
+          .withContext(entry.field)
+          .not.toBeNull();
+      }
+      // A required field is always shown, so its entry is locked.
+      expect(item('name').disabled).toBeTrue();
+      expect(item('age').disabled).toBeFalse();
+    });
+
+    it('MM-01 clicking a checkbox row toggles the field and keeps the menu open, like the old menu', () => {
+      trigger().click();
+      fixture.detectChanges();
+
+      item('birthday').querySelector<HTMLElement>('.sd-external-filter-setting')!.click();
+      fixture.detectChanges();
+      expect(component.inlineExternal()['birthday']).toBeTrue();
+      expect(configuration).toHaveBeenCalledWith({ inlineExternal: { name: true, age: true, birthday: true } });
+      expect(overlay().querySelector('.sd-action-popover')).not.toBeNull();
+
+      item('age').querySelector<HTMLElement>('.sd-external-filter-setting')!.click();
+      fixture.detectChanges();
+      expect(component.inlineExternal()['age']).toBeFalse();
+      expect(fixture.nativeElement.querySelector('sd-input-number')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-date')).not.toBeNull();
+    });
+
+    it('MM-01 activating an entry from the keyboard toggles once and closes; a required field never changes', () => {
+      trigger().click();
+      fixture.detectChanges();
+      // Enter / Space on a menu item reach the item button itself, not the checkbox row.
+      item('age').click();
+      fixture.detectChanges();
+      expect(component.inlineExternal()['age']).toBeFalse();
+      expect(configuration).toHaveBeenCalledTimes(1);
+      expect(overlay().querySelector('.sd-action-popover')).toBeNull();
+
+      component.onCheckboxChange(new Event('click'), filters[0]);
+      expect(component.inlineExternal()['name']).toBeTrue();
+      expect(configuration).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('opts string, number, date and datetime controls into clearable behavior', () => {

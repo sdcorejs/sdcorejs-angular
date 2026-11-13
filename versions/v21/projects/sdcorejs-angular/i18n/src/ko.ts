@@ -880,7 +880,10 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.expand': '트리 항목 펼치기',
   'core.component.tree.collapse': '트리 항목 접기',
   'core.component.tree.retry-item': '트리 항목 다시 불러오기',
-  'core.component.tree.load-error': '트리 데이터를 불러올 수 없습니다',
+  'core.component.tree.load-error': '목록을 불러오지 못했습니다.',
+  'core.component.tree.empty': '아직 항목이 없습니다',
+  'core.component.tree.no-match': '“{text}”와 일치하는 항목이 없습니다',
+  'core.component.tree.open-menu': '{label} 작업',
 
   // ---- Component: file-explorer ----
   'core.component.file-explorer.root': '모든 파일',

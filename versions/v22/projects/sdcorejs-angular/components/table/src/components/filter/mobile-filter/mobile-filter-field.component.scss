@@ -7,14 +7,9 @@
   // why: field controls take the coarse height (44px) inside the phone sheets.
   --sd-control-height-md: var(--sd-control-height-coarse, 44px);
 }
+// Nút toán tử là sd-button type text; kích thước và màu do sd-button lo, ở đây chỉ còn vị trí.
 .sd-mobile-field-operator {
   align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding-inline: 0;
-  font-size: var(--sd-font-size-12, 12px);
-  color: var(--sd-primary);
 }
 .sd-mobile-field-operator-text {
   font-size: var(--sd-font-size-12, 12px);
