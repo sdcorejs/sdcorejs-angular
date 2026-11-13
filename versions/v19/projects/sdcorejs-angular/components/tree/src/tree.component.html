@@ -6,6 +6,7 @@
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
 @let _treeLines = treeLines();
+@let _highlightTerm = highlightTerm();
 
 @if (rootLoading()) {
   <div class="sd-tree__root-loading" role="status" aria-live="polite">
@@ -17,7 +18,7 @@
     <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | sdTranslate }}</button>
   </div>
 } @else {
-  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
+  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading() || searchPending()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
     @for (node of visibleViewNodes(); track node.id) {
       @let _lines = _treeLines.get(node.id);
       <!-- why: `[tabIndex]` là property DOM (camelCase) — nó set đúng giá trị nhưng KHÔNG sinh
@@ -30,6 +31,7 @@
         [class.sd-tree__row--selected]="node.highlighted && !node.active"
         [class.sd-tree__row--active]="node.active"
         [class.sd-tree__row--parent]="node.hasChildren"
+        [class.sd-tree__row--context]="node.muted"
         [style.--sd-tree-level]="node.level"
         [attr.aria-level]="node.level + 1"
         [attr.aria-expanded]="node.ariaExpanded"
@@ -111,7 +113,11 @@
             @if (_resolvedItemTemplate) {
               <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
             } @else {
-              <span class="sd-tree__label">{{ node.label }}</span>
+              @if (_highlightTerm) {
+                <span class="sd-tree__label"><sd-highlight [text]="node.label" [term]="_highlightTerm" /></span>
+              } @else {
+                <span class="sd-tree__label">{{ node.label }}</span>
+              }
             }
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 :host {
   --sd-tree-row-height: 44px;
   --sd-tree-control-size: 28px;
@@ -238,6 +237,17 @@
 .sd-tree__label {
   font-size: var(--sd-font-size-14, 14px);
   font-weight: var(--sd-font-weight-regular, 400);
+}
+
+// R6: phần khớp giữ màu chữ của nhãn, chỉ thêm nền. Nút chỉ nằm trên đường tới kết quả thì chữ nhạt.
+.sd-tree__label {
+  --sd-highlight-bg: var(--sd-warning-light);
+  // `inherit` ở đây sẽ là từ khoá của chính custom property, không tới được `color` của <mark>.
+  --sd-highlight-color: currentcolor;
+}
+
+.sd-tree__row--context .sd-tree__label {
+  color: var(--sd-tree-muted, #5f6f89);
 }
 
 .sd-tree__row--parent .sd-tree__label {

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   Injector,
   TemplateRef,
@@ -23,6 +24,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
+import { SdHighlight } from '@sdcorejs/angular/components/highlight';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
@@ -34,6 +36,7 @@ import {
   SdTreeItem,
   SdTreeItemContext,
   SdTreeItemLazy,
+  SdTreeLazyOption,
   SdTreeLoadErrorEvent,
   SdTreeNode,
   SdTreeOption,
@@ -79,6 +82,8 @@ export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   /** Số đếm đã định dạng theo locale; `null`: không vẽ. */
   count: string | null;
   menuLabel: string;
+  /** Kết quả tìm trên server: nút chỉ nằm trên đường tới nút khớp. */
+  muted: boolean;
   selectionDisabled: boolean;
   selectionIndeterminate: boolean;
   toggleDisabled: boolean;
@@ -89,6 +94,17 @@ export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   context: SdTreeItemContext<T>;
   tabIndex: 0 | -1;
 }
+
+/** Cây kết quả của `onSearch`: các đường đi đã gộp theo id. */
+interface SdTreeSearchResult<T> {
+  text: string;
+  roots: SdTreeItemLazy<T>[];
+  children: Map<string, SdTreeItemLazy<T>[]>;
+  matched: Set<string>;
+}
+
+// Cùng thời gian chờ với đường lọc của sd-table (filter 500ms + reload 200ms).
+const SEARCH_DEBOUNCE_MS = 700;
 
 export interface SdTreeSelectionActionView<T = unknown> {
   action: SdTreeSelectionAction<T>;
@@ -111,6 +127,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     MatRadioModule,
     SdButton,
     SdButtonItem,
+    SdHighlight,
     SdQuickAction,
     SdTranslatePipe,
   ],
@@ -184,6 +201,17 @@ export class SdTree<T = unknown> {
   readonly #selectedIds = signal<Set<string>>(new Set());
   readonly #filterText = signal('');
   readonly #reloadTick = signal(0);
+  readonly #search = signal<SdTreeSearchResult<T> | null>(null);
+  /** Nút người dùng đã đóng trong kết quả tìm. Tách khỏi trạng thái mở thật để xoá chữ là cây về như cũ. */
+  readonly #searchCollapsed = signal<ReadonlySet<string>>(new Set());
+  /** Đang chờ debounce hoặc chờ `onSearch` trả về. */
+  readonly searchPending = signal(false);
+  readonly #serverSearch = computed(() => {
+    const tree = this.resolvedTree();
+    return tree.loadType === 'lazy' && !!tree.onSearch;
+  });
+  /** Chữ cần tô trong nhãn: chữ đang lọc (static) hoặc chữ của kết quả đang hiện (server). */
+  readonly highlightTerm = computed(() => (this.#serverSearch() ? (this.#search()?.text ?? '') : this.#filterText().trim()));
   readonly #expandedIdSet = computed(() => {
     const ids = this.expandedIds();
     return ids === undefined ? undefined : new Set(ids);
@@ -204,6 +232,8 @@ export class SdTree<T = unknown> {
   /** Lần tải con đang chạy theo id, để `reveal`, `expand` và `expandedIds` không gọi `onExpandChildren` hai lần. */
   readonly #lazyLoads = new Map<string, Promise<void>>();
   #revealController: AbortController | null = null;
+  #searchController: AbortController | null = null;
+  #searchTimer?: ReturnType<typeof setTimeout>;
   /** Nút `reveal` đang chờ hàng của nó được render để cuộn tới. */
   #pendingScrollId: string | null = null;
   /** Id do người dùng vừa mở: lần đổi `activeId` này không cần `reveal`. */
@@ -224,10 +254,14 @@ export class SdTree<T = unknown> {
     return selectedItems ? this.#idsFromSelectedItems(selectedItems) : this.#selectedIds();
   });
 
-  readonly rootNodes = computed<SdTreeNode<T>[]>(() => this.#buildNodes(this.#rootItems(), 0, null));
+  readonly rootNodes = computed<SdTreeNode<T>[]>(() => {
+    const search = this.#search();
+    return search ? this.#buildSearchNodes(search, search.roots, 0, null) : this.#buildNodes(this.#rootItems(), 0, null);
+  });
 
   readonly visibleNodes = computed<SdTreeNode<T>[]>(() => {
-    const filterText = this.normalizedFilterText();
+    // Tìm trên server: kết quả đã là cây cần hiện, không lọc lại các nút đã tải.
+    const filterText = this.#serverSearch() ? '' : this.normalizedFilterText();
     const result: SdTreeNode<T>[] = [];
 
     const walk = (nodes: SdTreeNode<T>[]) => {
@@ -318,6 +352,7 @@ export class SdTree<T = unknown> {
     const openId = navigation ? this.activeId() : null;
     const selectionVisible = this.selectionVisible();
     const numberFormat = new Intl.NumberFormat(this.#i18n.locale());
+    const matched = this.#search()?.matched;
     // why: đếm 1 lượt bottom-up cho CẢ cây rồi tra theo id. Bản cũ gọi `#flattenAll(node.children)`
     // cho TỪNG node hiển thị ngay trong map này → O(n²) kèm một mảng mới mỗi node mỗi lần
     // recompute. Chỉ cascade 'descendants' mới cần số liệu này nên các chế độ khác bỏ qua hẳn.
@@ -331,6 +366,7 @@ export class SdTree<T = unknown> {
       view.highlighted = navigation ? view.active : view.selected;
       // Q3: `aria-selected` là nút đang mở; lựa chọn của checkbox đi qua `aria-checked`.
       view.ariaSelected = navigation ? view.active : selectionVisible ? view.selected : null;
+      view.muted = !!matched && !matched.has(node.id);
       view.count = count;
       view.ariaLabel = count === null ? null : `${node.label}, ${count}`;
       return view;
@@ -379,10 +415,15 @@ export class SdTree<T = unknown> {
       });
     });
 
+    inject(DestroyRef).onDestroy(() => {
+      this.#cancelSearch();
+      this.#revealController?.abort();
+    });
+
     // R7: lazy + `expandedIds` từ ngoài: nút được khai là đang mở thì phải có con để hiện.
     effect(() => {
       const expanded = this.#expandedIdSet();
-      if (!expanded || this.resolvedTree().loadType !== 'lazy') return;
+      if (!expanded || this.resolvedTree().loadType !== 'lazy' || this.#search()) return;
       const loaded = this.#lazyChildren();
       const pending = this.#flattenAll(this.rootNodes()).filter(
         node => expanded.has(node.id) && !loaded[node.id] && node.treeItem.hasChildren !== false
@@ -410,8 +451,25 @@ export class SdTree<T = unknown> {
     this.#reloadTick.update(value => value + 1);
   }
 
+  /**
+   * Lọc cây theo chữ. Lazy có `tree.onSearch`: tìm trên server (debounce, huỷ lần trước) và hiện kết quả thay cây;
+   * còn lại: lọc ngay trên các nút đã tải. Chữ rỗng trả cây về trạng thái trước khi tìm.
+   */
   filter(searchText: string | undefined | null): void {
-    this.#filterText.set(searchText ?? '');
+    const text = searchText ?? '';
+    this.#filterText.set(text);
+    const tree = this.resolvedTree();
+    if (tree.loadType !== 'lazy' || !tree.onSearch) return;
+
+    const onSearch = tree.onSearch;
+    this.#cancelSearch();
+    if (!text.trim()) {
+      this.#search.set(null);
+      this.#searchCollapsed.set(new Set());
+      return;
+    }
+    this.searchPending.set(true);
+    this.#searchTimer = setTimeout(() => void this.#runSearch(text, onSearch), SEARCH_DEBOUNCE_MS);
   }
 
   isSelected(node: SdTreeNode<T>): boolean {
@@ -767,6 +825,7 @@ export class SdTree<T = unknown> {
       ariaLabel: null as string | null,
       count: null as string | null,
       menuLabel: this.#i18n.t('core.component.tree.open-menu', { label: node.label }),
+      muted: false,
       selectionDisabled,
       selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector, selectedDescendants),
       toggleDisabled: !node.hasChildren || node.isLoading,
@@ -881,6 +940,59 @@ export class SdTree<T = unknown> {
     });
   }
 
+  #cancelSearch(): void {
+    clearTimeout(this.#searchTimer);
+    this.#searchTimer = undefined;
+    this.#searchController?.abort();
+    this.#searchController = null;
+    this.searchPending.set(false);
+  }
+
+  async #runSearch(text: string, onSearch: NonNullable<SdTreeLazyOption<T>['onSearch']>): Promise<void> {
+    const controller = new AbortController();
+    this.#searchController = controller;
+    try {
+      const results = await onSearch(text, controller.signal);
+      if (controller.signal.aborted) return;
+      this.#searchCollapsed.set(new Set());
+      this.#search.set(mergeSearchPaths(text, results));
+    } catch (error) {
+      if (!controller.signal.aborted) this.loadError.emit({ error });
+    } finally {
+      if (this.#searchController === controller) this.searchPending.set(false);
+    }
+  }
+
+  /** Cây kết quả tìm: con lấy từ các đường đi đã gộp, mở hết trừ nút người dùng tự đóng, không tải lazy. */
+  #buildSearchNodes(
+    search: SdTreeSearchResult<T>,
+    items: SdTreeItemLazy<T>[],
+    level: number,
+    parent: SdTreeNode<T> | null
+  ): SdTreeNode<T>[] {
+    const tree = this;
+    return items.map(item => {
+      const children = search.children.get(item.id) ?? [];
+      const node: SdTreeNode<T> = {
+        treeItem: item,
+        data: item.data,
+        id: item.id,
+        label: item.label,
+        level,
+        parent,
+        children: [],
+        hasChildren: children.length > 0,
+        get isExpanded(): boolean {
+          return !tree.#searchCollapsed().has(item.id);
+        },
+        isLoading: false,
+        loadError: undefined,
+      };
+      node.children = this.#buildSearchNodes(search, children, level + 1, node);
+      return node;
+    });
+  }
+
   #childrenOf(item: SdTreeItem<T>): SdTreeItem<T>[] {
     const option = this.resolvedTree();
     // Static items own their `children`; lazy items keep loaded children in component state.
@@ -938,6 +1050,15 @@ export class SdTree<T = unknown> {
   }
 
   #setExpanded(id: string, expanded: boolean): void {
+    if (this.#search()) {
+      this.#searchCollapsed.update(collapsed => {
+        const next = new Set(collapsed);
+        if (expanded) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+      return;
+    }
     const controlled = this.expandedIds();
     if (controlled === undefined) {
       this.#expandedState.update(state => ({ ...state, [id]: expanded }));
@@ -1161,6 +1282,27 @@ function normalizeText(value: string): string {
 function formatCount(value: number | null | undefined, format: Intl.NumberFormat): string | null {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
   return format.format(Math.floor(value));
+}
+
+function mergeSearchPaths<T>(text: string, results: readonly { path: readonly SdTreeItemLazy<T>[] }[]): SdTreeSearchResult<T> {
+  const search: SdTreeSearchResult<T> = { text, roots: [], children: new Map(), matched: new Set() };
+  const seen = new Set<string>();
+  for (const { path } of results) {
+    path.forEach((item, index) => {
+      if (index === path.length - 1) search.matched.add(item.id);
+      if (seen.has(item.id)) return;
+      seen.add(item.id);
+      if (index === 0) {
+        search.roots.push(item);
+        return;
+      }
+      const parentId = path[index - 1].id;
+      const siblings = search.children.get(parentId);
+      if (siblings) siblings.push(item);
+      else search.children.set(parentId, [item]);
+    });
+  }
+  return search;
 }
 
 function scrollParent(element: HTMLElement): HTMLElement | null {

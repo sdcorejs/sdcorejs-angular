@@ -73,6 +73,11 @@ export interface SdTreeLazyOption<T = unknown> extends SdTreeBaseOption {
    * lần lượt từng nút trên đường đi. `signal` bị huỷ khi có lần `reveal` mới hoặc người dùng mở nút khác.
    */
   onResolvePath?: (id: string, signal: AbortSignal) => Promise<readonly string[]>;
+  /**
+   * Tìm trên server. Có callback này thì `filter(text)` gọi nó (debounce, huỷ lần trước) thay cho việc lọc các
+   * nút đã tải. Mỗi kết quả là một đường đi từ gốc tới nút khớp; cây hiện các đường đi đã gộp, mở hết.
+   */
+  onSearch?: (text: string, signal: AbortSignal) => Promise<readonly { path: readonly SdTreeItemLazy<T>[] }[]>;
 }
 
 export interface SdTreeCommand<T = unknown> {
