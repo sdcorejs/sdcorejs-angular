@@ -27,24 +27,25 @@
           [autoId]="_autoId + 'setting'"
           type="text"
           prefixIcon="settings"
-          [tooltip]="'core.component.table.customize' | sdTranslate"
-          [matMenuTriggerFor]="menu"
-          (click)="$event.stopPropagation()"></sd-button>
-        <mat-menu #menu="matMenu" class="sd-custom-panel-filter-configuration" [attr.data-autoid]="_autoId + 'setting-menu'">
+          [tooltip]="'core.component.table.customize' | sdTranslate">
+          <!-- why: bấm chuột vào ô chọn thì sự kiện dừng ở sd-checkbox, nên Action Popover không đóng và người dùng bật tắt
+               được nhiều field liền nhau như menu cũ. Enter/Space trên mục (hoặc bấm vào lề của mục) đi qua
+               (click) của sd-button-item: đổi field rồi đóng menu, focus về nút. -->
           @for (externalFilter of _filterItems; track externalFilter.field) {
-            <button
-              [attr.data-autoid]="_autoId + 'setting-' + externalFilter.field"
-              mat-menu-item
-              (click)="onCheckboxChange($event, externalFilter)"
-              [disabled]="externalFilter.required">
+            <sd-button-item
+              [autoId]="_autoId + 'setting-' + externalFilter.field"
+              [disabled]="externalFilter.required"
+              (click)="onCheckboxChange($event, externalFilter)">
               <sd-checkbox
+                class="sd-external-filter-setting"
                 [autoId]="_autoId + 'setting-' + externalFilter.field + '-checkbox'"
                 [label]="externalFilter.title"
                 [model]="_inlineExternal[externalFilter.field]"
-                [disabled]="externalFilter.required" />
-            </button>
+                [disabled]="externalFilter.required"
+                (click)="onCheckboxChange($event, externalFilter)" />
+            </sd-button-item>
           }
-        </mat-menu>
+        </sd-button>
       </div>
       <div class="sd-external-filter-body">
         <div class="row mx-0" style="row-gap: 16px">
