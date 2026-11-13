@@ -126,6 +126,19 @@ describe('SdTree selection bar (SB)', () => {
     expect(treeHost().getBoundingClientRect().height).toBeCloseTo(closedHeight, 0);
   });
 
+  it('TR-B-07 reveal keeps the node above the sticky bar instead of scrolling it underneath (R2 N1)', async () => {
+    await setup();
+    await select('n0');
+    const barTop = () => bar().getBoundingClientRect().top;
+
+    expect(await tree.reveal('n10')).toBeTrue();
+    await settle();
+
+    const target = host.querySelector<HTMLElement>('[data-autoid="components-tree-cat-row-n10"]')!.getBoundingClientRect();
+    expect(host.querySelector<HTMLElement>('.scroller')!.scrollTop).toBeGreaterThan(0);
+    expect(target.bottom).toBeLessThanOrEqual(barTop() + 0.5);
+  });
+
   it('SB-02 no visible action means no bar (sd-tree-select), whatever is selected', async () => {
     await setup({ selector: { visible: true } });
     await select('n1');

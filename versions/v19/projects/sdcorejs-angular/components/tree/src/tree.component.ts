@@ -1171,8 +1171,11 @@ export class SdTree<T = unknown> {
     if (!scroller) return;
     const box = scroller.getBoundingClientRect();
     const rect = row.getBoundingClientRect();
+    // Thanh chọn dính đáy vùng cuộn và đè lên các hàng ở đó: mép dưới nhìn thấy được là mép trên của thanh.
+    const bar = this.#host.nativeElement.querySelector<HTMLElement>(':scope > .sd-tree__selection-bar');
+    const bottom = box.bottom - (bar?.offsetHeight ?? 0);
     if (rect.top < box.top) scroller.scrollTop -= box.top - rect.top;
-    else if (rect.bottom > box.bottom) scroller.scrollTop += rect.bottom - box.bottom;
+    else if (rect.bottom > bottom) scroller.scrollTop += rect.bottom - bottom;
   }
 
   #ensureLazyChildren(node: SdTreeNode<T>, force = false): Promise<void> {

@@ -412,6 +412,7 @@ Review độc lập: [`design-tree-selection/reviews/`](design-tree-selection/re
 | 5 | SB thanh chọn dùng chung (SB-01…04) | `354061bee` |
 | R1 | Sửa theo review R1 (TR-B-01…06) | `b26c92bb0` |
 | 6 | MM (MM-01…03), docs, CHANGELOG, sync, showcase + E2E | `da1e1ca20`, `4f63b43f2`, `4ea76a5f7`, `2ae535e2a` |
+| R2 | Sửa theo review R2: N1 (TR-B-07), N2 (chữ về autoId) | commit `fix(tree): reveal không cuộn nút xuống dưới thanh chọn` |
 
 Đã chạy trên Node 22.22.3 (portable, `C:\tmp\n22`): full Karma v19 có coverage 10017 SUCCESS, lint, `ng build sdcorejs-angular`,
 `check:sync`, `test:theme`, `check:scss-hex`, `test:no-mat-menu`, `test:check-i18n`, `test:showcase-generators`,
@@ -433,4 +434,7 @@ Chưa làm:
 
 - Ảnh chụp so với HTML mục 01–05 (light, dark, RTL).
 - E2E external filter và mobile filter trên showcase (đã có unit test MM-01, MM-02).
+- R2 N3: menu thiết lập external filter đóng khi kích hoạt bằng bàn phím và mục không có `aria-checked` (cần đổi ở `components/button`, chờ PD chốt).
+- R2 G3: ngưỡng hẹp của thanh đo trên `sd-selection-bar` (đã trừ padding 8px của chủ sở hữu) và là `< 600` thay cho `<= 600`.
+- R2 G5, G6, G7: dọn `#searchSeen`, `role=status` cho khối rỗng, bề mặt public thừa.
 - Coverage theo file: `tree.component.ts` branches 84,1% (ngưỡng 85%), `selection-bar.component.ts` branches 80%.

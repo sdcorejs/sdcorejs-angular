@@ -512,11 +512,16 @@ When `autoId: 'category'` is set, the host renders `data-autoid="components-tree
 | Label                | `components-tree-<autoId>-label-<nodeId>`                |
 | Command menu trigger | `components-tree-<autoId>-command-<nodeId>`              |
 | Command item         | `components-tree-<autoId>-command-<nodeId>-<commandKey>` |
-| Selection action     | `components-tree-<autoId>-selection-action-<index>`      |
-| More selection actions | `components-tree-<autoId>-more-actions`                |
-| Clear selection      | `components-tree-<autoId>-clear-selection`               |
+| Selection action (button, the first two)   | `components-button-components-tree-<autoId>-selection-action-<index>` |
+| Selection action (entry under "More")      | `components-tree-<autoId>-selection-action-<index>`                   |
+| More selection actions                     | `components-button-components-tree-<autoId>-more-actions`             |
+| Clear selection                            | `components-button-components-tree-<autoId>-clear-selection`          |
 
 `nodeId` and `commandKey` are sanitized to alphanumeric / `_` / `-`.
+
+The selection-bar controls are `sd-button`s, so their rendered value carries the `components-button-` prefix. From
+the third action on, an action is an entry of the "More" menu: it has no prefix and exists in the DOM only while
+the menu is open.
 
 ## Related
 

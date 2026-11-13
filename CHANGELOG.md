@@ -339,7 +339,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Table
 
 - The icon cell of the selection bar uses the primary colours (`--sd-primary-light` / `--sd-primary`) instead of success. The bar now stacks below 600px of its own width instead of below a 600px viewport, so a table in a narrow column or drawer also gets the stacked layout.
-- The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`. Entries, order and autoIds are kept; the operator in use has a check. In the settings menu, clicking a checkbox keeps the menu open as before, while activating an entry with the keyboard toggles it and closes the menu. The operator trigger keeps its `data-autoid`, now on the `sd-button` host.
+- The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`. Entries, their order and their autoIds are kept (the `…-external-setting-menu` autoId of the old `mat-menu` element is gone); the operator in use has a check. In the settings menu, clicking a checkbox keeps the menu open as before, while activating an entry with the keyboard toggles it and closes the menu. The operator trigger keeps its `data-autoid`, now on the `sd-button` host.
 - Query-bar mode: the clear button keeps the values of `required` quick filters and external filters (hidden ones included), like `SdQueryBar.clearAll()`, and is no longer enabled by required values alone. The search box of the bar is `sd-search-field`.
 
 #### Theme
@@ -357,7 +357,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Tree
 
 - The root error state no longer shows `error.message`: it shows `core.component.tree.load-error` (now "The list couldn't be loaded.") with an error icon and an `sd-button` Retry. Read the error from `loadError` or `rootError()`.
-- The selection bar is the bar of `sd-table` and sits inside the tree host, sticky at the bottom of the nearest scroll area, instead of a floating `sd-quick-action`. Up to two actions are buttons and the rest go under "More"; an action without `color` follows `sd-button` (it was `primary`). The classes `.c-bg-length`, `.c-length`, `.c-message` and `.sd-tree__qa-*` are gone. AutoIds are unchanged.
+- The selection bar is the bar of `sd-table` and sits inside the tree host, sticky at the bottom of the nearest scroll area, instead of a floating `sd-quick-action`. Up to two actions are buttons and the rest go under "More"; an action without `color` follows `sd-button` (it was `primary`). The classes `.c-bg-length`, `.c-length`, `.c-message` and `.sd-tree__qa-*` are gone. The autoIds of the first two actions and of the clear button are unchanged; from the third action on, an action is an entry of "More" with `data-autoid="components-tree-<autoId>-selection-action-<index>"` (no `components-button-` prefix, present only while the menu is open).
 
 ### Deprecated
 
