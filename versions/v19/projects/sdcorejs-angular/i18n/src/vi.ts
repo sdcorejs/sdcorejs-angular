@@ -880,7 +880,9 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.tree.expand': 'Mở rộng mục',
   'core.component.tree.collapse': 'Thu gọn mục',
   'core.component.tree.retry-item': 'Tải lại mục',
-  'core.component.tree.load-error': 'Không tải được dữ liệu cây',
+  'core.component.tree.load-error': 'Không tải được danh sách.',
+  'core.component.tree.empty': 'Chưa có mục nào',
+  'core.component.tree.no-match': 'Không tìm thấy mục khớp “{text}”',
   'core.component.tree.open-menu': 'Thao tác với {label}',
 
   // ---- Component: file-explorer ----

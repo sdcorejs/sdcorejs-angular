@@ -357,27 +357,38 @@
 }
 
 .sd-tree__root-loading,
-.sd-tree__root-error {
+.sd-tree__root-error,
+.sd-tree__root-empty {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 120px;
   padding: 16px;
+  box-sizing: border-box;
 }
 
+// R8: chỉ icon mang màu lỗi; chữ là chữ thường và nút "Thử lại" là sd-button.
 .sd-tree__root-error {
   flex-direction: column;
-  color: var(--sd-error, #d92d20);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  text-align: center;
+}
 
-  button {
-    min-height: 36px;
-    padding: 6px 12px;
-    border: 1px solid currentcolor;
-    border-radius: var(--sd-radius-6, 6px);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-  }
+.sd-tree__root-error-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--sd-error, #d92d20);
+  font-size: var(--sd-font-size-24, 24px);
+  line-height: var(--sd-line-height-24, 24px);
+}
+
+.sd-tree__root-empty {
+  color: var(--sd-tree-muted, #5f6f89);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  text-align: center;
+  overflow-wrap: anywhere;
 }

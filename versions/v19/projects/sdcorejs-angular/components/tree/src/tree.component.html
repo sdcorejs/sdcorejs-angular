@@ -5,6 +5,8 @@
 @let _selectionActionViews = selectionActionViews();
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
+@let _emptyState = emptyState();
+@let _emptyDef = emptyDef();
 @let _treeLines = treeLines();
 @let _highlightTerm = highlightTerm();
 
@@ -13,9 +15,22 @@
     <mat-progress-spinner diameter="24" mode="indeterminate" />
   </div>
 } @else if (_rootError) {
+  <!-- why: thông điệp của exception (stack, tên bảng, URL nội bộ) không dành cho người dùng cuối; lỗi gốc vẫn
+       tới consumer qua `loadError` và `rootError()`. -->
   <div class="sd-tree__root-error" role="alert">
-    <span>{{ errorMessage(_rootError) }}</span>
-    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | sdTranslate }}</button>
+    <sd-icon class="sd-tree__root-error-icon" name="error" aria-hidden="true"></sd-icon>
+    <span class="sd-tree__root-error-text">{{ 'core.component.tree.load-error' | sdTranslate }}</span>
+    <sd-button data-tree-retry type="outline" size="sm" [title]="'core.component.tree.retry' | sdTranslate" (click)="retry()" />
+  </div>
+} @else if (_emptyState) {
+  <div class="sd-tree__root-empty">
+    @if (_emptyDef) {
+      <ng-container *ngTemplateOutlet="_emptyDef.templateRef; context: _emptyState" />
+    } @else if (_emptyState.searching) {
+      {{ 'core.component.tree.no-match' | sdTranslate: { text: _emptyState.text } }}
+    } @else {
+      {{ 'core.component.tree.empty' | sdTranslate }}
+    }
   </div>
 } @else {
   <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading() || searchPending()" [style.--sd-tree-indent-size]="indentSize() + 'px'">

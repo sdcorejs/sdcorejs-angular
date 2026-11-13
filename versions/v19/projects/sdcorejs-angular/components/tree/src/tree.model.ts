@@ -188,6 +188,12 @@ export interface SdTreeItemContext<T = unknown> {
 
 export type SdTreeItemTemplate<T = unknown> = TemplateRef<SdTreeItemContext<T>>;
 
+/** Context của `sdTreeEmptyDef`: cây rỗng (`searching: false`) hoặc không có mục khớp `text`. */
+export interface SdTreeEmptyContext {
+  searching: boolean;
+  text: string;
+}
+
 export interface SdTreeSelectionEvent<T = unknown> {
   item: T;
   selected: boolean;

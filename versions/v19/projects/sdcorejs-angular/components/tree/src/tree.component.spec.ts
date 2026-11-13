@@ -797,7 +797,8 @@ describe('SdTree', () => {
     const component = fixture.componentInstance;
 
     expect(fixture.nativeElement.querySelector('[data-tree-retry]')).not.toBeNull();
-    expect(text(fixture)).toContain('root failed');
+    // R8: the exception message never reaches the UI.
+    expect(text(fixture)).not.toContain('root failed');
 
     (fixture.nativeElement.querySelector('[data-tree-retry]') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -1027,11 +1028,11 @@ describe('SdTree', () => {
       const i18n = useI18n(fixture);
       const tree = treeComponent<NodeItem>(fixture);
 
-      expect(tree.errorMessage(null)).toBe('Không tải được dữ liệu cây');
+      expect(tree.errorMessage(null)).toBe('Không tải được danh sách.');
       expect(tree.errorMessage(new Error('boom'))).toBe('boom');
 
       i18n.setLanguage('en', { reload: false });
-      expect(tree.errorMessage(undefined)).toBe('Unable to load tree data');
+      expect(tree.errorMessage(undefined)).toBe("The list couldn't be loaded.");
     });
   });
 });

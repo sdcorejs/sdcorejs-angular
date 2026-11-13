@@ -27,12 +27,14 @@ import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdHighlight } from '@sdcorejs/angular/components/highlight';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTreeEmptyDefDirective } from './tree-empty-def.directive';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
   SdTreeCommand,
   SdTreeDataSource,
   SdTreeComponentOption,
+  SdTreeEmptyContext,
   SdTreeItem,
   SdTreeItemContext,
   SdTreeItemLazy,
@@ -175,6 +177,7 @@ export class SdTree<T = unknown> {
   readonly expandedIds = model<readonly string[] | undefined>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
+  readonly emptyDef = contentChild(SdTreeEmptyDefDirective);
   readonly resolvedItemsSource = computed<SdTreeDataSource<SdTreeItem<T>>>(() => {
     return this.option()?.items ?? this.items() ?? (EMPTY_TREE_ITEMS as SdTreeItem<T>[]);
   });
@@ -280,6 +283,12 @@ export class SdTree<T = unknown> {
 
     walk(this.rootNodes());
     return result;
+  });
+  /** Không có hàng nào để hiện: cây rỗng, hoặc không có mục khớp chữ đang tìm. `null` khi cây có hàng. */
+  readonly emptyState = computed<SdTreeEmptyContext | null>(() => {
+    if (this.visibleNodes().length) return null;
+    const text = this.#serverSearch() ? (this.#search()?.text ?? '') : this.#filterText();
+    return { searching: !!text.trim(), text: text.trim() };
   });
   readonly selectedItems = computed(() => this.#selectedItemsFromIds(this.selectedIdSet()));
   /** Use visible siblings so filtering and collapsed/lazy branches leave no dangling connectors. */
@@ -627,6 +636,10 @@ export class SdTree<T = unknown> {
     void this.toggle(node);
   }
 
+  /**
+   * @deprecated Trạng thái lỗi gốc không còn hiện `error.message` (thông điệp của exception không dành cho
+   * người dùng cuối); UI dùng `core.component.tree.load-error`. Đọc lỗi gốc qua `rootError()` hoặc `loadError`.
+   */
   errorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
     // why: thông điệp mặc định khi lỗi không mang message — chuỗi này hiện ra cho người dùng cuối
