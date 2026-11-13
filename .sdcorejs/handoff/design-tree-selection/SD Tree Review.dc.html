@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Roboto:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#f4f4f1;color:#1a1b1f;-webkit-font-smoothing:antialiased}
+a{color:#005cbb;text-decoration:none}
+a:hover{color:#004a99;text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#ecebe6;padding:1px 5px;border-radius:4px}
+</style>
+</helmet>
+<div style="font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.6;color:#1a1b1f;padding-bottom:96px">
+
+<header data-screen-label="00 Header" style="max-width:1240px;margin:0 auto;padding:56px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+  <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#6b6d73;display:flex;flex-wrap:wrap;gap:6px 16px"><span>sdcorejs-angular · main @ e501644 · versions/v19 · components/tree</span><span>09/11/2026</span></div>
+  <h1 style="margin:0;font-weight:600;font-size:44px;line-height:1.12;letter-spacing:-0.02em">sd-tree: UI hiện tại và UI cần thay đổi</h1>
+  <p style="margin:0;max-width:840px;color:#3a3c42;font-size:17px;text-wrap:pretty">Phần “Hiện tại” dựng lại từ <code>tree.component.html</code> và <code>tree.component.scss</code> trên main (hàng 44px, ô control 28px, thụt 20px mỗi cấp). Phần “Cần thay đổi” là chế độ điều hướng cho pattern P12 tree-detail, mã R1–R8 như Table Tree Gaps. Mọi thay đổi là cộng thêm sau cờ <code>navigation</code>, trừ R8 (trạng thái gốc) áp cho mọi cây.</p>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;padding:8px 0 40px;border-bottom:1px solid #dddcd6">
+    <a href="#hien-tai">01 Hiện tại</a>
+    <a href="#goc">02 Trạng thái gốc hiện tại</a>
+    <a href="#moi">03 Cần thay đổi</a>
+    <a href="#hang">04 Trạng thái hàng mới</a>
+    <a href="#chon">05 Thanh chọn nhiều</a>
+    <a href="#api">06 API và bàn phím</a>
+    <a href="#chot">07 Đã chốt</a>
+  </nav>
+</header>
+
+<section id="hien-tai" data-screen-label="01 Hiện tại" style="max-width:1240px;margin:0 auto;padding:40px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">01</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Hiện tại trên main</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px">
+    <sc-for list="{{ current }}" as="p" hint-placeholder-count="4">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #dddcd6"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">{{ p.tag }}</span><span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">{{ p.meta }}</span></div>
+        <div style="background:#f9f9f9;padding:20px;display:flex;justify-content:center">
+          <div style="width:320px;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#102047;overflow:hidden">
+            <sc-for list="{{ p.rows }}" as="n" hint-placeholder-count="6">
+              <div style="position:relative;display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px {{ n.pad }};background:{{ n.bg }};outline:{{ n.outline }};outline-offset:-2px">
+                <sc-for list="{{ n.lines }}" as="ln" hint-placeholder-count="0"><span style="position:absolute;left:{{ ln.x }};top:{{ ln.t }};height:{{ ln.h }};border-left:1px solid #dce1e9"></span></sc-for>
+                <sc-for list="{{ n.branches }}" as="br" hint-placeholder-count="0"><span style="position:absolute;left:{{ br.x }};top:22px;width:12px;border-top:1px solid #dce1e9"></span></sc-for>
+                <span style="position:relative;flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#5f6f89;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px">{{ n.chev }}<span style="display:{{ n.spinD }};position:absolute;left:6px;top:6px;width:16px;height:16px;box-sizing:border-box;border-radius:99px;border:2px solid #dbe8f6;border-top-color:#005cbb"></span></span>
+                <span style="display:{{ n.cbD }};flex:0 0 28px;width:28px;height:28px;margin-right:4px;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:{{ n.cbR }};border:{{ n.cbBd }};background:{{ n.cbBg }};display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;font-weight:700">{{ n.cbGlyph }}</span></span>
+                <span style="display:{{ n.iconD }};flex:0 0 20px;width:20px;min-height:28px;margin-right:8px;align-items:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:{{ n.iconC }}">{{ n.icon }}</span>
+                <span style="flex:1;min-width:0;padding:4px 0;font-size:14px;line-height:20px;font-weight:{{ n.w }};color:{{ n.fg }}">{{ n.pre }}<span style="background:{{ n.markBg }};border-radius:2px;color:#1a1b1f">{{ n.hit }}</span>{{ n.post }}</span>
+                <span style="padding:6px 0 0 8px;font-size:12px;line-height:16px;color:#5f6f89;font-variant-numeric:tabular-nums">{{ n.count }}</span>
+                <span style="flex:0 0 24px;width:24px;height:28px;margin-left:8px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f;opacity:{{ n.toolsOp }}">more_vert</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        
+        <div style="padding:12px 18px 16px;display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{ p.notes }}" as="x" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:14px minmax(0,1fr);gap:6px;font-size:13px;color:#3a3c42"><span style="color:#6b6d73">·</span><span style="text-wrap:pretty">{{ x }}</span></div></sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="goc" data-screen-label="02 Trạng thái gốc hiện tại" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">02</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Trạng thái gốc: hiện tại và cần thay đổi (R8)</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px">
+    <sc-for list="{{ roots }}" as="r" hint-placeholder-count="5">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #dddcd6;font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase"><span style="width:8px;height:8px;border-radius:99px;background:{{ r.dot }}"></span>{{ r.tag }}</div>
+        <div style="background:#f9f9f9;padding:20px;display:flex;justify-content:center">
+          <div style="width:240px;min-height:120px;box-sizing:border-box;padding:16px;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-family:Roboto,sans-serif;text-align:center;color:{{ r.fg }};font-size:14px">
+            <span style="display:{{ r.spinD }};width:24px;height:24px;box-sizing:border-box;border-radius:99px;border:3px solid #dbe8f6;border-top-color:#005cbb"></span>
+            <span style="display:{{ r.iconD }};font-family:'Material Symbols Outlined';font-size:24px;color:{{ r.iconC }}">{{ r.icon }}</span>
+            <span style="text-wrap:pretty">{{ r.text }}</span>
+            <span style="display:{{ r.btnD }};min-height:{{ r.btnH }};box-sizing:border-box;padding:{{ r.btnPad }};border:1px solid {{ r.btnBd }};border-radius:6px;color:{{ r.btnC }};font-weight:{{ r.btnW }};align-items:center;white-space:nowrap;flex:none">{{ r.btn }}</span>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;font-size:13px;color:#3a3c42;text-wrap:pretty">{{ r.v }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="moi" data-screen-label="03 Cần thay đổi" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">03</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Cần thay đổi: chế độ điều hướng</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Màn P12 <code>category/:id/products</code>: cây bên trái, danh sách của nút đang mở bên phải. Ô tìm phía trên cây dùng <code>sd-search-field sm</code> như các ô tìm khác của Core (do consumer đặt, gọi <code>filter()</code> hoặc dùng <code>onSearch</code>).</p>
+  <div style="overflow-x:auto;border:1px solid #dddcd6;border-radius:12px;background:#f9f9f9">
+    <div style="min-width:860px;padding:24px;box-sizing:border-box;display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#102047">
+      <sc-for list="{{ panes }}" as="tp" hint-placeholder-count="1">
+        <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden">
+          <div style="padding:10px"><div style="height:32px;box-sizing:border-box;border:1px solid #c9ccd1;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:14px;color:{{ tp.qColor }}"><span style="font-family:'Material Symbols Outlined';font-size:18px;color:#5f6368">search</span>{{ tp.q }}</div></div>
+          <sc-for list="{{ tp.rows }}" as="n" hint-placeholder-count="7">
+            <div style="position:relative;display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px {{ n.pad }};background:{{ n.bg }};outline:{{ n.outline }};outline-offset:-2px">
+              <span style="position:relative;flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#5f6f89;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px">{{ n.chev }}<span style="display:{{ n.spinD }};position:absolute;left:6px;top:6px;width:16px;height:16px;box-sizing:border-box;border-radius:99px;border:2px solid #dbe8f6;border-top-color:#005cbb"></span></span>
+              <span style="flex:0 0 20px;width:20px;min-height:28px;margin-right:8px;display:flex;align-items:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:{{ n.iconC }}">{{ n.icon }}</span>
+              <span style="flex:1;min-width:0;padding:4px 0;font-size:14px;line-height:20px;font-weight:{{ n.w }};color:{{ n.fg }}">{{ n.pre }}<span style="background:{{ n.markBg }};border-radius:2px;color:#1a1b1f">{{ n.hit }}</span>{{ n.post }}</span>
+              <span style="display:{{ n.mD }};align-items:center;height:18px;margin:5px 0 0 6px;padding:0 6px;border-radius:9px;background:#1a1b1f;color:#ffffff;font:600 10px/1 'JetBrains Mono',monospace">{{ n.m }}</span>
+              <span style="padding:6px 0 0 8px;font-size:12px;line-height:16px;color:#5f6f89;font-variant-numeric:tabular-nums">{{ n.count }}</span>
+              <span style="flex:0 0 24px;width:24px;height:28px;margin-left:8px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f;opacity:{{ n.toolsOp }}">more_vert</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+      <div style="background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;overflow:hidden;font-size:14px;color:#1a1b1f">
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #eceef2"><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:12px;color:#5f6368">Đồ uống › Nước suối</span><span style="font-size:16px;font-weight:500">Nước suối · 12 sản phẩm</span></div><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#44474f"><span style="width:32px;height:18px;border-radius:9px;background:#c9ccd1;position:relative"><span style="position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#ffffff"></span></span>Gồm danh mục con</span></div>
+        <div style="display:grid;grid-template-columns:90px minmax(0,1fr) 110px;height:40px;align-items:center;background:#f2f3f4;font-size:13px;font-weight:500;color:#44474f"><span style="padding:0 12px">Mã</span><span style="padding:0 12px">Tên sản phẩm</span><span style="padding:0 12px;text-align:right">Giá bán (₫)</span></div>
+        <sc-for list="{{ products }}" as="r" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) 110px;height:44px;align-items:center;border-top:1px solid #eceef2"><span style="padding:0 12px;color:#005cbb">{{ r.code }}</span><span style="padding:0 12px">{{ r.name }}</span><span style="padding:0 12px;text-align:right;font-variant-numeric:tabular-nums">{{ r.price }}</span></div></sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:1px;background:#dddcd6;border:1px solid #dddcd6;border-radius:12px;overflow:hidden">
+    <sc-for list="{{ changes }}" as="c" hint-placeholder-count="8">
+      <div style="background:#ffffff;padding:14px 18px;display:flex;flex-direction:column;gap:6px"><span style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:10px;background:#1a1b1f;color:#ffffff;font:600 11px/1 'JetBrains Mono',monospace">{{ c.k }}</span><strong style="font-weight:600;font-size:14px">{{ c.t }}</strong></span><span style="font-size:13px;color:#6b6d73;text-wrap:pretty"><strong style="font-weight:500;color:#3a3c42">Hiện tại:</strong> {{ c.a }}</span><span style="font-size:14px;color:#1a1b1f;text-wrap:pretty"><strong style="font-weight:500">Mới:</strong> {{ c.b }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="hang" data-screen-label="04 Trạng thái hàng mới" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">04</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Trạng thái hàng khi navigation bật</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px">
+    <sc-for list="{{ states }}" as="s" hint-placeholder-count="8">
+      <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column">
+        <div style="background:#f4f3f6;padding:14px;border-bottom:1px solid #ecebe6;font-family:Roboto,sans-serif;color:#102047">
+          <div style="position:relative;display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 24px;background:{{ s.bg }};outline:{{ s.outline }};outline-offset:-2px;border-radius:4px">
+            <span style="position:relative;flex:0 0 28px;height:28px;display:flex;align-items:center;justify-content:center;color:#5f6f89;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px">{{ s.chev }}<span style="display:{{ s.spinD }};position:absolute;left:6px;top:6px;width:16px;height:16px;box-sizing:border-box;border-radius:99px;border:2px solid #dbe8f6;border-top-color:#005cbb"></span></span>
+            <span style="display:{{ s.cbD }};flex:0 0 28px;width:28px;height:28px;margin-right:4px;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;font-weight:700">check</span></span>
+            <span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center;font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:{{ s.iconC }}">{{ s.icon }}</span>
+            <span style="flex:1;min-width:0;padding:4px 0;font-size:14px;line-height:20px;font-weight:{{ s.w }};color:{{ s.fg }}">{{ s.pre }}<span style="background:{{ s.markBg }};border-radius:2px;color:#1a1b1f">{{ s.hit }}</span>{{ s.post }}</span>
+            <span style="padding:6px 0 0 8px;font-size:12px;line-height:16px;color:#5f6f89">{{ s.count }}</span>
+            <span style="flex:0 0 24px;height:28px;margin-left:8px;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:18px;line-height:20px;color:#44474f;opacity:{{ s.toolsOp }}">more_vert</span>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600;font-size:14px">{{ s.k }}</strong><span style="font-size:13px;color:#3a3c42;text-wrap:pretty">{{ s.v }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="chon" data-screen-label="05 Thanh chọn nhiều" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">05</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Thanh chọn nhiều giống sd-table</h2></div>
+  <p style="margin:0;max-width:840px;color:#3a3c42;text-wrap:pretty">Được. Bảng đang dùng <code>&lt;sd-quick-action opened contained&gt;</code> trong <code>selector-action.component</code>: thanh nằm trong khung của bảng (không nổi trên trang), viền 1px <code>--sd-border</code>, bo 10px, padding 10px 12px, không bóng; ô icon <code>check_circle_outline</code> 28px (bảng đang dùng nền <code>--sd-success-light</code>; cây và bảng đổi sang <code>--sd-primary-light</code>, icon <code>--sd-primary</code>), message 13/20, nút <code>sd-button size="sm"</code> mặc định <code>type="light"</code>, nút “Thêm” gom các nút còn lại, nút xoá chọn 32px. Cây dùng đúng thanh đó, đặt cuối cây và dính đáy vùng cuộn của cây.</p>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:16px">
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #dddcd6"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Cây rộng</span><span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">640px · một hàng</span></div><div style="background:#f9f9f9;padding:20px;display:flex;justify-content:center;overflow-x:auto"><div style="width:640px;flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#102047;overflow:hidden"><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 4px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">expand_more</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">remove</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder_open</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Đồ uống</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 24px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">expand_more</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">folder_open</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Nước suối</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 44px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">description</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:400">Nước khoáng</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 44px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">description</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:400">Nước có ga</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 24px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">chevron_right</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Nước ngọt</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 4px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">chevron_right</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Bánh kẹo</span></div><div style="padding:0 8px"><div style="display:flex;align-items:center;flex-wrap:nowrap;gap:16px;padding:10px 12px;margin:8px 0;border:1px solid #dfe2e7;border-radius:10px;background:#ffffff;position:relative">
+  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;line-height:20px;white-space:nowrap;"><span style="flex:0 0 28px;height:28px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">check_circle</span></span><span>Đã chọn 3 mục</span></div>
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;"><span style="height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">archive</span>Lưu trữ</span><span style="height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">drive_file_move</span>Chuyển</span><span style="height:32px;box-sizing:border-box;padding:0 8px 0 12px;border-radius:8px;background:#eef0f3;color:#44474f;display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:500">Thêm<span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">more_horiz</span></span><span style="width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#62676d"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">close</span></span></div>
+</div></div></div></div></div>
+    <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden;display:flex;flex-direction:column"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #dddcd6"><span style="font:600 11px/16px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Cây hẹp</span><span style="font:400 12px/16px 'JetBrains Mono',monospace;color:#6b6d73">≤ 600px · xuống dòng, nút xoá góc trên</span></div><div style="background:#f9f9f9;padding:20px;display:flex;justify-content:center;overflow-x:auto"><div style="width:320px;flex:none;background:#ffffff;border:1px solid #e3e4ea;border-radius:8px;font-family:Roboto,'Helvetica Neue',sans-serif;color:#102047;overflow:hidden"><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 4px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">expand_more</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">remove</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder_open</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Đồ uống</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 24px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">expand_more</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">folder_open</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Nước suối</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 44px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">description</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:400">Nước khoáng</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 44px;background:#e0ebf7"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;background:#005cbb;display:flex;align-items:center;justify-content:center;color:#ffffff;font-family:'Material Symbols Outlined';font-size:13px;line-height:13px;font-weight:700">check</span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#005cbb">description</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:400">Nước có ga</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 24px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">chevron_right</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Nước ngọt</span></div><div style="display:flex;align-items:flex-start;min-height:44px;box-sizing:border-box;padding:8px 4px 8px 4px;background:transparent"><span style="flex:0 0 28px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">chevron_right</span></span><span style="flex:0 0 28px;width:28px;height:28px;margin-right:4px;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:3px;border:2px solid #5f6368"></span></span><span style="flex:0 0 20px;min-height:28px;margin-right:8px;display:flex;align-items:center"><span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:20px;color:#5f6f89">folder</span></span><span style="flex:1;padding:4px 0;font-size:14px;line-height:20px;font-weight:600">Bánh kẹo</span></div><div style="padding:0 8px"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;margin:8px 0;border:1px solid #dfe2e7;border-radius:10px;background:#ffffff;position:relative">
+  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;line-height:20px;white-space:nowrap;padding-right:36px"><span style="flex:0 0 28px;height:28px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">check_circle</span></span><span>Đã chọn 3 mục</span></div>
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;width:100%"><span style="height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">archive</span>Lưu trữ</span><span style="height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;background:#dbe8f6;color:#005cbb;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;white-space:nowrap"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">drive_file_move</span>Chuyển</span><span style="position:absolute;top:4px;right:8px;width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#62676d"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:18px">close</span></span></div>
+</div></div></div></div></div>
+  </div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #ecebe6;font-weight:600">Thay đổi so với hiện tại</div>
+    <sc-for list="{{ barRules }}" as="k" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font-weight:500">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.v }}</span></div>
+    </sc-for>
+  </div>
+  <div style="font-size:12px;color:#6b6d73">Nút sd-button trong mock vẽ theo cỡ sm (32px) và kiểu light; khung thanh, ô icon, nút xoá theo selector-action.component.scss.</div>
+</section>
+
+<section id="api" data-screen-label="06 API và bàn phím" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">06</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">API và bàn phím</h2></div>
+  <pre style="margin:0;padding:20px 24px;background:#ffffff;border:1px solid #dddcd6;border-radius:12px;overflow-x:auto;font:400 13px/1.65 'JetBrains Mono',monospace;color:#1a1b1f">{{ apiCode }}</pre>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;background:#f9f9f7;font-size:12px;font-weight:600;color:#6b6d73;text-transform:uppercase;letter-spacing:.04em"><span>Phím</span><span>Hiện tại</span><span>navigation: true</span></div>
+    <sc-for list="{{ keys }}" as="k" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:10px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:500 13px/22px 'JetBrains Mono',monospace">{{ k.k }}</span><span style="color:#3a3c42;text-wrap:pretty">{{ k.a }}</span><span style="color:#1a1b1f;text-wrap:pretty">{{ k.b }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="chot" data-screen-label="07 Đã chốt" style="max-width:1240px;margin:0 auto;padding:72px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 13px 'JetBrains Mono',monospace;color:#6b6d73">07</span><h2 style="margin:0;font-weight:600;font-size:30px;line-height:1.2;letter-spacing:-0.01em">Đã chốt</h2></div>
+  <div style="border:1px solid #dddcd6;border-radius:12px;background:#ffffff;overflow:hidden">
+    <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,1.2fr);gap:16px;padding:16px 20px;border-top:1px solid #ecebe6;font-size:14px"><span style="font:600 13px/22px 'JetBrains Mono',monospace;color:#6b6d73">{{ d.n }}</span><strong style="font-weight:600;text-wrap:pretty">{{ d.q }}</strong><span style="color:#3a3c42;text-wrap:pretty"><span style="font:600 11px 'JetBrains Mono',monospace;color:#2e7d32;text-transform:uppercase;letter-spacing:.06em;margin-right:8px">Đã chốt</span>{{ d.a }}</span></div>
+    </sc-for>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.v = this.build(); }
+  renderVals() { return this.v; }
+  build() {
+    const PAD = l => (4 + l * 20) + 'px';
+    const SEL = '#e0ebf7', HOV = 'rgba(15,23,42,.04)', ACT = SEL;
+    const N = (l, o) => ({ pad: PAD(l), bg: 'transparent', outline: 'none', chev: '', spinD: 'none', cbD: 'none', cbR: '3px', cbBd: '2px solid #5f6368', cbBg: '#ffffff', cbGlyph: '', iconD: 'flex', icon: '', iconC: '#5f6f89', w: '400', fg: '#102047', pre: '', hit: '', post: '', markBg: 'transparent', count: '', toolsOp: 0, lines: [], branches: [], mD: 'none', m: '', ...o });
+    const branch = (o) => ({ chev: 'expand_more', icon: 'folder_open', w: '600', ...o });
+    const closed = (o) => ({ chev: 'chevron_right', icon: 'folder', w: '600', ...o });
+    const cb = (state) => state === 'on' ? { cbD: 'flex', cbBd: '0', cbBg: '#005cbb', cbGlyph: 'check' } : state === 'mixed' ? { cbD: 'flex', cbBd: '0', cbBg: '#005cbb', cbGlyph: 'remove' } : { cbD: 'flex' };
+    const lx = l => (4 + l * 20 + 14) + 'px';
+    const current = [
+      { tag: 'Cơ bản · static', meta: 'commands, defaultExpanded: 1', rows: [
+        N(0, branch({ pre: 'Đồ uống' })),
+        N(1, branch({ pre: 'Nước suối', outline: '2px solid #005cbb' })),
+        N(2, { icon: 'description', pre: 'Nước khoáng' }),
+        N(1, closed({ pre: 'Nước ngọt', bg: HOV, toolsOp: 1 })),
+        N(1, closed({ pre: 'Trà, cà phê' })),
+        N(0, closed({ pre: 'Bánh kẹo' })),
+      ], notes: ['Nhánh đậm 600, lá 400; nhánh không có icon thì dùng folder / folder_open, lá không có icon thì không vẽ.', 'Bấm vào tên chỉ đưa focus (vòng 2px bên trong); không có trạng thái “đang mở”.', '⋯ (more_vert 24×28) chỉ hiện khi rê chuột hoặc khi chính nút ⋯ có focus.'] },
+      { tag: 'Chọn nhiều · cascade', meta: 'selector.visible, cascade: descendants', rows: [
+        N(0, branch({ pre: 'Đồ uống', ...cb('mixed') })),
+        N(1, branch({ pre: 'Nước suối', bg: SEL, iconC: '#005cbb', ...cb('on') })),
+        N(2, { icon: 'description', iconC: '#005cbb', pre: 'Nước khoáng', bg: SEL, ...cb('on') }),
+        N(2, { icon: 'description', iconC: '#005cbb', pre: 'Nước có ga', bg: SEL, ...cb('on') }),
+        N(1, closed({ pre: 'Nước ngọt', ...cb('off') })),
+      ], notes: ['Hàng đã chọn: nền --sd-tree-selected-bg (primary 12%), icon primary. Nhánh chọn một phần: dấu gạch, aria-checked="mixed".', 'Enter, Space đổi lựa chọn. selector.single đổi checkbox sang radio.', 'Có selector.actions thì thanh sd-quick-action nổi trên trang với ô đếm, message và các nút. Đổi sang thanh trong khung như sd-table ở mục 05.'] },
+      { tag: 'Lazy · tải con', meta: 'loadType: lazy', rows: [
+        N(0, branch({ pre: 'Đồ uống' })),
+        N(1, { chev: '', spinD: 'block', icon: 'folder_open', w: '600', pre: 'Trà, cà phê' }),
+        N(1, closed({ pre: 'Nước ngọt' })),
+        N(0, { chev: 'refresh', icon: 'folder', w: '600', pre: 'Gia vị' }),
+        N(0, closed({ pre: 'Bánh kẹo' })),
+      ], notes: ['Đang tải con: spinner 16px thay chevron.', 'Tải con lỗi: icon refresh ở chỗ chevron, bấm để thử lại; aria-label retry-item. Không có chữ báo lỗi trên hàng.', 'filter() chỉ tìm trong các nút đã tải.'] },
+      { tag: 'showLines', meta: 'đường nối --sd-border', rows: [
+        N(0, branch({ pre: 'Đồ uống', lines: [{ x: lx(0), t: '30px', h: '14px' }] })),
+        N(1, branch({ pre: 'Nước suối', lines: [{ x: lx(0), t: '0', h: '44px' }, { x: lx(1), t: '30px', h: '14px' }], branches: [{ x: lx(0) }] })),
+        N(2, { icon: 'description', pre: 'Nước khoáng', lines: [{ x: lx(0), t: '0', h: '44px' }, { x: lx(1), t: '0', h: '22px' }], branches: [{ x: lx(1) }] }),
+        N(1, closed({ pre: 'Nước ngọt', lines: [{ x: lx(0), t: '0', h: '22px' }], branches: [{ x: lx(0) }] })),
+        N(0, closed({ pre: 'Bánh kẹo' })),
+      ], notes: ['Đường dọc 1px ở giữa ô chevron của từng cấp; nhánh ngang 12px ở tâm dòng đầu.', 'Kết thúc ở con cuối đang hiện; tự cập nhật khi lọc, đóng mở, tải con.'] },
+    ];
+
+    const roots = [
+      { tag: 'Hiện tại · đang tải gốc', dot: '#6b6d73', fg: '#102047', spinD: 'block', iconD: 'none', icon: '', iconC: '', text: '', btnD: 'none', btn: '', btnH: '0', btnPad: '0', btnBd: 'transparent', btnC: '', btnW: '400', v: 'Spinner 24px giữa khối cao tối thiểu 120px. Giữ.' },
+      { tag: 'Hiện tại · lỗi gốc', dot: '#6b6d73', fg: '#d92d20', spinD: 'none', iconD: 'none', icon: '', iconC: '', text: 'TypeError: Failed to fetch', btnD: 'inline-flex', btn: 'Thử lại', btnH: '36px', btnPad: '6px 12px', btnBd: 'currentColor', btnC: '#d92d20', btnW: '400', v: 'Hiện thẳng error.message (errorMessage()), cả khối màu lỗi, nút tự vẽ viền currentColor. Trái SC-16: không hiện nội dung exception.' },
+      { tag: 'Hiện tại · rỗng', dot: '#6b6d73', fg: '#5f6f89', spinD: 'none', iconD: 'none', icon: '', iconC: '', text: '(không có gì)', btnD: 'none', btn: '', btnH: '0', btnPad: '0', btnBd: 'transparent', btnC: '', btnW: '400', v: 'items rỗng hoặc filter() không khớp: role="tree" trống, không có chữ nào.' },
+      { tag: 'Mới · lỗi gốc', dot: '#005cbb', fg: '#1a1b1f', spinD: 'none', iconD: 'block', icon: 'error', iconC: '#d92d20', text: 'Không tải được danh sách.', btnD: 'inline-flex', btn: 'Thử lại', btnH: '32px', btnPad: '0 12px', btnBd: '#c9ccd1', btnC: '#1a1b1f', btnW: '500', v: 'Icon error 24px --sd-error, chữ load-error (i18n, không dùng error.message), nút sd-button outline sm. role="alert" giữ, phát loadError như cũ.' },
+      { tag: 'Mới · rỗng, không tìm thấy', dot: '#005cbb', fg: '#5f6f89', spinD: 'none', iconD: 'none', icon: '', iconC: '', text: 'Không tìm thấy mục khớp “suoi”.', btnD: 'none', btn: '', btnH: '0', btnPad: '0', btnBd: 'transparent', btnC: '', btnW: '400', v: 'Rỗng: empty (“Chưa có mục nào”). Lọc không khớp: no-match có từ khoá. Thay được bằng template sdTreeEmptyDef (context searching, text).' },
+    ];
+
+    const R = (l, o) => N(l, { iconD: 'flex', ...o });
+    const panes = [{ q: 'Tìm danh mục', qColor: '#5f6368', rows: [
+      R(0, branch({ pre: 'Đồ uống', count: '48' })),
+      R(1, branch({ pre: 'Nước suối', count: '12', bg: ACT, iconC: '#005cbb', toolsOp: 1, mD: 'inline-flex', m: 'R1' })),
+      R(2, { icon: 'description', pre: 'Nước khoáng', count: '4' }),
+      R(1, closed({ pre: 'Nước ngọt', count: '20', mD: 'inline-flex', m: 'R3' })),
+      R(1, { chev: '', spinD: 'block', icon: 'folder_open', w: '600', pre: 'Trà, cà phê', count: '16' }),
+      R(0, closed({ pre: 'Bánh kẹo', count: '31', outline: '2px solid #005cbb', toolsOp: 1, mD: 'inline-flex', m: 'R4' })),
+      R(0, { chev: 'refresh', icon: 'folder', w: '600', pre: 'Gia vị', count: '9' }),
+    ] }];
+    const products = [
+      { code: 'SP-0012', name: 'Nước suối 500ml', price: '5.500' },
+      { code: 'SP-0013', name: 'Nước suối 1,5L', price: '11.000' },
+      { code: 'SP-0021', name: 'Nước khoáng có ga 330ml', price: '9.500' },
+      { code: 'SP-0022', name: 'Nước suối thùng 24 chai', price: '120.000' },
+    ];
+    const changes = [
+      { k: 'R1', t: 'Nút đang mở', a: 'Bấm hàng chỉ focus; nền tô chỉ khi tick checkbox.', b: 'navigation: true thì bấm hàng (trừ chevron, checkbox, ⋯) hoặc Enter là mở nút: activeId, activeChange. Nền --sd-tree-selected-bg, icon primary. Checkbox không còn tô nền hàng.' },
+      { k: 'R2', t: 'Mở tới nút theo id', a: 'Không có.', b: 'reveal(id) và khi activeId đổi từ ngoài (URL): mở các nút cha, cuộn tới nút trong vùng cuộn của cây (scrollTop, không scrollIntoView). Lazy: onResolvePath(id) trả id từ gốc tới cha.' },
+      { k: 'R3', t: 'Số đếm', a: 'Không có; phải viết template.', b: 'item.count: 12/16 --sd-tree-muted, tabular-nums, đứng trước ⋯ (chỗ ⋯ luôn giữ nên số không nhảy). Đọc kèm nhãn: “Nước suối, 12”.' },
+      { k: 'R4', t: '⋯ dùng được bằng bàn phím', a: 'Chỉ hiện khi rê chuột hoặc khi nút ⋯ có focus.', b: 'Hiện ở nút đang mở, khi hàng có focus, và luôn hiện khi pointer: coarse. Shift+F10 hoặc phím Menu mở menu của hàng đang focus.' },
+      { k: 'R5', t: 'Thao tác theo id', a: 'reload() chỉ tải lại gốc; toggle() nhận node.', b: 'reloadNode(id), expand(id), collapse(id), focusNode(id). Thêm nút con: reloadNode(cha) → expand → activeId = nút mới.' },
+      { k: 'R6', t: 'Tìm trên server', a: 'filter() chỉ tìm nút đã tải, không tô phần khớp.', b: 'onSearch(text, signal) cho cây lazy trả nút khớp kèm đường đi. Kết quả giữ nút cha (chữ muted), tô phần khớp nền --sd-warning-container. Xoá tìm: về đúng các nút đang mở trước đó.' },
+      { k: 'R7', t: 'Giữ trạng thái mở', a: 'Trạng thái mở nằm trong component, mất khi rời trang.', b: 'expandedIds = model, hai chiều; consumer lưu được khi quay lại từ trang chi tiết.' },
+      { k: 'R8', t: 'Trạng thái gốc', a: 'Lỗi hiện error.message; rỗng không có chữ.', b: 'Mục 02: lỗi dùng i18n và sd-button; rỗng và không tìm thấy có chữ hoặc sdTreeEmptyDef. Áp cho mọi cây, không chỉ navigation.' },
+    ];
+
+    const S = (k, v, o) => ({ k, v, bg: 'transparent', outline: 'none', chev: 'chevron_right', spinD: 'none', cbD: 'none', icon: 'folder', iconC: '#5f6f89', w: '600', fg: '#102047', pre: 'Nước ngọt', hit: '', post: '', markBg: 'transparent', count: '20', toolsOp: 0, ...o });
+    const states = [
+      S('Mặc định', 'Như main, thêm số đếm.'),
+      S('Hover', 'Nền --sd-tree-hover-bg, hiện ⋯ (như main).', { bg: HOV, toolsOp: 1 }),
+      S('Đang mở (R1)', 'Nền selected-bg, icon primary, ⋯ luôn hiện, aria-selected="true".', { bg: ACT, iconC: '#005cbb', toolsOp: 1 }),
+      S('Focus (R4)', 'Vòng focus như main, thêm hiện ⋯.', { outline: '2px solid #005cbb', toolsOp: 1 }),
+      S('Đang mở + tick checkbox', 'Checkbox giữ trạng thái riêng; nền là của đang mở, không cộng thêm.', { bg: ACT, iconC: '#005cbb', toolsOp: 1, cbD: 'flex' }),
+      S('Đang tải con', 'Spinner thay chevron (như main), số đếm giữ.', { chev: '', spinD: 'block', icon: 'folder_open' }),
+      S('Khớp tìm kiếm (R6)', 'Phần khớp nền --sd-warning-container, bo 2px.', { w: '400', icon: 'description', chev: '', pre: 'Nước khoáng ', hit: 'suối', post: '', markBg: '#fbecd0', count: '2' }),
+      S('Nút cha giữ lại khi tìm', 'Chữ --sd-tree-muted, vẫn mở nút được.', { chev: 'expand_more', icon: 'folder_open', fg: '#5f6f89', pre: 'Đồ uống', count: '48' }),
+    ];
+
+    const barRules = [
+      { k: 'Vị trí', v: 'Hiện tại nổi trên trang (sd-quick-action không contained). Mới: trong host của sd-tree, sau các hàng, position: sticky; bottom: 0 trong vùng cuộn của cây, nền --sd-surface. Không che hàng cuối: cây chừa padding dưới bằng chiều cao thanh khi thanh mở.' },
+      { k: 'Message', v: 'Hiện tại: ô đếm nền primary 48px + message. Mới: ô icon 28px nền --sd-primary-light, icon --sd-primary, rồi một message như bảng (selector.message, không có thì core.component.tree.selected-count), role="status". Đổi luôn màu ô icon của bảng (đang là success) để hai nơi giống nhau.' },
+      { k: 'Nút', v: 'selector.actions giữ shape hiện có (icon, title, tooltip, color, type, fontSet, hidden, click). Vẽ bằng sd-button size sm, mặc định type light; chia nút trực tiếp và nút “Thêm” theo cùng quy tắc của bảng.' },
+      { k: 'Xoá chọn', v: 'Nút 32px (40px khi ≤ 600px, góc trên phải), aria-label clear-selection; giữ autoId components-tree-<autoId>-clear-selection.' },
+      { k: 'Điều kiện mở', v: 'Giữ: có mục được chọn và ít nhất một action không bị hidden. sd-tree-select (không có action) vẫn không có thanh.' },
+      { k: 'Hẹp', v: 'Theo bề rộng host < 600px (ResizeObserver, SC-32), không theo media query viewport như bảng đang làm.' },
+      { k: 'Dùng chung', v: 'Tách selector-action của bảng thành component nội bộ dùng chung (ví dụ ɵSdSelectionBar) để bảng và cây cùng một bản; bảng không đổi giao diện.' },
+    ];
+    const apiCode = [
+      "// Item",
+      "count?: number | null;                                  // R3",
+      "",
+      "// Option (SdTreeComponentOptionBase)",
+      "navigation?: boolean;                                   // R1, mặc định false",
+      "onActivate?: (event: { item: T; node: SdTreeNode<T> }) => void;",
+      "",
+      "// SdTreeLazyOption",
+      "onResolvePath?: (id: string, signal: AbortSignal) => Promise<readonly string[]>;              // R2",
+      "onSearch?: (text: string, signal: AbortSignal) => Promise<readonly { path: readonly SdTreeItemLazy<T>[] }[]>;  // R6",
+      "",
+      "// SdTree",
+      "readonly activeId = model<string | null>(null);                  // R1",
+      "readonly expandedIds = model<readonly string[] | undefined>();   // R7",
+      "readonly activeChange = output<{ item: T; node: SdTreeNode<T> }>();",
+      "reveal(id: string): Promise<boolean>;     // R2",
+      "reloadNode(id: string): Promise<void>;    // R5",
+      "expand(id: string): Promise<boolean>;",
+      "collapse(id: string): void;",
+      "focusNode(id: string): boolean;",
+      "",
+      "// Template",
+      "<ng-template sdTreeEmptyDef let-searching=\"searching\" let-text=\"text\">…</ng-template>   // R8",
+      "",
+      "// i18n mới: core.component.tree.empty, .no-match ({text}), .open-menu",
+    ].join('\n');
+    const keys = [
+      { k: 'Bấm hàng', a: 'Chỉ focus.', b: 'Mở nút (activeId, activeChange, onActivate). Bấm chevron chỉ mở hoặc đóng.' },
+      { k: 'Enter', a: 'Đổi lựa chọn checkbox.', b: 'Mở nút.' },
+      { k: 'Space', a: 'Đổi lựa chọn checkbox.', b: 'Đổi lựa chọn khi có selector; không có thì không làm gì.' },
+      { k: '↑ ↓ Home End', a: 'Chuyển focus.', b: 'Như hiện tại; không mở nút (đi qua nhiều nút không gọi API bên phải).' },
+      { k: '← →', a: 'Đóng, mở, sang cha, con.', b: 'Như hiện tại.' },
+      { k: 'Shift+F10, Menu', a: 'Không có.', b: 'Mở menu ⋯ của hàng đang focus; đóng thì focus về hàng.' },
+      { k: 'Gõ ký tự', a: 'Không có.', b: 'Không đổi (ô tìm do consumer đặt).' },
+    ];
+    const decisions = [
+      { n: 'Q1', q: 'activeId là model trên component hay field trong option?', a: 'Model, vì cần hai chiều với URL, giống selectedId của sd-calendar, sd-kanban. Ghi ngoại lệ trong sd-tree.md (đang khuyên chỉ dùng [option]).' },
+      { n: 'Q2', q: 'Khi navigation bật, checkbox có còn tô nền hàng không?', a: 'Không. Nền chỉ dành cho nút đang mở; checkbox tự thể hiện trạng thái chọn.' },
+      { n: 'Q3', q: 'aria-selected khi có cả checkbox và navigation', a: 'aria-selected cho nút đang mở, aria-checked cho checkbox (hiện đang đặt cả hai theo checkbox).' },
+      { n: 'Q4', q: 'Debounce cho onSearch', a: 'Theo cách quick search của sd-table, như câu đã chốt cho sd-kanban.' },
+      { n: 'Q5', q: 'Lỗi gốc dùng sd-button thay nút tự vẽ', a: 'Có, sd-button outline sm, cùng kiểu dòng lỗi của sd-kanban, sd-calendar.' },
+      { n: 'Q6', q: 'Thanh sd-quick-action khi chọn nhiều', a: 'Dùng thanh chọn trong khung như sd-table, tách selector-action thành component dùng chung (mục 05).' },
+      { n: 'Q7', q: 'Màu ô icon của thanh chọn', a: 'Primary (--sd-primary-light nền, --sd-primary icon) cho cả sd-tree và sd-table.' },
+      { n: 'Q8', q: 'Menu lệnh trên hàng và nút “Thêm” của thanh chọn', a: 'Đã là Action Popover (sd-button + sd-button-item) ở cả sd-tree (command của hàng) và sd-table (desktop-command, selector-action). Không đổi.' },
+    ];
+    return { barRules, current, roots, panes, products, changes, states, apiCode, keys, decisions };
+  }
+}
+</script>
+</body>
+</html>
