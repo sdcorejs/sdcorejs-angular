@@ -83,7 +83,8 @@ export class SdButton implements OnInit, OnDestroy {
   activateItem(item: SdButtonItem, event: Event): void {
     event.stopPropagation();
     if (item.disabled()) return;
-    this.popover.close(true);
+    // Mục bật/tắt giữ menu mở và focus ở mục, cả khi kích hoạt bằng Enter/Space.
+    if (item.checked() === undefined) this.popover.close(true);
     item.click.emit(event);
   }
 

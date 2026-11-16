@@ -103,7 +103,7 @@ export class SdActionPopover {
   }
 
   private items(): HTMLButtonElement[] {
-    return Array.from(this.#ref?.overlayElement.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]:not(:disabled)') ?? []);
+    return Array.from(this.#ref?.overlayElement.querySelectorAll<HTMLButtonElement>('button.sd-action-item:not(:disabled)') ?? []);
   }
 
   private focus(index: number): void {

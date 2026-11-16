@@ -2,10 +2,8 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
 import { SdSection } from '@sdcorejs/angular/components/section';
-import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -25,7 +23,6 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
   standalone: true,
   imports: [
     CommonModule,
-    MatCheckboxModule,
     SdSection,
     SdInput,
     SdInputNumber,
@@ -36,7 +33,6 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
     SdButton,
     SdButtonItem,
     FilterValuesPipe,
-    SdCheckbox,
     SdTranslatePipe,
   ],
 })

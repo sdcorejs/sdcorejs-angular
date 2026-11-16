@@ -22,7 +22,7 @@ const popover = (page: Page): Locator => page.locator('.cdk-overlay-container .s
 test.describe('sd-table external filter settings (MM-01)', () => {
   const T = 'components-table-external-filters';
 
-  test('the settings menu is an Action Popover: the mouse toggles fields and keeps it open, Escape closes it', async ({ page }) => {
+  test('the settings menu is an Action Popover of toggles: the mouse, Space and Enter keep it open, Escape closes it', async ({ page }) => {
     const root = await open(page, 'example-external-filters');
     const salary = root.locator(`.sd-external-filter-body [data-autoid*="${T}-external-salary"]`).first();
     await expect(salary).toBeVisible();
@@ -31,16 +31,30 @@ test.describe('sd-table external filter settings (MM-01)', () => {
     await trigger.click();
     const menu = popover(page);
     await expect(menu).toBeVisible();
-    await expect(menu.locator('.sd-action-item')).toHaveText(['Họ và tên', 'Phòng ban', 'Lương', 'Ngày vào làm']);
+    await expect(menu.locator('.sd-action-label')).toHaveText(['Họ và tên', 'Phòng ban', 'Lương', 'Ngày vào làm']);
 
-    const salaryBox = menu.locator(`[data-autoid="${T}-external-setting-salary"] .sd-external-filter-setting label`);
-    await salaryBox.click();
+    const entry = menu.locator(`[data-autoid="${T}-external-setting-salary"]`);
+    await expect(entry).toHaveRole('menuitemcheckbox');
+    // The check box is aria-hidden: the entry is named by its label only.
+    await expect(entry).toHaveAccessibleName('Lương');
+    await expect(entry).toHaveAttribute('aria-checked', 'true');
+
+    await entry.click();
+    await expect(salary).toBeHidden();
+    await expect(entry).toHaveAttribute('aria-checked', 'false');
+    await expect(menu).toBeVisible();
+
+    // R2 N3: the keyboard toggles without closing the menu, and focus stays on the entry.
+    await entry.focus();
+    await page.keyboard.press('Space');
+    await expect(salary).toBeVisible();
+    await expect(entry).toHaveAttribute('aria-checked', 'true');
+    await expect(entry).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(salary).toBeHidden();
     await expect(menu).toBeVisible();
-
-    await salaryBox.click();
+    await page.keyboard.press('Enter');
     await expect(salary).toBeVisible();
-    await expect(menu).toBeVisible();
 
     await page.keyboard.press('Escape');
     await expect(menu).toBeHidden();
