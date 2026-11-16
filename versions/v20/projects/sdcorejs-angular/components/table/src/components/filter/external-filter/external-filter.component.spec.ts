@@ -155,46 +155,46 @@ describe('ExternalFilterComponent — OOM regression (effect + startWith)', () =
       const items = Array.from(overlay().querySelectorAll<HTMLButtonElement>('.sd-action-item'));
       expect(items.map(entry => entry.getAttribute('data-autoid'))).toEqual(filters.map(entry => 't-external-setting-' + entry.field));
       expect(items.map(entry => entry.querySelector('.sd-action-label')?.textContent?.trim())).toEqual(['Name', 'Age', 'Birthday']);
-      for (const entry of filters) {
-        expect(item(entry.field).querySelector(`[data-autoid$="t-external-setting-${entry.field}-checkbox"]`))
-          .withContext(entry.field)
-          .not.toBeNull();
-      }
+      // Toggle entries (R2 N3): the state reaches assistive technology, with no input nested in the menu item.
+      expect(items.map(entry => entry.getAttribute('role'))).toEqual(['menuitemcheckbox', 'menuitemcheckbox', 'menuitemcheckbox']);
+      expect(items.map(entry => entry.getAttribute('aria-checked'))).toEqual(['true', 'true', 'false']);
+      expect(overlay().querySelector('.sd-action-item input, .sd-action-item sd-checkbox')).toBeNull();
       // A required field is always shown, so its entry is locked.
       expect(item('name').disabled).toBeTrue();
       expect(item('age').disabled).toBeFalse();
     });
 
-    it('MM-01 clicking a checkbox row toggles the field and keeps the menu open, like the old menu', () => {
+    it('MM-01 activating entries toggles each field once and keeps the menu open, like the old menu', () => {
       trigger().click();
       fixture.detectChanges();
 
-      item('birthday').querySelector<HTMLElement>('.sd-external-filter-setting')!.click();
+      // The mouse, Enter and Space all reach the item button as one click.
+      item('birthday').click();
       fixture.detectChanges();
       expect(component.inlineExternal()['birthday']).toBeTrue();
-      expect(configuration).toHaveBeenCalledWith({ inlineExternal: { name: true, age: true, birthday: true } });
+      expect(configuration).toHaveBeenCalledOnceWith({ inlineExternal: { name: true, age: true, birthday: true } });
       expect(overlay().querySelector('.sd-action-popover')).not.toBeNull();
-
-      item('age').querySelector<HTMLElement>('.sd-external-filter-setting')!.click();
-      fixture.detectChanges();
-      expect(component.inlineExternal()['age']).toBeFalse();
-      expect(fixture.nativeElement.querySelector('sd-input-number')).toBeNull();
+      expect(item('birthday').getAttribute('aria-checked')).toBe('true');
       expect(fixture.nativeElement.querySelector('sd-date')).not.toBeNull();
-    });
 
-    it('MM-01 activating an entry from the keyboard toggles once and closes; a required field never changes', () => {
-      trigger().click();
-      fixture.detectChanges();
-      // Enter / Space on a menu item reach the item button itself, not the checkbox row.
       item('age').click();
       fixture.detectChanges();
       expect(component.inlineExternal()['age']).toBeFalse();
-      expect(configuration).toHaveBeenCalledTimes(1);
-      expect(overlay().querySelector('.sd-action-popover')).toBeNull();
+      expect(configuration).toHaveBeenCalledTimes(2);
+      expect(overlay().querySelector('.sd-action-popover')).not.toBeNull();
+      expect(item('age').getAttribute('aria-checked')).toBe('false');
+      expect(fixture.nativeElement.querySelector('sd-input-number')).toBeNull();
+    });
 
+    it('MM-01 a required field never changes, from its locked entry or from the handler', () => {
+      trigger().click();
+      fixture.detectChanges();
+      item('name').click();
       component.onCheckboxChange(new Event('click'), filters[0]);
+      fixture.detectChanges();
       expect(component.inlineExternal()['name']).toBeTrue();
-      expect(configuration).toHaveBeenCalledTimes(1);
+      expect(configuration).not.toHaveBeenCalled();
+      expect(item('name').getAttribute('aria-checked')).toBe('true');
     });
   });
 

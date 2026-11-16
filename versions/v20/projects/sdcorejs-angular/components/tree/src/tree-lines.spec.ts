@@ -75,6 +75,19 @@ describe('SdTree hierarchy presentation', () => {
     fixture.destroy();
   });
 
+  it('RTL: the indent and the lines start from the right edge of the row', () => {
+    const fixture = setup(true);
+    fixture.nativeElement.setAttribute('dir', 'rtl');
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelectorAll('.sd-tree__row')[1] as HTMLElement;
+    expect(getComputedStyle(row).paddingRight).toBe('28px');
+    expect(getComputedStyle(row).paddingLeft).toBe('4px');
+    const rowBox = row.getBoundingClientRect();
+    const lineBox = row.querySelector('.sd-tree__line')!.getBoundingClientRect();
+    expect(rowBox.right - lineBox.right).toBeLessThan(rowBox.width / 2);
+    fixture.destroy();
+  });
+
   it('honors option precedence and draws lazy branches only after children load', async () => {
     const fixture = setup(true);
     fixture.componentRef.setInput('option', {

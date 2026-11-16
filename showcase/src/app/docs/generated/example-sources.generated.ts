@@ -18165,6 +18165,8 @@ export class TableMobileDataDemoComponent {
       ],
     },
     filter: {
+      // Sheet lọc chỉ sửa bản nháp: callback chạy một lần khi bấm Áp dụng, cho từng filter đã đổi.
+      operatorChange: (column, operator) => this.log.set(\`Toán tử của \${column?.title}: \${operator}\`),
       externalFilters: [
         { field: 'customer', type: 'string', title: 'Khách hàng' },
         {
@@ -18172,6 +18174,7 @@ export class TableMobileDataDemoComponent {
           type: 'values',
           title: 'Kênh bán',
           option: { items: CHANNELS, valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+          onChange: (value: string[] | null) => this.log.set(\`Kênh bán: \${value?.length ? value.join(', ') : 'tất cả'}\`),
         },
       ],
     },
@@ -19800,8 +19803,8 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
         width: 100%;
         max-width: 560px;
         padding: 12px;
-        background: #fbfcfe;
-        border: 1px solid #e5eaf1;
+        background: var(--sd-surface-variant, #fbfcfe);
+        border: 1px solid var(--sd-border, #e5eaf1);
         border-radius: 8px;
       }
 
@@ -19817,20 +19820,20 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
         gap: 8px;
         min-height: 120px;
         padding: 12px;
-        color: #102047;
-        background: #ffffff;
-        border: 1px solid #e5eaf1;
+        color: var(--sd-text, #102047);
+        background: var(--sd-surface, #ffffff);
+        border: 1px solid var(--sd-border, #e5eaf1);
         border-radius: 8px;
       }
 
       .tree-demo-state ul {
         margin: 0;
-        padding-left: 18px;
+        padding-inline-start: 18px;
       }
 
       .tree-demo-state small,
       .tree-demo-state span {
-        color: #60708a;
+        color: var(--sd-text-secondary, #60708a);
       }
 
       .tree-filter {
@@ -19846,18 +19849,18 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
         min-width: 0;
         height: 36px;
         padding: 0 10px;
-        color: #102047;
-        background: #ffffff;
-        border: 1px solid #cfd8e6;
+        color: var(--sd-text, #102047);
+        background: var(--sd-surface, #ffffff);
+        border: 1px solid var(--sd-border, #cfd8e6);
         border-radius: 6px;
       }
 
       .tree-filter button {
         height: 36px;
         padding: 0 12px;
-        color: #1f56d9;
-        background: #edf3ff;
-        border: 1px solid #cddcff;
+        color: var(--sd-primary, #1f56d9);
+        background: var(--sd-primary-light, #edf3ff);
+        border: 1px solid var(--sd-primary-light, #cddcff);
         border-radius: 6px;
         cursor: pointer;
       }
@@ -19902,9 +19905,9 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
       .tree-detail__main button {
         height: 36px;
         padding: 0 12px;
-        color: #1f56d9;
-        background: #edf3ff;
-        border: 1px solid #cddcff;
+        color: var(--sd-primary, #1f56d9);
+        background: var(--sd-primary-light, #edf3ff);
+        border: 1px solid var(--sd-primary-light, #cddcff);
         border-radius: 6px;
         cursor: pointer;
       }
@@ -19914,7 +19917,7 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
         min-width: 0;
         gap: 2px;
         padding: 0;
-        color: #102047;
+        color: var(--sd-text, #102047);
         text-align: left;
         background: transparent;
         border: 0;
@@ -19922,7 +19925,7 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
       }
 
       .tree-custom-item span {
-        color: #60708a;
+        color: var(--sd-text-secondary, #60708a);
         font-size: 11px;
         font-weight: 700;
       }
@@ -19937,7 +19940,7 @@ const TREE_DEMO_CATEGORIES: TreeDemoCategory[] = [
 
       .tree-custom-item small {
         overflow: hidden;
-        color: #60708a;
+        color: var(--sd-text-secondary, #60708a);
         font-size: 12px;
         line-height: 16px;
         text-overflow: ellipsis;
@@ -20289,8 +20292,8 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
   width: 100%;
   max-width: 560px;
   padding: 12px;
-  background: #fbfcfe;
-  border: 1px solid #e5eaf1;
+  background: var(--sd-surface-variant, #fbfcfe);
+  border: 1px solid var(--sd-border, #e5eaf1);
   border-radius: 8px;
 }
 
@@ -20306,20 +20309,20 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
   gap: 8px;
   min-height: 120px;
   padding: 12px;
-  color: #102047;
-  background: #ffffff;
-  border: 1px solid #e5eaf1;
+  color: var(--sd-text, #102047);
+  background: var(--sd-surface, #ffffff);
+  border: 1px solid var(--sd-border, #e5eaf1);
   border-radius: 8px;
 }
 
 .tree-demo-state ul {
   margin: 0;
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 
 .tree-demo-state small,
 .tree-demo-state span {
-  color: #60708a;
+  color: var(--sd-text-secondary, #60708a);
 }
 
 .tree-filter {
@@ -20335,18 +20338,18 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
   min-width: 0;
   height: 36px;
   padding: 0 10px;
-  color: #102047;
-  background: #ffffff;
-  border: 1px solid #cfd8e6;
+  color: var(--sd-text, #102047);
+  background: var(--sd-surface, #ffffff);
+  border: 1px solid var(--sd-border, #cfd8e6);
   border-radius: 6px;
 }
 
 .tree-filter button {
   height: 36px;
   padding: 0 12px;
-  color: #1f56d9;
-  background: #edf3ff;
-  border: 1px solid #cddcff;
+  color: var(--sd-primary, #1f56d9);
+  background: var(--sd-primary-light, #edf3ff);
+  border: 1px solid var(--sd-primary-light, #cddcff);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -20391,9 +20394,9 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
 .tree-detail__main button {
   height: 36px;
   padding: 0 12px;
-  color: #1f56d9;
-  background: #edf3ff;
-  border: 1px solid #cddcff;
+  color: var(--sd-primary, #1f56d9);
+  background: var(--sd-primary-light, #edf3ff);
+  border: 1px solid var(--sd-primary-light, #cddcff);
   border-radius: 6px;
   cursor: pointer;
 }
@@ -20403,7 +20406,7 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
   min-width: 0;
   gap: 2px;
   padding: 0;
-  color: #102047;
+  color: var(--sd-text, #102047);
   text-align: left;
   background: transparent;
   border: 0;
@@ -20411,7 +20414,7 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
 }
 
 .tree-custom-item span {
-  color: #60708a;
+  color: var(--sd-text-secondary, #60708a);
   font-size: 11px;
   font-weight: 700;
 }
@@ -20426,7 +20429,7 @@ function lazyTreeItem(data: TreeDemoItem, hasChildren?: boolean, icon?: string):
 
 .tree-custom-item small {
   overflow: hidden;
-  color: #60708a;
+  color: var(--sd-text-secondary, #60708a);
   font-size: 12px;
   line-height: 16px;
   text-overflow: ellipsis;

@@ -109,6 +109,51 @@ describe('SdTree navigation (R1, R3, R4)', () => {
     expect(row('a').hasAttribute('aria-checked')).toBeFalse();
   });
 
+  for (const navigation of [false, true]) {
+    it(`TR-01 navigation ${navigation ? 'on' : 'off'}: arrows, Home and End move focus without opening; → and ← open, enter, close and leave`, async () => {
+      await setup({ navigation });
+      const component = fixture.componentInstance;
+      const focused = () => document.activeElement?.getAttribute('data-tree-node');
+      row('a').focus();
+
+      key('a', { key: 'ArrowDown' });
+      expect(focused()).toBe('a1');
+      key('a1', { key: 'End' });
+      expect(focused()).toBe('b1');
+      key('b1', { key: 'ArrowUp' });
+      expect(focused()).toBe('b');
+      key('b', { key: 'Home' });
+      expect(focused()).toBe('a');
+
+      // ← closes an open node; on a closed root it is left to the page.
+      expect(key('a', { key: 'ArrowLeft' }).defaultPrevented).toBeTrue();
+      await settle();
+      expect(row('a').getAttribute('aria-expanded')).toBe('false');
+      expect(key('a', { key: 'ArrowLeft' }).defaultPrevented).toBeFalse();
+
+      // → opens a closed node, then moves to its first child; on a leaf it is left to the page.
+      key('a', { key: 'ArrowRight' });
+      await settle();
+      expect(row('a').getAttribute('aria-expanded')).toBe('true');
+      key('a', { key: 'ArrowRight' });
+      expect(focused()).toBe('a1');
+      expect(key('a1', { key: 'ArrowRight' }).defaultPrevented).toBeFalse();
+      // ← on a child goes back to its parent.
+      key('a1', { key: 'ArrowLeft' });
+      expect(focused()).toBe('a');
+
+      // A key pressed on a control inside the row belongs to that control.
+      const toggle = part('toggle', 'a');
+      toggle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(focused()).toBe('a');
+
+      // Moving focus never opens a node.
+      expect(component.activeId()).toBeNull();
+      expect(component.activeEvents).toEqual([]);
+    });
+  }
+
   it('TR-02 navigation on: a row click activates the node and emits activeChange and onActivate', async () => {
     await setup();
     const component = fixture.componentInstance;

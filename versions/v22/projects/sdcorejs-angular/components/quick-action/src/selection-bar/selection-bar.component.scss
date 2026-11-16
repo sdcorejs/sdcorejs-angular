@@ -89,8 +89,9 @@
     width: 100%;
     gap: 6px;
   }
+  // Cạnh logic: × nằm ở cuối dòng, tức góc trên trái khi RTL.
   .sd-selection-message {
-    padding-right: 36px;
+    padding-inline-end: 36px;
   }
   .sd-selection-actions sd-button {
     flex: 1 1 auto;
@@ -102,7 +103,7 @@
   .sd-selection-clear {
     position: absolute;
     top: 4px;
-    right: 8px;
+    inset-inline-end: 8px;
     width: 40px;
     flex-basis: 40px;
     height: 40px;

@@ -242,10 +242,23 @@ Có ít nhất một `sd-button-item` thì button tự mở Action Popover bằn
 | prefixIcon / suffixIcon | string nullable | SdIcon renderer hiện có, icon trái/phải |
 | fontSet | SdIconSet, default provider | Hỗ trợ provider/registry hiện có, gồm Material và Lucide |
 | disabled | boolean, false | Không chạy và bỏ qua khi điều hướng bàn phím |
+| checked | boolean nullable, undefined | `true`/`false`: mục bật/tắt (`menuitemcheckbox`, `aria-checked`, ô chọn ở đầu mục), kích hoạt không đóng menu. `null`/`undefined`: mục lệnh thường |
 | tooltip | string nullable | Tooltip Material hiện có |
 | autoId | string nullable | Giá trị data-autoid trên native menuitem, giữ nguyên chuỗi |
-| click | Event output | Phát một lần sau khi popover đóng |
+| click | Event output | Phát một lần sau khi popover đóng; mục có `checked` phát khi menu vẫn mở |
 | projected content | nội dung trình bày | Label menuitem |
+
+### Mục bật/tắt (`checked`)
+
+Menu chọn nhiều giá trị (ẩn/hiện cột, bật/tắt field) dùng `checked`. Mục thành `menuitemcheckbox` có `aria-checked`, ô chọn đứng trước `prefixIcon`: màu muted khi tắt, primary khi bật (`color` của mục thắng nếu có). Chuột, Enter và Space đều phát `click` mà không đóng menu; focus ở lại mục. Consumer tự đổi giá trị trong `click`, như mọi input khác. Escape, Tab hay bấm ra ngoài đóng menu. Không lồng `sd-checkbox` hay input khác trong label.
+
+```html
+<sd-button type="text" prefixIcon="settings" tooltip="Tuỳ chỉnh">
+  @for (field of fields(); track field.key) {
+    <sd-button-item [checked]="visible()[field.key]" [disabled]="field.required" (click)="toggle(field)">{{ field.title }}</sd-button-item>
+  }
+</sd-button>
+```
 
 Divider có `title` tùy chọn để đặt heading cho nhóm; không focus/click. Item và divider là definitions, các native menuitem chỉ xuất hiện trong overlay. Các khối @if/@for cập nhật tự động; khi không còn item thì đóng popover và trở về button thường. Không thêm API visible/permission/loading; dùng điều kiện Angular và disabled.
 

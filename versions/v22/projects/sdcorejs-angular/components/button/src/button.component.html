@@ -188,16 +188,22 @@
         @let _entryColor = entry.color();
         @let _entryDisabled = entry.disabled();
         @let _entryFontSet = entry.fontSet();
+        @let _checked = entry.checked();
         <button
           type="button"
-          role="menuitem"
+          [attr.role]="_checked === undefined ? 'menuitem' : 'menuitemcheckbox'"
+          [attr.aria-checked]="_checked === undefined ? null : _checked"
           class="sd-action-item"
+          [class.sd-action-item--checked]="_checked === true"
           [disabled]="_entryDisabled"
           [attr.aria-disabled]="_entryDisabled"
           [attr.data-autoid]="entry.autoId()"
           [style.--sd-action-accent]="_entryColor ? 'var(--sd-' + _entryColor + ')' : null"
           [matTooltip]="entry.tooltip() || ''"
           (click)="activateItem(entry, $event)">
+          @if (_checked !== undefined) {
+            <sd-icon class="sd-action-check" [name]="_checked ? 'check_box' : 'check_box_outline_blank'" aria-hidden="true" />
+          }
           @if (_prefix) {
             <sd-icon [name]="_prefix" [fontSet]="_entryFontSet" />
           }

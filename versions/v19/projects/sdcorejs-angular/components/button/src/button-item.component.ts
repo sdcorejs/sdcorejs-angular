@@ -31,6 +31,12 @@ export class SdButtonItem {
   readonly suffixIcon = input<string | undefined | null>();
   readonly fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, { transform: value => value ?? undefined });
   readonly disabled = input(false, { transform: booleanAttribute });
+  /**
+   * Bật/tắt: `true`/`false` biến mục thành `menuitemcheckbox` có `aria-checked` và ô chọn ở đầu mục; kích hoạt bằng
+   * chuột, Enter hay Space phát `click` mà không đóng menu, để bật tắt nhiều mục liền nhau. `null`/`undefined` (mặc
+   * định): mục lệnh thường, đóng menu rồi mới phát `click`.
+   */
+  readonly checked = input<boolean | undefined, boolean | undefined | null>(undefined, { transform: value => value ?? undefined });
   readonly tooltip = input<string | undefined | null>();
   readonly autoId = input<string | undefined | null>();
   readonly click = output<Event>();
