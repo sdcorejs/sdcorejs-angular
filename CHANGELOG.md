@@ -35,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 > [!IMPORTANT]
-> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`; `@sdcorejs/angular/services/confirm` no longer exports `DialogConfirmComponent` and `DialogData` — open confirm prompts through `SdConfirmService`.
+> **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`; `@sdcorejs/angular/services/confirm` no longer exports `DialogConfirmComponent` and `DialogData` — open confirm prompts through `SdConfirmService`; an `sd-tree` selection action without `color` is now `secondary` (was `primary`), and from the third action on it is an entry of "More" with a new `data-autoid`; the external filter settings menu of `sd-table` no longer has the `…-external-setting-menu` and `…-external-setting-<field>-checkbox` autoIds — its entries are `menuitemcheckbox` items.
 
 **Highlights**
 
@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `sd-scheduler` (`@sdcorejs/angular/components/scheduler`): resource rows (rooms, vehicles, people) in day, week and month views, collapsible groups, create by sweeping a row, and move on two axes with `droppable` and `axis` through the same `onMove` pipeline as `sd-calendar`
 - `sd-kanban` new API: cards as `SdKanbanCard<T>`, a data source per column with cursor paging, totals and summaries, `droppable` checked while dragging, card selection and dragging by the whole card
 - `sd-query-bar`: one panel frame (the `sd-button` Action Popover) for the field picker, the chip popover and saved filters instead of `mat-menu`; saved filters with Undo and empty / error states; required fields always keep a chip and a value; an **Add condition** box in inline mode; `sd-table` saves its query-bar filters with `filter.queryBar.savedFilters`
+- `sd-tree` navigation mode for tree-detail screens: an open node (`activeId`) revealed from the URL, server search with `tree.onSearch`, counts on items, keyboard access to row commands, and the selection bar of `sd-table`
 
 ### Changed (BREAKING for consumers)
 
@@ -157,6 +158,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Query-bar mode with `queryBar.editor: 'popover'`: the header filter icon announces `aria-haspopup="dialog"` (was `menu`), since the chip popover is a dialog.
   - **Migration:** E2E selectors that match `aria-haspopup="menu"` on the header icon must match `dialog`.
+- The settings menu of the external filters is an `sd-button` Action Popover of toggle entries (see Changed). The autoId of the entries (`…-external-setting-<field>`) is kept, now on a `button[role="menuitemcheckbox"]` with `aria-checked`; the `…-external-setting-menu` autoId of the old `mat-menu` element and the `…-external-setting-<field>-checkbox` autoId of the `sd-checkbox` inside each entry are gone.
+  - **Migration:** open the menu with the settings button, then click the entry and read `aria-checked` instead of the checkbox.
+
+    ```diff
+    - page.locator('[data-autoid="orders-external-setting-salary-checkbox"] input').check()
+    + page.locator('[data-autoid="orders-external-setting-salary"]').click()
+    + await expect(page.locator('[data-autoid="orders-external-setting-salary"]')).toHaveAttribute('aria-checked', 'true')
+    ```
 
 #### Tab router
 
@@ -176,11 +185,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     + { path: 'orders/detail/:id', component: OrderDetailPage } // one tab per order
     ```
 
+#### Tree
+
+- An action of the selection bar without `color` follows `sd-button` and is `secondary`, as in `sd-table`; it was `primary`.
+  - **Migration:** set `color: 'primary'` on the actions that must stay primary.
+
+    ```diff
+    - { icon: 'drive_file_move', title: 'Chuyển', click: move }
+    + { icon: 'drive_file_move', title: 'Chuyển', color: 'primary', click: move }
+    ```
+
+- Up to two selection actions are buttons; from the third action on, an action is an entry of "More". Its `data-autoid` is `components-tree-<autoId>-selection-action-<index>` (it was `components-button-components-tree-<autoId>-selection-action-<index>`), on a menu item that exists only while the menu is open. The first two actions and the clear button keep their autoIds.
+  - **Migration:** E2E tests open "More" first, then match the entry without the `components-button-` prefix.
+
 ### Added
 
 #### Anchor
 
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
+
+#### Button
+
+- `checked` on `sd-button-item` (`boolean | null | undefined`, default `undefined`): `true` / `false` makes the entry a toggle — `role="menuitemcheckbox"` with `aria-checked`, a check box before the label (muted when off, primary when on) — and the mouse, Enter and Space emit `click` without closing the menu, with focus kept on the entry. `null` / `undefined` keeps a plain `menuitem`.
 
 #### Calendar
 
@@ -339,7 +365,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Table
 
 - The icon cell of the selection bar uses the primary colours (`--sd-primary-light` / `--sd-primary`) instead of success. The bar now stacks below 600px of its own width instead of below a 600px viewport, so a table in a narrow column or drawer also gets the stacked layout.
-- The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`. Entries, their order and their autoIds are kept (the `…-external-setting-menu` autoId of the old `mat-menu` element is gone); the operator in use has a check. In the settings menu, clicking a checkbox keeps the menu open as before, while activating an entry with the keyboard toggles it and closes the menu. The operator trigger keeps its `data-autoid`, now on the `sd-button` host.
+- The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`, with the same entries in the same order; the operator in use has a check. The settings menu uses toggle entries (`checked`): each one shows a check box, says whether its field is shown through `aria-checked`, and the mouse, Enter and Space toggle it without closing the menu, as the old menu did. Its autoIds are listed under Changed (BREAKING). The operator trigger keeps its `data-autoid`, now on the `sd-button` host, so the old selector still matches.
 - Query-bar mode: the clear button keeps the values of `required` quick filters and external filters (hidden ones included), like `SdQueryBar.clearAll()`, and is no longer enabled by required values alone. The search box of the bar is `sd-search-field`.
 
 #### Theme
@@ -357,7 +383,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Tree
 
 - The root error state no longer shows `error.message`: it shows `core.component.tree.load-error` (now "The list couldn't be loaded.") with an error icon and an `sd-button` Retry. Read the error from `loadError` or `rootError()`.
-- The selection bar is the bar of `sd-table` and sits inside the tree host, sticky at the bottom of the nearest scroll area, instead of a floating `sd-quick-action`. Up to two actions are buttons and the rest go under "More"; an action without `color` follows `sd-button` (it was `primary`). The classes `.c-bg-length`, `.c-length`, `.c-message` and `.sd-tree__qa-*` are gone. The autoIds of the first two actions and of the clear button are unchanged; from the third action on, an action is an entry of "More" with `data-autoid="components-tree-<autoId>-selection-action-<index>"` (no `components-button-` prefix, present only while the menu is open).
+- The selection bar is the bar of `sd-table` and sits inside the tree host, sticky at the bottom of the nearest scroll area, instead of a floating `sd-quick-action`; the host grows by the height of the bar, so the last row is not covered. Up to two actions are buttons and the rest go under "More" (colour and autoIds under Changed (BREAKING)). The classes `.c-bg-length`, `.c-length`, `.c-message` and `.sd-tree__qa-*` are gone.
 
 ### Deprecated
 

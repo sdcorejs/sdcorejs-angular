@@ -332,7 +332,12 @@ It resolves `false` when the node is not found, when a newer `reveal` or a row c
 fails; a failed ancestor shows its usual error state and `loadError` fires.
 
 Setting `activeId` from outside (not by the user clicking) calls `reveal` for you; a newer change aborts the one in
-flight. A page that scrolls with the document, not with a container, is not scrolled.
+flight.
+
+**Give the tree a scroll area of its own** when `reveal` or `activeId` must bring a node into view: a height or
+`max-height` with `overflow: auto` on the `sd-tree` host or on a wrapper. A tree in a page that scrolls with the
+document is not scrolled — the tree never calls `scrollIntoView` or `window.scrollTo`. The sticky selection bar
+uses the same scroll area.
 
 ### Operations by id
 
@@ -416,8 +421,8 @@ sets `type`; `color` follows `sd-button` when the action does not set it.
 
 The bar sits **inside the tree host**, after the rows, with `position: sticky; bottom: 0` in the nearest scroll
 area. It is part of the flow, so the host grows by the height of the bar and the last row is never covered. Below
-600px of its own width (not of the viewport) the bar stacks: full-width 40px buttons and the `×` in the top right
-corner.
+600px of its own width (not of the viewport) the bar stacks: full-width 40px buttons and the `×` in the top corner
+at the inline end (top right, top left in RTL).
 
 It opens only when **both** conditions hold — something is selected **and** at least one action survives the `hidden` predicates:
 
