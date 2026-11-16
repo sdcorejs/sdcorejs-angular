@@ -375,6 +375,43 @@ describe('SdTree reveal, node operations, expandedIds (R2, R5, R7)', () => {
       expect(visibleIds()).toEqual(before);
     });
 
+    it('TR-08 expand while the node is loading waits for that load instead of calling onExpandChildren again', async () => {
+      await setup('lazy');
+      const slow = deferred<SdTreeItemLazy<Category>[]>();
+      component.expandChildren.and.returnValue(slow.promise);
+      const first = tree.expand('r1');
+      const second = tree.expand('r1');
+      slow.resolve(LAZY_CHILDREN['r1']);
+
+      expect(await first).toBeTrue();
+      expect(await second).toBeTrue();
+      await settle();
+      expect(component.expandChildren).toHaveBeenCalledTimes(1);
+      expect(visibleIds()).toEqual(['r1', 'c1', 'c2', 'r2']);
+    });
+
+    it('TR-08 a child load that settles after reload() leaves the new tree closed and silent', async () => {
+      await setup('lazy');
+      const late = deferred<SdTreeItemLazy<Category>[]>();
+      const failing = deferred<SdTreeItemLazy<Category>[]>();
+      component.expandChildren.and.callFake((item: SdTreeItemLazy<Category>) => (item.id === 'r1' ? late.promise : failing.promise));
+      const opening = tree.expand('r1');
+      const failingOpen = tree.expand('r2');
+
+      tree.reload();
+      fixture.detectChanges();
+      late.resolve(LAZY_CHILDREN['r1']);
+      failing.reject(new Error('late'));
+
+      expect(await opening).toBeFalse();
+      expect(await failingOpen).toBeFalse();
+      await settle();
+      expect(visibleIds()).toEqual(['r1', 'r2']);
+      expect(row('r1')!.getAttribute('aria-expanded')).toBe('false');
+      expect(row('r2')!.querySelector('[data-tree-node-retry]')).toBeNull();
+      expect(component.errors).toEqual([]);
+    });
+
     it('TR-08 focusNode moves the roving tabindex and focus to a visible node only', async () => {
       await setup();
       expect(tree.focusNode('r4')).toBeTrue();

@@ -288,7 +288,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The row command trigger shows on focus, on the open node and always on touch screens; Shift+F10 or the ContextMenu key opens the menu of the focused row in navigation mode, and closing it returns focus to the row. i18n key `core.component.tree.open-menu`.
 - `tree.onSearch` (lazy): `filter(text)` searches on the server (300ms debounce, the previous request is aborted) and shows the merged result paths in place of the tree, with nodes that are only on the way to a match muted. Clearing the text restores the previous open state. Selection made before or during the search is kept.
 - The matching part of a label is highlighted while filtering, in static and lazy trees.
-- Root states: an empty tree shows `core.component.tree.empty`, a search without a match shows `core.component.tree.no-match`; `sdTreeEmptyDef` (`SdTreeEmptyDefDirective`) replaces both with a template that receives `{ searching, text }`.
+- Root states: an empty tree shows `core.component.tree.empty`, a search without a match shows `core.component.tree.no-match`, both inside `role="status"` (with `aria-busy` while the next server search runs); `sdTreeEmptyDef` (`SdTreeEmptyDefDirective`) replaces both with a template that receives `{ searching, text }`.
 
 #### General
 
@@ -376,6 +376,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Tree
 
 - `SdTree.errorMessage()`: the tree no longer uses it for its own UI.
+- `SdTree.selectionActionViews()`, `SdTree.clearSelectionAutoId()` and the `SdTreeSelectionActionView` type: the selection bar builds the autoIds of its buttons itself and the tree no longer reads them. Use `visibleSelectionActions()` for the actions left after `hidden`.
 
 ### Removed
 
@@ -410,6 +411,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - On the phone, the filter sheet and the one-filter chip sheet wrote their copy straight to the filter register on **Áp dụng**, so column `filter.onChange`, `filter.operatorChange` and external `onChange` never ran there. They now run after the write, once per filter whose value changed, like the query bar. Closing without applying calls nothing, an untouched `default` is not a change, external `custom` filters are skipped, and a `time` column edited through the column filter is not called twice.
 - The copy is no longer made with `JSON`, so `Date` values in the filters (including `Date` defaults) stay `Date`s instead of turning into ISO strings after **Áp dụng**. Details in `sd-table.md` ("Callbacks on the phone").
+- RTL: in the narrow selection bar (also used by `sd-tree`) the × sat in the start corner, next to the icon cell. It now sits at the inline end, and the message keeps its room on that side.
+
+#### Tree
+
+- RTL: child rows were not indented, because the indent was a left padding. The indent, the lines of `showLines`, the count and the row command trigger now use logical sides.
+- ← on a leaf did not move to its parent when the leaf counted as open (`defaultExpanded: true`, or `expanded: true` on the item): it tried to close the leaf. A leaf is never open for ← now.
+- Lazy trees: a child load still running when the tree reloads (`reload()`, new `items`) no longer opens the node of the new tree with no children once it ends. The chevron does nothing and `expand(id)` resolves `false`; open the node again to load it.
 
 ## [3.5] - 2026-11-05
 

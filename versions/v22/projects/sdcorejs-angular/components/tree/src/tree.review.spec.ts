@@ -211,4 +211,80 @@ describe('SdTree review fixes (TR-B)', () => {
     jasmine.clock().tick(1);
     expect(component.search).toHaveBeenCalledTimes(1);
   });
+
+  it('TR-B-08 nodes seen in search results are kept only while they are selected (R2 G5)', async () => {
+    await setup(hostComponent => hostComponent.withSelector());
+    const selectFromOutside = async (items: Category[]) => {
+      component.selected.set(items);
+      component.withSelector();
+      await settle();
+    };
+    await searchFor('g');
+    await tick('g1');
+
+    // The next results no longer hold g1: the ticked node stays, the nodes only seen (r1, c1) are dropped.
+    component.search.and.returnValue(Promise.resolve([{ path: [lazy('r2', false)] }]));
+    await searchFor('r');
+    await searchFor('');
+    expect(ids(tree.selectedItems())).toEqual(['g1']);
+
+    tree.reload();
+    await settle();
+    expect(ids(tree.selectedItems())).toEqual(['g1']);
+
+    // c1 was seen but never ticked: like any node that is not loaded, selecting it from outside does not resolve.
+    await selectFromOutside([{ id: 'c1' }, { id: 'g1' }]);
+    expect(ids(tree.selectedItems())).toEqual(['g1']);
+
+    tree.clearSelection();
+    await settle();
+    tree.reload();
+    await settle();
+    await selectFromOutside([{ id: 'g1' }]);
+    expect(tree.selectedItems()).toEqual([]);
+  });
+
+  it('TR-B-09 the empty block is a status region and is busy while the next server search runs (R2 G6)', async () => {
+    await setup();
+    component.search.and.returnValue(Promise.resolve([]));
+    await searchFor('zz');
+    const empty = () => host.querySelector<HTMLElement>('.sd-tree__root-empty');
+    expect(empty()!.getAttribute('role')).toBe('status');
+    expect(empty()!.hasAttribute('aria-busy')).toBeFalse();
+
+    tree.filter('zzz');
+    await settle();
+    expect(empty()!.getAttribute('aria-busy')).toBe('true');
+
+    jasmine.clock().tick(DEBOUNCE_MS);
+    await settle();
+    expect(empty()!.hasAttribute('aria-busy')).toBeFalse();
+  });
+
+  it('TR-B-10 the deprecated selectionActionViews and clearSelectionAutoId keep their values (R2 G7)', async () => {
+    await setup();
+    const click = jasmine.createSpy('click');
+    component.option.set({
+      ...component.base,
+      selector: {
+        visible: true,
+        actions: [
+          { title: 'A', click },
+          { title: 'B', click, hidden: true },
+          { title: 'C', click },
+        ],
+      },
+    });
+    await settle();
+    expect(tree.selectionActionViews().map(view => [view.action.title, view.autoId])).toEqual([
+      ['A', 'components-tree-rb-selection-action-0'],
+      ['C', 'components-tree-rb-selection-action-1'],
+    ]);
+    expect(tree.clearSelectionAutoId()).toBe('components-tree-rb-clear-selection');
+
+    component.option.set({ ...component.base, autoId: null, selector: { visible: true, actions: [{ title: 'A', click }] } });
+    await settle();
+    expect(tree.selectionActionViews().map(view => view.autoId)).toEqual([null]);
+    expect(tree.clearSelectionAutoId()).toBeNull();
+  });
 });

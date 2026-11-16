@@ -372,8 +372,8 @@ does not tick ancestors, because the results do not show all of their children.
 | --- | --- |
 | Loading | A 24px spinner in a block of at least 120px. |
 | Error | An `error` icon, the text `core.component.tree.load-error` and an outline `sd-button` "Retry", inside `role="alert"`. The message of the thrown error is **never** shown; read it from `loadError` or `rootError()`. |
-| Empty | `core.component.tree.empty`, centred and muted. |
-| No match | `core.component.tree.no-match` with the text being searched. |
+| Empty | `core.component.tree.empty`, centred and muted, inside `role="status"`. |
+| No match | `core.component.tree.no-match` with the text being searched, inside `role="status"`. While the next server search is pending the block carries `aria-busy="true"`. |
 
 Replace the empty and no-match texts with a template:
 
@@ -403,6 +403,10 @@ tree.searchPending(); // Signal<boolean> — a server search is waiting or runni
 
 `errorMessage(error)` is deprecated: the root error state no longer shows the message of the thrown error.
 
+`selectionActionViews()`, `clearSelectionAutoId()` and the `SdTreeSelectionActionView` type are deprecated: the
+selection bar builds the autoIds of its buttons itself, and the tree template no longer reads them. Use
+`visibleSelectionActions()` for the actions that survive `hidden`.
+
 ## Selection bar
 
 When rows are selected the tree shows the same selection bar as `sd-table`: a framed bar with a primary icon cell,
@@ -418,7 +422,7 @@ corner.
 It opens only when **both** conditions hold — something is selected **and** at least one action survives the `hidden` predicates:
 
 ```ts
-selectionQuickActionOpened(); // selectedCount() > 0 && selectionActionViews().length > 0
+selectionQuickActionOpened(); // selectedCount() > 0 && visibleSelectionActions().length > 0
 ```
 
 A selector with no actions therefore keeps the bar closed. Such a bar would only restate what the checkboxes already show, with `×` as its single control; deselect through the checkboxes instead. This is what keeps the bar out of `<sd-tree-select>`, whose embedded tree declares no actions and whose Apply/Cancel already live in the modal footer.

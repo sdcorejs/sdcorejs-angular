@@ -22,7 +22,9 @@
     <sd-button data-tree-retry type="outline" size="sm" [title]="'core.component.tree.retry' | sdTranslate" (click)="retry()" />
   </div>
 } @else if (_emptyState) {
-  <div class="sd-tree__root-empty">
+  <!-- why: khối này thay chỗ `role="tree"`, nên nó phải tự đọc được (status) và tự mang `aria-busy` của lần tìm trên
+       server đang chờ — nếu không, chữ "không khớp" cũ được đọc như kết quả của lần gõ mới. -->
+  <div class="sd-tree__root-empty" role="status" [attr.aria-busy]="searchPending() || null">
     @if (_emptyDef) {
       <ng-container *ngTemplateOutlet="_emptyDef.templateRef; context: _emptyState" />
     } @else if (_emptyState.searching) {

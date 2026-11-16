@@ -28,6 +28,11 @@ class FakeResizeObserver {
   emit(width: number): void {
     this.callback([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver);
   }
+
+  /** Lần báo không kèm entry nào. */
+  emitNone(): void {
+    this.callback([], this as unknown as ResizeObserver);
+  }
 }
 
 @Component({
@@ -49,7 +54,7 @@ class BarHostComponent {
   readonly message = signal('Đã chọn 2 mục');
   readonly autoId = signal<string | null>('components-table-orders');
   readonly prefix = signal('action');
-  readonly actions = signal<SdSelectionBarAction[]>(
+  readonly actions = signal<SdSelectionBarAction[] | null>(
     ['Duyệt', 'Xuất', 'Gán nhãn', 'Xoá'].map(title => ({ variant: 'normal', title, icon: 'check', click: () => undefined }))
   );
   readonly ran: SdSelectionBarActionNormal[] = [];
@@ -178,13 +183,29 @@ describe('ɵSdSelectionBar', () => {
     expect(bar().classList).not.toContain('sd-selection-bar--narrow');
     expect(getComputedStyle(clear).position).toBe('static');
 
-    // A hidden or detached bar reports 0: that is not "narrow".
+    // A hidden or detached bar reports 0: that is not "narrow". Neither is a report without entries.
     observer.emit(0);
+    fixture.detectChanges();
+    expect(bar().classList).not.toContain('sd-selection-bar--narrow');
+    observer.emitNone();
     fixture.detectChanges();
     expect(bar().classList).not.toContain('sd-selection-bar--narrow');
 
     fixture.destroy();
     expect(observer.disconnected).toBeTrue();
+  });
+
+  it('SB-03 RTL: the narrow bar puts × at the inline end and keeps room for it on that side', async () => {
+    await create();
+    host.setAttribute('dir', 'rtl');
+    FakeResizeObserver.instances[0].emit(599);
+    fixture.detectChanges();
+
+    const frame = host.querySelector('.c-quick-action.contained')!.getBoundingClientRect();
+    const clear = host.querySelector<HTMLElement>('.sd-selection-clear')!.getBoundingClientRect();
+    expect(clear.left).toBeGreaterThanOrEqual(frame.left);
+    expect(clear.left - frame.left).toBeLessThan(16);
+    expect(getComputedStyle(host.querySelector('.sd-selection-message')!).paddingLeft).toBe('36px');
   });
 
   it('SB-03 the viewport media query is gone', async () => {
@@ -206,7 +227,7 @@ describe('ɵSdSelectionBar', () => {
 
   it('SB-04 two actions stay direct, the rest go under "more", and every one emits itself', async () => {
     await create();
-    const actions = component.actions();
+    const actions = component.actions()!;
     const direct = Array.from(host.querySelectorAll<HTMLElement>('.sd-selection-direct'));
     expect(direct.map(element => element.querySelector('.c-title')!.textContent!.trim())).toEqual(['Duyệt', 'Xuất']);
 
@@ -227,7 +248,7 @@ describe('ɵSdSelectionBar', () => {
   it('SB-04 two actions or fewer need no "more" button; a group opens its own menu', async () => {
     await create();
     const child: SdSelectionBarActionNormal = { variant: 'normal', title: 'PDF', click: () => undefined };
-    component.actions.set([{ variant: 'children', title: 'Xuất', children: [child] }, component.actions()[0]]);
+    component.actions.set([{ variant: 'children', title: 'Xuất', children: [child] }, component.actions()![0]]);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -239,6 +260,16 @@ describe('ɵSdSelectionBar', () => {
     fixture.detectChanges();
     overlay().querySelector<HTMLButtonElement>('.sd-action-item')!.click();
     expect(component.ran).toEqual([child]);
+  });
+
+  it('SB-04 no actions (null) leaves the message and the clear button only', async () => {
+    await create();
+    component.actions.set(null);
+    fixture.detectChanges();
+    expect(host.querySelector('.sd-selection-direct')).toBeNull();
+    expect(host.querySelector('.sd-selection-more')).toBeNull();
+    expect(host.querySelector('.sd-selection-message')!.textContent).toContain('Đã chọn 2 mục');
+    expect(host.querySelector('.sd-selection-clear')).not.toBeNull();
   });
 
   it('SB-04 the clear button is named and emits clear', async () => {
