@@ -230,6 +230,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
   assert.equal(scripts['test:theme-token-list'], 'node --test scripts/theme-token-list.test.mjs');
   assert.equal(scripts['test:window-api'], 'node --test scripts/window-public-api.test.mjs scripts/annotate-window-deprecation.test.mjs');
   assert.equal(scripts['test:check-scss-hex'], 'node --test scripts/check-scss-hex.test.mjs');
+  assert.equal(scripts['test:no-mat-menu'], 'node --test scripts/no-mat-menu.test.mjs');
 
   assert.deepEqual(scripts['test:scripts'].split(' && '), [
     'npm run test:showcase-generators',
@@ -248,6 +249,7 @@ test('[workspace] root lint and script gates enumerate every line in order', () 
     'npm run test:theme-token-list',
     'npm run test:window-api',
     'npm run test:check-scss-hex',
+    'npm run test:no-mat-menu',
   ]);
 });
 
