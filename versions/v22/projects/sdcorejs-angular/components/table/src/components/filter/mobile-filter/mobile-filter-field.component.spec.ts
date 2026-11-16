@@ -188,24 +188,35 @@ describe('SdTableMobileFilterFieldComponent', () => {
     it('shows the operator as text when the filter offers one', () => {
       mount({ columns: [{ field: 'code', type: 'string', title: 'Code' }] });
 
-      expect(query('button.sd-mobile-field-operator')).toBeNull();
+      expect(query('sd-button.sd-mobile-field-operator')).toBeNull();
       expect(query('.sd-mobile-field-operator-text')?.textContent?.trim()).toBe(component.operatorLabel());
       expect(component.operatorLabel()).toBeTruthy();
     });
 
-    it('opens a menu of the operators and stores the one picked', () => {
+    it('MM-02 opens an Action Popover of the operators, ticks the current one and stores the one picked', () => {
       const value = mount({ columns: [code] });
-      const trigger = query('[data-autoid="f-operator"]') as HTMLButtonElement;
-      expect(trigger).not.toBeNull();
+      const host = query('sd-button[data-autoid="f-operator"]') as HTMLElement;
+      expect(host).not.toBeNull();
+      const trigger = host.querySelector('button') as HTMLButtonElement;
+      // A text sd-button that carries the current operator as its label.
+      expect(trigger.classList).toContain('c-text');
+      expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+      expect(trigger.querySelector('.c-title')?.textContent?.trim()).toBe(component.operatorLabel());
 
       trigger.click();
       fixture.detectChanges();
-      const entries = TestBed.inject(OverlayContainer)
-        .getContainerElement()
-        .querySelectorAll<HTMLButtonElement>('.sd-table-mobile-operator-menu [mat-menu-item]');
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      expect(overlay.querySelector('.sd-action-popover')).not.toBeNull();
+      const entries = overlay.querySelectorAll<HTMLButtonElement>('.sd-action-item');
       expect(entries.length).toBe(2);
+      const ticked = (entry: HTMLElement) =>
+        Array.from(entry.querySelectorAll('sd-icon')).some(icon => icon.textContent?.trim() === 'check');
+      expect(ticked(entries[0])).toBeTrue();
+      expect(ticked(entries[1])).toBeFalse();
       entries[1].click();
       fixture.detectChanges();
+      expect(overlay.querySelector('.sd-action-popover')).toBeNull();
+      expect(trigger.querySelector('.c-title')?.textContent?.trim()).toBe(component.operatorLabel());
 
       expect(value.columnOperator?.['code']).toBe('EQUAL');
       expect(component.operator()).toBe('EQUAL');

@@ -2,22 +2,37 @@
 @let _selectionVisible = selectionVisible();
 @let _selectionSingle = selectionSingle();
 @let _selectionMessage = selectionMessage();
-@let _selectionActionViews = selectionActionViews();
 @let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
+@let _emptyState = emptyState();
+@let _emptyDef = emptyDef();
 @let _treeLines = treeLines();
+@let _highlightTerm = highlightTerm();
 
 @if (rootLoading()) {
   <div class="sd-tree__root-loading" role="status" aria-live="polite">
     <mat-progress-spinner diameter="24" mode="indeterminate" />
   </div>
 } @else if (_rootError) {
+  <!-- why: thông điệp của exception (stack, tên bảng, URL nội bộ) không dành cho người dùng cuối; lỗi gốc vẫn
+       tới consumer qua `loadError` và `rootError()`. -->
   <div class="sd-tree__root-error" role="alert">
-    <span>{{ errorMessage(_rootError) }}</span>
-    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | sdTranslate }}</button>
+    <sd-icon class="sd-tree__root-error-icon" name="error" aria-hidden="true"></sd-icon>
+    <span class="sd-tree__root-error-text">{{ 'core.component.tree.load-error' | sdTranslate }}</span>
+    <sd-button data-tree-retry type="outline" size="sm" [title]="'core.component.tree.retry' | sdTranslate" (click)="retry()" />
+  </div>
+} @else if (_emptyState) {
+  <div class="sd-tree__root-empty">
+    @if (_emptyDef) {
+      <ng-container *ngTemplateOutlet="_emptyDef.templateRef; context: _emptyState" />
+    } @else if (_emptyState.searching) {
+      {{ 'core.component.tree.no-match' | sdTranslate: { text: _emptyState.text } }}
+    } @else {
+      {{ 'core.component.tree.empty' | sdTranslate }}
+    }
   </div>
 } @else {
-  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
+  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading() || searchPending()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
     @for (node of visibleViewNodes(); track node.id) {
       @let _lines = _treeLines.get(node.id);
       <!-- why: `[tabIndex]` là property DOM (camelCase) — nó set đúng giá trị nhưng KHÔNG sinh
@@ -27,14 +42,19 @@
         class="sd-tree__row"
         role="treeitem"
         [attr.tabindex]="node.tabIndex"
-        [class.sd-tree__row--selected]="node.selected"
+        [class.sd-tree__row--selected]="node.highlighted && !node.active"
+        [class.sd-tree__row--active]="node.active"
         [class.sd-tree__row--parent]="node.hasChildren"
+        [class.sd-tree__row--context]="node.muted"
         [style.--sd-tree-level]="node.level"
         [attr.aria-level]="node.level + 1"
         [attr.aria-expanded]="node.ariaExpanded"
-        [attr.aria-selected]="_selectionVisible ? node.selected : null"
+        [attr.aria-selected]="node.ariaSelected"
+        [attr.aria-label]="node.ariaLabel"
         [attr.aria-checked]="_selectionVisible ? (node.selectionIndeterminate ? 'mixed' : node.selected) : null"
         [attr.data-autoid]="node.autoIds.row"
+        [attr.data-tree-node]="node.id"
+        (click)="onRowClick(node, $event)"
         (focus)="onRowFocus(node)"
         (keydown)="onRowKeydown(node, $event)">
         @if (_lines) {
@@ -98,7 +118,7 @@
           @if (node.icon) {
             <sd-icon
               class="sd-tree__item-icon"
-              [color]="node.selected ? 'primary' : undefined"
+              [color]="node.highlighted ? 'primary' : undefined"
               [attr.data-autoid]="node.autoIds.icon"
               [name]="node.icon"></sd-icon>
           }
@@ -107,10 +127,18 @@
             @if (_resolvedItemTemplate) {
               <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
             } @else {
-              <span class="sd-tree__label">{{ node.label }}</span>
+              @if (_highlightTerm) {
+                <span class="sd-tree__label"><sd-highlight [text]="node.label" [term]="_highlightTerm" /></span>
+              } @else {
+                <span class="sd-tree__label">{{ node.label }}</span>
+              }
             }
           </div>
         </div>
+
+        @if (node.count !== null) {
+          <span class="sd-tree__count">{{ node.count }}</span>
+        }
 
         @if (node.commands.length) {
           <sd-button
@@ -118,7 +146,7 @@
             type="text"
             size="sm"
             prefixIcon="more_vert"
-            [tooltip]="node.label"
+            [tooltip]="node.menuLabel"
             [attr.data-autoid]="node.autoIds.command">
             @for (command of node.commands; track command.key) {
               <sd-button-item
@@ -138,36 +166,14 @@
   </div>
 }
 
-<sd-quick-action [opened]="_selectionQuickActionOpened">
-  <div class="d-flex align-items-center" sdMessage>
-    <div class="c-bg-length">
-      <span class="c-length sd-tree__qa-count">{{ selectedCount() }}</span>
-    </div>
-    <div class="c-message">
-      {{ _selectionMessage }}
-    </div>
-  </div>
-
-  <div class="d-flex align-items-center mr-8 sd-tree__qa-actions" sdAction>
-    @for (actionView of _selectionActionViews; track $index) {
-      <sd-button
-        [autoId]="actionView.autoId"
-        class="ml-4"
-        [tooltip]="actionView.action.tooltip"
-        [prefixIcon]="actionView.action.icon"
-        [color]="actionView.action.color || 'primary'"
-        [type]="actionView.action.type || 'light'"
-        [fontSet]="actionView.action.fontSet"
-        [title]="actionView.action.title"
-        (click)="onSelectionAction(actionView.action)" />
-    }
-    <sd-button
-      [autoId]="clearSelectionAutoId()"
-      class="ml-4"
-      prefixIcon="close"
-      color="secondary"
-      type="outline"
-      width="35px"
-      (click)="clearSelection()" />
-  </div>
-</sd-quick-action>
+<!-- SB: thanh chọn nhiều dùng chung với sd-table, nằm trong host sau các hàng và dính đáy vùng cuộn gần nhất.
+     Vì thanh nằm trong luồng, host tự cao thêm đúng bằng thanh khi nó mở: hàng cuối không bị che. -->
+<sd-selection-bar
+  class="sd-tree__selection-bar"
+  [opened]="_selectionQuickActionOpened"
+  [message]="_selectionMessage"
+  [actions]="selectionBarActions()"
+  [autoId]="autoId()"
+  actionAutoIdPrefix="selection-action"
+  (action)="$event.click()"
+  (clear)="clearSelection()" />

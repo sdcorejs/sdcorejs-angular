@@ -2,8 +2,11 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
+  Injector,
   TemplateRef,
+  afterNextRender,
   booleanAttribute,
   computed,
   contentChild,
@@ -11,25 +14,31 @@ import {
   inject,
   input,
   isSignal,
+  model,
   output,
   signal,
   untracked,
+  viewChildren,
 } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton, SdButtonItem } from '@sdcorejs/angular/components/button';
-import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
+import { SdHighlight } from '@sdcorejs/angular/components/highlight';
+import { ɵSdSelectionBar, type ɵSdSelectionBarActionNormal } from '@sdcorejs/angular/components/quick-action';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTreeEmptyDefDirective } from './tree-empty-def.directive';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
   SdTreeCommand,
   SdTreeDataSource,
   SdTreeComponentOption,
+  SdTreeEmptyContext,
   SdTreeItem,
   SdTreeItemContext,
   SdTreeItemLazy,
+  SdTreeLazyOption,
   SdTreeLoadErrorEvent,
   SdTreeNode,
   SdTreeOption,
@@ -65,6 +74,18 @@ export interface SdTreeViewCommand<T = unknown> {
 export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   icon?: string;
   selected: boolean;
+  /** Nút đang mở (chỉ khi `navigation` bật). */
+  active: boolean;
+  /** Hàng được tô nền: nút đang mở khi `navigation` bật, ngược lại là hàng đã chọn. */
+  highlighted: boolean;
+  ariaSelected: boolean | null;
+  /** Tên đọc "{label}, {count}" khi có số đếm; `null` để hàng lấy tên từ nội dung. */
+  ariaLabel: string | null;
+  /** Số đếm đã định dạng theo locale; `null`: không vẽ. */
+  count: string | null;
+  menuLabel: string;
+  /** Kết quả tìm trên server: nút chỉ nằm trên đường tới nút khớp. */
+  muted: boolean;
   selectionDisabled: boolean;
   selectionIndeterminate: boolean;
   toggleDisabled: boolean;
@@ -75,6 +96,17 @@ export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   context: SdTreeItemContext<T>;
   tabIndex: 0 | -1;
 }
+
+/** Cây kết quả của `onSearch`: các đường đi đã gộp theo id. */
+interface SdTreeSearchResult<T> {
+  text: string;
+  roots: SdTreeItemLazy<T>[];
+  children: Map<string, SdTreeItemLazy<T>[]>;
+  matched: Set<string>;
+}
+
+// Q4: cùng thời gian chờ với ô tìm của sd-kanban. `filter()` thường được gọi theo từng phím gõ.
+const SEARCH_DEBOUNCE_MS = 300;
 
 export interface SdTreeSelectionActionView<T = unknown> {
   action: SdTreeSelectionAction<T>;
@@ -97,7 +129,8 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     MatRadioModule,
     SdButton,
     SdButtonItem,
-    SdQuickAction,
+    SdHighlight,
+    ɵSdSelectionBar,
     SdTranslatePipe,
   ],
   templateUrl: './tree.component.html',
@@ -110,6 +143,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
 export class SdTree<T = unknown> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #i18n = inject(I18nService);
+  readonly #injector = inject(Injector);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly option = input<SdTreeComponentOption<T> | undefined>(undefined);
 
@@ -129,8 +163,21 @@ export class SdTree<T = unknown> {
   readonly expandChange = output<SdTreeToggleEvent<T>>();
   readonly collapseChange = output<SdTreeToggleEvent<T>>();
   readonly loadError = output<SdTreeLoadErrorEvent<T>>();
+  /**
+   * Id của nút đang mở (chế độ `navigation`). Là model trên component, không nằm trong `[option]`, để gắn hai
+   * chiều với URL.
+   */
+  readonly activeId = model<string | null>(null);
+  /** Phát mỗi lần người dùng mở một nút, kể cả nút đang mở. */
+  readonly activeChange = output<{ item: T; node: SdTreeNode<T> }>();
+  /**
+   * Trạng thái mở. Có giá trị: là nguồn của trạng thái mở (hai chiều), `expanded` và `defaultExpanded` không còn
+   * áp dụng. `undefined`: cây tự quản lý như cũ. Đổi `items` không reset.
+   */
+  readonly expandedIds = model<readonly string[] | undefined>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
+  readonly emptyDef = contentChild(SdTreeEmptyDefDirective);
   readonly resolvedItemsSource = computed<SdTreeDataSource<SdTreeItem<T>>>(() => {
     return this.option()?.items ?? this.items() ?? (EMPTY_TREE_ITEMS as SdTreeItem<T>[]);
   });
@@ -139,6 +186,7 @@ export class SdTree<T = unknown> {
   readonly resolvedCommands = computed(() => this.option()?.commands ?? this.commands() ?? []);
   readonly resolvedSelectable = computed(() => this.option()?.selectable ?? this.selectable());
   readonly resolvedShowLines = computed(() => this.option()?.showLines ?? this.showLines());
+  readonly navigation = computed(() => this.option()?.navigation === true);
   readonly autoId = computed(() => {
     const scope = this.option()?.autoId ?? this.autoIdInput();
     return scope ? `components-tree-${scope}` : undefined;
@@ -156,9 +204,27 @@ export class SdTree<T = unknown> {
   readonly #selectedIds = signal<Set<string>>(new Set());
   readonly #filterText = signal('');
   readonly #reloadTick = signal(0);
+  readonly #search = signal<SdTreeSearchResult<T> | null>(null);
+  /** Nút người dùng đã đóng trong kết quả tìm. Tách khỏi trạng thái mở thật để xoá chữ là cây về như cũ. */
+  readonly #searchCollapsed = signal<ReadonlySet<string>>(new Set());
+  /** Đang chờ debounce hoặc chờ `onSearch` trả về. */
+  readonly searchPending = signal(false);
+  readonly #serverSearch = computed(() => {
+    const tree = this.resolvedTree();
+    return tree.loadType === 'lazy' && !!tree.onSearch;
+  });
+  /** Chữ cần tô trong nhãn: chữ đang lọc (static) hoặc chữ của kết quả đang hiện (server). */
+  readonly highlightTerm = computed(() => (this.#serverSearch() ? (this.#search()?.text ?? '') : this.#filterText().trim()));
+  readonly #expandedIdSet = computed(() => {
+    const ids = this.expandedIds();
+    return ids === undefined ? undefined : new Set(ids);
+  });
   readonly rootLoading = signal(false);
   readonly rootError = signal<unknown | null>(null);
   readonly activeNodeId = signal<string | null>(null);
+  private readonly buttons = viewChildren(SdButton);
+  /** Hàng đã mở menu ⋯ bằng bàn phím; menu đóng thì focus quay về đây. */
+  #keyboardMenuRow: HTMLElement | null = null;
 
   #rootLoadId = 0;
   #lastSource?: SdTreeDataSource<SdTreeItem<T>>;
@@ -166,6 +232,20 @@ export class SdTree<T = unknown> {
   #lastReloadTick = -1;
   #treeGeneration = 0;
   readonly #lazyLoadIds = new Map<string, number>();
+  /** Lần tải con đang chạy theo id, để `reveal`, `expand` và `expandedIds` không gọi `onExpandChildren` hai lần. */
+  readonly #lazyLoads = new Map<string, Promise<void>>();
+  #revealController: AbortController | null = null;
+  #searchController: AbortController | null = null;
+  /** Data của các nút từng có trong kết quả tìm, để nút được tick ở đó vẫn là lựa chọn sau khi xoá chữ tìm. */
+  readonly #searchSeen = new Map<string, T>();
+  readonly #searchSeenTick = signal(0);
+  #searchTimer?: ReturnType<typeof setTimeout>;
+  /** Nút `reveal` đang chờ hàng của nó được render để cuộn tới. */
+  #pendingScrollId: string | null = null;
+  /** Id do người dùng vừa mở: lần đổi `activeId` này không cần `reveal`. */
+  #userActiveId: string | null = null;
+  /** Id đã `reveal` xong: tải lại `items` không cuộn lại lần nữa. */
+  #revealedId: string | null = null;
 
   readonly normalizedFilterText = computed(() => normalizeText(this.#filterText()));
   readonly selectionVisible = computed(() => this.resolvedSelectable() && this.resolvedSelector()?.visible === true);
@@ -180,10 +260,40 @@ export class SdTree<T = unknown> {
     return selectedItems ? this.#idsFromSelectedItems(selectedItems) : this.#selectedIds();
   });
 
-  readonly rootNodes = computed<SdTreeNode<T>[]>(() => this.#buildNodes(this.#rootItems(), 0, null));
+  /** Cây thật (đã tải). Vẫn được dựng khi đang hiện kết quả tìm, vì lựa chọn không được phụ thuộc vào thứ đang hiện. */
+  readonly #loadedNodes = computed<SdTreeNode<T>[]>(() => this.#buildNodes(this.#rootItems(), 0, null));
+  readonly rootNodes = computed<SdTreeNode<T>[]>(() => {
+    const search = this.#search();
+    return search ? this.#buildSearchNodes(search, search.roots, 0, null) : this.#loadedNodes();
+  });
+  /**
+   * Mọi nút mà lựa chọn có thể trỏ tới: nút đã tải, nút trong kết quả tìm đang hiện, và nút từng xuất hiện trong
+   * kết quả tìm (`#searchSeen`).
+   *
+   * why: lựa chọn từng được tính trên `rootNodes()`, tức trên cây KẾT QUẢ khi đang tìm. Tick một nút trong kết
+   * quả sẽ phát `selectedItemsChange` thiếu các nút đã chọn nằm ngoài kết quả, và consumer hai chiều ghi đè mất
+   * chúng. Ngược lại, nút chỉ có trong kết quả sẽ rơi khỏi lựa chọn ngay khi xoá chữ tìm.
+   */
+  readonly #selectableNodes = computed<{ id: string; data: T }[]>(() => {
+    const loaded = this.#flattenAll(this.#loadedNodes());
+    const search = this.#search();
+    this.#searchSeenTick();
+    if (!search && !this.#searchSeen.size) return loaded;
+    const result: { id: string; data: T }[] = [...loaded];
+    const ids = new Set(loaded.map(node => node.id));
+    const add = (id: string, data: T) => {
+      if (ids.has(id)) return;
+      ids.add(id);
+      result.push({ id, data });
+    };
+    if (search) for (const node of this.#flattenAll(this.rootNodes())) add(node.id, node.data);
+    for (const [id, data] of this.#searchSeen) add(id, data);
+    return result;
+  });
 
   readonly visibleNodes = computed<SdTreeNode<T>[]>(() => {
-    const filterText = this.normalizedFilterText();
+    // Tìm trên server: kết quả đã là cây cần hiện, không lọc lại các nút đã tải.
+    const filterText = this.#serverSearch() ? '' : this.normalizedFilterText();
     const result: SdTreeNode<T>[] = [];
 
     const walk = (nodes: SdTreeNode<T>[]) => {
@@ -202,6 +312,12 @@ export class SdTree<T = unknown> {
 
     walk(this.rootNodes());
     return result;
+  });
+  /** Không có hàng nào để hiện: cây rỗng, hoặc không có mục khớp chữ đang tìm. `null` khi cây có hàng. */
+  readonly emptyState = computed<SdTreeEmptyContext | null>(() => {
+    if (this.visibleNodes().length) return null;
+    const text = this.#serverSearch() ? (this.#search()?.text ?? '') : this.#filterText();
+    return { searching: !!text.trim(), text: text.trim() };
   });
   readonly selectedItems = computed(() => this.#selectedItemsFromIds(this.selectedIdSet()));
   /** Use visible siblings so filtering and collapsed/lazy branches leave no dangling connectors. */
@@ -246,15 +362,28 @@ export class SdTree<T = unknown> {
       autoId: this.#selectionActionAutoId(index),
     }));
   });
+  /** `selector.actions` (đã bỏ lệnh ẩn) theo shape của thanh chọn dùng chung; index khớp `selectionActionViews`. */
+  readonly selectionBarActions = computed<ɵSdSelectionBarActionNormal[]>(() =>
+    this.visibleSelectionActions().map(action => ({
+      variant: 'normal',
+      icon: action.icon,
+      fontSet: action.fontSet,
+      tooltip: action.tooltip,
+      title: action.title,
+      color: action.color,
+      type: action.type,
+      click: () => this.onSelectionAction(action),
+    }))
+  );
   readonly clearSelectionAutoId = computed(() => {
     const base = this.autoId();
     return base ? `${base}-clear-selection` : null;
   });
 
   /**
-   * why: chọn node mà selector KHÔNG khai action nào thì thanh quick-action chỉ còn bộ đếm + nút ✕.
-   * Nó nổi đè lên cây để nói lại đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` —
-   * vốn chỉ chọn rồi bấm "Áp dụng" ở footer modal, không có action nào — không còn thấy thanh này.
+   * why: chọn node mà selector KHÔNG khai action nào thì thanh chọn chỉ còn message + nút ✕, tức nói lại
+   * đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` — vốn chỉ chọn rồi bấm "Áp dụng" ở
+   * footer modal, không có action nào — không có thanh này.
    */
   readonly selectionQuickActionOpened = computed(() => this.selectedCount() > 0 && this.selectionActionViews().length > 0);
 
@@ -270,14 +399,29 @@ export class SdTree<T = unknown> {
     const nodes = this.visibleNodes();
     const requestedActiveId = this.activeNodeId();
     const activeId = nodes.some(node => node.id === requestedActiveId) ? requestedActiveId : nodes[0]?.id;
+    const navigation = this.navigation();
+    const openId = navigation ? this.activeId() : null;
+    const selectionVisible = this.selectionVisible();
+    const numberFormat = new Intl.NumberFormat(this.#i18n.locale());
+    const matched = this.#search()?.matched;
     // why: đếm 1 lượt bottom-up cho CẢ cây rồi tra theo id. Bản cũ gọi `#flattenAll(node.children)`
     // cho TỪNG node hiển thị ngay trong map này → O(n²) kèm một mảng mới mỗi node mỗi lần
     // recompute. Chỉ cascade 'descendants' mới cần số liệu này nên các chế độ khác bỏ qua hẳn.
     const selectedDescendants =
       selector?.cascade === 'descendants' ? this.#countSelectedDescendants(this.rootNodes(), selectedIds) : EMPTY_DESCENDANT_COUNTS;
-    return nodes.map(node =>
-      this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId, selectedDescendants)
-    );
+    return nodes.map(node => {
+      const view = this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId, selectedDescendants);
+      const count = formatCount(node.treeItem.count, numberFormat);
+      view.active = navigation && node.id === openId;
+      // Q2: khi điều hướng, checkbox tự thể hiện lựa chọn; nền hàng chỉ dành cho nút đang mở.
+      view.highlighted = navigation ? view.active : view.selected;
+      // Q3: `aria-selected` là nút đang mở; lựa chọn của checkbox đi qua `aria-checked`.
+      view.ariaSelected = navigation ? view.active : selectionVisible ? view.selected : null;
+      view.muted = !!matched && !matched.has(node.id);
+      view.count = count;
+      view.ariaLabel = count === null ? null : `${node.label}, ${count}`;
+      return view;
+    });
   });
 
   readonly trackByNode = (_index: number, node: SdTreeNode<T>): string => node.id;
@@ -304,14 +448,80 @@ export class SdTree<T = unknown> {
         this.#loadRootItems(source);
       });
     });
+
+    // R2: `activeId` đổi từ ngoài (URL, nút khác trên trang) thì tự mở tới nút đó.
+    effect(() => {
+      const id = this.activeId();
+      const navigation = this.navigation();
+      const loading = this.rootLoading();
+      // Đang hiện kết quả tìm thì cây thật không ở trên màn hình; xoá chữ tìm xong effect chạy lại và mở tới nút.
+      const searching = !!this.#search();
+      this.#rootItems();
+      untracked(() => {
+        if (id !== this.#revealedId) this.#revealedId = null;
+        if (id === this.#userActiveId) return;
+        if (!navigation || id === null || loading || searching || id === this.#revealedId) return;
+        this.#userActiveId = null;
+        void this.reveal(id).then(revealed => {
+          if (revealed && this.activeId() === id) this.#revealedId = id;
+        });
+      });
+    });
+
+    inject(DestroyRef).onDestroy(() => {
+      this.#cancelSearch();
+      this.#revealController?.abort();
+    });
+
+    // R7: lazy + `expandedIds` từ ngoài: nút được khai là đang mở thì phải có con để hiện.
+    effect(() => {
+      const expanded = this.#expandedIdSet();
+      if (!expanded || this.resolvedTree().loadType !== 'lazy' || this.#search()) return;
+      const loaded = this.#lazyChildren();
+      const pending = this.#flattenAll(this.rootNodes()).filter(
+        node => expanded.has(node.id) && !loaded[node.id] && node.treeItem.hasChildren !== false
+      );
+      untracked(() => {
+        for (const node of pending) {
+          if (!node.loadError) void this.#ensureLazyChildren(node);
+        }
+      });
+    });
+
+    effect(() => {
+      const opened = this.buttons().some(button => button.popover.opened());
+      untracked(() => {
+        const row = this.#keyboardMenuRow;
+        if (opened || !row) return;
+        this.#keyboardMenuRow = null;
+        // Action Popover trả focus về nút ⋯; menu mở từ hàng thì hàng mới là nơi người dùng đang đứng.
+        if (row.isConnected && row.contains(document.activeElement)) row.focus();
+      });
+    });
   }
 
   reload(): void {
     this.#reloadTick.update(value => value + 1);
   }
 
+  /**
+   * Lọc cây theo chữ. Lazy có `tree.onSearch`: tìm trên server (debounce, huỷ lần trước) và hiện kết quả thay cây;
+   * còn lại: lọc ngay trên các nút đã tải. Chữ rỗng trả cây về trạng thái trước khi tìm.
+   */
   filter(searchText: string | undefined | null): void {
-    this.#filterText.set(searchText ?? '');
+    const text = searchText ?? '';
+    this.#filterText.set(text);
+    const tree = this.resolvedTree();
+    const onSearch = tree.loadType === 'lazy' ? tree.onSearch : undefined;
+    this.#cancelSearch();
+    // Thiếu `onSearch` mà vẫn còn kết quả đang hiện (option vừa đổi): trả cây về, rồi lọc tại chỗ như thường.
+    if (!onSearch || !text.trim()) {
+      this.#search.set(null);
+      this.#searchCollapsed.set(new Set());
+      return;
+    }
+    this.searchPending.set(true);
+    this.#searchTimer = setTimeout(() => void this.#runSearch(text, onSearch), SEARCH_DEBOUNCE_MS);
   }
 
   isSelected(node: SdTreeNode<T>): boolean {
@@ -349,22 +559,72 @@ export class SdTree<T = unknown> {
     const currentNode = this.#findNode(node.id) ?? node;
     if (!currentNode.hasChildren || currentNode.isLoading) return;
 
-    if (currentNode.isExpanded) {
-      this.#expandedState.update(state => ({ ...state, [currentNode.id]: false }));
-      const toggleEvent = { item: currentNode.data, expanded: false, node: { ...currentNode, isExpanded: false } };
-      this.option()?.onCollapse?.(toggleEvent);
-      this.collapseChange.emit(toggleEvent);
-      return;
+    if (currentNode.isExpanded) this.#collapseNode(currentNode);
+    else await this.#expandNode(currentNode);
+  }
+
+  /**
+   * Mở các nút cha của `id` rồi cuộn tới nút trong vùng cuộn gần nhất của cây; không lấy focus.
+   * Static tìm trong `items`; lazy dùng `tree.onResolvePath` khi nút chưa được tải.
+   * Trả `false` khi không tìm thấy, bị một lần `reveal` mới hơn huỷ, hoặc lỗi tải.
+   */
+  async reveal(id: string): Promise<boolean> {
+    this.#revealController?.abort();
+    const controller = new AbortController();
+    this.#revealController = controller;
+    const { signal } = controller;
+
+    let path = this.#ancestorIds(id);
+    if (!path) {
+      const tree = this.resolvedTree();
+      if (tree.loadType !== 'lazy' || !tree.onResolvePath) return false;
+      try {
+        path = [...(await tree.onResolvePath(id, signal))];
+      } catch (error) {
+        if (!signal.aborted) this.loadError.emit({ error });
+        return false;
+      }
     }
 
-    await this.#ensureLazyChildren(currentNode);
-    const nextNode = this.#findNode(currentNode.id) ?? currentNode;
-    if (!nextNode.hasChildren || nextNode.loadError) return;
+    for (const ancestorId of path) {
+      if (signal.aborted) return false;
+      const ancestor = this.#findNode(ancestorId);
+      if (!ancestor || !(await this.#expandNode(ancestor, signal))) return false;
+    }
+    if (signal.aborted || !this.#findNode(id)) return false;
 
-    this.#expandedState.update(state => ({ ...state, [currentNode.id]: true }));
-    const toggleEvent = { item: currentNode.data, expanded: true, node: { ...nextNode, isExpanded: true } };
-    this.option()?.onExpand?.(toggleEvent);
-    this.expandChange.emit(toggleEvent);
+    this.activeNodeId.set(id);
+    this.#pendingScrollId = id;
+    this.#scrollWhenRendered(id);
+    return true;
+  }
+
+  /** Mở một nút theo id. Trả `false` khi không tìm thấy, nút là lá, hoặc tải con bị lỗi. */
+  async expand(id: string): Promise<boolean> {
+    const node = this.#findNode(id);
+    return node ? this.#expandNode(node) : false;
+  }
+
+  /** Đóng một nút theo id. */
+  collapse(id: string): void {
+    const node = this.#findNode(id);
+    if (node?.isExpanded) this.#collapseNode(node);
+  }
+
+  /** Lazy: bỏ cache con của nút, gọi lại `onExpandChildren`, giữ trạng thái mở. Static: không làm gì. */
+  async reloadNode(id: string): Promise<void> {
+    if (this.resolvedTree().loadType !== 'lazy') return;
+    const node = this.#findNode(id);
+    if (node) await this.#ensureLazyChildren(node, true);
+  }
+
+  /** Đặt roving tabindex và focus vào một nút đang hiển thị. Trả `false` khi nút không hiển thị. */
+  focusNode(id: string): boolean {
+    const row = this.#rowElement(id);
+    if (!row) return false;
+    this.activeNodeId.set(id);
+    row.focus();
+    return true;
   }
 
   toggleSelection(node: SdTreeNode<T>, event?: Event): void {
@@ -379,7 +639,8 @@ export class SdTree<T = unknown> {
       if (shouldSelect) selectedIds.add(node.id);
     } else if (selector?.cascade === 'descendants') {
       this.#setNodeAndDescendants(node, shouldSelect, selectedIds);
-      this.#reconcileAncestors(node.parent, selectedIds);
+      // Trong kết quả tìm, nút cha chỉ có các con khớp: không suy ra "đã chọn hết con" từ cây đó.
+      if (!this.#search()) this.#reconcileAncestors(node.parent, selectedIds);
     } else if (shouldSelect) {
       selectedIds.add(node.id);
     } else {
@@ -419,6 +680,10 @@ export class SdTree<T = unknown> {
     void this.toggle(node);
   }
 
+  /**
+   * @deprecated Trạng thái lỗi gốc không còn hiện `error.message` (thông điệp của exception không dành cho
+   * người dùng cuối); UI dùng `core.component.tree.load-error`. Đọc lỗi gốc qua `rootError()` hoặc `loadError`.
+   */
   errorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
     // why: thông điệp mặc định khi lỗi không mang message — chuỗi này hiện ra cho người dùng cuối
@@ -428,6 +693,14 @@ export class SdTree<T = unknown> {
 
   onRowFocus(node: SdTreeNode<T>): void {
     this.activeNodeId.set(node.id);
+  }
+
+  /** Chế độ điều hướng: bấm vào hàng (trừ chevron, checkbox/radio, ⋯) mở nút. */
+  onRowClick(node: SdTreeNode<T>, event: Event): void {
+    if (!this.navigation()) return;
+    const target = event.target as Element | null;
+    if (target?.closest?.('.sd-tree__toggle, .sd-tree__checkbox, .sd-tree__radio, .sd-tree__command-trigger')) return;
+    this.#activate(node);
   }
 
   onRowKeydown(node: SdTreeNode<T>, event: KeyboardEvent): void {
@@ -465,12 +738,44 @@ export class SdTree<T = unknown> {
         if (node.isExpanded) void this.toggle(node);
         else this.#focusVisibleNode(nodes.findIndex(item => item.id === node.parent?.id));
         return;
+      case 'F10':
+      case 'ContextMenu':
+        // R4: Shift+F10 hoặc phím ContextMenu mở menu ⋯ của hàng đang focus.
+        if (!this.navigation() || (event.key === 'F10' && !event.shiftKey)) return;
+        if (this.#openRowMenu(event.currentTarget as HTMLElement)) event.preventDefault();
+        return;
       case 'Enter':
       case ' ':
+        if (this.navigation() && event.key === 'Enter') {
+          event.preventDefault();
+          this.#activate(node);
+          return;
+        }
         if (!this.selectionVisible()) return;
         event.preventDefault();
         this.toggleSelection(node);
     }
+  }
+
+  #activate(node: SdTreeNode<T>): void {
+    const current = this.#findNode(node.id) ?? node;
+    // Người dùng đã tự chọn nút: bỏ lần `reveal` đang chạy để nó không cuộn cây đi chỗ khác.
+    this.#revealController?.abort();
+    this.#pendingScrollId = null;
+    this.#userActiveId = current.id;
+    this.activeNodeId.set(current.id);
+    this.activeId.set(current.id);
+    const event = { item: current.data, node: current };
+    this.option()?.onActivate?.(event);
+    this.activeChange.emit(event);
+  }
+
+  #openRowMenu(row: HTMLElement): boolean {
+    const trigger = row.querySelector<HTMLButtonElement>('.sd-tree__command-trigger button');
+    if (!trigger || trigger.disabled) return false;
+    this.#keyboardMenuRow = row;
+    if (trigger.getAttribute('aria-expanded') !== 'true') trigger.click();
+    return true;
   }
 
   createContext(node: SdTreeNode<T>): SdTreeItemContext<T> {
@@ -549,6 +854,7 @@ export class SdTree<T = unknown> {
   #setRootItems(items: SdTreeItem<T>[] | undefined | null): void {
     this.#treeGeneration += 1;
     this.#lazyLoadIds.clear();
+    this.#lazyLoads.clear();
     this.#rootItems.set([...(items ?? [])]);
     this.#lazyChildren.set({});
     this.#loadingState.set({});
@@ -570,6 +876,13 @@ export class SdTree<T = unknown> {
       ...node,
       icon: this.#iconOf(node),
       selected,
+      active: false,
+      highlighted: selected,
+      ariaSelected: null as boolean | null,
+      ariaLabel: null as string | null,
+      count: null as string | null,
+      menuLabel: this.#i18n.t('core.component.tree.open-menu', { label: node.label }),
+      muted: false,
       selectionDisabled,
       selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector, selectedDescendants),
       toggleDisabled: !node.hasChildren || node.isLoading,
@@ -668,6 +981,8 @@ export class SdTree<T = unknown> {
         // `visibleNodes` + `visibleViewNodes` map lại từ đầu. Consumer nào đọc các field này bên
         // trong computed/template vẫn nhận đúng dependency signal, nên phản ứng không đổi.
         get isExpanded(): boolean {
+          const controlled = tree.#expandedIdSet();
+          if (controlled) return controlled.has(item.id);
           return tree.#expandedState()[item.id] ?? item.expanded ?? tree.#defaultExpanded(level);
         },
         get isLoading(): boolean {
@@ -678,6 +993,61 @@ export class SdTree<T = unknown> {
         },
       };
       node.children = this.#buildNodes(rawChildren, level + 1, node);
+      return node;
+    });
+  }
+
+  #cancelSearch(): void {
+    clearTimeout(this.#searchTimer);
+    this.#searchTimer = undefined;
+    this.#searchController?.abort();
+    this.#searchController = null;
+    this.searchPending.set(false);
+  }
+
+  async #runSearch(text: string, onSearch: NonNullable<SdTreeLazyOption<T>['onSearch']>): Promise<void> {
+    const controller = new AbortController();
+    this.#searchController = controller;
+    try {
+      const results = await onSearch(text, controller.signal);
+      if (controller.signal.aborted) return;
+      this.#searchCollapsed.set(new Set());
+      for (const { path } of results) for (const item of path) this.#searchSeen.set(item.id, item.data);
+      this.#searchSeenTick.update(value => value + 1);
+      this.#search.set(mergeSearchPaths(text, results));
+    } catch (error) {
+      if (!controller.signal.aborted) this.loadError.emit({ error });
+    } finally {
+      if (this.#searchController === controller) this.searchPending.set(false);
+    }
+  }
+
+  /** Cây kết quả tìm: con lấy từ các đường đi đã gộp, mở hết trừ nút người dùng tự đóng, không tải lazy. */
+  #buildSearchNodes(
+    search: SdTreeSearchResult<T>,
+    items: SdTreeItemLazy<T>[],
+    level: number,
+    parent: SdTreeNode<T> | null
+  ): SdTreeNode<T>[] {
+    const tree = this;
+    return items.map(item => {
+      const children = search.children.get(item.id) ?? [];
+      const node: SdTreeNode<T> = {
+        treeItem: item,
+        data: item.data,
+        id: item.id,
+        label: item.label,
+        level,
+        parent,
+        children: [],
+        hasChildren: children.length > 0,
+        get isExpanded(): boolean {
+          return !tree.#searchCollapsed().has(item.id);
+        },
+        isLoading: false,
+        loadError: undefined,
+      };
+      node.children = this.#buildSearchNodes(search, children, level + 1, node);
       return node;
     });
   }
@@ -717,9 +1087,113 @@ export class SdTree<T = unknown> {
     return node.isExpanded ? 'folder_open' : 'folder';
   }
 
-  async #ensureLazyChildren(node: SdTreeNode<T>): Promise<void> {
+  async #expandNode(node: SdTreeNode<T>, signal?: AbortSignal): Promise<boolean> {
+    if (!node.hasChildren) return false;
+    await this.#ensureLazyChildren(node);
+    // `reveal` bị huỷ trong lúc chờ tải: con đã vào cache, nhưng không mở nút và không phát sự kiện.
+    if (signal?.aborted) return false;
+    const next = this.#findNode(node.id);
+    if (!next || !next.hasChildren || next.loadError) return false;
+    if (next.isExpanded) return true;
+
+    this.#setExpanded(next.id, true);
+    const toggleEvent = { item: next.data, expanded: true, node: { ...next, isExpanded: true } };
+    this.option()?.onExpand?.(toggleEvent);
+    this.expandChange.emit(toggleEvent);
+    return true;
+  }
+
+  #collapseNode(node: SdTreeNode<T>): void {
+    this.#setExpanded(node.id, false);
+    const toggleEvent = { item: node.data, expanded: false, node: { ...node, isExpanded: false } };
+    this.option()?.onCollapse?.(toggleEvent);
+    this.collapseChange.emit(toggleEvent);
+  }
+
+  #setExpanded(id: string, expanded: boolean): void {
+    if (this.#search()) {
+      this.#searchCollapsed.update(collapsed => {
+        const next = new Set(collapsed);
+        if (expanded) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+      return;
+    }
+    const controlled = this.expandedIds();
+    if (controlled === undefined) {
+      this.#expandedState.update(state => ({ ...state, [id]: expanded }));
+      return;
+    }
+    const rest = controlled.filter(value => value !== id);
+    this.expandedIds.set(expanded ? [...rest, id] : rest);
+  }
+
+  /** Id các nút cha của một nút ĐÃ có trong cây (từ gốc tới cha trực tiếp); `undefined` khi nút chưa có. */
+  #ancestorIds(id: string): string[] | undefined {
+    const node = this.#findNode(id);
+    if (!node) return undefined;
+    const path: string[] = [];
+    for (let current = node.parent; current; current = current.parent) path.unshift(current.id);
+    return path;
+  }
+
+  #rowElement(id: string): HTMLElement | undefined {
+    const rows = this.#host.nativeElement.querySelectorAll<HTMLElement>('[role="treeitem"]');
+    return Array.from(rows).find(row => row.getAttribute('data-tree-node') === id);
+  }
+
+  /**
+   * Các nút cha vừa mở chưa chắc đã có trong DOM ở lần render đầu (cây con lazy, view chưa refresh), nên thử lại
+   * vài lần render rồi thôi.
+   */
+  #scrollWhenRendered(id: string, attempt = 0): void {
+    afterNextRender(
+      () => {
+        if (this.#pendingScrollId !== id) return;
+        const row = this.#rowElement(id);
+        if (row) {
+          this.#pendingScrollId = null;
+          this.#scrollToRow(row);
+        } else if (attempt < 5 && this.visibleNodes().some(node => node.id === id)) {
+          this.#scrollWhenRendered(id, attempt + 1);
+        } else {
+          this.#pendingScrollId = null;
+        }
+      },
+      { injector: this.#injector }
+    );
+  }
+
+  /** Cuộn bằng `scrollTop` của vùng cuộn gần nhất: `scrollIntoView` sẽ cuộn luôn cả trang. */
+  #scrollToRow(row: HTMLElement): void {
+    const scroller = scrollParent(this.#host.nativeElement);
+    if (!scroller) return;
+    const box = scroller.getBoundingClientRect();
+    const rect = row.getBoundingClientRect();
+    // Thanh chọn dính đáy vùng cuộn và đè lên các hàng ở đó: mép dưới nhìn thấy được là mép trên của thanh.
+    const bar = this.#host.nativeElement.querySelector<HTMLElement>(':scope > .sd-tree__selection-bar');
+    const bottom = box.bottom - (bar?.offsetHeight ?? 0);
+    if (rect.top < box.top) scroller.scrollTop -= box.top - rect.top;
+    else if (rect.bottom > bottom) scroller.scrollTop += rect.bottom - bottom;
+  }
+
+  #ensureLazyChildren(node: SdTreeNode<T>, force = false): Promise<void> {
+    if (this.resolvedTree().loadType !== 'lazy') return Promise.resolve();
+    if (!force && (node.children.length > 0 || this.#lazyChildren()[node.id])) return Promise.resolve();
+    const running = this.#lazyLoads.get(node.id);
+    if (running && !force) return running;
+
+    const load = this.#loadLazyChildren(node).finally(() => {
+      if (this.#lazyLoads.get(node.id) === load) this.#lazyLoads.delete(node.id);
+    });
+    this.#lazyLoads.set(node.id, load);
+    return load;
+  }
+
+  async #loadLazyChildren(node: SdTreeNode<T>): Promise<void> {
     const option = this.resolvedTree();
-    if (option.loadType !== 'lazy' || node.children.length > 0 || this.#lazyChildren()[node.id]) return;
+    if (option.loadType !== 'lazy') return;
 
     const generation = this.#treeGeneration;
     const loadId = (this.#lazyLoadIds.get(node.id) ?? 0) + 1;
@@ -820,7 +1294,7 @@ export class SdTree<T = unknown> {
   }
 
   #selectedItemsFromIds(selectedIds: Set<string>): T[] {
-    return this.#flattenAll(this.rootNodes())
+    return this.#selectableNodes()
       .filter(node => selectedIds.has(node.id))
       .map(node => node.data);
   }
@@ -830,7 +1304,7 @@ export class SdTree<T = unknown> {
     const selectedDataIds = new Set(selectedItems.map(item => this.#dataId(item)).filter((id): id is string => !!id));
     const result = new Set<string>();
 
-    for (const node of this.#flattenAll(this.rootNodes())) {
+    for (const node of this.#selectableNodes()) {
       const dataId = this.#dataId(node.data);
       if (selectedRefs.has(node.data) || (dataId && selectedDataIds.has(dataId))) {
         result.add(node.id);
@@ -867,6 +1341,41 @@ function normalizeText(value: string): string {
     .replace(/[\u0111\u0110]/g, match => (match === '\u0110' ? 'D' : 'd'))
     .toLowerCase()
     .trim();
+}
+
+function formatCount(value: number | null | undefined, format: Intl.NumberFormat): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
+  return format.format(Math.floor(value));
+}
+
+function mergeSearchPaths<T>(text: string, results: readonly { path: readonly SdTreeItemLazy<T>[] }[]): SdTreeSearchResult<T> {
+  const search: SdTreeSearchResult<T> = { text, roots: [], children: new Map(), matched: new Set() };
+  const seen = new Set<string>();
+  for (const { path } of results) {
+    path.forEach((item, index) => {
+      if (index === path.length - 1) search.matched.add(item.id);
+      if (seen.has(item.id)) return;
+      seen.add(item.id);
+      if (index === 0) {
+        search.roots.push(item);
+        return;
+      }
+      const parentId = path[index - 1].id;
+      const siblings = search.children.get(parentId);
+      if (siblings) siblings.push(item);
+      else search.children.set(parentId, [item]);
+    });
+  }
+  return search;
+}
+
+/** Vùng cuộn gần nhất, tính cả chính host (consumer có thể đặt `overflow` thẳng lên `sd-tree`). */
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (let current: HTMLElement | null = element; current; current = current.parentElement) {
+    const overflow = getComputedStyle(current).overflowY;
+    if (overflow === 'auto' || overflow === 'scroll') return current;
+  }
+  return null;
 }
 
 function sanitizeId(value: string): string {

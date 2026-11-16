@@ -1,4 +1,3 @@
-
 :host {
   --sd-tree-row-height: 44px;
   --sd-tree-control-size: 28px;
@@ -45,7 +44,8 @@
   outline-offset: -2px;
 }
 
-.sd-tree__row--selected {
+.sd-tree__row--selected,
+.sd-tree__row--active {
   background: var(--sd-tree-selected-bg);
 }
 
@@ -239,8 +239,30 @@
   font-weight: var(--sd-font-weight-regular, 400);
 }
 
+// R6: phần khớp giữ màu chữ của nhãn, chỉ thêm nền. Nút chỉ nằm trên đường tới kết quả thì chữ nhạt.
+.sd-tree__label {
+  --sd-highlight-bg: var(--sd-warning-light);
+  // `inherit` ở đây sẽ là từ khoá của chính custom property, không tới được `color` của <mark>.
+  --sd-highlight-color: currentcolor;
+}
+
+.sd-tree__row--context .sd-tree__label {
+  color: var(--sd-tree-muted, #5f6f89);
+}
+
 .sd-tree__row--parent .sd-tree__label {
   font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+// Số đếm (R3): bám dòng đầu như các control khác. ⋯ luôn giữ chỗ bằng opacity nên số không nhảy khi hover.
+.sd-tree__count {
+  flex: 0 0 auto;
+  padding: 6px 0 0 8px;
+  color: var(--sd-tree-muted, #5f6f89);
+  font-size: var(--sd-font-size-12, 12px);
+  line-height: var(--sd-line-height-16, 16px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sd-tree__command-trigger {
@@ -259,10 +281,20 @@
   transition: opacity var(--sd-duration-fast, 120ms) ease;
 }
 
+// R4: hàng có focus (chính nó hoặc phần tử bên trong) và nút đang mở cũng hiện ⋯, để bàn phím dùng được.
 .sd-tree__row:hover .sd-tree__command-trigger,
+.sd-tree__row:focus-within .sd-tree__command-trigger,
+.sd-tree__row--active .sd-tree__command-trigger,
 .sd-tree__command-trigger:focus-within,
 .sd-tree__command-trigger:has(button[aria-expanded='true']) {
   opacity: 1;
+}
+
+// Màn cảm ứng không có hover: ⋯ luôn hiện.
+@media (pointer: coarse) {
+  .sd-tree__command-trigger {
+    opacity: 1;
+  }
 }
 
 :host ::ng-deep .sd-tree__command-trigger button.c-button {
@@ -276,76 +308,50 @@
   }
 }
 
-.c-bg-length {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  position: static;
-  width: auto;
-  min-width: 48px;
-  height: 48px;
-  padding: 12px 8px;
-  background: var(--sd-primary);
-  // why: badge nằm sát mép trái của `.c-quick-action` nên nó LÀ góc trái của thanh. Bo 4px trong khi
-  // thanh bo 8px làm hai đầu thanh lệch nhau — trái vuông hơn phải. Khớp đúng 8px của thanh.
-  border-radius: 8px 0 0 8px;
-}
-
-.c-bg-length .c-length {
-  position: static;
-  width: auto;
-  min-width: 32px;
-  height: 24px;
-  color: var(--sd-text-on-solid, #ffffff);
-  font-family: Roboto, sans-serif;
-  font-size: var(--sd-font-size-16, 16px);
-  font-style: normal;
-  font-weight: var(--sd-font-weight-medium, 500);
-  line-height: var(--sd-line-height-24, 24px);
-  text-align: center;
-}
-
-.c-message {
-  position: static;
-  min-width: 200px;
-  height: 20px;
-  margin: 0 0 0 8px;
-  color: var(--sd-tree-strong-text, #000000);
-  font-family: Roboto, sans-serif;
-  font-size: var(--sd-font-size-14, 14px);
-  font-style: normal;
-  font-weight: normal;
-  line-height: var(--sd-line-height-20, 20px);
-}
-
-.sd-tree__qa-actions {
-  align-items: center;
-  gap: 4px;
-  margin-right: 8px;
+// SB: thanh chọn dính đáy vùng cuộn gần nhất. Nền surface để hàng cuộn bên dưới không lộ qua khe 8px quanh khung.
+.sd-tree__selection-bar {
+  // flow-root: lề 8px trên dưới của khung nằm trong thanh, nên nền surface phủ cả hai khe đó.
+  display: flow-root;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding-inline: 8px;
+  background: var(--sd-surface);
 }
 
 .sd-tree__root-loading,
-.sd-tree__root-error {
+.sd-tree__root-error,
+.sd-tree__root-empty {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 120px;
   padding: 16px;
+  box-sizing: border-box;
 }
 
+// R8: chỉ icon mang màu lỗi; chữ là chữ thường và nút "Thử lại" là sd-button.
 .sd-tree__root-error {
   flex-direction: column;
-  color: var(--sd-error, #d92d20);
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  text-align: center;
+}
 
-  button {
-    min-height: 36px;
-    padding: 6px 12px;
-    border: 1px solid currentcolor;
-    border-radius: var(--sd-radius-6, 6px);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-  }
+.sd-tree__root-error-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--sd-error, #d92d20);
+  font-size: var(--sd-font-size-24, 24px);
+  line-height: var(--sd-line-height-24, 24px);
+}
+
+.sd-tree__root-empty {
+  color: var(--sd-tree-muted, #5f6f89);
+  font-size: var(--sd-font-size-14, 14px);
+  line-height: var(--sd-line-height-20, 20px);
+  text-align: center;
+  overflow-wrap: anywhere;
 }

@@ -397,3 +397,44 @@ Chụp trong Browser pane hay timeout khi cửa sổ bị ẩn, nên dùng Playw
 - **Góc trắng sau ô bo tròn** (hàng filter bảng nền xám, ô disabled): wrapper mang nền nhưng chỉ bo 8px lúc focus, lúc
   nghỉ Material bo 4px trên / 0px dưới → nền tràn ra ngoài cung viền. Bo `--sd-control-radius` ở mọi trạng thái.
 - Spec RED trước cho cả ba (`badge-picker.component.spec.ts`, `form-field-control-tokens.spec.ts`).
+
+## Gói design-tree-selection (2026-11-13)
+
+Nhánh `feat/tree-navigation`, cắt từ `origin/main` tại `ff1e5d602` (#149). Thông số: [`design-tree-selection/tree-selection.md`](design-tree-selection/tree-selection.md).
+Review độc lập: [`design-tree-selection/reviews/`](design-tree-selection/reviews/).
+
+| Checkpoint | Nội dung | Commit |
+| --- | --- | --- |
+| 1 | Model, API, R1, R3, R4 (TR-01…03, 06, 07) | `3ddc69c61` |
+| 2 | R2, R5, R7 (TR-04, 05, 08, 10) | `8d5a80212` |
+| 3 | R6 và tô phần khớp (TR-09) | `bcd405d48` |
+| 4 | R8 trạng thái gốc (TR-11) | `ec54e5b60` |
+| 5 | SB thanh chọn dùng chung (SB-01…04) | `354061bee` |
+| R1 | Sửa theo review R1 (TR-B-01…06) | `b26c92bb0` |
+| 6 | MM (MM-01…03), docs, CHANGELOG, sync, showcase + E2E | `da1e1ca20`, `4f63b43f2`, `4ea76a5f7`, `2ae535e2a` |
+| R2 | Sửa theo review R2: N1 (TR-B-07), N2 (chữ về autoId) | commit `fix(tree): reveal không cuộn nút xuống dưới thanh chọn` |
+
+Đã chạy trên Node 22.22.3 (portable, `C:\tmp\n22`): full Karma v19 có coverage 10017 SUCCESS, lint, `ng build sdcorejs-angular`,
+`check:sync`, `test:theme`, `check:scss-hex`, `test:no-mat-menu`, `test:check-i18n`, `test:showcase-generators`,
+E2E `showcase/e2e/components/tree.e2e.ts` 6/6 (project `asia-bangkok`).
+
+Điểm lệch spec, cần PD chốt:
+
+- Nền phần khớp dùng `--sd-warning-light`: token `--sd-warning-container` không có trong repo, quy tắc cấm thêm token.
+- Debounce của `onSearch` là 300ms như sd-kanban (R1 N1).
+- Thanh chọn của cây nằm trong luồng (sticky), nên host tự cao thêm bằng chiều cao thanh; không đặt `padding-bottom` riêng.
+- Lệnh của cây không khai `color` theo mặc định của sd-button như ở bảng (trước là primary).
+- Menu thiết lập external filter: bấm ô chọn giữ menu mở; kích hoạt mục bằng bàn phím thì đóng. AutoId `setting-menu` không còn.
+- `data-autoid` của nút toán tử mobile nằm trên host `sd-button`.
+- Shift+F10 / ContextMenu chỉ bật khi `navigation` bật; ⋯ hiện khi focus và trên màn cảm ứng áp cho mọi cây.
+- Lọc static không tô muted nút cha (chỉ tìm trên server mới tô).
+- `reveal` không cuộn khi trang cuộn bằng document (R1 N4, phần cuộn theo trang).
+
+Chưa làm:
+
+- Ảnh chụp so với HTML mục 01–05 (light, dark, RTL).
+- E2E external filter và mobile filter trên showcase (đã có unit test MM-01, MM-02).
+- R2 N3: menu thiết lập external filter đóng khi kích hoạt bằng bàn phím và mục không có `aria-checked` (cần đổi ở `components/button`, chờ PD chốt).
+- R2 G3: ngưỡng hẹp của thanh đo trên `sd-selection-bar` (đã trừ padding 8px của chủ sở hữu) và là `< 600` thay cho `<= 600`.
+- R2 G5, G6, G7: dọn `#searchSeen`, `role=status` cho khối rỗng, bề mặt public thừa.
+- Coverage theo file: `tree.component.ts` branches 84,1% (ngưỡng 85%), `selection-bar.component.ts` branches 80%.

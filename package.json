@@ -19,6 +19,7 @@
     "test:window-api": "node --test scripts/window-public-api.test.mjs scripts/annotate-window-deprecation.test.mjs",
     "check:scss-hex": "node scripts/check-scss-hex.mjs",
     "test:check-scss-hex": "node --test scripts/check-scss-hex.test.mjs",
+    "test:no-mat-menu": "node --test scripts/no-mat-menu.test.mjs",
     "check:table-mobile-consumer": "node scripts/check-table-mobile-consumer.mjs",
     "check:table-aggregate-consumer": "node scripts/check-table-aggregate-consumer.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
@@ -48,7 +49,7 @@
     "build:page": "node scripts/build-published-page.mjs",
     "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
-    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:ci-selection && npm run test:file-explorer-icons && npm run test:pattern-docs && npm run test:theme && npm run test:theme-token-list && npm run test:window-api && npm run test:check-scss-hex",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page && npm run test:check-i18n && npm run test:supported-versions && npm run test:version-sync-contract && npm run test:release-package-contract && npm run test:publish-npm-workflow && npm run test:ci-selection && npm run test:file-explorer-icons && npm run test:pattern-docs && npm run test:theme && npm run test:theme-token-list && npm run test:window-api && npm run test:check-scss-hex && npm run test:no-mat-menu",
     "changeset": "changeset"
   },
   "devDependencies": {
