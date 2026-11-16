@@ -382,6 +382,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - One root service holds a single media query listener for every `sdScroll`. Mouse listeners and a pending `scrollTop()` are removed on destroy, and a new `scrollTop()` replaces a pending one.
 - Code that dispatched synthetic `mouseover`/`mouseout` on the host to toggle the scrollbar should call `onMouseOver()`/`onMouseOut()`. Details in `sd-scroll.md`.
 
+#### Table
+
+- On the phone, the filter sheet and the one-filter chip sheet wrote their copy straight to the filter register on **Áp dụng**, so column `filter.onChange`, `filter.operatorChange` and external `onChange` never ran there. They now run after the write, once per filter whose value changed, like the query bar. Closing without applying calls nothing, an untouched `default` is not a change, external `custom` filters are skipped, and a `time` column edited through the column filter is not called twice.
+- The copy is no longer made with `JSON`, so `Date` values in the filters (including `Date` defaults) stay `Date`s instead of turning into ISO strings after **Áp dụng**. Details in `sd-table.md` ("Callbacks on the phone").
+
 ## [3.5] - 2026-11-05
 
 Packages `19.3.5` · `20.3.5` · `21.3.5` · `22.3.5`, validated against `*.3.4`.
