@@ -399,6 +399,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The icon-only Search button had a tooltip but no `aria-label`, so it was read as its icon ligature "search". It now carries `core.component.query-bar.search` as `aria-label` too.
 - The type label of each field in the field picker (11px) used `--sd-query-bar-text-muted`, 4.2:1 on the light panel of the default theme, under the 4.5:1 of WCAG AA. It uses `--sd-query-bar-text-secondary`: 5.9:1 light, 10.9:1 dark.
 
+#### Scroll
+
+- On a touch screen, `sdScroll` (the scroll area of `sd-table`) only scrolled horizontally after a first tap: `overflow-x` stayed `hidden` until an emulated `mouseover`, which the browser fires after a tap. A device that matches `(hover: none), (any-pointer: coarse)` now gets `overflow-x: auto` from the first render. Laptops with a touch screen match `any-pointer: coarse` and always show the horizontal scrollbar.
+- Mouse devices keep the scrollbar hidden at rest. The toggle listens to `mouseenter`/`mouseleave` outside `NgZone` instead of `mouseover`/`mouseout`, so moving across table cells no longer runs change detection, and `overflow-x` is written only when it changes.
+- One root service holds a single media query listener for every `sdScroll`. Mouse listeners and a pending `scrollTop()` are removed on destroy, and a new `scrollTop()` replaces a pending one.
+- Code that dispatched synthetic `mouseover`/`mouseout` on the host to toggle the scrollbar should call `onMouseOver()`/`onMouseOut()`. Details in `sd-scroll.md`.
+
+#### Table
+
+- On the phone, the filter sheet and the one-filter chip sheet wrote their copy straight to the filter register on **Áp dụng**, so column `filter.onChange`, `filter.operatorChange` and external `onChange` never ran there. They now run after the write, once per filter whose value changed, like the query bar. Closing without applying calls nothing, an untouched `default` is not a change, external `custom` filters are skipped, and a `time` column edited through the column filter is not called twice.
+- The copy is no longer made with `JSON`, so `Date` values in the filters (including `Date` defaults) stay `Date`s instead of turning into ISO strings after **Áp dụng**. Details in `sd-table.md` ("Callbacks on the phone").
+
 ## [3.5] - 2026-11-05
 
 Packages `19.3.5` · `20.3.5` · `21.3.5` · `22.3.5`, validated against `*.3.4`.

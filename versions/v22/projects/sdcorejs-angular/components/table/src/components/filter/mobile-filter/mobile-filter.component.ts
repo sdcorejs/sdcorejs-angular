@@ -34,11 +34,10 @@ import {
   TableFilterRegister,
   TableFilterValue,
 } from '../../../services/table-filter/table-filter.model';
+import { cloneTableFilterValue, runTableFilterCallbacks } from '../../../services/table-filter/table-filter-callbacks.util';
 import { SdTableSheetHistory, sdTableSheetSwipe } from '../../mobile-sheet/mobile-sheet';
 import { SdTableMobileFilterFieldComponent } from './mobile-filter-field.component';
 import { sdTableMobileFilterSummary } from './mobile-filter-summary';
-
-const clone = <V>(value: V): V => (value ? JSON.parse(JSON.stringify(value)) : value);
 
 /**
  * Filter sheet of the phone (handoff table-mobile 5): one `sd-modal` bottom sheet with two levels — the list of
@@ -146,10 +145,10 @@ export class MobileFilterComponent {
   open = () => {
     const reg = this.filterRegister();
     const val = reg?.value.get();
-    const cloned = (o: any) => (o ? clone(o) : {});
-    this.workingColumnFilter.set(cloned(val?.columnFilter));
-    this.workingColumnOperator.set(cloned(val?.columnOperator));
-    this.workingExternalFilter.set(cloned(val?.externalFilter));
+    // why: copy giữ `Date` — bản JSON biến default kiểu ngày thành chuỗi và làm lệch so sánh khi Áp dụng.
+    this.workingColumnFilter.set(cloneTableFilterValue(val?.columnFilter));
+    this.workingColumnOperator.set(cloneTableFilterValue(val?.columnOperator));
+    this.workingExternalFilter.set(cloneTableFilterValue(val?.externalFilter));
     this.page.set(undefined);
     this.revision.update(value => value + 1);
     this.sheet().open();
@@ -178,8 +177,24 @@ export class MobileFilterComponent {
   }
 
   onApply = () => {
-    this.filterRegister()?.value.set(this.working());
+    const register = this.filterRegister();
+    const previous = cloneTableFilterValue(register?.value.get());
+    const next = this.working();
+    register?.value.set(next);
     this.sheet().close();
+    // why: control của sheet chỉ sửa bản nháp nên không gọi callback như query bar; gọi một lần cho mỗi filter đã đổi,
+    // sau khi ghi. Cột custom dùng column-filter, đã tự gọi `filter.onChange` lúc sửa — không gọi lần hai.
+    const customColumns = new Set(
+      (this.model()?.items ?? []).flatMap(item => (item.custom?.kind === 'column' ? [item.custom.column.field] : []))
+    );
+    runTableFilterCallbacks({
+      previous,
+      next,
+      externalFilters: this.externalFilterItems(),
+      columns: this.columnItems(),
+      operatorChange: this.filter()?.operatorChange,
+      columnOnChange: column => !customColumns.has(column.field),
+    });
   };
 
   onCancel = () => {

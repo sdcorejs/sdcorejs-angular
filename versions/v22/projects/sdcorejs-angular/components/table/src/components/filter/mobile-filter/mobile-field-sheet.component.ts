@@ -20,10 +20,9 @@ import type { SdTable } from '../../../table.component';
 import { sdTableMobileFilterClear, type SdTableMobileFilterItem } from '../../../services/table-filter/table-mobile-filter.util';
 import type { TableFilterValue } from '../../../services/table-filter/table-filter.model';
 import type { SdTableQueryContext } from '../../../services/table-filter/table-query-bar.util';
+import { cloneTableFilterValue, runTableFilterCallbacks } from '../../../services/table-filter/table-filter-callbacks.util';
 import { SdTableSheetHistory, sdTableSheetSwipe } from '../../mobile-sheet/mobile-sheet';
 import { SdTableMobileFilterFieldComponent } from './mobile-filter-field.component';
-
-const clone = <V>(value: V): V => (value ? JSON.parse(JSON.stringify(value)) : value);
 
 /**
  * Sheet of one filter, opened from its chip (handoff table-mobile 4). Works on a copy: Apply writes that filter and
@@ -64,7 +63,7 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
     const register = this.table().filterRegister;
     if (!register || !item.source) return;
     this.item.set(item);
-    this.working.set(clone(register.value.get()));
+    this.working.set(cloneTableFilterValue(register.value.get()));
     this.revision.update(value => value + 1);
     // why: render the title first; Material puts the focus on the title (cdkFocusInitial) as soon as the sheet attaches.
     this.#changes.detectChanges();
@@ -107,6 +106,15 @@ export class SdTableMobileFieldSheetComponent<T = unknown> {
     }
     this.sheet().close();
     register.value.set(next);
+    // why: control của sheet sửa bản nháp nên không gọi callback; gọi cho đúng filter này nếu nó đã đổi, sau khi ghi.
+    runTableFilterCallbacks({
+      previous: current,
+      next,
+      externalFilters: source.external ? [source.external] : [],
+      columns: source.column ? [source.column] : [],
+      operatorChange: this.table().tableOption()?.filter?.operatorChange,
+      columnOnChange: () => true,
+    });
   }
 
   /** Every close path ends here: drop the history entry the sheet pushed and the copy. */

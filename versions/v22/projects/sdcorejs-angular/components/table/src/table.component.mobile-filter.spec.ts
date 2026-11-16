@@ -545,6 +545,121 @@ describe('SdTable mobile filter chips', () => {
       }
     }));
   });
+
+  /** Mobile controls edit a copy, so the filter callbacks run on Apply — once per filter that changed, after the write. */
+  describe('filter callbacks', () => {
+    let customerChange: jasmine.Spy;
+    let statusChange: jasmine.Spy;
+    let operatorChange: jasmine.Spy;
+    const createWithCallbacks = () =>
+      create(h => {
+        customerChange = jasmine.createSpy('customerChange');
+        statusChange = jasmine.createSpy('statusChange');
+        operatorChange = jasmine.createSpy('operatorChange');
+        h.option.filter = {
+          operatorChange,
+          externalFilters: [{ field: 'customer', type: 'string', title: 'Khách hàng', default: 'An', onChange: customerChange }],
+        };
+        h.option.columns[1] = { ...h.option.columns[1], filter: { onChange: statusChange } } as (typeof h.option.columns)[number];
+      });
+    const sheetInput = () => overlay().querySelector<HTMLInputElement>('.sd-mobile-sheet-body input')!;
+    const type = (value: string) => {
+      const input = sheetInput();
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      settle();
+    };
+    const fullButton = (suffix: string): HTMLButtonElement =>
+      overlay().querySelector<HTMLButtonElement>(
+        `[data-autoid$="-mobile-filter-${suffix}"] button, button[data-autoid$="-mobile-filter-${suffix}"]`
+      )!;
+
+    it('sheet of one filter: Apply calls the external onChange with the new value, after the write', fakeAsync(() => {
+      createWithCallbacks();
+      customerChange.and.callFake(() => expect(table.filterRegister!.value.get().externalFilter?.['customer']).toBe('Bình'));
+      chip('customer').click();
+      settle();
+      type('Bình');
+      sheetButton('apply').click();
+      settle();
+      expect(customerChange).toHaveBeenCalledOnceWith('Bình');
+      expect(statusChange).not.toHaveBeenCalled();
+    }));
+
+    it('sheet of one filter: Apply calls the column onChange and operatorChange', fakeAsync(() => {
+      createWithCallbacks();
+      chip('status').click();
+      settle();
+      overlay().querySelectorAll<HTMLInputElement>('sd-checkbox input[type=checkbox]')[1].click();
+      settle();
+      sheetButton('apply').click();
+      settle();
+      expect(statusChange).toHaveBeenCalledTimes(1);
+      expect(statusChange.calls.mostRecent().args[0]).toEqual(['s1']);
+      expect(customerChange).not.toHaveBeenCalled();
+
+      chip('code').click();
+      settle();
+      overlay().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter-code-operator"] button')!.click();
+      settle();
+      overlay().querySelectorAll<HTMLButtonElement>('.sd-action-popover .sd-action-item')[1].click();
+      settle();
+      sheetButton('apply').click();
+      settle();
+      expect(operatorChange).toHaveBeenCalledTimes(1);
+      expect(operatorChange.calls.mostRecent().args[1]).toBe('EQUAL');
+    }));
+
+    it('sheet of one filter: Cancel and an untouched default call nothing', fakeAsync(() => {
+      createWithCallbacks();
+      chip('customer').click();
+      settle();
+      type('Bình');
+      sheetButton('cancel').click();
+      settle();
+      chip('customer').click();
+      settle();
+      sheetButton('apply').click();
+      settle();
+      expect(customerChange).not.toHaveBeenCalled();
+      expect(table.filterRegister!.value.get().externalFilter?.['customer']).toBe('An');
+    }));
+
+    it('full sheet: Apply calls the callbacks of every filter that changed, Cancel calls none', fakeAsync(() => {
+      createWithCallbacks();
+      const openAll = () => {
+        element().querySelector<HTMLButtonElement>('[data-autoid$="-mobile-filter"]')!.click();
+        settle();
+      };
+      const editBoth = () => {
+        fullButton('row-customer').click();
+        settle();
+        type('Bình');
+        fullButton('done').click();
+        settle();
+        fullButton('row-status').click();
+        settle();
+        overlay().querySelectorAll<HTMLInputElement>('sd-checkbox input[type=checkbox]')[2].click();
+        settle();
+        fullButton('done').click();
+        settle();
+      };
+      openAll();
+      editBoth();
+      fullButton('cancel').click();
+      settle();
+      expect(customerChange).not.toHaveBeenCalled();
+      expect(statusChange).not.toHaveBeenCalled();
+
+      openAll();
+      editBoth();
+      fullButton('apply').click();
+      settle();
+      expect(customerChange).toHaveBeenCalledOnceWith('Bình');
+      expect(statusChange).toHaveBeenCalledTimes(1);
+      expect(statusChange.calls.mostRecent().args[0]).toEqual(['s2']);
+    }));
+  });
 });
 
 @Component({
