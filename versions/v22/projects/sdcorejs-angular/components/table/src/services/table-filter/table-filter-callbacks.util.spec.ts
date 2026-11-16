@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SdTableColumn } from '../../models/table-column.model';
 import { cloneTableFilterValue, runTableFilterCallbacks } from './table-filter-callbacks.util';
 import { SdTableExternalFilter } from './table-filter.model';
@@ -33,7 +32,13 @@ describe('cloneTableFilterValue', () => {
 
 describe('runTableFilterCallbacks', () => {
   const external = (field: string, type: SdTableExternalFilter['type'] = 'values', onChange?: (v: any) => void) =>
-    ({ field, title: field, type, onChange, option: { items: [], valueField: 'id', displayField: 'name' } }) as any as SdTableExternalFilter;
+    ({
+      field,
+      title: field,
+      type,
+      onChange,
+      option: { items: [], valueField: 'id', displayField: 'name' },
+    }) as any as SdTableExternalFilter;
 
   it('calls onChange of every external filter whose value changed, with the new value', () => {
     const project = jasmine.createSpy('project');
