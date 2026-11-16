@@ -108,8 +108,13 @@ interface SdTreeSearchResult<T> {
 // Q4: cùng thời gian chờ với ô tìm của sd-kanban. `filter()` thường được gọi theo từng phím gõ.
 const SEARCH_DEBOUNCE_MS = 300;
 
+/**
+ * @deprecated Thanh chọn của cây nay là thanh dùng chung với sd-table và tự dựng autoId cho từng lệnh; template của
+ * cây không còn đọc kiểu này. Sẽ bỏ ở một bản breaking.
+ */
 export interface SdTreeSelectionActionView<T = unknown> {
   action: SdTreeSelectionAction<T>;
+  /** @deprecated AutoId của lệnh do thanh chọn dùng chung dựng; giá trị này không còn gắn vào DOM. */
   autoId: string | null;
 }
 
@@ -236,7 +241,10 @@ export class SdTree<T = unknown> {
   readonly #lazyLoads = new Map<string, Promise<void>>();
   #revealController: AbortController | null = null;
   #searchController: AbortController | null = null;
-  /** Data của các nút từng có trong kết quả tìm, để nút được tick ở đó vẫn là lựa chọn sau khi xoá chữ tìm. */
+  /**
+   * Data của các nút từng có trong kết quả tìm, để nút được tick ở đó vẫn là lựa chọn sau khi xoá chữ tìm. Chỉ giữ
+   * nút đang được chọn: dọn mỗi lần kết quả tìm được thay, bị xoá, và khi cây tải lại (`#pruneSearchSeen`).
+   */
   readonly #searchSeen = new Map<string, T>();
   readonly #searchSeenTick = signal(0);
   #searchTimer?: ReturnType<typeof setTimeout>;
@@ -356,13 +364,14 @@ export class SdTree<T = unknown> {
       return !hidden;
     });
   });
+  /** @deprecated Dùng `visibleSelectionActions()`; thanh chọn dùng chung tự dựng autoId. Sẽ bỏ ở một bản breaking. */
   readonly selectionActionViews = computed<SdTreeSelectionActionView<T>[]>(() => {
     return this.visibleSelectionActions().map((action, index) => ({
       action,
       autoId: this.#selectionActionAutoId(index),
     }));
   });
-  /** `selector.actions` (đã bỏ lệnh ẩn) theo shape của thanh chọn dùng chung; index khớp `selectionActionViews`. */
+  /** `selector.actions` (đã bỏ lệnh ẩn) theo shape của thanh chọn dùng chung; index khớp `visibleSelectionActions`. */
   readonly selectionBarActions = computed<ɵSdSelectionBarActionNormal[]>(() =>
     this.visibleSelectionActions().map(action => ({
       variant: 'normal',
@@ -375,6 +384,10 @@ export class SdTree<T = unknown> {
       click: () => this.onSelectionAction(action),
     }))
   );
+  /**
+   * @deprecated Nút xoá chọn thuộc thanh chọn dùng chung, autoId do thanh dựng từ `autoId()` của cây. Sẽ bỏ ở một bản
+   * breaking.
+   */
   readonly clearSelectionAutoId = computed(() => {
     const base = this.autoId();
     return base ? `${base}-clear-selection` : null;
@@ -385,7 +398,7 @@ export class SdTree<T = unknown> {
    * đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` — vốn chỉ chọn rồi bấm "Áp dụng" ở
    * footer modal, không có action nào — không có thanh này.
    */
-  readonly selectionQuickActionOpened = computed(() => this.selectedCount() > 0 && this.selectionActionViews().length > 0);
+  readonly selectionQuickActionOpened = computed(() => this.selectedCount() > 0 && this.visibleSelectionActions().length > 0);
 
   /**
    * Template-facing row model. Expensive/variable values are resolved once per
@@ -518,6 +531,7 @@ export class SdTree<T = unknown> {
     if (!onSearch || !text.trim()) {
       this.#search.set(null);
       this.#searchCollapsed.set(new Set());
+      this.#pruneSearchSeen();
       return;
     }
     this.searchPending.set(true);
@@ -732,12 +746,16 @@ export class SdTree<T = unknown> {
         if (!node.isExpanded) void this.toggle(node);
         else if (nodes[index + 1]?.parent?.id === node.id) this.#focusVisibleNode(index + 1);
         return;
-      case 'ArrowLeft':
-        if (!node.isExpanded && !node.parent) return;
+      case 'ArrowLeft': {
+        // why: lá cũng có `isExpanded` (vd. `defaultExpanded: true` áp cho mọi mức), nên phải xét `hasChildren`;
+        // thiếu điều kiện này ← trên lá gọi `toggle` (không làm gì) thay vì về nút cha.
+        const open = node.hasChildren && node.isExpanded;
+        if (!open && !node.parent) return;
         event.preventDefault();
-        if (node.isExpanded) void this.toggle(node);
+        if (open) void this.toggle(node);
         else this.#focusVisibleNode(nodes.findIndex(item => item.id === node.parent?.id));
         return;
+      }
       case 'F10':
       case 'ContextMenu':
         // R4: Shift+F10 hoặc phím ContextMenu mở menu ⋯ của hàng đang focus.
@@ -852,6 +870,8 @@ export class SdTree<T = unknown> {
   }
 
   #setRootItems(items: SdTreeItem<T>[] | undefined | null): void {
+    // Trước khi thay cây: lựa chọn còn được tính trên cây cũ, nên nút đang chọn từ kết quả tìm vẫn được giữ.
+    this.#pruneSearchSeen();
     this.#treeGeneration += 1;
     this.#lazyLoadIds.clear();
     this.#lazyLoads.clear();
@@ -1012,6 +1032,7 @@ export class SdTree<T = unknown> {
       const results = await onSearch(text, controller.signal);
       if (controller.signal.aborted) return;
       this.#searchCollapsed.set(new Set());
+      this.#pruneSearchSeen();
       for (const { path } of results) for (const item of path) this.#searchSeen.set(item.id, item.data);
       this.#searchSeenTick.update(value => value + 1);
       this.#search.set(mergeSearchPaths(text, results));
@@ -1020,6 +1041,22 @@ export class SdTree<T = unknown> {
     } finally {
       if (this.#searchController === controller) this.searchPending.set(false);
     }
+  }
+
+  /**
+   * Bỏ khỏi `#searchSeen` các nút không còn được chọn. Gọi trước khi kết quả tìm đang hiện bị thay hoặc xoá, và trước
+   * khi cây tải lại: lúc đó nút không chọn chỉ còn là data cũ, giữ lại thì Map lớn dần suốt đời component.
+   */
+  #pruneSearchSeen(): void {
+    if (!this.#searchSeen.size) return;
+    const selected = untracked(() => this.selectedIdSet());
+    let removed = false;
+    for (const id of [...this.#searchSeen.keys()]) {
+      if (selected.has(id)) continue;
+      this.#searchSeen.delete(id);
+      removed = true;
+    }
+    if (removed) this.#searchSeenTick.update(value => value + 1);
   }
 
   /** Cây kết quả tìm: con lấy từ các đường đi đã gộp, mở hết trừ nút người dùng tự đóng, không tải lazy. */
@@ -1089,9 +1126,11 @@ export class SdTree<T = unknown> {
 
   async #expandNode(node: SdTreeNode<T>, signal?: AbortSignal): Promise<boolean> {
     if (!node.hasChildren) return false;
+    const generation = this.#treeGeneration;
     await this.#ensureLazyChildren(node);
-    // `reveal` bị huỷ trong lúc chờ tải: con đã vào cache, nhưng không mở nút và không phát sự kiện.
-    if (signal?.aborted) return false;
+    // `reveal` bị huỷ trong lúc chờ tải: con đã vào cache, nhưng không mở nút và không phát sự kiện. Cây tải lại
+    // (`reload()`, đổi `items`) trong lúc chờ: con vừa tải thuộc cây cũ và đã bị bỏ, mở nút mới thì nó mở mà rỗng.
+    if (signal?.aborted || generation !== this.#treeGeneration) return false;
     const next = this.#findNode(node.id);
     if (!next || !next.hasChildren || next.loadError) return false;
     if (next.isExpanded) return true;

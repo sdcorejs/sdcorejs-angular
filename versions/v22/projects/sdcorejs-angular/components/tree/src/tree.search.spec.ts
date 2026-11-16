@@ -187,6 +187,10 @@ describe('SdTree search (R6)', () => {
     host.querySelector<HTMLElement>('[data-autoid="components-tree-sr-toggle-r1"]')!.click();
     await settle();
     expect(visibleIds()).toEqual(['r1']);
+    // Opening it again inside the results shows the results below it.
+    host.querySelector<HTMLElement>('[data-autoid="components-tree-sr-toggle-r1"]')!.click();
+    await settle();
+    expect(visibleIds()).toEqual(['r1', 'c1', 'g1', 'g2']);
 
     component.search.calls.reset();
     tree.filter('');

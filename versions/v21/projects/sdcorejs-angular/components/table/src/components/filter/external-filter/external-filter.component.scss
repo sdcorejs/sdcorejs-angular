@@ -7,10 +7,3 @@
   // Each grid column adds 8px, matching the section header's 16px inset.
   padding: 16px 8px;
 }
-// Ô chọn trong menu thiết lập chiếm trọn chiều ngang của mục, để bấm vào đâu trên dòng cũng là bấm vào nó.
-.sd-external-filter-setting {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  min-width: 0;
-}

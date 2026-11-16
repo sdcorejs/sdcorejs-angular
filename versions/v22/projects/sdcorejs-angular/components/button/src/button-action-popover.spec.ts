@@ -511,3 +511,109 @@ describe('SdButton keyed @for entries', () => {
     expect(trigger().classList).toContain('c-square');
   });
 });
+
+// Toggle entries, as in the settings menu of the sd-table external filters (handoff design-tree-selection, R2 N3).
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdButton, SdButtonItem],
+  template: `<sd-button prefixIcon="settings" tooltip="Fields">
+    @for (field of fields; track field) {
+      <sd-button-item [autoId]="'field-' + field" [checked]="state()[field]" [disabled]="field === 'locked'" (click)="toggle(field)">{{
+        field
+      }}</sd-button-item>
+    }
+    <sd-button-item (click)="reset()">Reset</sd-button-item>
+  </sd-button>`,
+})
+class ToggleHost {
+  fields = ['name', 'age', 'locked'];
+  state = signal<Record<string, boolean | null | undefined>>({ name: true, age: false, locked: true });
+  toggle = jasmine.createSpy('toggle').and.callFake((field: string) => this.state.update(state => ({ ...state, [field]: !state[field] })));
+  reset = jasmine.createSpy('reset');
+}
+
+describe('SdButton toggle entries (checked)', () => {
+  let fixture: ComponentFixture<ToggleHost>;
+  const menu = () => document.querySelector<HTMLElement>('[role="menu"]');
+  const rows = () => Array.from(menu()!.querySelectorAll<HTMLButtonElement>('.sd-action-item'));
+  const trigger = () => fixture.nativeElement.querySelector('sd-button button') as HTMLButtonElement;
+  const key = (target: HTMLElement, value: string) =>
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }));
+  const check = (row: HTMLButtonElement) => row.querySelector('.sd-action-check')?.textContent?.trim() ?? null;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [ToggleHost, NoopAnimationsModule] });
+    fixture = TestBed.createComponent(ToggleHost);
+    fixture.detectChanges();
+  });
+  afterEach(() => fixture.destroy());
+
+  it('renders checked entries as menuitemcheckbox with aria-checked and a check box; the others stay menuitem', () => {
+    trigger().click();
+    fixture.detectChanges();
+    const [name, age, locked, reset] = rows();
+    expect([name, age, locked, reset].map(row => row.getAttribute('role'))).toEqual([
+      'menuitemcheckbox',
+      'menuitemcheckbox',
+      'menuitemcheckbox',
+      'menuitem',
+    ]);
+    expect([name, age, locked, reset].map(row => row.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true', null]);
+    expect([name, age, locked, reset].map(check)).toEqual(['check_box', 'check_box_outline_blank', 'check_box', null]);
+    expect(name.classList).toContain('sd-action-item--checked');
+    expect(age.classList).not.toContain('sd-action-item--checked');
+    // The check box comes before the label.
+    expect(name.firstElementChild?.classList).toContain('sd-action-check');
+
+    // null / undefined: a plain command again.
+    fixture.componentInstance.state.set({ name: null, age: undefined, locked: true });
+    fixture.detectChanges();
+    expect(rows()[0].getAttribute('role')).toBe('menuitem');
+    expect(rows()[0].hasAttribute('aria-checked')).toBeFalse();
+    expect(check(rows()[1])).toBeNull();
+  });
+
+  it('activating a toggle keeps the menu open and the focus on the entry; a plain entry still closes', () => {
+    key(trigger(), 'ArrowDown');
+    fixture.detectChanges();
+    const [name, age, locked, reset] = rows();
+    expect(document.activeElement).toBe(name);
+
+    // Enter and Space reach the item as a native click.
+    name.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.toggle).toHaveBeenCalledOnceWith('name');
+    expect(menu()).not.toBeNull();
+    expect(document.activeElement).toBe(name);
+    expect(name.getAttribute('aria-checked')).toBe('false');
+    expect(check(name)).toBe('check_box_outline_blank');
+
+    // Toggle entries take part in the arrow keys; the disabled one is skipped and never runs.
+    key(name, 'ArrowDown');
+    expect(document.activeElement).toBe(age);
+    age.click();
+    fixture.detectChanges();
+    expect(age.getAttribute('aria-checked')).toBe('true');
+    key(age, 'ArrowDown');
+    expect(document.activeElement).toBe(reset);
+    locked.click();
+    expect(fixture.componentInstance.toggle).toHaveBeenCalledTimes(2);
+
+    reset.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.reset).toHaveBeenCalledTimes(1);
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(trigger());
+  });
+
+  it('Escape closes a menu of toggles and returns focus to the trigger', () => {
+    key(trigger(), 'ArrowDown');
+    fixture.detectChanges();
+    rows()[0].click();
+    fixture.detectChanges();
+    key(rows()[0], 'Escape');
+    fixture.detectChanges();
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(trigger());
+  });
+});

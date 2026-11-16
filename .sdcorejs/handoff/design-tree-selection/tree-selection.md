@@ -116,7 +116,7 @@ Navigation tắt: không đổi.
 - Giao diện (giữ từ bảng): `<sd-quick-action opened contained>`, host `padding-inline: 8px`; khung `padding: 10px 12px; margin: 8px 0; border: 1px solid var(--sd-border); border-radius: var(--sd-radius-10, 10px); box-shadow: none; gap: 16px`; message 13/20 gap 8px; nút `sd-button size="sm"` mặc định `type="light"`; nút “Thêm” `suffixIcon="more_horiz"`, `color="secondary"`, `type="light"`; nút xoá chọn 32px bo 8px, hover `--sd-surface-variant`.
 - **Ô icon** (Q7): 28px bo 8px, nền `--sd-primary-light`, icon `check_circle_outline` 18px `--sd-primary`, ở cả bảng và cây (bảng đang dùng `--sd-success-light` / `--sd-success-dark`).
 - Hẹp: theo bề rộng host < 600px bằng `ResizeObserver` (có kiểm tra tồn tại), thay `@media (max-width: 600px)`: khung xuống dòng gap 8px, nút giãn đủ hàng cao 40px, nút xoá chọn 40px ở góc trên phải, message `padding-right: 36px`.
-- **sd-tree**: thay `<sd-quick-action [opened]>` nổi bằng `ɵSdSelectionBar`, đặt sau các hàng trong host, `position: sticky; bottom: 0` trong vùng cuộn gần nhất, nền `--sd-surface`. Khi thanh mở, host thêm `padding-bottom` bằng chiều cao thanh để không che hàng cuối. Message: `selector.message` hoặc `core.component.tree.selected-count`. Actions: `selector.actions` giữ shape (`icon`, `title`, `tooltip`, `color`, `type`, `fontSet`, `hidden`, `click`); ánh xạ sang input của thanh. Điều kiện mở giữ: có mục chọn và ít nhất một action không hidden (`sd-tree-select` không có thanh). Bỏ style `.c-bg-length`, `.c-length`, `.c-message`, `.sd-tree__qa-*`.
+- **sd-tree**: thay `<sd-quick-action [opened]>` nổi bằng `ɵSdSelectionBar`, đặt sau các hàng trong host, `position: sticky; bottom: 0` trong vùng cuộn gần nhất, nền `--sd-surface`. Thanh nằm trong luồng sau các hàng, nên khi mở host cao thêm đúng bằng thanh và hàng cuối không bị che; không cần `padding-bottom` (chốt sau R2, mục 19). Message: `selector.message` hoặc `core.component.tree.selected-count`. Actions: `selector.actions` giữ shape (`icon`, `title`, `tooltip`, `color`, `type`, `fontSet`, `hidden`, `click`); ánh xạ sang input của thanh. Điều kiện mở giữ: có mục chọn và ít nhất một action không hidden (`sd-tree-select` không có thanh). Bỏ style `.c-bg-length`, `.c-length`, `.c-message`, `.sd-tree__qa-*`.
 - autoId giữ: `components-tree-<autoId>-selection-action-<index>`, `components-tree-<autoId>-clear-selection`; bảng giữ autoId hiện có.
 
 ## 13. MM: bỏ mat-menu còn lại của sd-table
@@ -149,7 +149,7 @@ Bỏ `MatMenuModule` khỏi hai component; style `.sd-custom-panel-filter-config
 | TR-10 | expandedIds hai chiều; đổi items không reset. |
 | TR-11 | Trạng thái gốc: lỗi không hiện chuỗi exception (throw `new Error('SECRET')`), nút sd-button, rỗng, không khớp, sdTreeEmptyDef. |
 | SB-01 | Bảng: thanh như cũ, ô icon primary; autoId giữ. |
-| SB-02 | Cây: thanh trong host, sticky, padding-bottom khi mở; không có action → không có thanh (sd-tree-select). |
+| SB-02 | Cây: thanh trong host, sticky, host cao thêm bằng thanh khi mở và hàng cuối không bị che; không có action → không có thanh (sd-tree-select). |
 | SB-03 | Hẹp theo host < 600px (FakeResizeObserver); không ResizeObserver không throw. |
 | SB-04 | Nút “Thêm” gom action theo cùng quy tắc ở bảng và cây. |
 | MM-01 | external filter: menu thiết lập là Action Popover, đủ mục, autoId giữ, hành vi giữ. |
@@ -179,3 +179,17 @@ Coverage file đã sửa: statements ≥ 90%, branches ≥ 85%.
 4. `filter()` hiện có trả về nút cha của kết quả chưa (để tô muted cho cả static).
 5. Danh sách mục trong menu thiết lập của external filter và các autoId để giữ.
 6. `errorMessage()` có được export public không, có nơi nào ngoài cây dùng không.
+## 19. PD chốt sau R2 (16/11/2026)
+Chốt theo đề xuất cho 12 điểm lệch của #150.
+1. Tô phần khớp: `--sd-warning-light` (repo không có `--sd-warning-container`). Ảnh chụp mục 04 cho màu gần thiết kế.
+2. Lệnh của thanh chọn trên cây không khai `color` theo `sd-button` (`secondary`), giống bảng; bản cũ là `primary`. Ghi BREAKING.
+3. Không `padding-bottom`: thanh nằm trong luồng, host tự cao thêm (sửa mục 12, SB-02).
+4. Ngưỡng hẹp đo bề rộng của chính thanh, `< 600`; giữ dạng hẹp hai hàng như hiện tại.
+5. Lọc static không làm mờ nút cha; tô phần khớp có ở cả hai chế độ.
+6. Menu thiết lập external filter: thêm input `checked` cho `sd-button-item` (`menuitemcheckbox`, `aria-checked`, ô chọn, kích hoạt không đóng menu); bỏ `sd-checkbox` lồng trong mục. AutoId `…-external-setting-<field>-checkbox` mất theo. Ghi BREAKING.
+7. Nút ⋯ hiện khi focus, ở nút đang mở và trên màn cảm ứng ở mọi cây; Shift+F10 chỉ khi bật `navigation`.
+8. `reveal` chỉ cuộn vùng cuộn gần nhất; `sd-tree.md` ghi cây cần vùng cuộn riêng, không thêm `window.scrollTo`.
+9. `onSearch` chờ 300ms như sd-kanban và file-explorer.
+10. Lệnh thứ ba trở đi của cây nằm trong "Thêm", autoId mất tiền tố `components-button-`. Ghi BREAKING.
+11. AutoId `…-external-setting-menu` mất. Ghi BREAKING cùng điểm 6.
+12. CHANGELOG: 2, 6, 10, 11 vào Changed (BREAKING for consumers) và "Before upgrading"; thêm một dòng Highlights cho chế độ điều hướng của sd-tree.

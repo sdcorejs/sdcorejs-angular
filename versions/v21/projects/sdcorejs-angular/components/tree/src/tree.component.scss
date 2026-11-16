@@ -29,7 +29,9 @@
   align-items: flex-start;
   min-height: var(--sd-tree-row-height);
   box-sizing: border-box;
-  padding: 8px 4px 8px calc(4px + (var(--sd-tree-level) * var(--sd-tree-indent-size)));
+  // Cạnh logic: ở RTL phần thụt lề nằm bên phải, nơi hàng bắt đầu.
+  padding-block: 8px;
+  padding-inline: calc(4px + (var(--sd-tree-level) * var(--sd-tree-indent-size))) 4px;
   color: var(--sd-tree-text, #102047);
   border-radius: 0;
 }
@@ -58,10 +60,10 @@
 
 .sd-tree__line {
   position: absolute;
-  left: calc(4px + var(--sd-tree-line-level) * var(--sd-tree-indent-size) + var(--sd-tree-control-size) / 2);
+  inset-inline-start: calc(4px + var(--sd-tree-line-level) * var(--sd-tree-indent-size) + var(--sd-tree-control-size) / 2);
   top: 0;
   bottom: 0;
-  border-left: 1px solid currentcolor;
+  border-inline-start: 1px solid currentcolor;
 }
 
 .sd-tree__line--branch::after {
@@ -257,7 +259,8 @@
 // Số đếm (R3): bám dòng đầu như các control khác. ⋯ luôn giữ chỗ bằng opacity nên số không nhảy khi hover.
 .sd-tree__count {
   flex: 0 0 auto;
-  padding: 6px 0 0 8px;
+  padding-block: 6px 0;
+  padding-inline: 8px 0;
   color: var(--sd-tree-muted, #5f6f89);
   font-size: var(--sd-font-size-12, 12px);
   line-height: var(--sd-line-height-16, 16px);
@@ -275,7 +278,7 @@
   width: 24px;
   height: var(--sd-tree-control-size);
   padding: 0;
-  margin-left: 8px;
+  margin-inline-start: 8px;
   line-height: var(--sd-line-height-24, 24px);
   opacity: 0;
   transition: opacity var(--sd-duration-fast, 120ms) ease;
