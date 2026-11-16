@@ -818,25 +818,6 @@
   }
 }
 
-:host .sd-table-query-bar-hint {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 0 12px 8px;
-  background: var(--sd-table-bg, #ffffff);
-  font-size: var(--sd-font-size-12, 12px);
-  line-height: var(--sd-line-height-18, 18px);
-  color: var(--sd-error);
-
-  sd-icon {
-    flex: none;
-    width: 16px;
-    height: 16px;
-    font-size: var(--sd-font-size-16, 16px);
-  }
-}
-
 // Lớp loading (design handoff table-loading, phương án 1e). Không phủ lên bảng: header, filter, sort, paginator và
 // thanh cuộn luôn dùng được; bàn phím không bị chặn.
 @include loading.skeleton-keyframes;

@@ -195,7 +195,6 @@
     @if (_queryBarMode) {
       <!-- why: thanh nằm trên .c-container, ngoài lớp loading (làm mờ .c-table) — luôn bấm được khi đang tải. -->
       @if (_queryBarOption) {
-        @let _queryBarHint = queryBarHint();
         <sd-query-bar
           class="sd-table-query-bar"
           role="search"
@@ -209,12 +208,6 @@
             <div sdQueryBarEnd class="sd-table-query-bar-end"><ng-container [ngTemplateOutlet]="_right.templateRef" /></div>
           }
         </sd-query-bar>
-        @if (_queryBarHint) {
-          <p class="sd-table-query-bar-hint" [id]="queryBarHintId">
-            <sd-icon name="error_outline" aria-hidden="true"></sd-icon>
-            <span>{{ _queryBarHint }}</span>
-          </p>
-        }
       }
     } @else if (_quickSearch && !_mobileCards) {
       <sd-table-quick-search
@@ -222,6 +215,7 @@
         [value]="quickSearchValue()"
         [autoId]="_autoId"
         [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
+        [requiredHintId]="requiredHintId"
         (valueChange)="onQuickSearchChange($event)" />
     }
     @if (_mobileCards) {
@@ -242,6 +236,7 @@
             [value]="quickSearchValue()"
             [autoId]="_autoId"
             [rightTemplate]="sdQuickSearchRightDef()?.templateRef"
+            [requiredHintId]="requiredHintId"
             (valueChange)="onQuickSearchChange($event)" />
         }
         @if (_tableOption.reload?.visible) {
@@ -828,8 +823,19 @@
           <!-- why: empty mặc định giữ 3 trạng thái (filter không có kết quả / chưa chọn filter bắt buộc / chưa có dữ liệu)
                cùng ảnh cấu hình qua SD_TABLE_CONFIGURATION.images, cho cả bảng server (NSP-5551). Không có role live:
                vùng .sd-table-live (luôn có trong DOM) đọc tiêu đề của khối này. -->
+          @let _requiredHint = requiredHint();
           <div class="c-no-data-row">
-            @if (_isFiltered) {
+            @if (_requiredHint) {
+              <!-- why: field bắt buộc còn rỗng thì bảng không đọc. Câu nhắc nằm ở đây, chỗ các dòng sẽ hiện, chứ không chèn
+                   dưới thanh lọc: dòng chèn thêm đẩy bảng xuống rồi kéo lên khi người dùng chọn xong. Thắng cả "không có
+                   kết quả" vì các bộ lọc khác chưa được áp dụng. -->
+              @if (tableConfiguration?.images?.filterRequired) {
+                <img class="c-image" [src]="tableConfiguration!.images!.filterRequired" alt="filter-required" />
+              } @else {
+                <img class="c-image sd-image-filter-required" alt="filter-required" />
+              }
+              <div class="T16R text-secondary sd-table-required-hint" [id]="requiredHintId">{{ _requiredHint }}</div>
+            } @else if (_isFiltered) {
               @if (tableConfiguration?.images?.filterEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
               } @else {

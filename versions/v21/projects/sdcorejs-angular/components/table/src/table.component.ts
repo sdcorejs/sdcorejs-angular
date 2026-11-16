@@ -578,6 +578,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (this.isFiltered()) return 'core.component.table.no-results';
     return this.requireFiltered() ? 'core.component.table.choose-filter-hint' : 'core.component.table.no-data';
   });
+  /** Text of that block for the status region: the required hint wins over the title, as on screen. */
+  readonly #emptyText = computed(() => {
+    const key = this.#emptyKey();
+    if (!key) return '';
+    return this.requiredHint() || this.#i18n.t(key);
+  });
   /** Rows that fill a table with a fixed height, measured when the skeleton shows. */
   readonly #skeletonFill = signal<number | undefined>(undefined);
   /** Skeleton rows of the desktop table (`matNoDataRow`) while `loadingView()` is `skeleton`; empty otherwise. */
@@ -833,7 +839,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   /** Chip trên thanh (nháp của thanh) và ô tìm — gắn hai chiều với `sd-query-bar`. */
   readonly barFilters = signal<Filter[]>([]);
   readonly barSearch = signal('');
-  readonly queryBarHintId = `sd-table-${Utilities.generateUuid()}-query-bar-hint`;
+  /** Id of the required hint in the empty block; `aria-describedby` of empty required chips and of the quick search input. */
+  readonly requiredHintId = `sd-table-${Utilities.generateUuid()}-required-hint`;
   /** Giá trị lọc đã áp dụng, theo lần phát gần nhất của filter register. */
   readonly #appliedFilter = signal<TableFilterValue | undefined>(undefined);
   // syncQueryParams: bật sau khi cấu hình + filter register sẵn sàng và state từ URL đã áp cho lần đọc đầu.
@@ -1011,7 +1018,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       appearance: 'flush',
       onClearAll: this.#clearQueryBar,
       clearDisabled: !this.#queryBarDirty(),
-      invalidHintId: this.queryBarHintId,
+      invalidHintId: this.requiredHintId,
     };
   });
 
@@ -1043,16 +1050,25 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.queryBar()?.openField(key, trigger instanceof HTMLElement ? trigger : undefined);
   }
 
-  /** Dòng nhắc dưới thanh: field bắt buộc còn rỗng, kể cả quick filter bị ẩn (vẫn chặn đọc). */
-  readonly queryBarHint = computed(() => {
-    const labels = (this.queryBar()?.invalidFields() ?? []).map(field => field.label);
+  /**
+   * "Chọn {label} để xem dữ liệu" for the required fields that are still empty, or `''`. The empty block of the body
+   * shows it in place of `choose-filter-hint` (the read is blocked, so that block is on screen): a line under the
+   * filter row would push the table down and back up once the value is chosen.
+   * - Query-bar mode: empty required chips, hidden required quick filters, and required external filters the bar
+   *   cannot show (custom, filterDef, exclude…), which still block the read.
+   * - Quick search: empty required quick filters, hidden ones included.
+   * The external filter panel of the default mode marks its own required fields.
+   */
+  readonly requiredHint = computed(() => {
+    const bar = this.queryBarMode();
+    const labels = bar ? (this.queryBar()?.invalidFields() ?? []).map(field => field.label) : [];
     const value = this.quickSearchValue();
     for (const item of this.quickSearchOption()?.filters ?? []) {
       const hidden = isSignal(item.hidden) ? item.hidden() : item.hidden;
-      if (item.required && hidden && !hasQuickSearchValue(value.filters?.[item.field])) labels.push(item.title);
+      // The bar lists its own chips; a visible quick filter is one of them.
+      if (item.required && (!bar || hidden) && !hasQuickSearchValue(value.filters?.[item.field])) labels.push(item.title);
     }
-    // why: external bắt buộc mà thanh không hiện được (custom, filterDef, exclude…) vẫn chặn đọc — phải nói ra.
-    const sources = this.queryBarModel()?.sources;
+    const sources = bar ? this.queryBarModel()?.sources : undefined;
     const external = this.#appliedFilter()?.externalFilter;
     for (const item of this.tableOption()?.filter?.externalFilters ?? []) {
       if (item.required && sources && !sources.has(`external:${item.field}`) && !isRawFilterSet(external?.[item.field])) {
@@ -1234,8 +1250,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     // the status region says it, also after a read too fast to show the loading layer. Defined after the loading
     // effect, which clears the region when a read starts, so the same text is read again for the next empty result.
     effect(() => {
-      const key = this.#emptyKey();
-      if (key) untracked(() => this.#liveMessage.set(this.#i18n.t(key)));
+      const text = this.#emptyText();
+      if (text) untracked(() => this.#liveMessage.set(text));
     });
 
     // why: the progress bar sits in .c-container (so it does not scroll sideways with the table) right under the
@@ -1470,10 +1486,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       this.#liveMessage.set(this.#i18n.t(count === 1 ? 'core.component.table.loaded-one' : 'core.component.table.loaded', { count }));
     else if (failed && !!this.dataStateTemplate() && !this.hideReadError())
       this.#liveMessage.set(this.#i18n.t('core.component.table.error-occurred'));
-    else {
-      const empty = this.#emptyKey();
-      this.#liveMessage.set(empty ? this.#i18n.t(empty) : '');
-    }
+    else this.#liveMessage.set(this.#emptyText());
   }
 
   /** Skeleton rows that fill a table with a fixed height (fill mode, `style.maxHeight`); `undefined` otherwise. */

@@ -367,6 +367,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The icon cell of the selection bar uses the primary colours (`--sd-primary-light` / `--sd-primary`) instead of success. The bar now stacks below 600px of its own width instead of below a 600px viewport, so a table in a narrow column or drawer also gets the stacked layout.
 - The settings menu of the external filter and the operator menu of the mobile filter page are Action Popovers (`sd-button` + `sd-button-item`) instead of `mat-menu`, with the same entries in the same order; the operator in use has a check. The settings menu uses toggle entries (`checked`): each one shows a check box, says whether its field is shown through `aria-checked`, and the mouse, Enter and Space toggle it without closing the menu, as the old menu did. Its autoIds are listed under Changed (BREAKING). The operator trigger keeps its `data-autoid`, now on the `sd-button` host, so the old selector still matches.
 - Query-bar mode: the clear button keeps the values of `required` quick filters and external filters (hidden ones included), like `SdQueryBar.clearAll()`, and is no longer enabled by required values alone. The search box of the bar is `sd-search-field`.
+- A required filter left empty is explained in the empty block of the table, where the rows will be, instead of a line under the query bar or the quick search row: that line pushed the table down and back up once the value was chosen. The block shows the filter-required image and "Chọn {label} để xem dữ liệu" (`core.component.query-bar.required`, the titles of the missing filters) in place of `core.component.table.choose-filter-hint`, and in place of "no results" when other filters hold values; the status region reads the same text.
+  - Quick search names the missing filters too (it said "Chọn các bộ lọc bắt buộc trước khi tìm kiếm."), hidden ones included, and so does the phone layout, which had no hint.
+  - Empty required chips and the disabled keyword input point `aria-describedby` at the new block. The elements `.sd-table-query-bar-hint` and `.sd-quick-search-hint` are gone; E2E tests read `.sd-table-required-hint`.
 
 #### Theme
 
@@ -398,6 +401,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Modal
 
 - `disableBackdropClose` on `sd-modal`: use `enableBackdropClose`. It keeps working while `enableBackdropClose` is not passed.
+
+#### Table
+
+- `core.component.table.quick-search.required` is no longer read: the quick search hint uses `core.component.query-bar.required` with the filter titles. The key stays in the five catalogs so a custom catalog that sets it still compiles.
 
 #### Tree
 

@@ -49,12 +49,6 @@
   max-width: 100%;
   min-width: 0;
 }
-.sd-quick-search-hint {
-  margin: 6px 0 0;
-  font-size: var(--sd-font-size-12, 12px);
-  line-height: var(--sd-line-height-18, 18px);
-  color: var(--sd-text-secondary, #626872);
-}
 @container (max-width: 550px) {
   .sd-quick-search-controls {
     flex-basis: 100%;
