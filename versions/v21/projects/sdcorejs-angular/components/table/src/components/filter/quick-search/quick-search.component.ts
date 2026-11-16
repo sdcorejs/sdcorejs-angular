@@ -49,6 +49,8 @@ export class TableQuickSearchComponent {
   readonly value = input.required<SdTableQuickSearchValue>();
   readonly autoId = input<string | undefined | null>();
   readonly rightTemplate = input<TemplateRef<unknown> | undefined>();
+  /** Id of the table's required hint (in its empty block); described by it while a required filter is empty. */
+  readonly requiredHintId = input<string | undefined>();
   readonly valueChange = output<SdTableQuickSearchValue>();
   readonly term = signal('');
   readonly isMobile = inject(SdViewportService).isMobile;

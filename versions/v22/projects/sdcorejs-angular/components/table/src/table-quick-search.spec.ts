@@ -345,6 +345,44 @@ describe('SdTable quick search integration', () => {
     fixture.destroy();
   }));
 
+  it('names a missing required filter in the empty block and keeps the height of the quick search row', fakeAsync(() => {
+    mount(host => host.tenant.set(null));
+    const element: HTMLElement = fixture.nativeElement.querySelector('sd-table');
+    const quick = element.querySelector('sd-table-quick-search') as HTMLElement;
+    const input = quick.querySelector('input') as HTMLInputElement;
+    const hint = element.querySelector('.c-no-data-row .sd-table-required-hint') as HTMLElement;
+    expect(host.loader).not.toHaveBeenCalled();
+    expect(hint.textContent!.trim()).toBe(TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Tenant' }));
+    expect(input.getAttribute('aria-describedby')).toBe(hint.id);
+    // No line under the row: the table does not move when the value is chosen.
+    expect(quick.querySelector('p')).toBeNull();
+    const blocked = quick.getBoundingClientRect().height;
+
+    host.tenant.set(1);
+    fixture.detectChanges();
+    tick(900);
+    flush();
+    fixture.detectChanges();
+    expect(host.loader).toHaveBeenCalled();
+    expect(element.querySelector('.sd-table-required-hint')).toBeNull();
+    expect(quick.getBoundingClientRect().height).toBe(blocked);
+    expect(input.getAttribute('aria-describedby')).toMatch(/-hint$/);
+    expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent?.trim()).toBe(
+      TestBed.inject(I18nService).t('core.component.table.quick-search.enter')
+    );
+    fixture.destroy();
+  }));
+
+  it('also names a hidden required filter, which still blocks the read', fakeAsync(() => {
+    mount(host => {
+      host.tenant.set(null);
+      host.hidden.set(true);
+    });
+    const hint = fixture.nativeElement.querySelector('sd-table .sd-table-required-hint') as HTMLElement;
+    expect(hint.textContent!.trim()).toBe(TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Tenant' }));
+    fixture.destroy();
+  }));
+
   it('applies dropdown immediately with the committed term, preserves draft and emits onChange once', fakeAsync(() => {
     mount();
     table.setFilter({ quickSearch: { term: 'Alice', filters: { tenantId: 0 } } });
