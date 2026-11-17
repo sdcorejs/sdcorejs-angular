@@ -1,6 +1,7 @@
 :host {
   display: block;
   height: 100vh;
+  height: 100dvh;
   position: relative;
   overflow: hidden;
 }
@@ -65,5 +66,6 @@
 
 .c-mobile-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }

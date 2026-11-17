@@ -121,6 +121,31 @@ describe('Upload file viewer (wave 3 · 4b)', () => {
       expect(getComputedStyle(q('.sd-upload-file-viewer__stage')!).paddingLeft).toBe('72px');
     });
 
+    it('fits the available pane after resize and preserves explicit zoom and pan', async () => {
+      await open([image('a.jpg', png(4000, 2000)), image('b.jpg', png(40, 20))]);
+      await loaded();
+      const pane = q<HTMLElement>('.sd-upload-file-viewer-pane')!;
+      // Exercise the parent/child height contract; this is not a mobile browser-toolbar simulation.
+      pane.style.height = '320px';
+      await settle();
+      const bounds = pane.getBoundingClientRect();
+      const frame = viewer()!.getBoundingClientRect();
+      const strip = q('.sd-upload-file-viewer__strip')!.getBoundingClientRect();
+      expect(frame.top).toBeGreaterThanOrEqual(bounds.top);
+      expect(frame.bottom).toBeLessThanOrEqual(bounds.bottom);
+      expect(strip.bottom).toBeLessThanOrEqual(frame.bottom);
+      expect(q('.sd-upload-file-viewer__stage')!.getBoundingClientRect().height).toBeGreaterThan(0);
+
+      const preview = fixture.componentInstance.preview();
+      preview.zoom.set(150);
+      preview.pan.set({ x: 12, y: 8 });
+      pane.style.height = '460px';
+      await settle();
+      expect(preview.zoom()).toBe(150);
+      expect(preview.pan()).toEqual({ x: 12, y: 8 });
+      expect(q('.sd-upload-file-viewer__strip')!.getBoundingClientRect().bottom).toBeLessThanOrEqual(pane.getBoundingClientRect().bottom);
+    });
+
     it('focuses the stage on open and gives focus back to the opener on close, with Esc', async () => {
       await open([image('a.jpg', png(40, 20))]);
       expect(document.activeElement).toBe(q('.sd-upload-file-viewer__stage'));

@@ -477,6 +477,21 @@ describe('DialogConfirmComponent — real MatBottomSheet', () => {
     expect(await dismissed).toEqual({ action: 'ACCEPT', value: null });
   });
 
+  it('keeps actions inside a constrained container while only the long message scrolls', async () => {
+    const { container } = await open({ title: 'Long message', message: '<p>More content</p>'.repeat(40), yesTitle: 'Yes', noTitle: 'No' });
+    // Constrain the real Material container; its panelClass is on the enclosing CDK pane.
+    container.style.maxHeight = '240px';
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    const content = container.querySelector('.sd-dialog-confirm__content--sheet') as HTMLElement;
+    const actions = container.querySelector('.sd-dialog-confirm__actions--sheet') as HTMLElement;
+    const bounds = container.getBoundingClientRect();
+    expect(bounds.height).toBeLessThanOrEqual(240);
+    expect(actions.getBoundingClientRect().bottom).toBeLessThanOrEqual(bounds.bottom);
+    expect(content.clientHeight).toBeGreaterThan(0);
+    expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    expect(container.scrollHeight).toBeLessThanOrEqual(container.clientHeight + 1);
+  });
+
   it('clicking the cancel button dismisses the sheet with CANCEL', async () => {
     const { ref, container } = await open({ title: 'T', message: 'M', yesTitle: 'Yes', noTitle: 'No' });
     const dismissed = new Promise(resolve => ref.afterDismissed().subscribe(resolve));

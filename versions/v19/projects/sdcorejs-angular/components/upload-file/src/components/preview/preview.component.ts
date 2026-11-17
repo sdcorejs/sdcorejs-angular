@@ -183,9 +183,7 @@ export class PreviewComponent {
       // why: pane phủ cả màn hình, khung viewer tự canh giữa và tự đổi sang full-screen ≤ 600px bằng CSS (cấu hình
       // dialog không có media query). Bấm ra ngoài khung đóng popup — xem `onShellClick`.
       width: '100vw',
-      height: '100vh',
       maxWidth: '100vw',
-      maxHeight: '100vh',
       panelClass: 'sd-upload-file-viewer-pane',
       backdropClass: 'cdk-overlay-dark-backdrop',
       autoFocus: '.sd-upload-file-viewer__stage',

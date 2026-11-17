@@ -182,6 +182,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
 
+#### Assets
+
+- Opt-in `h-dvh`, `h-svh`, `min-h-dvh` and `min-h-svh` sizing utilities with `vh` fallbacks. `h-screen` and `min-h-screen` keep their existing meaning. See `assets/STYLE-GUIDE.md#83-mobile-viewport` for browser support, keyboard limitations and physical-device checks.
+
 #### Calendar
 
 - `sd-calendar` (`@sdcorejs/angular/components/calendar`, `SdCalendar<T>`): month, week, day and agenda views of `SdCalendarEvent<T>` (`id`, `title`, `start`, `end`, `allDay`, `color`, `occurrence`, `data`).
@@ -361,6 +365,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+#### Confirm
+
+- Bottom sheets share a dynamic viewport height cap between their Material container and content host; only the content scrolls, with action padding that respects the bottom safe area.
+
+#### Layout
+
+- The mobile V1 shell uses dynamic viewport height with a `vh` fallback, so its content scrollport follows browser toolbar changes.
+
+#### Modal
+
+- Modal and side-drawer footer safe-area padding also applies in landscape beyond the narrow-layout breakpoint.
+
 #### Query bar
 
 - The × of the popover, inline and inline value chips read "Remove filter" in English in every language and did not say which filter. It is named by the new key `core.component.query-bar.remove-filter` with the field label (`{label}`): "Xoá bộ lọc Trạng thái", "Remove Trạng thái filter".
@@ -381,6 +397,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Mouse devices keep the scrollbar hidden at rest. The toggle listens to `mouseenter`/`mouseleave` outside `NgZone` instead of `mouseover`/`mouseout`, so moving across table cells no longer runs change detection, and `overflow-x` is written only when it changes.
 - One root service holds a single media query listener for every `sdScroll`. Mouse listeners and a pending `scrollTop()` are removed on destroy, and a new `scrollTop()` replaces a pending one.
 - Code that dispatched synthetic `mouseover`/`mouseout` on the host to toggle the scrollbar should call `onMouseOver()`/`onMouseOut()`. Details in `sd-scroll.md`.
+
+#### Table
+
+- Shared filter and sort sheet footer styles preserve bottom and side safe-area padding instead of overriding it with a fixed 16px inset.
+
+#### Upload file
+
+- The preview pane owns dynamic viewport height in both orientations; its viewer fills the remaining shell space and avoids safe-area edges. Resizing preserves explicit image zoom and pan.
+
+#### General
+
+- Documentation search bounds the dialog at every viewport width and lets the results fill the remaining space, including landscape on phones.
 
 ## [3.5] - 2026-11-05
 

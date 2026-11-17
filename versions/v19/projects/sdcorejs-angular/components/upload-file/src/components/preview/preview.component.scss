@@ -2,6 +2,14 @@
 // dark: màu đọc từ `--sd-upload-file-viewer-*` (`_component-tokens.scss`). Nội dung render trong overlay của CDK Dialog
 // từ template của component, nên rule ở đây vẫn áp (phần tử mang thuộc tính `_ngcontent`).
 
+// why: chỉ pane sở hữu chiều cao viewport; viewer lấy phần còn lại sau padding của shell ở mọi hướng màn hình.
+::ng-deep .cdk-overlay-pane.sd-upload-file-viewer-pane {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
 .sd-upload-file-viewer-shell {
   display: flex;
   align-items: center;
@@ -9,15 +17,17 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  padding: 24px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px))
+    max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
 }
 
 .sd-upload-file-viewer {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: min(1200px, 100vw - 48px);
-  height: calc(100vh - 48px);
+  width: min(1200px, 100%);
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   border-radius: var(--sd-radius-12, 12px);
   background: var(--sd-upload-file-viewer-bg, #141518);
@@ -30,13 +40,13 @@
 // ≤ 600px: full-screen, không bo góc.
 @media (max-width: 600px) {
   .sd-upload-file-viewer-shell {
-    padding: 0;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px)
+      env(safe-area-inset-left, 0px);
+    background: var(--sd-upload-file-viewer-bg, #141518);
   }
 
   .sd-upload-file-viewer {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
+    width: 100%;
     border-radius: 0;
   }
 }

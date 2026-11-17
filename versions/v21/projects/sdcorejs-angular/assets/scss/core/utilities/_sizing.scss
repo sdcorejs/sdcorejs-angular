@@ -18,10 +18,14 @@
 .h-100    { height: 100% !important; } // alias of h-full
 .h-auto   { height: auto !important; }
 .h-screen { height: 100vh !important; }
+.h-dvh    { height: 100vh !important; height: 100dvh !important; }
+.h-svh    { height: 100vh !important; height: 100svh !important; }
 .h-fit    { height: fit-content !important; }
 
 .min-h-full   { min-height: 100% !important; }
 .min-h-screen { min-height: 100vh !important; }
+.min-h-dvh    { min-height: 100vh !important; min-height: 100dvh !important; }
+.min-h-svh    { min-height: 100vh !important; min-height: 100svh !important; }
 .min-w-full   { min-width: 100% !important; }
 
 .max-h-full   { max-height: 100% !important; }
