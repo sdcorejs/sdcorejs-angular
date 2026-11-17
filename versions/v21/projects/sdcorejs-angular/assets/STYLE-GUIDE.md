@@ -357,12 +357,89 @@ w-{n}   h-{n}
 | `h-full` / `h-100` | `height: 100%` |
 | `h-auto`        | `height: auto` |
 | `h-screen`      | `height: 100vh` |
+| `h-dvh`         | `height: 100dvh`, fallback `100vh` |
+| `h-svh`         | `height: 100svh`, fallback `100vh` |
 | `h-fit`         | `height: fit-content` |
 | `min-h-full`    | `min-height: 100%` |
 | `min-h-screen`  | `min-height: 100vh` |
+| `min-h-dvh`     | `min-height: 100dvh`, fallback `100vh` |
+| `min-h-svh`     | `min-height: 100svh`, fallback `100vh` |
 | `min-w-full`    | `min-width: 100%` |
 | `max-h-full`    | `max-height: 100%` |
 | `max-w-full`    | `max-width: 100%` |
+
+`h-screen` / `min-h-screen` giữ nguyên nghĩa để tương thích với consumer cũ. Chọn `h-dvh` cho shell toàn màn hình có
+vùng cuộn riêng; chọn `min-h-svh` cho trang cuộn tự nhiên cần ổn định khi thanh công cụ hiện/thu. Thành phần nằm dưới
+header hoặc trong dialog nên lấy phần chiều cao còn lại từ flex/grid của parent, không tự lấy một viewport nữa.
+Xem [Mobile viewport](#83-mobile-viewport) về browser support, safe-area, bàn phím và kiểm chứng trên thiết bị thật.
+
+### 8.3 Mobile viewport
+
+#### Choosing a height contract
+
+Use one viewport-sized owner per fullscreen surface. Its header/footer should not shrink; its scrollable flex child
+needs `min-height: 0` and `overflow: auto`. Children below an application header should fill the remaining parent
+space rather than request another `100dvh`.
+
+| Layout | Choice | Tradeoff |
+| --- | --- | --- |
+| Fullscreen shell or file viewer with internal scrolling | `height: 100vh; height: 100dvh` on the outer owner | Follows browser chrome; content can reflow during resize. |
+| Normal document that should fill the screen and continue scrolling | `min-height: 100vh; min-height: 100svh` | Stable while chrome changes; may leave spare space when chrome collapses. |
+| Dialog or bottom sheet | Dynamic `max-height` on the container; one scrollable body | Keep actions outside the body and include padding in the height budget. |
+| Embedded page, table or tab outlet | Parent flex/grid sizing | Do not add a second viewport height below the parent's header. |
+
+The `h-dvh`, `h-svh`, `min-h-dvh` and `min-h-svh` utilities are opt-in. Existing `h-screen` and `min-h-screen` retain
+their `100vh` meaning. The upload viewer follows the pane's available height; fit zoom adjusts to the stage, while
+explicit zoom and pan are preserved on resize.
+
+#### Browser support and fallback
+
+Native `dvh` / `svh` support starts at Safari 15.4, Chrome 108 and Firefox 101. These are feature-support thresholds,
+not a promise that every older browser supports the Angular version or all features of this package. Applications
+must also satisfy their Angular major's browser support policy.
+
+Viewport fixes retain a preceding `vh` declaration as a CSS fallback. This preserves usable CSS on older engines;
+it does not reproduce dynamic viewport behavior there. Do not add a global JavaScript `--vh` update on every scroll
+or change the meaning of `SdViewportService.height()` to compensate. If a consumer needs older browsers, validate
+that requirement separately and scope any fallback to the affected surface.
+
+References: [viewport units](https://web.dev/blog/viewport-units),
+[Chrome keyboard viewport behavior](https://developer.chrome.com/blog/viewport-resize-behavior).
+
+#### Safe area and keyboard
+
+Safe-area padding is independent of viewport height. Edge controls use `env(safe-area-inset-*, 0px)`, including in
+landscape. An application opting into `viewport-fit=cover` must account for all exposed edges, not just the bottom.
+Do not add that viewport option solely to fix a height calculation. Contained drawers may sit away from the screen
+edge; inspect the final composition before adding further inset padding.
+
+`dvh` does not guarantee that the virtual keyboard is excluded. On browsers where the keyboard only resizes the
+visual viewport, fixed controls can still be obscured. `SdViewportService.height()` continues to expose
+`window.innerHeight`; it is not a keyboard-visible-height API. Only introduce a scoped `visualViewport` adapter after
+reproducing a problem. Such an adapter must consider `height`, `offsetTop`, resize/scroll events, cleanup, SSR and
+pinch zoom. Chrome's `interactive-widget=resizes-content` is not a cross-browser Safari solution.
+
+#### Verification matrix
+
+Desktop/headless viewport resizing verifies layout constraints, not mobile browser chrome. The repository's
+`showcase/e2e/mobile-viewport.e2e.ts` covers resize behavior on the freshly built library. A simulated small height
+is not a virtual keyboard test; WebKit automation is not a physical Safari toolbar test.
+
+Run the following on both Android Chrome and iPhone Safari, recording device, OS/browser versions, orientation,
+viewport meta settings and browser/tab versus installed-app mode. Test toolbar expanded, collapsed, and transitioning.
+
+| Case | Steps | Acceptance |
+| --- | --- | --- |
+| V1 shell | Mount `sd-layout` V1 as the actual app root, with a long page and a bottom action. Scroll to the end, change toolbar state, rotate. | Last content and action reachable; no unintended document scrollbar or nested scrolling. Do not rely on the clipped showcase fixture. |
+| Upload viewer | Open multiple files, select the last thumbnail, zoom/pan, change toolbar state, rotate with the viewer open. | Toolbar and filmstrip inside the visible area; explicit zoom/pan retained; fitted image recomputes without losing controls. |
+| Confirm sheet | Open long text or a vertical choice list; scroll to the last choice in both orientations. | Only content scrolls; title can be reached and both actions remain visible and tappable. |
+| Table sheets | Open full filter, individual field and sort sheets with many choices. | Apply/Cancel and the last choice remain reachable; safe-area padding survives shared styles. |
+| Keyboard | Focus the last editable field in a modal, drawer and filter; type, dismiss the keyboard, rotate and repeat. | Focused field can be revealed; actions reachable without losing input or moving the entire page unexpectedly. |
+| Safe area | On a notched iPhone, test a consumer that actually uses `viewport-fit=cover`; include landscape and installed mode if supported by the app. | Controls avoid top/bottom/side insets; no doubled inset from parent and child. |
+| Docs search | Search for a term with many results; rotate beyond 760px width while open; focus the search field. | Results scroll, footer remains reachable, no clipped close button. |
+
+Record physical-device results separately from automated resize results. A passing automated run does not close
+the toolbar, keyboard or nonzero-safe-area checks above.
 
 ---
 

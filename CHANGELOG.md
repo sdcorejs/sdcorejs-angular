@@ -204,6 +204,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `syncQueryParams` (`booleanAttribute`, default `false`): writes the current section to the query param `anchor-<autoId>` (the `key` of `sd-anchor-item`, or its 0-based position without a key) once the section has stayed active for 300ms, and scrolls to that section when the link is opened or the param changes (a key whose section renders later waits for it). The first section removes the param. Needs `autoId`.
 
+#### Assets
+
+- Opt-in `h-dvh`, `h-svh`, `min-h-dvh` and `min-h-svh` sizing utilities with `vh` fallbacks. `h-screen` and `min-h-screen` keep their existing meaning. See `assets/STYLE-GUIDE.md#83-mobile-viewport` for browser support, keyboard limitations and physical-device checks.
+
 #### Button
 
 - `checked` on `sd-button-item` (`boolean | null | undefined`, default `undefined`): `true` / `false` makes the entry a toggle — `role="menuitemcheckbox"` with `aria-checked`, a check box before the label (muted when off, primary when on) — and the mouse, Enter and Space emit `click` without closing the menu, with focus kept on the entry. `null` / `undefined` keeps a plain `menuitem`.
@@ -419,6 +423,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+#### Confirm
+
+- Bottom sheets share a dynamic viewport height cap between their Material container and content host; only the content scrolls, with action padding that respects the bottom safe area.
+
+#### Layout
+
+- The mobile V1 shell uses dynamic viewport height with a `vh` fallback, so its content scrollport follows browser toolbar changes.
+
+#### Modal
+
+- Modal and side-drawer footer safe-area padding also applies in landscape beyond the narrow-layout breakpoint.
+
 #### Query bar
 
 - The × of the popover, inline and inline value chips read "Remove filter" in English in every language and did not say which filter. It is named by the new key `core.component.query-bar.remove-filter` with the field label (`{label}`): "Xoá bộ lọc Trạng thái", "Remove Trạng thái filter".
@@ -442,6 +458,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Table
 
+- Shared filter and sort sheet footer styles preserve bottom and side safe-area padding instead of overriding it with a fixed 16px inset.
+
 - On the phone, the filter sheet and the one-filter chip sheet wrote their copy straight to the filter register on **Áp dụng**, so column `filter.onChange`, `filter.operatorChange` and external `onChange` never ran there. They now run after the write, once per filter whose value changed, like the query bar. Closing without applying calls nothing, an untouched `default` is not a change, external `custom` filters are skipped, and a `time` column edited through the column filter is not called twice.
 - The copy is no longer made with `JSON`, so `Date` values in the filters (including `Date` defaults) stay `Date`s instead of turning into ISO strings after **Áp dụng**. Details in `sd-table.md` ("Callbacks on the phone").
 - RTL: in the narrow selection bar (also used by `sd-tree`) the × sat in the start corner, next to the icon cell. It now sits at the inline end, and the message keeps its room on that side.
@@ -451,6 +469,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - RTL: child rows were not indented, because the indent was a left padding. The indent, the lines of `showLines`, the count and the row command trigger now use logical sides.
 - ← on a leaf did not move to its parent when the leaf counted as open (`defaultExpanded: true`, or `expanded: true` on the item): it tried to close the leaf. A leaf is never open for ← now.
 - Lazy trees: a child load still running when the tree reloads (`reload()`, new `items`) no longer opens the node of the new tree with no children once it ends. The chevron does nothing and `expand(id)` resolves `false`; open the node again to load it.
+
+#### Upload file
+
+- The preview pane owns dynamic viewport height in both orientations; its viewer fills the remaining shell space and avoids safe-area edges. Resizing preserves explicit image zoom and pan.
+
+#### General
+
+- Documentation search bounds the dialog at every viewport width and lets the results fill the remaining space, including landscape on phones.
 
 ## [3.5] - 2026-11-05
 

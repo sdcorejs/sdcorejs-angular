@@ -106,12 +106,16 @@
 }
 
 .search-dialog {
+  --search-top: max(8vh, 72px);
+  --search-bottom: 24px;
   position: fixed;
   z-index: 91;
-  top: max(8vh, 72px);
+  top: var(--search-top);
   left: 50%;
   width: min(680px, calc(100vw - 32px));
-  max-height: min(720px, calc(100vh - 96px));
+  box-sizing: border-box;
+  max-height: min(720px, calc(100vh - var(--search-top) - var(--search-bottom)));
+  max-height: min(720px, calc(100dvh - var(--search-top) - var(--search-bottom)));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -123,6 +127,7 @@
 
   &__field {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 10px;
     border-bottom: 1px solid var(--docs-border-color);
@@ -165,7 +170,6 @@
   &__results {
     flex: 1;
     min-height: 0;
-    max-height: calc(min(720px, 100vh - 96px) - 120px);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 10px;
@@ -173,6 +177,7 @@
 
   footer {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 16px;
     border-top: 1px solid var(--docs-border-color);
@@ -265,9 +270,9 @@
 
 @media (max-width: 759.98px) {
   .search-dialog {
-    top: 12px;
+    --search-top: 12px;
+    --search-bottom: 12px;
     width: calc(100vw - 24px);
-    max-height: calc(100dvh - 24px);
 
     &__field {
       gap: 8px;
@@ -279,7 +284,6 @@
     }
 
     &__results {
-      max-height: calc(100dvh - 92px);
       padding: 8px;
     }
 
