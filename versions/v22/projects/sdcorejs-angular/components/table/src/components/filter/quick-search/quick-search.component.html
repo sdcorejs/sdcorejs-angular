@@ -43,7 +43,7 @@
           autocomplete="off"
           [attr.data-autoid]="_autoId ? _autoId + '-quick-search-term' : null"
           [attr.aria-label]="'core.component.table.search' | sdTranslate"
-          [attr.aria-describedby]="_inputId + (_valid ? '-hint' : '-required')"
+          [attr.aria-describedby]="_valid ? _inputId + '-hint' : requiredHintId() || null"
           [placeholder]="_option.placeholder || ('core.component.table.quick-search.placeholder' | sdTranslate)"
           [disabled]="!_valid"
           [value]="_term"
@@ -58,8 +58,5 @@
   }
 </div>
 <span [id]="_inputId + '-hint'" hidden>{{ _enterHint }}</span>
-@if (!_valid) {
-  <p class="sd-quick-search-hint" [id]="_inputId + '-required'">
-    {{ 'core.component.table.quick-search.required' | sdTranslate }}
-  </p>
-}
+<!-- why: câu nhắc khi thiếu filter bắt buộc nằm trong khối trạng thái rỗng của bảng, không chèn dưới hàng này (đổi chiều cao
+     hàng làm bảng nhảy). -->

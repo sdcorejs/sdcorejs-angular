@@ -40,6 +40,35 @@ describe('SelectorActionComponent autoId propagation', () => {
     expect(btn).toBeTruthy();
   });
 
+  it('SB-01 keeps the action and "more" autoIds and paints the icon cell primary, not success', () => {
+    const more = { title: 'Khác', icon: 'more', click: () => {} };
+    const extra = { title: 'Xuất', icon: 'download', click: () => {} };
+    const all = [DELETE_ACTION, extra, more];
+    fixture.componentInstance.opt.set({ type: 'local', items: () => [], columns: [], selector: { actions: all } } as any);
+    fixture.componentInstance.selected.set([selectedRow(all.map(action => Utilities.hash(action)))]);
+    fixture.detectChanges();
+
+    const ids = Array.from(fixture.nativeElement.querySelectorAll('[data-autoid]')).map(element =>
+      (element as HTMLElement).getAttribute('data-autoid')
+    );
+    expect(ids).toEqual([
+      'components-button-components-table-employees-action-0',
+      'components-button-components-table-employees-action-1',
+      'components-button-components-table-employees-more-actions',
+      'components-button-components-table-employees-clear-selection',
+    ]);
+
+    document.documentElement.style.setProperty('--sd-primary-light', 'rgb(1, 2, 3)');
+    document.documentElement.style.setProperty('--sd-success-light', 'rgb(7, 8, 9)');
+    try {
+      const icon = fixture.nativeElement.querySelector('.sd-selection-icon') as HTMLElement;
+      expect(getComputedStyle(icon).backgroundColor).toBe('rgb(1, 2, 3)');
+    } finally {
+      document.documentElement.style.removeProperty('--sd-primary-light');
+      document.documentElement.style.removeProperty('--sd-success-light');
+    }
+  });
+
   it('omits the autoId attribute when no base is provided', () => {
     fixture.componentInstance.autoId.set(undefined);
     fixture.detectChanges();

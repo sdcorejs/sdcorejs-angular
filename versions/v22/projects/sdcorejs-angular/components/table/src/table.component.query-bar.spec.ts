@@ -317,7 +317,7 @@ describe('SdTable filter.mode query-bar', () => {
       option.filter!.quickSearch!.filters![0].required = true;
       mount(option);
       const control = inlineChips()[indexOf('quick:warehouseId')].querySelector('[aria-invalid="true"]') as HTMLElement;
-      const hint = el().querySelector('.sd-table-query-bar-hint') as HTMLElement;
+      const hint = el().querySelector('.sd-table-required-hint') as HTMLElement;
       expect(control).not.toBeNull();
       expect(control.getAttribute('aria-describedby')!.split(' ')).toContain(hint.id);
     }));
@@ -510,24 +510,31 @@ describe('SdTable filter.mode query-bar', () => {
   describe('required filters', () => {
     beforeEach(() => configure());
 
-    it('blocks the read while a required quick filter is empty and explains why', fakeAsync(() => {
+    it('blocks the read while a required quick filter is empty and explains why in the empty block', fakeAsync(() => {
       const option = buildOption();
       option.filter!.quickSearch!.filters![0].required = true;
       mount(option);
       expect(loader).not.toHaveBeenCalled();
       expect(table.requireFiltered()).toBeTrue();
       const chip = el().querySelector('sd-query-bar .c-chip[data-field="quick:warehouseId"]') as HTMLElement;
-      const hint = el().querySelector('.sd-table-query-bar-hint') as HTMLElement;
+      const hint = el().querySelector('.c-no-data-row .sd-table-required-hint') as HTMLElement;
+      const text = TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Kho xuất' });
       expect(chip.getAttribute('aria-invalid')).toBe('true');
       // why: matTooltip của chip nối thêm id mô tả của nó vào cùng thuộc tính.
       expect(chip.getAttribute('aria-describedby')!.split(' ')).toContain(hint.id);
-      expect(hint.querySelector('span')!.textContent!.trim()).toBe(
-        TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Kho xuất' })
+      expect(hint.textContent!.trim()).toBe(text);
+      // The hint replaces the generic "choose a filter" line, with the filter-required image, and the status region says it.
+      expect(el().querySelector('.c-no-data-row img')!.getAttribute('alt')).toBe('filter-required');
+      expect(el().querySelector('.c-no-data-row')!.textContent).not.toContain(
+        TestBed.inject(I18nService).t('core.component.table.choose-filter-hint')
       );
+      expect(el().querySelector('.sd-table-live')!.textContent!.trim()).toBe(text);
+      // Nothing sits between the bar and the table, so the table does not move once the value is chosen.
+      expect(el().querySelector('sd-query-bar')!.nextElementSibling!.classList).toContain('c-container');
 
       commit('quick:warehouseId', { data: 'hn' });
       expect(loader).toHaveBeenCalledTimes(1);
-      expect(el().querySelector('.sd-table-query-bar-hint')).toBeNull();
+      expect(el().querySelector('.sd-table-required-hint')).toBeNull();
     }));
 
     it('names an empty required external filter the bar cannot show in the hint', fakeAsync(() => {
@@ -536,11 +543,21 @@ describe('SdTable filter.mode query-bar', () => {
       mount(option);
       expect(loader).not.toHaveBeenCalled();
       expect(indexOf('external:note')).toBe(-1);
-      const hint = el().querySelector('.sd-table-query-bar-hint') as HTMLElement;
+      const hint = el().querySelector('.sd-table-required-hint') as HTMLElement;
       expect(hint).not.toBeNull();
-      expect(hint.querySelector('span')!.textContent!.trim()).toBe(
-        TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Ghi chú' })
-      );
+      expect(hint.textContent!.trim()).toBe(TestBed.inject(I18nService).t('core.component.query-bar.required', { label: 'Ghi chú' }));
+    }));
+
+    it('shows the hint, not "no results", when other chips hold values while a required one is empty', fakeAsync(() => {
+      const option = buildOption({ queryBar: { exclude: ['note'] } });
+      option.filter!.externalFilters![1] = { ...option.filter!.externalFilters![1], required: true };
+      mount(option);
+      commit('external:status', { data: ['new'] });
+      expect(loader).not.toHaveBeenCalled();
+      expect(table.isFiltered()).toBeTrue();
+      const block = el().querySelector('.c-no-data-row') as HTMLElement;
+      expect(block.querySelector('.sd-table-required-hint')).not.toBeNull();
+      expect(block.textContent).not.toContain(TestBed.inject(I18nService).t('core.component.table.no-results'));
     }));
 
     it('reports an empty required external filter to onFilter and does not read', fakeAsync(() => {

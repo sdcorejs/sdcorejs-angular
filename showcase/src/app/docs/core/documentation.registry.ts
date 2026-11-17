@@ -744,9 +744,9 @@ const COMPONENT_PAGES = [
     selector: 'sd-tree',
     importPath: '@sdcorejs/angular/components/tree',
     publishedDocId: 'components/tree/sd-tree',
-    keywords: ['hierarchy', 'lazy tree', 'selection', 'filter'],
+    keywords: ['hierarchy', 'lazy tree', 'selection', 'filter', 'tree detail', 'navigation'],
     status: 'stable',
-    demoSectionCount: 5,
+    demoSectionCount: 6,
     loadComponent: () => import('../../pages/components/tree/tree-demo.component').then(m => m.TreeDemoComponent),
   }),
   defineDocPage({

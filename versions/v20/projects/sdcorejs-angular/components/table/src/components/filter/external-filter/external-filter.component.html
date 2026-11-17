@@ -27,24 +27,19 @@
           [autoId]="_autoId + 'setting'"
           type="text"
           prefixIcon="settings"
-          [tooltip]="'core.component.table.customize' | sdTranslate"
-          [matMenuTriggerFor]="menu"
-          (click)="$event.stopPropagation()"></sd-button>
-        <mat-menu #menu="matMenu" class="sd-custom-panel-filter-configuration" [attr.data-autoid]="_autoId + 'setting-menu'">
+          [tooltip]="'core.component.table.customize' | sdTranslate">
+          <!-- why: mục bật/tắt (`checked`) giữ menu mở với cả chuột lẫn Enter/Space, như menu cũ, và báo trạng thái
+               qua aria-checked (R2 N3). -->
           @for (externalFilter of _filterItems; track externalFilter.field) {
-            <button
-              [attr.data-autoid]="_autoId + 'setting-' + externalFilter.field"
-              mat-menu-item
+            <sd-button-item
+              [autoId]="_autoId + 'setting-' + externalFilter.field"
+              [checked]="!!_inlineExternal[externalFilter.field]"
+              [disabled]="externalFilter.required"
               (click)="onCheckboxChange($event, externalFilter)"
-              [disabled]="externalFilter.required">
-              <sd-checkbox
-                [autoId]="_autoId + 'setting-' + externalFilter.field + '-checkbox'"
-                [label]="externalFilter.title"
-                [model]="_inlineExternal[externalFilter.field]"
-                [disabled]="externalFilter.required" />
-            </button>
+              >{{ externalFilter.title }}</sd-button-item
+            >
           }
-        </mat-menu>
+        </sd-button>
       </div>
       <div class="sd-external-filter-body">
         <div class="row mx-0" style="row-gap: 16px">

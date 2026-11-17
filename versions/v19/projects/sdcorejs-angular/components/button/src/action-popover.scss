@@ -14,6 +14,13 @@
   sd-icon {
     @include panel.icon;
   }
+  // Ô chọn của mục bật/tắt: muted khi tắt, primary khi bật (màu của hàng thắng nếu có).
+  .sd-action-check {
+    color: var(--sd-action-accent, var(--sd-text-secondary, #626872));
+  }
+  .sd-action-item--checked .sd-action-check {
+    color: var(--sd-action-accent, var(--sd-primary));
+  }
   .sd-action-divider {
     @include panel.divider;
   }

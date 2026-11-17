@@ -1,18 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { SdButton, SdButtonItem, SdButtonItemDivider } from '@sdcorejs/angular/components/button';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
+import { ɵSdSelectionBar } from '@sdcorejs/angular/components/quick-action';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOption } from '../../models/table-option.model';
 import { Action, sdResolveTableActions } from './action-filter.pipe';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'selector-action',
   templateUrl: './selector-action.component.html',
   styleUrl: './selector-action.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, SdButton, SdButtonItem, SdButtonItemDivider, SdQuickAction],
+  imports: [ɵSdSelectionBar],
 })
 export class SelectorActionComponent {
   // ==========================================
@@ -54,19 +52,6 @@ export class SelectorActionComponent {
   // ==========================================
   // 4. HANDLERS
   // ==========================================
-  readonly directActions = computed(() =>
-    this.actions()
-      .map((action, index) => ({ action, index }))
-      .slice(0, 2)
-  );
-  readonly overflowActions = computed(() =>
-    this.actions()
-      .map((action, index) => ({ action, index }))
-      .slice(2)
-  );
-  readonly moreLabel = computed(() => this.#i18n.t('core.component.table.selector-action.more'));
-  readonly clearLabel = computed(() => this.#i18n.t('core.component.table.clear-selection'));
-
   onClear = () => this.clear.emit();
 
   onClickAction = (action: Action) => {

@@ -99,6 +99,8 @@ export class TableMobileDataDemoComponent {
       ],
     },
     filter: {
+      // Sheet lọc chỉ sửa bản nháp: callback chạy một lần khi bấm Áp dụng, cho từng filter đã đổi.
+      operatorChange: (column, operator) => this.log.set(`Toán tử của ${column?.title}: ${operator}`),
       externalFilters: [
         { field: 'customer', type: 'string', title: 'Khách hàng' },
         {
@@ -106,6 +108,7 @@ export class TableMobileDataDemoComponent {
           type: 'values',
           title: 'Kênh bán',
           option: { items: CHANNELS, valueField: 'id', displayField: 'name', selection: 'MULTIPLE' },
+          onChange: (value: string[] | null) => this.log.set(`Kênh bán: ${value?.length ? value.join(', ') : 'tất cả'}`),
         },
       ],
     },

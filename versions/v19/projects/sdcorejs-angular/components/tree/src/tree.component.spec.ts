@@ -424,20 +424,6 @@ describe('SdTree', () => {
     expect(backgroundRect.top + backgroundRect.height / 2).toBeCloseTo(checkboxRect.top + checkboxRect.height / 2, 0);
   });
 
-  it('rounds the quick-action count badge with the same radius as the bar', async () => {
-    const fixture = await createFixture(StaticHostComponent);
-    const bar = fixture.nativeElement.querySelector('.c-quick-action') as HTMLElement;
-    const badge = fixture.nativeElement.querySelector('.c-bg-length') as HTMLElement;
-    const barStyle = getComputedStyle(bar);
-    const badgeStyle = getComputedStyle(badge);
-
-    expect(badgeStyle.borderTopLeftRadius).toBe(barStyle.borderTopLeftRadius);
-    expect(badgeStyle.borderBottomLeftRadius).toBe(barStyle.borderBottomLeftRadius);
-    // Cạnh phải của badge nằm giữa thanh nên phải vuông.
-    expect(badgeStyle.borderTopRightRadius).toBe('0px');
-    expect(badgeStyle.borderBottomRightRadius).toBe('0px');
-  });
-
   it('renders quick action when selection is visible and rows are selected', async () => {
     const fixture = await createFixture(StaticHostComponent);
     const component = fixture.componentInstance;
@@ -447,7 +433,7 @@ describe('SdTree', () => {
     tree.toggleSelection(payable);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('.sd-tree__qa-count')?.textContent?.trim()).toBe('1');
+    expect(fixture.nativeElement.querySelector('.sd-selection-message > span:last-child')?.textContent?.trim()).toBe('Đã chọn 1 dòng');
     expect(fixture.nativeElement.textContent).toContain('Đã chọn 1 dòng');
 
     tree.onSelectionAction(component.selector.actions![0]!);
@@ -797,7 +783,8 @@ describe('SdTree', () => {
     const component = fixture.componentInstance;
 
     expect(fixture.nativeElement.querySelector('[data-tree-retry]')).not.toBeNull();
-    expect(text(fixture)).toContain('root failed');
+    // R8: the exception message never reaches the UI.
+    expect(text(fixture)).not.toContain('root failed');
 
     (fixture.nativeElement.querySelector('[data-tree-retry]') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -1027,11 +1014,11 @@ describe('SdTree', () => {
       const i18n = useI18n(fixture);
       const tree = treeComponent<NodeItem>(fixture);
 
-      expect(tree.errorMessage(null)).toBe('Không tải được dữ liệu cây');
+      expect(tree.errorMessage(null)).toBe('Không tải được danh sách.');
       expect(tree.errorMessage(new Error('boom'))).toBe('boom');
 
       i18n.setLanguage('en', { reload: false });
-      expect(tree.errorMessage(undefined)).toBe('Unable to load tree data');
+      expect(tree.errorMessage(undefined)).toBe("The list couldn't be loaded.");
     });
   });
 });
