@@ -141,6 +141,15 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - **The `date` format error is a real validator, not a `setErrors()` injection.** It is produced by a stable `ValidatorFn` registered on `formControl` through the shared connector, so it survives any later `updateValueAndValidity()` — whether triggered by the component, by a `setValue`, or by the consumer. Clearing it removes the `date` key entirely (the validator returns `null`); the control is never left with a `{ date: null }` errors object, so a well-formed datetime is never transiently reported as `INVALID` to a parent `FormGroup`. All validators are attached **additively** (`addValidators` / `removeValidators`), so a validator a consumer attaches directly to the exposed `formControl` is preserved.
 - **Date adapter**: `SdNativeDateAdapter` and the date-format tokens from `@sdcorejs/angular-material-datetime` are provided locally by `SdDatetime`, so consumers do not need app-level adapter configuration. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
 
+## Typing behaviour
+
+The input writes its text into `formControl` after every keystroke (the editor control holds the display string). While the field has focus that text reaches `model` / `sdChange` only when it is a finished datetime:
+
+- The text must match the display format exactly (`dd/MM/yyyy HH:mm` or `dd/MM/yyyy HH:mm:ss`, two-digit day, month, hour, minute). `19/1/2026 10:30` while the month is being retyped is not read as January, `19/11/2026 1:30` is not read as 01:30, and `19/11/202 10:30` is not read as year 202 — `model` keeps the last committed value until the text is finished.
+- A field that was just emptied keeps its value too. `null` is committed when the user leaves the empty field or presses Enter on it (`onConfirmInput`), or clicks the clear button.
+- On blur or Enter, shorthand such as `1/2/2027 9:05` is accepted, rewritten to the display format and committed. Unfinished text raises the `date` format error and keeps the value.
+- Outside typing (the field is not focused), a string written to `formControl` from code is read as before: an empty string clears the model.
+
 ## Public methods & getters
 
 | Member                   | Kind                         | Description                                                                                                                                                                                            |

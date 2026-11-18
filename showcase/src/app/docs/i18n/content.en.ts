@@ -1149,6 +1149,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
     title: 'Inline editing',
     description: 'Click the date to open the calendar immediately; the text stays until a date is chosen. Hover shows × to clear.',
   },
+  'forms/date/example-chot-gia-tri-khi-go': {
+    title: 'Commit the value while typing',
+    description:
+      'Edit the text in place: unfinished text does not change the value. The date changes only once dd/MM/yyyy is complete, and becomes empty only when you leave the field, press Enter on an empty field or click clear.',
+  },
   'forms/date/example-chuan-hoa-gia-tri-dau-ra': {
     title: 'Normalize the output value',
     description:
@@ -1161,6 +1166,11 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'forms/datetime/example-chinh-sua-noi-tuyen': {
     title: 'Inline editing',
     description: 'Click to open the datetime overlay; the text stays unchanged until a value is chosen. Hover shows × to clear.',
+  },
+  'forms/datetime/example-chot-gia-tri-khi-go': {
+    title: 'Commit the value while typing',
+    description:
+      'Edit the text in place: unfinished text does not change the value. The datetime changes only once dd/MM/yyyy HH:mm is complete, and becomes empty only when you leave the field, press Enter on an empty field or click clear.',
   },
   'forms/datetime/example-chuan-hoa-gia-tri-dau-ra': {
     title: 'Normalize the output value',

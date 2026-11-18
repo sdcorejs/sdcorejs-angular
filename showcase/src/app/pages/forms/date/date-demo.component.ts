@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -93,6 +93,23 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
           </div>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chot-gia-tri-khi-go') {
+        <demo-section
+          heading="Chốt giá trị khi gõ"
+          [props]="[{ name: '(sdChange)', value: 'event' }]"
+          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+            <sd-date label="Ngày hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-date>
+            <div style="font-size:12px; color:#555">
+              model: <code data-e2e="commit-model">{{ commitValue() ?? 'null' }}</code>
+            </div>
+            <div style="font-size:12px; color:#555">
+              sdChange: <code data-e2e="commit-log">{{ commitLogJson() }}</code>
+            </div>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   `,
   styles: `
@@ -134,6 +151,14 @@ export class DateDemoComponent {
   lockedA = signal<string | null>('2025-01-15');
   lockedB = signal<string | null>('2025-02-20');
   filter = signal<string | null>(null);
+
+  commitValue = signal<string | null>('2026/11/19');
+  readonly commitLog = signal<(string | null)[]>([]);
+  readonly commitLogJson = computed(() => JSON.stringify(this.commitLog()));
+
+  logCommit(value: string | null) {
+    this.commitLog.update(log => [...log, value]);
+  }
 
   check() {
     this.formValid.markAllAsTouched();

@@ -113,10 +113,24 @@ function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolea
   return DateUtilities.toFormat(source, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
 }
 
+const DATETIME_DISPLAY_FORMATS = ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm'];
+
 /** Parses the committed display string back to the local instant it denotes. */
 function datetimeControlToDate(value: string | null): Date | null {
   if (!value) return null;
-  return parseFirstValid(value, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
+  return parseFirstValid(value, DATETIME_DISPLAY_FORMATS);
+}
+
+/**
+ * `true` khi chuỗi khớp 1-1 với format hiển thị (round-trip), tức người dùng đã gõ xong.
+ * why: `date-fns.parse` rất dễ dãi — `19/1/2026 10:30` (đang sửa tháng 11 → 10) ra tháng 1, `19/11/202 10:30` ra
+ * năm 202. `onConfirmInput` chuẩn hoá dạng viết tắt về đúng format này trước khi chốt.
+ */
+function isFinishedDatetimeDisplay(value: string): boolean {
+  return DATETIME_DISPLAY_FORMATS.some(format => {
+    const parsed = parseDate(value, format, new Date());
+    return isValidDate(parsed) && DateUtilities.toFormat(parsed, format) === value;
+  });
 }
 
 @Component({
@@ -378,6 +392,11 @@ export class SdDatetime implements OnDestroy, OnInit {
    * are kept only when they are shown, and milliseconds are always dropped.
    */
   #serializeCommitted(display: string | null): SdDatetimeModelValue {
+    // why: control giữ chuỗi của ô nhập nên đổi sau MỖI phím. Khi ô đang focus, `''` (vừa xoá trắng) và mọi chuỗi
+    // chưa gõ xong chỉ là trạng thái đang gõ — model giữ nguyên, nếu không `sdChange` phát null hoặc một thời điểm
+    // sai giữa chừng. Bỏ giá trị được chốt bằng `null`: rời ô / Enter trên ô trống (`onConfirmInput`), nút xoá.
+    // Ngoài lúc gõ (giá trị ghi từ code) thì giữ cách đọc cũ.
+    if (this.isFocused && display !== null && (display === '' || !isFinishedDatetimeDisplay(display))) return this.valueModel();
     const parsed = datetimeControlToDate(display);
     const transform = this.transform();
     if (!parsed || !transform) return display ? (datetimeControlToStored(display, this.showSeconds()) ?? this.valueModel()) : null;

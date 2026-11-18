@@ -373,12 +373,14 @@ export type ShowcaseExampleSourceKey =
   | "forms/date-range/example-trang-thai"
   | "forms/date-range/example-validator"
   | "forms/date/example-chinh-sua-noi-tuyen"
+  | "forms/date/example-chot-gia-tri-khi-go"
   | "forms/date/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/date/example-co-ban"
   | "forms/date/example-kich-thuoc"
   | "forms/date/example-trang-thai"
   | "forms/date/example-validator"
   | "forms/datetime/example-chinh-sua-noi-tuyen"
+  | "forms/datetime/example-chot-gia-tri-khi-go"
   | "forms/datetime/example-chuan-hoa-gia-tri-dau-ra"
   | "forms/datetime/example-co-ban"
   | "forms/datetime/example-trang-thai"
@@ -3133,6 +3135,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "transform chỉ đổi giá trị đi ra (model, sdChange, field trong FormGroup) — ô nhập vẫn là dd/MM/yyyy. Ngày được serialize ở nửa đêm GIỜ ĐỊA PHƯƠNG, nên phần ngày trong chuỗi UTC có thể lệch một ngày so với ô hiển thị. Đó là cùng một thời điểm.",
   },
   {
+    sourceKey: "forms/date/example-chot-gia-tri-khi-go",
+    pageKey: "forms/date",
+    sectionId: "example-chot-gia-tri-khi-go",
+    title: "Chốt giá trị khi gõ",
+    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.",
+  },
+  {
     sourceKey: "forms/date-range/example-co-ban",
     pageKey: "forms/date-range",
     sectionId: "example-co-ban",
@@ -3201,6 +3210,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chuan-hoa-gia-tri-dau-ra",
     title: "Chuẩn hoá giá trị đầu ra",
     description: "transform chỉ đổi giá trị đi ra — ô nhập vẫn theo showSeconds. Độ chính xác vẫn do showSeconds quy định: tắt thì giây về 0, bật thì giữ giây; mili-giây luôn bằng 0.",
+  },
+  {
+    sourceKey: "forms/datetime/example-chot-gia-tri-khi-go",
+    pageKey: "forms/datetime",
+    sectionId: "example-chot-gia-tri-khi-go",
+    title: "Chốt giá trị khi gõ",
+    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.",
   },
   {
     sourceKey: "forms/entity-picker/example-server-single-select",
