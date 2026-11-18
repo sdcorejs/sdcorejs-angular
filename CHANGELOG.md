@@ -333,6 +333,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - The bottom sheet uses the panel class `sd-confirm-bottom-sheet`, takes its accessible name from the title as plain text, and keeps each method's initial focus target.
   - `width` of `confirm()` applies to the dialog only; the bottom sheet is always full-width.
 
+#### Date
+
+- `sd-date` no longer changes its value while a date is being edited. Text that is not a finished `dd/MM/yyyy` date, including a field that was just emptied, used to put `null` in the form control, `model` and `sdChange` on the first keystroke. The last committed date now stays until the text is a finished date (committed on that keystroke); `null` is committed when the user leaves the field with empty or unfinished text, presses Enter on an empty field or clicks the clear button. Enter on unfinished text commits nothing. While an existing date is being edited the form value is no longer `null` and `required` is not reported; it appears once the emptied field is left. See [date](versions/v19/projects/sdcorejs-angular/forms/date/sd-date.md#typing-behaviour).
+
+#### Datetime
+
+- `sd-datetime` changes `model` / `sdChange` while typing only for a finished datetime: the text must match `dd/MM/yyyy HH:mm` or `dd/MM/yyyy HH:mm:ss` exactly. Before, every keystroke was parsed loosely, so retyping a month emitted January in between (`19/1/2026 10:30`), retyping an hour emitted 01:30, a three-digit year emitted year 202, and emptying the field emitted `null` at once. A field emptied while focused now keeps its value until it is left or Enter is pressed. Shorthand such as `1/2/2027 9:05` is still accepted on blur or Enter. Strings written to the control from code while the field is not focused are read as before. See [datetime](versions/v19/projects/sdcorejs-angular/forms/datetime/sd-datetime.md#typing-behaviour).
+
 #### Kanban
 
 - On a coarse pointer the "⋯" button, Dismiss, Retry and "Show more" are at least 44px high (`--sd-control-height-coarse`, was 40px), as in `sd-calendar` and `sd-scheduler`.
@@ -426,6 +434,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Confirm
 
 - Bottom sheets share a dynamic viewport height cap between their Material container and content host; only the content scrolls, with action padding that respects the bottom safe area.
+
+#### Date
+
+- `sd-date`: editing a typed date in the middle of the text (`19/11/2026` → `19/10/2026`) could empty the value when the field lost focus. While the text was being re-formatted the date picker kept reading the unformatted text, so its `change` event reported no date even though the field showed a complete one. The picker now reads the text that is shown.
 
 #### Layout
 

@@ -150,7 +150,15 @@ Separators are inserted as you type: `2` → `2`, `22` → `22/`, `2208` → `22
 | `11` (after deleting) | year 1100, via the `parseISO` century fallback | rejected |
 | `11/12/2026` | 11 Dec 2026 | 11 Dec 2026 |
 
-`SdStrictDateFnsAdapter` closes both holes: it skips the ISO fallback and requires the text to round-trip through the configured format, so the control only ever receives a date the user actually finished typing. The value is committed on blur; incomplete or impossible text (`31/02/2026`) clears the field.
+`SdStrictDateFnsAdapter` closes both holes: it skips the ISO fallback and requires the text to round-trip through the configured format, so the control only ever receives a date the user actually finished typing. Incomplete or impossible text (`31/02/2026`) clears the field on blur.
+
+**Unfinished text never touches the committed value.** The component owns the write from the input to the form control (it re-registers `onChange` on Material's value accessor), so while the field has focus:
+
+- Text that is not a finished `dd/MM/yyyy` date — one digit of a month being retyped, or a field that was just emptied — leaves `formControl.value`, `model`, the parent form's value and `sdChange` on the last committed date. Editing `19/11/2026` into `19/10/2026` goes from one date to the other and never through `null`.
+- A finished date is committed at once: `formControl`, `model` and `sdChange` change on the keystroke that completes it.
+- `null` is committed only when the user leaves the field with empty or unfinished text, presses Enter on an empty field, or clicks the clear button. Enter on unfinished text commits nothing and keeps the text.
+- `required` is therefore not reported while an existing date is being edited; it appears once the emptied field is left.
+- The control is marked dirty on the first keystroke.
 
 ## Public methods & getters
 

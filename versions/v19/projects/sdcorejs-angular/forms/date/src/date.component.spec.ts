@@ -823,7 +823,8 @@ describe('SdDate (partial input is not a date)', () => {
     type('11/12/2026');
     type('11', 'deleteContentBackward');
 
-    expect(comp.formControl.value).toBeNull();
+    // Chuỗi dở dang không đụng vào ngày đã chốt (xem date.typing-commit.spec.ts), và không bao giờ ra năm 1100.
+    expect((comp.formControl.value as Date).getFullYear()).toBe(2026);
     expect(input.value).toBe('11');
   });
 
@@ -845,6 +846,38 @@ describe('SdDate (partial input is not a date)', () => {
     type('31/02/2026');
 
     expect(comp.formControl.value).toBeNull();
+  });
+
+  // Sửa giữa chuỗi: trình duyệt bắn `input` cho từng phím, rồi `change` + `blur` khi rời ô.
+  const editAt = (rawValue: string, caret: number, inputType: string) => {
+    input.value = rawValue;
+    input.setSelectionRange(caret, caret);
+    input.dispatchEvent(new InputEvent('input', { inputType, bubbles: true }));
+    fixture.detectChanges();
+  };
+
+  it('keeps the date when the month is edited in place (19/11/2026 -> 19/10/2026)', () => {
+    const host = fixture.componentInstance;
+    host.model = '2026/11/19';
+    fixture.detectChanges();
+    expect(input.value).toBe('19/11/2026');
+    input.dispatchEvent(new Event('focus'));
+    host.changes.length = 0;
+
+    // Xoá chữ số thứ hai của tháng rồi gõ 0.
+    editAt('19/1/2026', 4, 'deleteContentBackward');
+    const caret = input.selectionStart ?? 0;
+    editAt(`${input.value.slice(0, caret)}0${input.value.slice(caret)}`, caret + 1, 'insertText');
+    expect(input.value).toBe('19/10/2026');
+    expect((comp.formControl.value as Date | null)?.getMonth()).toBe(9);
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(input.value).toBe('19/10/2026');
+    expect(host.model).toBe('2026/10/19');
+    expect(host.changes[host.changes.length - 1]).toBe('2026/10/19');
   });
 });
 

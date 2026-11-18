@@ -9,6 +9,7 @@ import {
   input,
   model,
   computed,
+  effect,
   OnDestroy,
   OnInit,
   output,
@@ -22,7 +23,7 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
-import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDatepicker, MatDatepickerInput, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -136,6 +137,8 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
   datePicker = viewChild<MatDatepicker<Date>>(MatDatepicker);
+  // why: query signal không đặt được trên field ES private (#).
+  private readonly pickerInput = viewChild(MatDatepickerInput<Date>);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -411,8 +414,21 @@ export class SdDate implements OnDestroy, OnInit {
   isFocused = false;
   isValid?: boolean;
   #hasInvalidInput = false;
+  #syncingPicker = false;
 
   #subscription = new Subscription();
+
+  constructor() {
+    // Giành quyền ghi view → control của ô nhập.
+    // why: `MatDatepickerInput` là value accessor của ô, nó parse lại sau MỖI phím và ghi null vào control ngay khi
+    // chuỗi còn dở dang; connector đẩy tiếp null đó ra `model` / `sdChange` trong lúc người dùng đang sửa. Đăng ký
+    // lại `onChange` (API công khai của ControlValueAccessor) để chỉ ngày gõ xong mới vào control. Ô nhập bị dựng
+    // lại khi đổi `viewed`, nên phải đăng ký theo từng instance của directive.
+    effect(() => {
+      const pickerInput = this.pickerInput();
+      if (pickerInput) untracked(() => pickerInput.registerOnChange((value: Date | null) => this.#commitFromInput(value)));
+    });
+  }
 
   ngOnInit() {
     this.#subscription.add(
@@ -435,6 +451,19 @@ export class SdDate implements OnDestroy, OnInit {
     if (val === 'TODAY') return new Date();
     if (val && DateUtilities.isDate(val)) return new Date(val);
     return null;
+  }
+
+  /**
+   * Giá trị ô nhập gửi lên control trong lúc gõ hoặc khi chọn trên lịch.
+   * why: null ở đây luôn là "chuỗi chưa thành ngày" (dở dang, sai, hoặc vừa xoá trắng) — chưa phải người dùng chốt
+   * bỏ giá trị. Control giữ ngày đã chốt gần nhất; null chỉ được chốt khi rời ô (`onBlur`), nhấn Enter trên ô trống
+   * hoặc bấm nút xoá.
+   */
+  #commitFromInput(value: Date | null): void {
+    this.formControl.markAsDirty();
+    if (!value || dateControlsEqual(this.formControl.value as Date | null, value)) return;
+    // why: ô đang hiển thị đúng chuỗi này rồi, không ghi ngược lại view để khỏi động vào con trỏ.
+    this.formControl.setValue(value, { emitModelToViewChange: false });
   }
 
   onFocus = () => {
@@ -520,7 +549,8 @@ export class SdDate implements OnDestroy, OnInit {
 
   onInput = (event: Event) => {
     const input = event.target as HTMLInputElement | null;
-    if (!input) return;
+    // why: lượt `input` do chính component bắn lại (xem #syncPicker) chỉ để Material parse, không định dạng lần nữa.
+    if (!input || this.#syncingPicker) return;
 
     const rawValue = input.value;
     const inputType = (event as InputEvent).inputType;
@@ -534,11 +564,28 @@ export class SdDate implements OnDestroy, OnInit {
       input.value = formattedValue;
       const caretPosition = getCaretPosition(rawValue, selectionStart, formattedValue, addTrailingSeparator);
       input.setSelectionRange?.(caretPosition, caretPosition);
+      this.#syncPicker(input);
     }
 
     this.#hasInvalidInput = hasInvalidCharacters;
     this.#validateDateInput(formattedValue, hasInvalidCharacters);
   };
+
+  /**
+   * why: `MatDatepickerInput` parse chuỗi THÔ trước khi component định dạng lại, và gán `input.value` bằng code
+   * không phát `input`. Sửa giữa chuỗi (`19/11/2026` → `19/10/2026`) đi qua chuỗi thô sai khuôn, nên Material giữ
+   * null dù ô đã hiện ngày đủ; `change` lúc rời ô khi đó phát null và xoá giá trị. Bắn lại `input` để Material
+   * parse đúng chuỗi đang hiển thị.
+   */
+  #syncPicker(input: HTMLInputElement): void {
+    if (typeof input.dispatchEvent !== 'function') return;
+    this.#syncingPicker = true;
+    try {
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    } finally {
+      this.#syncingPicker = false;
+    }
+  }
 
   /** Kept as a compatibility entry point for callers that used the old keyup handler. */
   onKeyup = (event: SdDateKeyupEvent) => {
@@ -572,6 +619,9 @@ export class SdDate implements OnDestroy, OnInit {
   }
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {
+    // why: `change` (Enter, hoặc ngay trước blur) khi chuỗi còn dở dang thì Material báo null. Chưa nhập xong thì
+    // không chốt gì; rời ô đã có `onBlur` xử lý.
+    if (!event.value && this.inputRef()?.nativeElement?.value) return;
     this.inputRef()?.nativeElement?.focus();
     const value = event.value ?? null;
     this.#hasInvalidInput = false;

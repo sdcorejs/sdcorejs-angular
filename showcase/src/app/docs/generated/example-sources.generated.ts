@@ -22157,7 +22157,7 @@ export class ChipCalendarDemoComponent {
 `,
   },
   "forms/date": {
-    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -22252,6 +22252,23 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
           </div>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chot-gia-tri-khi-go') {
+        <demo-section
+          heading="Chốt giá trị khi gõ"
+          [props]="[{ name: '(sdChange)', value: 'event' }]"
+          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+            <sd-date label="Ngày hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-date>
+            <div style="font-size:12px; color:#555">
+              model: <code data-e2e="commit-model">{{ commitValue() ?? 'null' }}</code>
+            </div>
+            <div style="font-size:12px; color:#555">
+              sdChange: <code data-e2e="commit-log">{{ commitLogJson() }}</code>
+            </div>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: \`
@@ -22293,6 +22310,14 @@ export class DateDemoComponent {
   lockedA = signal<string | null>('2025-01-15');
   lockedB = signal<string | null>('2025-02-20');
   filter = signal<string | null>(null);
+
+  commitValue = signal<string | null>('2026/11/19');
+  readonly commitLog = signal<(string | null)[]>([]);
+  readonly commitLogJson = computed(() => JSON.stringify(this.commitLog()));
+
+  logCommit(value: string | null) {
+    this.commitLog.update(log => [...log, value]);
+  }
 
   check() {
     this.formValid.markAllAsTouched();
@@ -22498,7 +22523,7 @@ export class DateRangeDemoComponent {
 }`,
   },
   "forms/datetime": {
-    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+    typescript: `import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -22585,6 +22610,23 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
           </div>
         </demo-section>
       }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chot-gia-tri-khi-go') {
+        <demo-section
+          heading="Chốt giá trị khi gõ"
+          [props]="[{ name: '(sdChange)', value: 'event' }]"
+          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+            <sd-datetime label="Giờ hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-datetime>
+            <div style="font-size:12px; color:#555">
+              model: <code data-e2e="commit-model">{{ commitValue() ?? 'null' }}</code>
+            </div>
+            <div style="font-size:12px; color:#555">
+              sdChange: <code data-e2e="commit-log">{{ commitLogJson() }}</code>
+            </div>
+          </div>
+        </demo-section>
+      }
     </demo-page>
   \`,
   styles: \`
@@ -22625,6 +22667,14 @@ export class DatetimeDemoComponent {
   startAt = signal<string | null>(null);
   lockedA = signal<string | null>('2025-01-15 09:30');
   lockedB = signal<string | null>('2025-02-20 14:00');
+
+  commitValue = signal<string | null>('2026/11/19 10:30:00');
+  readonly commitLog = signal<(string | null)[]>([]);
+  readonly commitLogJson = computed(() => JSON.stringify(this.commitLog()));
+
+  logCommit(value: string | null) {
+    this.commitLog.update(log => [...log, value]);
+  }
 
   check() {
     this.formValid.markAllAsTouched();
@@ -35886,6 +35936,23 @@ Bởi Nguyễn Văn A"></sd-badge>
       </div>
     </demo-section>`,
   },
+  "forms/date/example-chot-gia-tri-khi-go": {
+    ...SHOWCASE_PAGE_SOURCES["forms/date"],
+    html: `<demo-section
+      heading="Chốt giá trị khi gõ"
+      [props]="[{ name: '(sdChange)', value: 'event' }]"
+      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+      <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+        <sd-date label="Ngày hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-date>
+        <div style="font-size:12px; color:#555">
+          model: <code data-e2e="commit-model">{{ commitValue() ?? 'null' }}</code>
+        </div>
+        <div style="font-size:12px; color:#555">
+          sdChange: <code data-e2e="commit-log">{{ commitLogJson() }}</code>
+        </div>
+      </div>
+    </demo-section>`,
+  },
   "forms/date/example-chuan-hoa-gia-tri-dau-ra": {
     ...SHOWCASE_PAGE_SOURCES["forms/date"],
     html: `<demo-section
@@ -35965,6 +36032,23 @@ Bởi Nguyễn Văn A"></sd-badge>
       note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
       <div style="width: 300px; font-size:13px; color:#555">
         Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
+      </div>
+    </demo-section>`,
+  },
+  "forms/datetime/example-chot-gia-tri-khi-go": {
+    ...SHOWCASE_PAGE_SOURCES["forms/datetime"],
+    html: `<demo-section
+      heading="Chốt giá trị khi gõ"
+      [props]="[{ name: '(sdChange)', value: 'event' }]"
+      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+      <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
+        <sd-datetime label="Giờ hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-datetime>
+        <div style="font-size:12px; color:#555">
+          model: <code data-e2e="commit-model">{{ commitValue() ?? 'null' }}</code>
+        </div>
+        <div style="font-size:12px; color:#555">
+          sdChange: <code data-e2e="commit-log">{{ commitLogJson() }}</code>
+        </div>
       </div>
     </demo-section>`,
   },
