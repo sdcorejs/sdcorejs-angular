@@ -38,6 +38,7 @@ describe('SdDatetime (typing never commits an unfinished datetime)', () => {
   let input: HTMLInputElement;
 
   beforeEach(() => {
+    localStorage.setItem('sd-core.language', 'vi');
     TestBed.configureTestingModule({ imports: [TypingHost, NoopAnimationsModule] });
     fixture = TestBed.createComponent(TypingHost);
     host = fixture.componentInstance;
@@ -333,6 +334,131 @@ describe('SdDatetime (typing never commits an unfinished datetime)', () => {
       fixture.detectChanges();
 
       expect(host.model).toBeNull();
+    });
+  });
+
+  describe('a datetime that does not exist', () => {
+    const replaceWith = (text: string) => {
+      select(0, input.value.length);
+      backspace();
+      type(text);
+      expect(input.value).toBe(text);
+    };
+
+    const errorText = () => (fixture.nativeElement.querySelector('mat-error') as HTMLElement | null)?.textContent?.trim();
+
+    for (const text of ['31/02/2026 10:30', '29/02/2026 10:30', '31/04/2026 10:30', '19/11/2026 25:30', '19/11/2026 10:65']) {
+      it(`"${text}" stays in the field on blur: value kept, invalid-date error`, () => {
+        replaceWith(text);
+
+        blur();
+
+        expect(input.value).toBe(text);
+        expectNothingCommitted();
+        expect(comp.formControl.errors?.['date']).toBe('Ngày giờ không hợp lệ');
+        expect(comp.formControl.invalid).toBeTrue();
+      });
+    }
+
+    it('Enter reports it too and commits nothing', () => {
+      replaceWith('31/02/2026 10:30');
+
+      pressEnter();
+
+      expect(input.value).toBe('31/02/2026 10:30');
+      expectNothingCommitted();
+      expect(comp.formControl.errors?.['date']).toBe('Ngày giờ không hợp lệ');
+    });
+
+    it('shows the message and marks the control touched', () => {
+      replaceWith('31/02/2026 10:30');
+
+      blur();
+
+      expect(comp.formControl.touched).toBeTrue();
+      expect(errorText()).toBe('Ngày giờ không hợp lệ');
+    });
+
+    it('text that does not match the format still reports the format error', () => {
+      replaceWith('19/13/2026 10:30');
+
+      blur();
+
+      expect(comp.formControl.errors?.['date']).toBe('Sai định dạng');
+      expectNothingCommitted();
+    });
+
+    it('29/02 is valid in a leap year', () => {
+      replaceWith('29/02/2028 10:30');
+
+      blur();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.model).toBe('2028/02/29 10:30:00');
+    });
+
+    it('correcting the text clears the error at once and commits the corrected datetime', () => {
+      replaceWith('31/02/2026 10:30');
+      blur();
+      input.dispatchEvent(new Event('focus'));
+
+      select(0, 2);
+      type('28');
+      expect(input.value).toBe('28/02/2026 10:30');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      blur();
+
+      expect(host.model).toBe('2026/02/28 10:30:00');
+      expect(host.changes).toEqual(['2026/02/28 10:30:00']);
+      expect(errorText()).toBeUndefined();
+    });
+
+    it('survives a later validity recalculation', () => {
+      replaceWith('31/02/2026 10:30');
+      blur();
+
+      comp.formControl.updateValueAndValidity();
+
+      expect(comp.formControl.errors?.['date']).toBe('Ngày giờ không hợp lệ');
+    });
+
+    it('the clear button removes the text, the value and the error', () => {
+      replaceWith('31/02/2026 10:30');
+      blur();
+
+      comp.clear(undefined);
+      fixture.detectChanges();
+
+      expect(input.value).toBe('');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.model).toBeNull();
+      expect(host.changes).toEqual([null]);
+    });
+
+    it('a new model from the parent replaces it and clears the error', () => {
+      replaceWith('31/02/2026 10:30');
+      blur();
+
+      host.model = '2027/03/04 08:15:00';
+      fixture.detectChanges();
+
+      expect(input.value).toBe('04/03/2027 08:15');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.changes).toEqual([]);
+    });
+
+    it('emptying the field afterwards and leaving it commits null and clears the error', () => {
+      replaceWith('31/02/2026 10:30');
+      blur();
+      input.dispatchEvent(new Event('focus'));
+
+      select(0, input.value.length);
+      backspace();
+      blur();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.model).toBeNull();
+      expect(host.changes).toEqual([null]);
     });
   });
 

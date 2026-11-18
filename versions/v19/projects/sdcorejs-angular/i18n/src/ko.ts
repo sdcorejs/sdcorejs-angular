@@ -219,6 +219,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date.min-date': '최소 날짜: {date}',
   'core.form.date.max-date': '최대 날짜: {date}',
   'core.form.date.parse-error': '구문 분석 오류: {text}',
+  'core.form.date.invalid-date': '유효하지 않은 날짜입니다',
   'core.form.date.invalid-format': '형식이 올바르지 않습니다',
 
   // ---- Forms: date-range ----
@@ -232,6 +233,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.datetime.required': '정보를 입력해 주세요',
   'core.form.datetime.min-date': '최소 날짜: {date}',
   'core.form.datetime.max-date': '최대 날짜: {date}',
+  'core.form.datetime.invalid-date': '유효하지 않은 날짜 및 시간입니다',
   'core.form.datetime.invalid-format': '형식이 올바르지 않습니다',
   'core.form.datetime.now': '지금',
   'core.form.datetime.confirm': '확인',

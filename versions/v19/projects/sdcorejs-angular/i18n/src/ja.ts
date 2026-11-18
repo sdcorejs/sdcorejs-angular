@@ -220,6 +220,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date.min-date': '最小日付: {date}',
   'core.form.date.max-date': '最大日付: {date}',
   'core.form.date.parse-error': '解析エラー: {text}',
+  'core.form.date.invalid-date': '無効な日付です',
   'core.form.date.invalid-format': '形式が正しくありません',
 
   // ---- Forms: date-range ----
@@ -233,6 +234,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.datetime.required': '入力してください',
   'core.form.datetime.min-date': '最小日付: {date}',
   'core.form.datetime.max-date': '最大日付: {date}',
+  'core.form.datetime.invalid-date': '無効な日時です',
   'core.form.datetime.invalid-format': '形式が正しくありません',
   'core.form.datetime.now': '現在',
   'core.form.datetime.confirm': '確定',

@@ -6,8 +6,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdDate } from './date.component';
 
-// Một ngày đang có chỉ được thay bằng null khi người dùng CHỐT bỏ nó (rời ô, Enter trên ô trống, nút xoá).
-// Chuỗi đang gõ dở không được chạm vào control, model hay sdChange. Mọi spec ở đây bắn sự kiện DOM thật
+// Một ngày đang có chỉ được thay bằng null khi người dùng CHỐT bỏ nó (rời ô trống, Enter trên ô trống, nút xoá).
+// Chuỗi đang gõ dở không được chạm vào control, model hay sdChange; chuỗi chưa thành ngày (dở dang, hoặc ngày không
+// có trên lịch) được giữ lại trong ô kèm lỗi thay vì bị xoá. Mọi spec ở đây bắn sự kiện DOM thật
 // (`input` từng phím, `change`, `blur`) để listener của MatDatepickerInput cùng chạy như trên trình duyệt.
 
 @Component({
@@ -47,6 +48,7 @@ describe('SdDate (typing never commits an unfinished date)', () => {
   };
 
   beforeEach(() => {
+    localStorage.setItem('sd-core.language', 'vi');
     TestBed.configureTestingModule({ imports: [TypingHost, NoopAnimationsModule] });
     fixture = TestBed.createComponent(TypingHost);
     host = fixture.componentInstance;
@@ -222,24 +224,31 @@ describe('SdDate (typing never commits an unfinished date)', () => {
       expect(comp.formControl.dirty).toBeTrue();
     });
 
-    it('Enter does not commit it and keeps the text', () => {
+    it('reports no error while it is still being typed', () => {
+      cutToPartial();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+    });
+
+    it('Enter does not commit it, keeps the text and reports the format error', () => {
       cutToPartial();
 
       pressEnter();
 
       expect(input.value).toBe('19/1');
       expectNothingCommitted();
+      expect(comp.formControl.errors?.['date']).toBe('Sai định dạng');
     });
 
-    it('leaving the field clears it once', () => {
+    it('leaving the field keeps the text and the value, and reports the format error', () => {
       cutToPartial();
 
       blur();
 
-      expect(input.value).toBe('');
-      expect(comp.formControl.value).toBeNull();
-      expect(host.model).toBeNull();
-      expect(host.changes).toEqual([null]);
+      expect(input.value).toBe('19/1');
+      expectNothingCommitted();
+      expect(comp.formControl.errors?.['date']).toBe('Sai định dạng');
+      expect(comp.formControl.touched).toBeTrue();
     });
 
     it('can still be completed after Enter was pressed on it', () => {
@@ -254,19 +263,145 @@ describe('SdDate (typing never commits an unfinished date)', () => {
       expect(host.changes).toEqual(['2026/10/19']);
     });
 
-    it('an impossible calendar date typed in full is not committed until blur clears it', () => {
+  });
+
+  describe('a date that does not exist', () => {
+    const typeImpossible = () => {
       select(0, 2);
       type('31');
       select(3, 5);
       type('02');
       expect(input.value).toBe('31/02/2026');
+    };
+
+    const errorText = () => (fixture.nativeElement.querySelector('mat-error') as HTMLElement | null)?.textContent?.trim();
+
+    it('is reported as soon as it is typed in full, without changing the value', () => {
+      typeImpossible();
 
       expectNothingCommitted();
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
+    });
+
+    it('stays in the field when the user leaves it: value kept, control and form invalid, message shown', () => {
+      typeImpossible();
 
       blur();
 
-      expect(host.changes).toEqual([null]);
+      expect(input.value).toBe('31/02/2026');
+      expectNothingCommitted();
+      expect(comp.formControl.invalid).toBeTrue();
+      expect(host.fg.invalid).toBeTrue();
+      expect(errorText()).toBe('Ngày không hợp lệ');
+      expect(controlValues).not.toContain(null);
+    });
+
+    it('Enter reports it too and commits nothing', () => {
+      typeImpossible();
+
+      pressEnter();
+
+      expect(input.value).toBe('31/02/2026');
+      expectNothingCommitted();
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
+    });
+
+    it('29/02 is invalid in a common year and valid in a leap year', () => {
+      select(0, input.value.length);
+      backspace();
+      type('29022026');
+      blur();
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
+      expectNothingCommitted();
+
+      focus();
+      select(10);
+      backspace();
+      typeChar('8');
+      blur();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.model).toBe('2028/02/29');
+      expect(host.changes).toEqual(['2028/02/29']);
+    });
+
+    it('correcting the text clears the error and commits the corrected date', () => {
+      typeImpossible();
+      blur();
+
+      focus();
+      select(0, 2);
+      type('28');
+      expect(input.value).toBe('28/02/2026');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      blur();
+
+      expect(host.model).toBe('2026/02/28');
+      expect(host.changes).toEqual(['2026/02/28']);
+      expect(host.fg.valid).toBeTrue();
+      expect(errorText()).toBeUndefined();
+    });
+
+    it('survives a later validity recalculation', () => {
+      typeImpossible();
+      blur();
+
+      comp.formControl.updateValueAndValidity();
+      host.required = true;
+      fixture.detectChanges();
+
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
+    });
+
+    it('a calendar pick replaces it and clears the error', () => {
+      typeImpossible();
+      blur();
+
+      comp.datePicker()!.select(new Date(2026, 0, 5));
+      fixture.detectChanges();
+
+      expect(input.value).toBe('05/01/2026');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.changes).toEqual(['2026/01/05']);
+    });
+
+    it('the clear button removes the text, the value and the error', () => {
+      typeImpossible();
+      blur();
+
+      comp.clear(undefined);
+      fixture.detectChanges();
+
       expect(input.value).toBe('');
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.changes).toEqual([null]);
+    });
+
+    it('a new model from the parent replaces it and clears the error', () => {
+      typeImpossible();
+      blur();
+
+      host.model = '2027/03/04';
+      fixture.detectChanges();
+
+      expect(input.value).toBe('04/03/2027');
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.changes).toEqual([]);
+    });
+
+    it('emptying the field afterwards and leaving it commits null and clears the error', () => {
+      typeImpossible();
+      blur();
+
+      focus();
+      select(0, input.value.length);
+      backspace();
+      blur();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.model).toBeNull();
+      expect(host.changes).toEqual([null]);
     });
   });
 
@@ -454,13 +589,27 @@ describe('SdDate (typing never commits an unfinished date)', () => {
       expect(host.changes).toEqual(['2026/11/19']);
     });
 
-    it('leaving unfinished text emits nothing, there was no value to remove', () => {
+    it('leaving unfinished text keeps it with the format error and emits nothing', () => {
       type('1911');
 
       blur();
 
-      expect(input.value).toBe('');
+      expect(input.value).toBe('19/11/');
       expect(host.changes).toEqual([]);
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.formControl.errors?.['date']).toBe('Sai định dạng');
+    });
+
+    it('a date that does not exist is kept with the invalid-date error and no value', () => {
+      type('31022026');
+
+      blur();
+
+      expect(input.value).toBe('31/02/2026');
+      expect(host.changes).toEqual([]);
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
+      expect(host.fg.invalid).toBeTrue();
     });
   });
 });

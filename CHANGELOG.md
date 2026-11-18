@@ -323,6 +323,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### General
 
 - i18n keys `core.common.retry` and `core.common.dismiss` in the five locales, shared by the Retry and Dismiss buttons of `sd-calendar`, `sd-scheduler` and `sd-kanban`.
+- i18n keys `core.form.date.invalid-date` ("Ngày không hợp lệ") and `core.form.datetime.invalid-date` ("Ngày giờ không hợp lệ") in the five locales, for text that matches the format of `sd-date` / `sd-datetime` but names a day or a time that does not exist. Custom catalogs fall back to the key until they add them.
 - The three `syncQueryParams` inputs share one behavior: the URL is updated with `replaceUrl` (no history entry per change), writes from several components in one turn go out as one navigation, other query params and the fragment are kept, a component whose route is not on screen (a background router tab, a page being left) does not write, and nothing happens without Angular routes. Without `autoId` nothing is synced and a warning is logged once.
 
 ### Changed
@@ -335,11 +336,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Date
 
-- `sd-date` no longer changes its value while a date is being edited. Text that is not a finished `dd/MM/yyyy` date, including a field that was just emptied, used to put `null` in the form control, `model` and `sdChange` on the first keystroke. The last committed date now stays until the text is a finished date (committed on that keystroke); `null` is committed when the user leaves the field with empty or unfinished text, presses Enter on an empty field or clicks the clear button. Enter on unfinished text commits nothing. While an existing date is being edited the form value is no longer `null` and `required` is not reported; it appears once the emptied field is left. See [date](versions/v19/projects/sdcorejs-angular/forms/date/sd-date.md#typing-behaviour).
+- `sd-date` no longer changes its value while a date is being edited, and no longer clears text that is not a date.
+  - Text that is not a finished `dd/MM/yyyy` date, including a field that was just emptied, used to put `null` in the form control, `model` and `sdChange` on the first keystroke. The last committed date now stays until the text is a finished date (committed on that keystroke).
+  - Leaving the field with unfinished text (`19/1`) or with a day that does not exist (`31/02/2026`) used to empty the field and commit `null`. The text now stays as typed, the committed value does not change, nothing is emitted, and the control carries a `date` error — "Sai định dạng" for unfinished text, the new "Ngày không hợp lệ" for a day that does not exist (raised as soon as it is typed in full) — so the parent form is invalid until the text is corrected. Enter reports the same error and commits nothing.
+  - `null` is committed only when the **empty** field is left, on Enter over an empty field, or by the clear button.
+  - While an existing date is being edited the form value is no longer `null` and `required` is not reported; it appears once the emptied field is left. Screens that relied on an invalid entry resetting the value to `null` must now check the control's validity. See [date](versions/v19/projects/sdcorejs-angular/forms/date/sd-date.md#typing-behaviour).
 
 #### Datetime
 
 - `sd-datetime` changes `model` / `sdChange` while typing only for a finished datetime: the text must match `dd/MM/yyyy HH:mm` or `dd/MM/yyyy HH:mm:ss` exactly. Before, every keystroke was parsed loosely, so retyping a month emitted January in between (`19/1/2026 10:30`), retyping an hour emitted 01:30, a three-digit year emitted year 202, and emptying the field emitted `null` at once. A field emptied while focused now keeps its value until it is left or Enter is pressed. Shorthand such as `1/2/2027 9:05` is still accepted on blur or Enter. Strings written to the control from code while the field is not focused are read as before. See [datetime](versions/v19/projects/sdcorejs-angular/forms/datetime/sd-datetime.md#typing-behaviour).
+- `sd-datetime` reports a datetime that does not exist. Text such as `31/02/2026 10:30`, `29/02/2026 10:30`, `19/11/2026 25:30` or `19/11/2026 10:65` passed the format check on blur / Enter and was left in the field with no error, while the control stayed valid with the old value. It now raises the new "Ngày giờ không hợp lệ" error; the text and the committed value are kept. The `date` error clears as soon as the text becomes a real datetime, without waiting for blur.
 
 #### Kanban
 

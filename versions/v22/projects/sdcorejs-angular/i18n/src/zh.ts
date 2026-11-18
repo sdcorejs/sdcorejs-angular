@@ -219,6 +219,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date.min-date': '最小日期: {date}',
   'core.form.date.max-date': '最大日期: {date}',
   'core.form.date.parse-error': '解析错误: {text}',
+  'core.form.date.invalid-date': '日期无效',
   'core.form.date.invalid-format': '格式不正确',
 
   // ---- Forms: date-range ----
@@ -232,6 +233,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.datetime.required': '请输入内容',
   'core.form.datetime.min-date': '最小日期: {date}',
   'core.form.datetime.max-date': '最大日期: {date}',
+  'core.form.datetime.invalid-date': '日期时间无效',
   'core.form.datetime.invalid-format': '格式不正确',
   'core.form.datetime.now': '现在',
   'core.form.datetime.confirm': '确认',

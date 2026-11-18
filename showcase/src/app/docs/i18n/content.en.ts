@@ -1152,7 +1152,7 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'forms/date/example-chot-gia-tri-khi-go': {
     title: 'Commit the value while typing',
     description:
-      'Edit the text in place: unfinished text does not change the value. The date changes only once dd/MM/yyyy is complete, and becomes empty only when you leave the field, press Enter on an empty field or click clear.',
+      'Edit the text in place: unfinished text does not change the value. The date changes only once dd/MM/yyyy is complete; unfinished text or a date that does not exist stays in the field with an error. The value becomes empty only when you leave an empty field, press Enter on it or click clear.',
   },
   'forms/date/example-chuan-hoa-gia-tri-dau-ra': {
     title: 'Normalize the output value',
@@ -1170,7 +1170,7 @@ export const EN_EXAMPLE_CONTENT: Readonly<Partial<Record<ShowcaseExampleSourceKe
   'forms/datetime/example-chot-gia-tri-khi-go': {
     title: 'Commit the value while typing',
     description:
-      'Edit the text in place: unfinished text does not change the value. The datetime changes only once dd/MM/yyyy HH:mm is complete, and becomes empty only when you leave the field, press Enter on an empty field or click clear.',
+      'Edit the text in place: unfinished text does not change the value. The datetime changes only once dd/MM/yyyy HH:mm is complete; unfinished text or a datetime that does not exist stays in the field with an error. The value becomes empty only when you leave an empty field, press Enter on it or click clear.',
   },
   'forms/datetime/example-chuan-hoa-gia-tri-dau-ra': {
     title: 'Normalize the output value',

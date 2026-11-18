@@ -12,6 +12,7 @@ interface Demo {
   input: Locator;
   model: Locator;
   log: Locator;
+  error: Locator;
 }
 
 /**
@@ -25,7 +26,13 @@ const open = async (page: Page, control: 'date' | 'datetime'): Promise<Demo> => 
   await expect(preview.locator('demo-section')).toBeVisible();
   const input = preview.locator(`[data-autoid="forms-${control}-commit"]`);
   await expect(input).toBeVisible();
-  return { page, input, model: preview.locator('[data-e2e="commit-model"]'), log: preview.locator('[data-e2e="commit-log"]') };
+  return {
+    page,
+    input,
+    model: preview.locator('[data-e2e="commit-model"]'),
+    log: preview.locator('[data-e2e="commit-log"]'),
+    error: preview.locator('mat-error'),
+  };
 };
 
 /** Puts the caret `fromEnd` characters before the end of the text. */
@@ -111,19 +118,73 @@ test.describe('sd-date typing', () => {
     expect(await logOf(log)).toEqual([null]);
   });
 
-  test('Enter on unfinished text commits nothing; leaving the field then clears it once', async ({ page }) => {
-    const { input, model, log } = await open(page, 'date');
+  test('unfinished text stays in the field with the format error; the value is kept', async ({ page }) => {
+    const { input, model, log, error } = await open(page, 'date');
 
     await caretFromEnd(input, 0);
     for (let step = 0; step < 5; step++) await input.press('Backspace');
     await expect(input).toHaveValue('19/1');
+    await expect(error).toHaveCount(0);
     await input.press('Enter');
     await expect(input).toHaveValue('19/1');
-    await expect(model).toHaveText('2026/11/19');
-    await expect(log).toHaveText('[]');
+    await expect(error).toHaveText('Sai định dạng');
 
     await input.press('Tab');
-    await expect(input).toHaveValue('');
+    await expect(input).toHaveValue('19/1');
+    await expect(error).toHaveText('Sai định dạng');
+    await expect(model).toHaveText('2026/11/19');
+    await expect(log).toHaveText('[]');
+  });
+
+  test('a date that does not exist stays in the field with the invalid-date error; the value is kept', async ({ page }) => {
+    const { input, model, log, error } = await open(page, 'date');
+
+    await selectAll(input);
+    await input.pressSequentially('31022026');
+    await expect(input).toHaveValue('31/02/2026');
+    // Thông báo chỉ hiện sau khi ô đã được chạm (rời ô / Enter), như mọi lỗi khác của control.
+    await expect(error).toHaveCount(0);
+
+    await input.press('Tab');
+    await expect(input).toHaveValue('31/02/2026');
+    await expect(error).toHaveText('Ngày không hợp lệ');
+    await expect(model).toHaveText('2026/11/19');
+    await expect(log).toHaveText('[]');
+  });
+
+  test('correcting a date that does not exist clears the error and commits the corrected date', async ({ page }) => {
+    const { input, model, log, error } = await open(page, 'date');
+
+    await selectAll(input);
+    await input.pressSequentially('31022026');
+    await input.press('Tab');
+    await expect(error).toHaveText('Ngày không hợp lệ');
+
+    await input.click();
+    await input.press('Home');
+    await input.press('Shift+ArrowRight');
+    await input.press('Shift+ArrowRight');
+    await input.pressSequentially('28');
+    await expect(input).toHaveValue('28/02/2026');
+    await expect(error).toHaveCount(0);
+
+    await input.press('Tab');
+    await expect(model).toHaveText('2026/02/28');
+    expect(await logOf(log)).toEqual(['2026/02/28']);
+  });
+
+  test('emptying a field that shows a date that does not exist commits null once it is left', async ({ page }) => {
+    const { input, model, log, error } = await open(page, 'date');
+
+    await selectAll(input);
+    await input.pressSequentially('31022026');
+    await input.press('Tab');
+    await expect(error).toHaveText('Ngày không hợp lệ');
+
+    await selectAll(input);
+    await input.press('Backspace');
+    await input.press('Tab');
+    await expect(error).toHaveCount(0);
     await expect(model).toHaveText('null');
     expect(await logOf(log)).toEqual([null]);
   });
@@ -155,6 +216,42 @@ test.describe('sd-date typing', () => {
 });
 
 test.describe('sd-datetime typing', () => {
+  for (const text of ['31/02/2026 10:30', '19/11/2026 25:30']) {
+    test(`"${text}" stays in the field with the invalid-date error; the value is kept`, async ({ page }) => {
+      const { input, model, log, error } = await open(page, 'datetime');
+
+      await selectAll(input);
+      await input.pressSequentially(text);
+      await expect(input).toHaveValue(text);
+
+      await input.press('Tab');
+      await expect(input).toHaveValue(text);
+      await expect(error).toHaveText('Ngày giờ không hợp lệ');
+      await expect(model).toHaveText('2026/11/19 10:30:00');
+      await expect(log).toHaveText('[]');
+    });
+  }
+
+  test('correcting a datetime that does not exist clears the error and commits the corrected one', async ({ page }) => {
+    const { input, model, log, error } = await open(page, 'datetime');
+
+    await selectAll(input);
+    await input.pressSequentially('31/02/2026 10:30');
+    await input.press('Tab');
+    await expect(error).toHaveText('Ngày giờ không hợp lệ');
+
+    await input.click();
+    await input.press('Home');
+    await input.press('Shift+ArrowRight');
+    await input.press('Shift+ArrowRight');
+    await input.pressSequentially('28');
+    await expect(input).toHaveValue('28/02/2026 10:30');
+    await expect(error).toHaveCount(0);
+
+    await input.press('Tab');
+    await expect(model).toHaveText('2026/02/28 10:30:00');
+    expect(await logOf(log)).toEqual(['2026/02/28 10:30:00']);
+  });
   test('editing the month in place is not read as January in between', async ({ page }) => {
     const { input, model, log } = await open(page, 'datetime');
     await expect(input).toHaveValue('19/11/2026 10:30');

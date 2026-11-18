@@ -286,7 +286,7 @@ describe('SdDate', () => {
       expect(input.value).toBe('22/08/1991');
     });
 
-    it('clears an incomplete or invalid date on blur', () => {
+    it('keeps an incomplete date in the field on blur, with the format error and the old value', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
       const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
@@ -294,25 +294,26 @@ describe('SdDate', () => {
 
       comp.onBlur();
 
-      expect(host.model).toBeNull();
-      expect(comp.formControl.value).toBeNull();
-      expect(input.value).toBe('');
+      expect(host.model).toBe('2026/05/15');
+      expect(comp.formControl.value instanceof Date).toBeTrue();
+      expect(input.value).toBe('22/');
+      expect(comp.formControl.errors?.['date']).toBe('Sai định dạng');
     });
 
-    it('clears a date with invalid characters on blur', () => {
+    it('commits the date that is left once stray characters are stripped', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
       const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
       setInputValue(input, '22a08/1991');
+      expect(input.value).toBe('22/08/1991');
 
       comp.onBlur();
 
-      expect(host.model).toBeNull();
-      expect(comp.formControl.value).toBeNull();
-      expect(input.value).toBe('');
+      expect(host.model).toBe('1991/08/22');
+      expect(comp.formControl.hasError('date')).toBeFalse();
     });
 
-    it('clears an impossible calendar date on blur', () => {
+    it('keeps an impossible calendar date in the field on blur, with the invalid-date error and the old value', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
       const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
@@ -320,9 +321,10 @@ describe('SdDate', () => {
 
       comp.onBlur();
 
-      expect(host.model).toBeNull();
-      expect(comp.formControl.value).toBeNull();
-      expect(input.value).toBe('');
+      expect(host.model).toBe('2026/05/15');
+      expect(comp.formControl.value instanceof Date).toBeTrue();
+      expect(input.value).toBe('31/02/1991');
+      expect(comp.formControl.errors?.['date']).toBe('Ngày không hợp lệ');
     });
   });
 
