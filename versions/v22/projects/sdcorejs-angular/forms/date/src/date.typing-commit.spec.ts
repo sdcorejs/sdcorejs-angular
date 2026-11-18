@@ -262,7 +262,6 @@ describe('SdDate (typing never commits an unfinished date)', () => {
       expect(host.model).toBe('2026/10/19');
       expect(host.changes).toEqual(['2026/10/19']);
     });
-
   });
 
   describe('a date that does not exist', () => {
