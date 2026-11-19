@@ -296,6 +296,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - A link wins over the cached filters and goes into the first read, so the table reads once; a param changed from outside is applied with one more read; a param that disappears is written back from the current state; malformed values, unknown fields, disabled column filters, operators outside the column's `filter.operator.list` and page sizes outside `paginate.pages` are ignored.
   - `paginate.total: 'unknown'` restores the page size only.
 - `filter.queryBar.savedFilters: { key }` (query-bar mode, desktop): turns on the saved filters of the bar, stored in this browser under `sd-query-bar:savedFilters:sd-table:<key>`. A saved filter holds the chips, the AND/OR logic and the search term (not sort, columns or page size); applying one reads once and drops fields the table no longer has. Read from the table option only — `SD_TABLE_CONFIGURATION.filter.queryBar` cannot set it.
+- Default operator lists for `string` and `number` columns: a column with `filter.operator.enable` and no `filter.operator.list` falls back to a list built into the library when `SD_TABLE_CONFIGURATION.filter.operator.list` has none for its type. It used to show no operator.
+  - `string`: `CONTAIN`, `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `END_WITH`, `NULL`, `NOT_NULL`, preselected `CONTAIN`. `number`: `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN`, `LESS_OR_EQUAL`, `NULL`, `NOT_NULL`, preselected `EQUAL`. Other column types have no built-in list.
+  - The application configuration wins per column type, and an empty array turns the operators of that type off. Columns and applications that declare their own list keep their behavior, including no preselected operator without a `default`.
+  - Such columns start showing the operator chip (and the operators in query-bar mode): the backend must support the listed operators, or the application narrows the list.
+- Configuration by key, for portals whose modules call different backends: `SD_TABLE_CONFIGURATION` takes one configuration or several (an array in `useValue`, or `multi: true`), each with an optional `key`, like `SD_UPLOAD_FILE_CONFIGURATION` and `SD_PERMISSION_CONFIGURATION`; a table picks one with the new `option.configurationKey`.
+  - The keyed configuration is merged field by field over the configuration without a `key` (the portal default), so a module declares only what differs, for example its own `filter.operator.list`. Arrays are replaced as a whole.
+  - A missing or unknown `configurationKey` uses the portal default; two configurations with the same `key` throw. Applications that provide a single configuration are unchanged.
 
 #### Timeline
 

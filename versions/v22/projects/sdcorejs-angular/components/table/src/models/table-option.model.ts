@@ -35,6 +35,12 @@ interface SdTableBaseOption<T = any> {
    */
   key?: string;
   /**
+   * `key` của cấu hình trong `SD_TABLE_CONFIGURATION` áp cho bảng này (portal có nhiều module, mỗi module một backend).
+   * Cấu hình đó được gộp lên trên cấu hình mặc định của portal (cấu hình không `key`). Không khai, hoặc không có cấu
+   * hình nào trùng `key`: dùng cấu hình mặc định của portal.
+   */
+  configurationKey?: string;
+  /**
    * Field định danh của MỘT DÒNG (hỗ trợ dot-notation, vd `'id'` hoặc `'user.id'`).
    *
    * Table dùng giá trị này làm `SdTableItem.meta.id` — khoá cho `trackBy` của mat-table,
