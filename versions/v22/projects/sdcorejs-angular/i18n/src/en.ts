@@ -218,6 +218,7 @@ export const EN_MESSAGES = {
   'core.form.date.min-date': 'Minimum date: {date}',
   'core.form.date.max-date': 'Maximum date: {date}',
   'core.form.date.parse-error': 'Parse error: {text}',
+  'core.form.date.invalid-date': 'Invalid date',
   'core.form.date.invalid-format': 'Invalid format',
 
   // ---- Forms: date-range ----
@@ -231,6 +232,7 @@ export const EN_MESSAGES = {
   'core.form.datetime.required': 'Please enter information',
   'core.form.datetime.min-date': 'Minimum date: {date}',
   'core.form.datetime.max-date': 'Maximum date: {date}',
+  'core.form.datetime.invalid-date': 'Invalid date and time',
   'core.form.datetime.invalid-format': 'Invalid format',
   'core.form.datetime.now': 'Now',
   'core.form.datetime.confirm': 'Confirm',

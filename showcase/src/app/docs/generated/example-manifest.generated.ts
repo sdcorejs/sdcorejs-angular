@@ -3139,7 +3139,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/date",
     sectionId: "example-chot-gia-tri-khi-go",
     title: "Chốt giá trị khi gõ",
-    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.",
+    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy; chuỗi dở dang hoặc ngày không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.",
   },
   {
     sourceKey: "forms/date-range/example-co-ban",
@@ -3216,7 +3216,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "forms/datetime",
     sectionId: "example-chot-gia-tri-khi-go",
     title: "Chốt giá trị khi gõ",
-    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.",
+    description: "Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm; chuỗi dở dang hoặc ngày giờ không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.",
   },
   {
     sourceKey: "forms/entity-picker/example-server-single-select",

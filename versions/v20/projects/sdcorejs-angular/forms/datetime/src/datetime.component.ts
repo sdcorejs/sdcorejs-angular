@@ -114,6 +114,22 @@ function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolea
 }
 
 const DATETIME_DISPLAY_FORMATS = ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm'];
+const DATETIME_TO_MINUTES = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]$/;
+const DATETIME_TO_SECONDS = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]:[0-6][0-9]$/;
+
+/** Vì sao chuỗi trong ô chưa phải một thời điểm: sai khuôn, hay đủ khuôn nhưng ngày / giờ không tồn tại. */
+type SdDatetimeTextError = 'format' | 'calendar';
+
+/**
+ * Lỗi của một chuỗi được CHỐT (rời ô, Enter); null khi chuỗi rỗng hoặc là một thời điểm có thật.
+ * why: khuôn regex chỉ soát chữ số, nên `31/02/2026 10:30`, `19/11/2026 25:30` hay `10:65` đều lọt. Phải parse
+ * thật mới biết ngày / giờ đó có tồn tại.
+ */
+function datetimeTextError(text: string | null | undefined): SdDatetimeTextError | null {
+  if (!text) return null;
+  if (!DATETIME_TO_MINUTES.test(text) && !DATETIME_TO_SECONDS.test(text)) return 'format';
+  return parseFirstValid(text, DATETIME_DISPLAY_FORMATS) ? null : 'calendar';
+}
 
 /** Parses the committed display string back to the local instant it denotes. */
 function datetimeControlToDate(value: string | null): Date | null {
@@ -277,6 +293,9 @@ export class SdDatetime implements OnDestroy, OnInit {
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    // why: `model` đổi từ ngoài ghi control bằng `emitEvent: false` nên #state không tick; cờ lỗi hạ theo thì
+    // message phải tính lại.
+    void this.#textError();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -346,8 +365,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
 
-  /** `true` khi text vừa nhập không phải datetime dd/MM/yyyy HH:mm(:ss) hợp lệ. */
-  readonly #invalidFormat = signal(false);
+  /** Lỗi của chuỗi vừa chốt: `format` → "Sai định dạng", `calendar` → "Ngày giờ không hợp lệ". */
+  readonly #textError = signal<SdDatetimeTextError | null>(null);
 
   /**
    * why: lỗi format PHẢI đi qua pipeline validator. Trước đây nó bị nhét thẳng vào control bằng
@@ -361,8 +380,14 @@ export class SdDatetime implements OnDestroy, OnInit {
    * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không
    * tự biến mình thành dependency reactive khi bị gọi trong effect/computed.
    */
-  readonly #datetimeFormatValidator: ValidatorFn = () =>
-    untracked(() => (this.#invalidFormat() ? { date: this.#i18n.t('core.form.datetime.invalid-format') } : null));
+  readonly #datetimeFormatValidator: ValidatorFn = control =>
+    untracked(() => {
+      const kind = this.#textError();
+      // why: control giữ chuỗi của ô, nên người dùng vừa sửa thành một thời điểm hợp lệ là lỗi hết ngay, không đợi
+      // rời ô.
+      if (!kind || (control.value && !datetimeTextError(control.value))) return null;
+      return { date: this.#i18n.t(kind === 'calendar' ? 'core.form.datetime.invalid-date' : 'core.form.datetime.invalid-format') };
+    });
 
   readonly #validators = computed<readonly ValidatorFn[]>(() =>
     this.inlineError() ? [this.#datetimeFormatValidator, SdInlineErrorValidator] : [this.#datetimeFormatValidator]
@@ -456,7 +481,11 @@ export class SdDatetime implements OnDestroy, OnInit {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
-    modelToControl: value => this.#modelToDisplay(value),
+    modelToControl: value => {
+      // why: `model` đổi là ô sắp được ghi đè bằng giá trị đó — chuỗi sai trước đó (và lỗi của nó) không còn.
+      untracked(() => this.#textError.set(null));
+      return this.#modelToDisplay(value);
+    },
     controlToModel: value => this.#serializeCommitted(value),
     modelEquals: (left, right) => this.#modelsEqual(left, right),
     validators: this.#validators,
@@ -512,7 +541,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     // `date` VĨNH VIỄN: control invalid + hiện "Sai định dạng" trên một giá trị hoàn toàn hợp lệ.
     // Đây là regression MỚI của việc đưa lỗi vào pipeline validator — bản `setErrors` cũ tình cờ
     // bị `updateValueAndValidity` kế tiếp xoá hộ.
-    this.#setDatetimeError(false);
+    this.#setDatetimeError(null);
     const display = DateUtilities.toFormat(value, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
     if (this.formControl.value !== display) {
       // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
@@ -612,21 +641,22 @@ export class SdDatetime implements OnDestroy, OnInit {
   onConfirmInput = (event: any) => {
     const currentVal: string = event.target.value;
     const formControl: AbstractControl = this.formControl;
-    const regexToMinutes = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]$/g;
-    const regexToSecond = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]:[0-6][0-9]$/g;
+    const kind = datetimeTextError(currentVal);
 
-    if (currentVal && !(regexToMinutes.test(currentVal) || regexToSecond.test(currentVal))) {
+    if (kind) {
+      // why: chuỗi sai khuôn hoặc ngày / giờ không tồn tại được giữ nguyên trong ô kèm lỗi; giá trị đã chốt không
+      // đổi, control invalid nên form không submit được cho tới khi sửa.
       formControl.markAsDirty();
       formControl.markAsTouched();
-      this.#setDatetimeError(true);
+      this.#setDatetimeError(kind);
       return;
     }
 
-    this.#setDatetimeError(false);
+    this.#setDatetimeError(null);
 
     // Đồng bộ qua canonical control; connector sở hữu conversion và model/output timing.
     if (currentVal) {
-      const parsed = parseFirstValid(currentVal, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
+      const parsed = parseFirstValid(currentVal, DATETIME_DISPLAY_FORMATS);
       if (parsed) {
         const display = DateUtilities.toFormat(parsed, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm');
         if (this.formControl.value !== display) {
@@ -639,15 +669,17 @@ export class SdDatetime implements OnDestroy, OnInit {
   };
 
   /**
-   * Bật/tắt cờ format rồi chạy lại pipeline NGAY.
+   * Đặt cờ lỗi của chuỗi rồi chạy lại pipeline NGAY khi kết quả đổi.
    * why: chạy lại đồng bộ để lỗi xuất hiện/biến mất đúng nhịp nhập, đồng thời phát `events` cho
-   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ.
-   * Early-return khi cờ không đổi để một datetime hợp lệ không bị phát thừa một vòng status.
+   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ. Không đổi gì
+   * thì không chạy, để một datetime hợp lệ không bị phát thừa một vòng status.
    */
-  #setDatetimeError(invalid: boolean): void {
-    if (this.#invalidFormat() === invalid) return;
-    this.#invalidFormat.set(invalid);
-    this.formControl.updateValueAndValidity();
+  #setDatetimeError(kind: SdDatetimeTextError | null): void {
+    const flagChanged = this.#textError() !== kind;
+    this.#textError.set(kind);
+    const expected = this.#datetimeFormatValidator(this.formControl)?.['date'] ?? null;
+    const current = this.formControl.errors?.['date'] ?? null;
+    if (flagChanged || expected !== current) this.formControl.updateValueAndValidity();
   }
 
   clear = ($event: any) => {
@@ -655,7 +687,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     // why: phải tắt cờ TRƯỚC và NGOÀI nhánh `if` — sau khi gõ text sai, `onConfirmInput` return sớm
     // nên `formControl.value` vẫn là null; nhánh `if` không chạy và lỗi `date` sẽ treo lại trên một
     // field vừa được xoá trắng.
-    this.#setDatetimeError(false);
+    this.#setDatetimeError(null);
     if (this.formControl.value) {
       this.formControl.markAsDirty();
       this.formControl.setValue(null);

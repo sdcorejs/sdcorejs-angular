@@ -59,11 +59,21 @@ import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 
-import { dateControlsEqual, formatDateInput, getCaretPosition, isPartialDateInput, parseDateInput } from './date-input.util';
+import {
+  DATE_DISPLAY_PATTERN,
+  dateControlsEqual,
+  formatDateInput,
+  getCaretPosition,
+  isPartialDateInput,
+  parseDateInput,
+} from './date-input.util';
 import { ɵSdOperatorChip, ɵsdIsNoDataOperator, ɵsdOperatorHasValue, ɵsdSingleOperator } from '@sdcorejs/angular/components/operator';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type SdDateModelValue = string | number | Date | undefined | null;
+/** Vì sao chuỗi trong ô chưa phải một ngày: sai khuôn `dd/MM/yyyy`, hay đủ khuôn nhưng ngày không có trên lịch. */
+type SdDateTextError = 'format' | 'calendar';
+
 type SdDateKeyupEvent = Event | { target?: { value?: string | null } };
 
 // why: cách đọc dùng chung với sd-chip-calendar (`ɵsdNormalizeCalendarDay` trong forms/models).
@@ -258,6 +268,9 @@ export class SdDate implements OnDestroy, OnInit {
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    // why: `model` đổi từ ngoài ghi control bằng `emitEvent: false` nên #state không tick; cờ lỗi hạ theo thì
+    // message phải tính lại.
+    void this.#textError();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -319,18 +332,23 @@ export class SdDate implements OnDestroy, OnInit {
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
 
-  /** `true` khi text đang gõ không phải ngày dd/MM/yyyy hợp lệ. */
-  readonly #invalidFormat = signal(false);
+  /** Lỗi của chuỗi đang nằm trong ô: `format` → "Sai định dạng", `calendar` → "Ngày không hợp lệ". */
+  readonly #textError = signal<SdDateTextError | null>(null);
 
   /**
-   * why: lỗi format PHẢI đi qua pipeline validator. Trước đây nó bị nhét thẳng vào control bằng
-   * `setErrors()` — tức là nằm NGOÀI pipeline — nên bất kỳ `updateValueAndValidity` nào chạy sau
-   * (effect validators của connector, hay chính `setValue`) đều xoá sạch lỗi mà không ai hay biết.
-   * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không
-   * tự biến mình thành dependency reactive khi bị gọi trong effect/computed.
+   * why: lỗi của chuỗi PHẢI đi qua pipeline validator. Chuỗi sai được GIỮ LẠI trong ô sau khi rời ô, nên lỗi phải
+   * sống qua mọi `updateValueAndValidity` (effect validators của connector, `setValue`) — nhét bằng `setErrors()`
+   * thì lần tính lại kế tiếp xoá mất. Cờ được hạ ở mọi chỗ ô bị ghi đè: gõ tiếp, chọn lịch, nút xoá, `model` đổi từ
+   * ngoài, rời ô với chuỗi hợp lệ hoặc ô trống.
+   * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không tự biến mình thành
+   * dependency reactive khi bị gọi trong effect/computed.
    */
   readonly #dateFormatValidator: ValidatorFn = () =>
-    untracked(() => (this.#invalidFormat() ? { date: this.#i18n.t('core.form.date.invalid-format') } : null));
+    untracked(() => {
+      const kind = this.#textError();
+      if (!kind) return null;
+      return { date: this.#i18n.t(kind === 'calendar' ? 'core.form.date.invalid-date' : 'core.form.date.invalid-format') };
+    });
 
   readonly #validators = computed<readonly ValidatorFn[]>(() =>
     this.inlineError() ? [this.#dateFormatValidator, SdInlineErrorValidator] : [this.#dateFormatValidator]
@@ -401,7 +419,15 @@ export class SdDate implements OnDestroy, OnInit {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
-    modelToControl: value => this.#modelToControl(value),
+    modelToControl: value => {
+      const controlValue = this.#modelToControl(value);
+      // why: `model` đổi là ô sắp được ghi đè bằng giá trị đó — chuỗi sai trước đó (và lỗi của nó) không còn.
+      untracked(() => {
+        this.#textError.set(null);
+        if (controlValue === null) this.#clearInputText();
+      });
+      return controlValue;
+    },
     controlToModel: value => this.#serializeCommitted(value),
     modelEquals: (left, right) => this.#modelsEqual(left, right),
     controlEquals: dateControlsEqual,
@@ -413,7 +439,6 @@ export class SdDate implements OnDestroy, OnInit {
   });
   isFocused = false;
   isValid?: boolean;
-  #hasInvalidInput = false;
   #syncingPicker = false;
 
   #subscription = new Subscription();
@@ -476,22 +501,22 @@ export class SdDate implements OnDestroy, OnInit {
 
     const input = this.inputRef()?.nativeElement;
     const displayValue = input?.value ?? '';
-    const parsedValue = this.#hasInvalidInput ? null : parseDateInput(displayValue);
+    const parsedValue = parseDateInput(displayValue);
 
     this.formControl.markAsTouched();
     this.isValid = false;
-    this.#setDateError(false);
-    this.#hasInvalidInput = false;
 
-    if (parsedValue) {
-      if (!dateControlsEqual(this.formControl.value as Date | null, parsedValue)) {
-        this.formControl.setValue(parsedValue);
-      }
+    // Ô trống hoặc một ngày gõ xong: chốt (null / ngày đó).
+    if (!displayValue || parsedValue) {
+      if (!dateControlsEqual(this.formControl.value as Date | null, parsedValue)) this.formControl.setValue(parsedValue);
+      this.#setDateError(null);
       return;
     }
 
-    if (input && displayValue) input.value = '';
-    if (this.formControl.value !== null) this.formControl.setValue(null);
+    // why: chuỗi dở dang hoặc ngày không có trên lịch (31/02/2026) KHÔNG bị xoá và không đưa giá trị về null nữa —
+    // người dùng nhìn thấy đúng thứ mình gõ kèm lỗi, giá trị đã chốt giữ nguyên, control invalid nên form không
+    // submit được cho tới khi sửa.
+    this.#setDateError(this.#errorOfText(displayValue));
   };
 
   onClick = () => {
@@ -567,7 +592,6 @@ export class SdDate implements OnDestroy, OnInit {
       this.#syncPicker(input);
     }
 
-    this.#hasInvalidInput = hasInvalidCharacters;
     this.#validateDateInput(formattedValue, hasInvalidCharacters);
   };
 
@@ -596,37 +620,56 @@ export class SdDate implements OnDestroy, OnInit {
 
   #validateDateInput(value: string, hasInvalidCharacters: boolean): void {
     const parsedValue = parseDateInput(value);
-    const invalid = !!value && (hasInvalidCharacters || (!parsedValue && !isPartialDateInput(value)));
+    // why: khi đang gõ, chuỗi dở dang chưa phải lỗi; chỉ báo ngay khi đã đủ dd/MM/yyyy mà ngày không tồn tại, hoặc
+    // có ký tự lạ.
+    const kind: SdDateTextError | null =
+      !value || parsedValue
+        ? null
+        : hasInvalidCharacters
+          ? 'format'
+          : DATE_DISPLAY_PATTERN.test(value)
+            ? 'calendar'
+            : isPartialDateInput(value)
+              ? null
+              : 'format';
 
     this.isValid = !!value && !parsedValue;
-    if (invalid) {
-      this.formControl.markAsDirty();
-      this.#setDateError(true);
-    } else {
-      this.#setDateError(false);
-    }
+    if (kind) this.formControl.markAsDirty();
+    this.#setDateError(kind);
+  }
+
+  /** Lỗi của một chuỗi được CHỐT (rời ô, Enter): mọi chuỗi không rỗng mà chưa thành ngày đều là lỗi. */
+  #errorOfText(text: string): SdDateTextError | null {
+    if (!text || parseDateInput(text)) return null;
+    return DATE_DISPLAY_PATTERN.test(text) ? 'calendar' : 'format';
   }
 
   /**
-   * Bật/tắt cờ format rồi chạy lại pipeline NGAY.
+   * Đặt cờ lỗi của chuỗi rồi chạy lại pipeline NGAY khi kết quả đổi.
    * why: chạy lại đồng bộ để lỗi xuất hiện/biến mất đúng nhịp gõ, đồng thời phát `events` cho
-   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ.
+   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ. So với lỗi
+   * đang nằm trên control (không chỉ so cờ) vì validator còn phụ thuộc chuỗi trong ô.
    */
-  #setDateError(invalid: boolean): void {
-    if (this.#invalidFormat() === invalid) return;
-    this.#invalidFormat.set(invalid);
-    this.formControl.updateValueAndValidity();
+  #setDateError(kind: SdDateTextError | null): void {
+    const flagChanged = this.#textError() !== kind;
+    this.#textError.set(kind);
+    const expected = this.#dateFormatValidator(this.formControl)?.['date'] ?? null;
+    const current = this.formControl.errors?.['date'] ?? null;
+    if (flagChanged || expected !== current) this.formControl.updateValueAndValidity();
   }
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {
-    // why: `change` (Enter, hoặc ngay trước blur) khi chuỗi còn dở dang thì Material báo null. Chưa nhập xong thì
-    // không chốt gì; rời ô đã có `onBlur` xử lý.
-    if (!event.value && this.inputRef()?.nativeElement?.value) return;
+    // why: `change` (Enter, hoặc ngay trước blur) khi chuỗi chưa thành ngày thì Material báo null. Enter là một lần
+    // chốt: không đổi giá trị, nhưng báo lỗi của chuỗi như khi rời ô.
+    const typedText = this.inputRef()?.nativeElement?.value ?? '';
+    if (!event.value && typedText) {
+      this.formControl.markAsTouched();
+      this.#setDateError(this.#errorOfText(typedText));
+      return;
+    }
     this.inputRef()?.nativeElement?.focus();
     const value = event.value ?? null;
-    this.#hasInvalidInput = false;
     this.isValid = false;
-    this.#setDateError(false);
 
     if (!dateControlsEqual(this.formControl.value as Date | null, value)) {
       // why: người dùng sửa thì control của form phải dirty trước khi nhận giá trị, như value accessor của Angular;
@@ -634,6 +677,8 @@ export class SdDate implements OnDestroy, OnInit {
       this.formControl.markAsDirty();
       this.formControl.setValue(value);
     }
+    // why: hạ cờ SAU khi ghi control — lúc này ô đã hiện đúng giá trị vừa chốt.
+    this.#setDateError(null);
   };
 
   clear = ($event: any) => {
@@ -642,5 +687,18 @@ export class SdDate implements OnDestroy, OnInit {
       this.formControl.markAsDirty();
       this.formControl.setValue(null);
     }
+    this.#clearInputText();
+    this.#setDateError(null);
   };
+
+  /**
+   * Xoá chuỗi đang nằm trong ô khi giá trị về null.
+   * why: sau khi người dùng gõ một chuỗi chưa thành ngày, `MatDatepickerInput` đã giữ null. Ghi null vào control
+   * lúc đó không làm giá trị của nó đổi, và từ Angular Material 22 nó không ghi lại ô nhập nữa — chuỗi sai nằm lại
+   * dù giá trị đã bị xoá. Bản 19–21 thì có ghi; xoá tay để không phụ thuộc phiên bản.
+   */
+  #clearInputText(): void {
+    const input = this.inputRef()?.nativeElement;
+    if (input?.value) input.value = '';
+  }
 }

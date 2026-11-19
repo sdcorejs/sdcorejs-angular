@@ -219,6 +219,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date.min-date': 'Ngày nhỏ nhất: {date}',
   'core.form.date.max-date': 'Ngày lớn nhất: {date}',
   'core.form.date.parse-error': 'Lỗi phân tích: {text}',
+  'core.form.date.invalid-date': 'Ngày không hợp lệ',
   'core.form.date.invalid-format': 'Sai định dạng',
 
   // ---- Forms: date-range ----
@@ -232,6 +233,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.datetime.required': 'Vui lòng nhập thông tin',
   'core.form.datetime.min-date': 'Ngày nhỏ nhất: {date}',
   'core.form.datetime.max-date': 'Ngày lớn nhất: {date}',
+  'core.form.datetime.invalid-date': 'Ngày giờ không hợp lệ',
   'core.form.datetime.invalid-format': 'Sai định dạng',
   'core.form.datetime.now': 'Bây giờ',
   'core.form.datetime.confirm': 'Xác nhận',

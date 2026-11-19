@@ -147,7 +147,9 @@ The input writes its text into `formControl` after every keystroke (the editor c
 
 - The text must match the display format exactly (`dd/MM/yyyy HH:mm` or `dd/MM/yyyy HH:mm:ss`, two-digit day, month, hour, minute). `19/1/2026 10:30` while the month is being retyped is not read as January, `19/11/2026 1:30` is not read as 01:30, and `19/11/202 10:30` is not read as year 202 — `model` keeps the last committed value until the text is finished.
 - A field that was just emptied keeps its value too. `null` is committed when the user leaves the empty field or presses Enter on it (`onConfirmInput`), or clicks the clear button.
-- On blur or Enter, shorthand such as `1/2/2027 9:05` is accepted, rewritten to the display format and committed. Unfinished text raises the `date` format error and keeps the value.
+- On blur or Enter, shorthand such as `1/2/2027 9:05` is accepted, rewritten to the display format and committed. Unfinished text raises `date: 'Sai định dạng'` (`core.form.datetime.invalid-format`) and keeps the value.
+- **A datetime that does not exist stays in the field with an error.** Text that matches the format but names a day or a time that does not exist (`31/02/2026 10:30`, `29/02/2026 10:30`, `19/11/2026 25:30`, `19/11/2026 10:65`) raises `date: 'Ngày giờ không hợp lệ'` (`core.form.datetime.invalid-date`) on blur / Enter. Before, such text passed the format check and was left in the field with no error at all, while the form stayed valid with the old value. The text is kept as typed, `model` / `sdChange` are untouched, and the control is invalid, so the parent form cannot be submitted until the text is corrected.
+- Both errors go away as soon as the text becomes a real datetime, when the empty field is left, on a picker confirm, on the clear button, or when `model` is set from outside.
 - Outside typing (the field is not focused), a string written to `formControl` from code is read as before: an empty string clears the model.
 
 ## Public methods & getters

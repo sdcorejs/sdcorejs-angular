@@ -22257,7 +22257,7 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
         <demo-section
           heading="Chốt giá trị khi gõ"
           [props]="[{ name: '(sdChange)', value: 'event' }]"
-          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy; chuỗi dở dang hoặc ngày không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.">
           <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
             <sd-date label="Ngày hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-date>
             <div style="font-size:12px; color:#555">
@@ -22615,7 +22615,7 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
         <demo-section
           heading="Chốt giá trị khi gõ"
           [props]="[{ name: '(sdChange)', value: 'event' }]"
-          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+          note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm; chuỗi dở dang hoặc ngày giờ không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.">
           <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
             <sd-datetime label="Giờ hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-datetime>
             <div style="font-size:12px; color:#555">
@@ -35941,7 +35941,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     html: `<demo-section
       heading="Chốt giá trị khi gõ"
       [props]="[{ name: '(sdChange)', value: 'event' }]"
-      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Ngày chỉ đổi khi gõ đủ dd/MM/yyyy; chuỗi dở dang hoặc ngày không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.">
       <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
         <sd-date label="Ngày hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-date>
         <div style="font-size:12px; color:#555">
@@ -36040,7 +36040,7 @@ Bởi Nguyễn Văn A"></sd-badge>
     html: `<demo-section
       heading="Chốt giá trị khi gõ"
       [props]="[{ name: '(sdChange)', value: 'event' }]"
-      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm, và chỉ về trống khi rời ô, nhấn Enter trên ô trống hoặc bấm xoá.">
+      note="Sửa ngay trong ô: chuỗi đang gõ dở không đổi giá trị. Thời điểm chỉ đổi khi gõ đủ dd/MM/yyyy HH:mm; chuỗi dở dang hoặc ngày giờ không tồn tại được giữ lại trong ô kèm lỗi. Giá trị chỉ về trống khi rời ô trống, nhấn Enter trên ô trống hoặc bấm xoá.">
       <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
         <sd-datetime label="Giờ hẹn" autoId="commit" [(model)]="commitValue" (sdChange)="logCommit($event)"></sd-datetime>
         <div style="font-size:12px; color:#555">
