@@ -420,9 +420,13 @@ export class SdDate implements OnDestroy, OnInit {
       this.sdChange.emit(value);
     },
     modelToControl: value => {
+      const controlValue = this.#modelToControl(value);
       // why: `model` đổi là ô sắp được ghi đè bằng giá trị đó — chuỗi sai trước đó (và lỗi của nó) không còn.
-      untracked(() => this.#textError.set(null));
-      return this.#modelToControl(value);
+      untracked(() => {
+        this.#textError.set(null);
+        if (controlValue === null) this.#clearInputText();
+      });
+      return controlValue;
     },
     controlToModel: value => this.#serializeCommitted(value),
     modelEquals: (left, right) => this.#modelsEqual(left, right),
@@ -683,6 +687,18 @@ export class SdDate implements OnDestroy, OnInit {
       this.formControl.markAsDirty();
       this.formControl.setValue(null);
     }
+    this.#clearInputText();
     this.#setDateError(null);
   };
+
+  /**
+   * Xoá chuỗi đang nằm trong ô khi giá trị về null.
+   * why: sau khi người dùng gõ một chuỗi chưa thành ngày, `MatDatepickerInput` đã giữ null. Ghi null vào control
+   * lúc đó không làm giá trị của nó đổi, và từ Angular Material 22 nó không ghi lại ô nhập nữa — chuỗi sai nằm lại
+   * dù giá trị đã bị xoá. Bản 19–21 thì có ghi; xoá tay để không phụ thuộc phiên bản.
+   */
+  #clearInputText(): void {
+    const input = this.inputRef()?.nativeElement;
+    if (input?.value) input.value = '';
+  }
 }

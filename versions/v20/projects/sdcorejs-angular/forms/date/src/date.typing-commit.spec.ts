@@ -375,6 +375,19 @@ describe('SdDate (typing never commits an unfinished date)', () => {
       expect(host.changes).toEqual([null]);
     });
 
+    it('a model reset to null from the parent removes the text and the error', () => {
+      typeImpossible();
+      blur();
+
+      host.model = null;
+      fixture.detectChanges();
+
+      expect(input.value).toBe('');
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.formControl.hasError('date')).toBeFalse();
+      expect(host.changes).toEqual([]);
+    });
+
     it('a new model from the parent replaces it and clears the error', () => {
       typeImpossible();
       blur();
