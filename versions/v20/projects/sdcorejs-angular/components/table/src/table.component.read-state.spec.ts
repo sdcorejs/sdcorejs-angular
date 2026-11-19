@@ -358,6 +358,71 @@ describe('SdTable server read state', () => {
       expect(noDataRow(f).image?.getAttribute('src')).toBe('assets/custom-empty.svg');
       f.destroy();
     }));
+
+    describe('configurations by key', () => {
+      const configurations = [
+        { images: { dataEmpty: 'assets/portal-empty.svg' }, paginate: { pageSize: 30 } },
+        { key: 'sales', images: { dataEmpty: 'assets/sales-empty.svg' } },
+      ];
+      const option = (configurationKey?: string) =>
+        ({
+          type: 'server',
+          items: empty(),
+          columns: [{ field: 'name', type: 'string', title: 'Name' }],
+          configurationKey,
+        }) as SdTableOption<Row>;
+      const render = (configurationKey?: string) => {
+        const f = TestBed.createComponent(SdTable<Row>);
+        f.componentRef.setInput('option', option(configurationKey));
+        f.detectChanges();
+        tick(250);
+        f.detectChanges();
+        return f;
+      };
+
+      for (const provider of ['useValue array', 'multi: true'] as const) {
+        describe(provider, () => {
+          beforeEach(() =>
+            TestBed.configureTestingModule({
+              providers:
+                provider === 'multi: true'
+                  ? configurations.map(useValue => ({ provide: SD_TABLE_CONFIGURATION, useValue, multi: true }))
+                  : [{ provide: SD_TABLE_CONFIGURATION, useValue: configurations }],
+            })
+          );
+
+          it('gives a table without configurationKey the portal configuration', fakeAsync(() => {
+            const f = render();
+            expect(noDataRow(f).image?.getAttribute('src')).toBe('assets/portal-empty.svg');
+            expect(f.componentInstance.tableOption()?.paginate?.pageSize).toBe(30);
+            f.destroy();
+          }));
+
+          it('lays the configuration of configurationKey over the portal one', fakeAsync(() => {
+            const f = render('sales');
+            expect(noDataRow(f).image?.getAttribute('src')).toBe('assets/sales-empty.svg');
+            expect(f.componentInstance.tableOption()?.paginate?.pageSize).toBe(30);
+            f.destroy();
+          }));
+
+          it('falls back to the portal configuration for an unknown configurationKey', fakeAsync(() => {
+            const f = render('unknown');
+            expect(noDataRow(f).image?.getAttribute('src')).toBe('assets/portal-empty.svg');
+            f.destroy();
+          }));
+
+          it('follows configurationKey when the option is replaced', fakeAsync(() => {
+            const f = render('sales');
+            f.componentRef.setInput('option', option());
+            f.detectChanges();
+            tick(250);
+            f.detectChanges();
+            expect(noDataRow(f).image?.getAttribute('src')).toBe('assets/portal-empty.svg');
+            f.destroy();
+          }));
+        });
+      }
+    });
   });
 
   for (const staleFails of [false, true]) {

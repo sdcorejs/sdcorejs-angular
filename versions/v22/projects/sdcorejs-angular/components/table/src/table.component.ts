@@ -134,7 +134,14 @@ import { DesktopCellComponent } from './components/desktop-cell/desktop-cell.com
 import { DesktopCommand } from './components/command/desktop-command.component';
 import { SdPopupExport } from './components/popup-export/popup-export.component';
 import { SelectorActionComponent } from './components/selector-action/selector-action.component';
-import { DEFAULT_TABLE_CONFIG, ISdTableConfiguration, SD_TABLE_CONFIGURATION, SD_TABLE_LAYOUT } from './configurations';
+import {
+  DEFAULT_TABLE_CONFIG,
+  ISdTableConfiguration,
+  resolveTableColumnOperators,
+  resolveTableConfiguration,
+  SD_TABLE_CONFIGURATION,
+  SD_TABLE_LAYOUT,
+} from './configurations';
 import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 import { SdTableItem } from './models/table-item.model';
 import { ConfiguredTable, ConfiguredTableResult } from './models/table-option-config.model';
@@ -1176,7 +1183,15 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   exportTitle = this.#tableExportService.exportTitle;
 
   // 2. Public & Optional Token
-  tableConfiguration = inject<ISdTableConfiguration>(SD_TABLE_CONFIGURATION, { optional: true });
+  // why: token nhận một cấu hình hoặc mảng cấu hình theo key (multi: true), nên kiểu thật rộng hơn kiểu của token.
+  readonly #tableConfigurations = inject<ISdTableConfiguration | ISdTableConfiguration[] | null>(SD_TABLE_CONFIGURATION, {
+    optional: true,
+  });
+  readonly #tableConfiguration = computed(() => resolveTableConfiguration(this.#tableConfigurations, this.tableOption()?.configurationKey));
+  /** Cấu hình áp cho bảng này: cấu hình trùng `option.configurationKey` gộp lên cấu hình mặc định của portal. */
+  get tableConfiguration(): ISdTableConfiguration | null {
+    return this.#tableConfiguration();
+  }
 
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   readonly #layout = inject(SD_TABLE_LAYOUT, { optional: true });
@@ -1661,22 +1676,24 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   };
 
   #initConfiguration = (option: SdTableOption): SdTableOption => {
+    // why: chạy trước khi tableOption nhận option mới, nên chọn cấu hình theo key của chính option đang khởi tạo.
+    const tableConfiguration = resolveTableConfiguration(this.#tableConfigurations, option.configurationKey);
     option.paginate = {
       total: option?.paginate?.total,
       hidden: option?.paginate?.hidden,
-      pageSize: option?.paginate?.pageSize ?? this.tableConfiguration?.paginate?.pageSize ?? DEFAULT_TABLE_CONFIG.paginate?.pageSize,
-      pages: option?.paginate?.pages ?? this.tableConfiguration?.paginate?.pages ?? DEFAULT_TABLE_CONFIG.paginate?.pages,
-      showFirstLastButtons: option?.paginate?.showFirstLastButtons ?? this.tableConfiguration?.paginate?.showFirstLastButtons ?? false,
+      pageSize: option?.paginate?.pageSize ?? tableConfiguration?.paginate?.pageSize ?? DEFAULT_TABLE_CONFIG.paginate?.pageSize,
+      pages: option?.paginate?.pages ?? tableConfiguration?.paginate?.pages ?? DEFAULT_TABLE_CONFIG.paginate?.pages,
+      showFirstLastButtons: option?.paginate?.showFirstLastButtons ?? tableConfiguration?.paginate?.showFirstLastButtons ?? false,
       hidePageSize: option?.paginate?.hidePageSize ?? false,
     };
     option.filter = option.filter || {};
-    option.filter.hideInlineFilter = option?.filter?.hideInlineFilter ?? this.tableConfiguration?.filter?.hideInlineFilter;
-    option.filter.externalFilterPerRow = option?.filter?.externalFilterPerRow ?? this.tableConfiguration?.filter?.externalFilterPerRow;
-    option.filter.manualFilter = option?.filter?.manualFilter ?? this.tableConfiguration?.filter?.manualFilter;
+    option.filter.hideInlineFilter = option?.filter?.hideInlineFilter ?? tableConfiguration?.filter?.hideInlineFilter;
+    option.filter.externalFilterPerRow = option?.filter?.externalFilterPerRow ?? tableConfiguration?.filter?.externalFilterPerRow;
+    option.filter.manualFilter = option?.filter?.manualFilter ?? tableConfiguration?.filter?.manualFilter;
     option.filter.hideExternalFilterToolbar =
-      option?.filter?.hideExternalFilterToolbar ?? this.tableConfiguration?.filter?.hideExternalFilterToolbar;
+      option?.filter?.hideExternalFilterToolbar ?? tableConfiguration?.filter?.hideExternalFilterToolbar;
     // why: chỉ ghi khi configuration có giá trị — bảng không dùng mode mới giữ nguyên object filter của consumer.
-    const filterConfiguration = this.tableConfiguration?.filter;
+    const filterConfiguration = tableConfiguration?.filter;
     if (option.filter.mode === undefined && filterConfiguration?.mode) option.filter.mode = filterConfiguration.mode;
     if (option.filter.modeSelectable === undefined && filterConfiguration?.modeSelectable !== undefined) {
       option.filter.modeSelectable = filterConfiguration.modeSelectable;
@@ -1691,11 +1708,11 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     // why: cột con của header nhóm cũng có filter và operator riêng.
     for (const column of leafColumns(option.columns)) {
       if (column.filter?.operator?.enable) {
-        if (!column.filter?.operator?.list?.length) {
-          column.filter.operator.list = this.tableConfiguration?.filter?.operator?.list?.[column.type] || [];
-        }
+        // why: cột không khai danh sách thì lấy theo type — cấu hình của ứng dụng trước, rồi bộ mặc định của thư viện.
+        const typeOperators = resolveTableColumnOperators(column.type, tableConfiguration, column.filter.operator.list);
+        column.filter.operator.list = typeOperators.list;
 
-        const defaultOperator = this.tableConfiguration?.filter?.operator?.default?.[column.type];
+        const defaultOperator = typeOperators.default;
         if (defaultOperator) {
           this.columnOperator[column.field] = defaultOperator;
         }

@@ -3,7 +3,6 @@ import { SdStorageService, SdStorageWithDefault } from '@sdcorejs/angular/servic
 import { Subject } from 'rxjs';
 import { ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
-import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn } from '../models/table-column.model';
 import { defaultConfiguredTable } from './config-custom.util';
@@ -32,7 +31,6 @@ export class ConfigService {
   widthChange$ = this.#widthChange.asObservable();
   private readonly storageService = inject(SdStorageService);
   readonly #destroyRef = inject(DestroyRef);
-  public readonly tableConfiguration: ISdTableConfiguration | null = inject(SD_TABLE_CONFIGURATION, { optional: true });
 
   constructor() {
     this.#destroyRef.onDestroy(() => {

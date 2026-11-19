@@ -261,6 +261,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `onFilter` (server) | `(filterReq, { externalFilterValid }) => void`                   | no           | Called BEFORE each server fetch; useful to cancel / log / sync URL.                                                                                                                                                                          |
 | `columns`           | `SdTableColumn<T>[]`                                             | yes          | Column definitions (see schema below).                                                                                                                                                                                                       |
 | `key`               | `string`                                                         | no           | Storage key for persisted user column-config (visibility/order/width).                                                                                                                                                                       |
+| `configurationKey`  | `string`                                                         | no           | `key` of the `SD_TABLE_CONFIGURATION` entry applied to this table, laid over the portal default. See **Configurations by key**.                                                                                                              |
 | `rowKey`            | `string`                                                         | no           | Field that identifies a row (dot-notation supported, e.g. `'id'` / `'user.id'`). Becomes `SdTableItem.meta.id` — the mat-table `trackBy` key, the `preserveSelection` key, the tree expand-state key and the per-row `data-autoid` suffix. See **Row identity** below. |
 | `config`            | `TableOptionConfig`                                              | no           | `{ visible?, resizable?, onResize? }` — gear button, drag-to-resize, resize callback. See **Column resize** section.                                                                                                                         |
 | `selector`          | `SdTableOptionSelector<T>`                                       | no           | Multi-select + bulk actions.                                                                                                                                                                                                                 |
@@ -1290,7 +1291,67 @@ useValue: {
 } satisfies ISdTableConfiguration
 ```
 
+### Default column operators
+
+A column with `filter.operator.enable` takes its operators from the first source that has them:
+
+1. `column.filter.operator.list`.
+2. `SD_TABLE_CONFIGURATION.filter.operator.list[column.type]` — the application list for that column type. An empty array means "no operators for this type".
+3. The list built into the library:
+
+| Column `type` | Operators | Preselected |
+| --- | --- | --- |
+| `string` | `CONTAIN`, `NOT_CONTAIN`, `EQUAL`, `NOT_EQUAL`, `START_WITH`, `END_WITH`, `NULL`, `NOT_NULL` | `CONTAIN` |
+| `number` | `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_OR_EQUAL`, `LESS_THAN`, `LESS_OR_EQUAL`, `NULL`, `NOT_NULL` | `EQUAL` |
+| any other type | none | none |
+
+- Only `string` and `number` have a built-in list: they are the types for which the table uses the chosen operator, both in the server request (`SdConvertToPagingReq`) and in local filtering. `boolean`, `date`, `datetime`, `time`, `values` and `lazy-values` send a fixed operator (`EQUAL` / `BETWEEN` / `IN`), so they get operators only from the column or the application.
+- The preselected operator comes from `column.filter.operator.default` (when it is in the list), else `SD_TABLE_CONFIGURATION.filter.operator.default[column.type]`. The built-in preselection applies only together with the built-in list: a column or an application that declares its own list without a default keeps no preselected operator.
+- The application configuration is read per type: declaring `list.string` leaves `number` on the built-in list.
+- Every operator in a list must be supported by the backend that serves the table. A portal whose modules call different backends should narrow the list per type in its configuration, or per column.
+
+```ts
+// Narrow the text operators for every table, and turn the number operators off.
+{ provide: SD_TABLE_CONFIGURATION, useValue: { filter: { operator: { list: { string: ['CONTAIN', 'EQUAL'], number: [] } } } } }
+```
+
 Per-table options always override these defaults.
+
+### Configurations by key
+
+A portal whose modules call different backends can declare one configuration per module, the same way as `SD_UPLOAD_FILE_CONFIGURATION` and `SD_PERMISSION_CONFIGURATION`: the token takes one configuration or several, each with a `key`, and a table picks one with `option.configurationKey`.
+
+```ts
+// app.config.ts — an array in useValue, or one provider per configuration with multi: true
+{
+  provide: SD_TABLE_CONFIGURATION,
+  useValue: [
+    // No key: the portal default, for every table.
+    { paginate: { pageSize: 50 }, images: { dataEmpty: 'assets/empty.svg' } },
+    // The sales backend only supports two text operators and no number operators.
+    { key: 'sales', filter: { operator: { list: { string: ['CONTAIN', 'EQUAL'], number: [] } } } },
+    { key: 'stock', paginate: { pageSize: 20 } },
+  ] satisfies ISdTableConfiguration[],
+}
+
+// A table of the sales module
+option: SdTableOption<Order> = { type: 'server', configurationKey: 'sales', columns: [...], items: ... };
+```
+
+Each setting is read from the first source that has it:
+
+1. the table option (and, for operators, the column);
+2. the configuration whose `key` equals `option.configurationKey`;
+3. the configuration without a `key` (the portal default);
+4. the library default.
+
+- Steps 2 and 3 are merged field by field, so a module declares only what differs: the `sales` tables above keep `pageSize: 50` and the portal images.
+- Arrays are replaced as a whole, never concatenated: `filter.operator.list.string` of the module replaces the portal list for `string` and leaves the other types alone; `paginate.pages` works the same way. A field set to `undefined` does not erase the portal value.
+- A table without `configurationKey`, or with a key that no configuration declares, uses the portal default.
+- Two configurations with the same `key` (two without a `key` included) throw `[sd-table] Duplicate table configuration key: <key>` when a table is created.
+- Use the same `key` as the module's upload and permission configurations, so one key names everything that belongs to that module.
+- Declare the configurations at the application root. A lazy route that provides `SD_TABLE_CONFIGURATION` itself replaces the root entries for its own subtree (`multi` providers of a child injector are not added to the parent's), and a table rendered in a dialog opened from a root service still reads the root entries.
+- An application that provides a single configuration needs no change.
 
 ## Export button label (i18n)
 
