@@ -481,6 +481,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - One root service holds a single media query listener for every `sdScroll`. Mouse listeners and a pending `scrollTop()` are removed on destroy, and a new `scrollTop()` replaces a pending one.
 - Code that dispatched synthetic `mouseover`/`mouseout` on the host to toggle the scrollbar should call `onMouseOver()`/`onMouseOut()`. Details in `sd-scroll.md`.
 
+#### Select
+
+- On the Angular 22 line, the filter box in the panel of `sd-select` sat 5px below its search icon, so the caret looked misaligned. Angular Material renders the panel as a popover inside `mat-select` there, and the `margin-top: 10px` that `core/form.scss` gives the control of an outline form field also matched the filter input. The rule now skips inputs and textareas inside `.mat-mdc-select-panel`.
+
 #### Table
 
 - Shared filter and sort sheet footer styles preserve bottom and side safe-area padding instead of overriding it with a fixed 16px inset.
