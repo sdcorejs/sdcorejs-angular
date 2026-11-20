@@ -103,10 +103,13 @@
     }
 
     .mat-mdc-form-field-infix {
+      // why: ở Material 22, panel của mat-select là popover nằm ngay trong mat-select (tức trong infix),
+      // nên input/textarea bên trong panel (ô lọc của sd-select) cũng khớp rule này, nhận margin-top 10px và
+      // lệch xuống 5px so với icon tìm kiếm. Rule chỉ dành cho control của chính form-field.
       mat-select.mat-mdc-select,
       mat-date-range-input.mat-mdc-date-range-input,
-      input.mat-mdc-input-element,
-      textarea.mat-mdc-input-element {
+      input.mat-mdc-input-element:not(.mat-mdc-select-panel *),
+      textarea.mat-mdc-input-element:not(.mat-mdc-select-panel *) {
         font-size: var(--sd-font-size-14, 14px);
         margin-top: 10px; // Text hiển thị trong auto complete
       }
