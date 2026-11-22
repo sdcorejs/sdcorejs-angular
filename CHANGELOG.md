@@ -34,6 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.6] - 2026-11-20
+
+Packages `19.3.6` · `20.3.6` · `21.3.6` · `22.3.6`, validated against `*.3.5`.
+
 > [!IMPORTANT]
 > **Before upgrading:** `sd-tab-router-outlet` now identifies a tab by its path only — the same path with another query or fragment reuses the open tab and its component instead of opening a new tab; screens that read their own query params must subscribe to `ActivatedRoute.queryParamMap`; a standalone `sd-card` (outside `sd-card-group`) is now `static` and no longer toggles — add `behavior="select"` to keep the toggle; `@sdcorejs/angular/components/history` (`sd-history`) is removed — move to `sd-timeline`; the panels of `sd-query-bar` are no longer `mat-menu` — selectors such as `.mat-mdc-menu-panel` must move to the `sd-query-panel` classes or the new `data-autoid` values, and the `sd-table` header filter icon announces `aria-haspopup="dialog"` with the popover editor; a `required` query-bar field now behaves as pinned and keeps its value; custom i18n catalogs must drop `core.component.query-bar.swap-field`; `sd-kanban` takes `SdKanbanCard<T>` cards through `items` or `option.dataSource` instead of `[(model)]` with mapping functions, and `option.move` becomes `{ movable, droppable, reorder, onMove }` — follow the conversion table in `sd-kanban.md`; `@sdcorejs/angular/services/confirm` no longer exports `DialogConfirmComponent` and `DialogData` — open confirm prompts through `SdConfirmService`; an `sd-tree` selection action without `color` is now `secondary` (was `primary`), and from the third action on it is an entry of "More" with a new `data-autoid`; the external filter settings menu of `sd-table` no longer has the `…-external-setting-menu` and `…-external-setting-<field>-checkbox` autoIds — its entries are `menuitemcheckbox` items.
 
@@ -3389,7 +3393,8 @@ Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
 ---
 
-[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.5...HEAD
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.6...HEAD
+[3.6]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.5...v3.6
 [3.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.4...v3.5
 [3.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...v3.4
 [3.3]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.2...v3.3
