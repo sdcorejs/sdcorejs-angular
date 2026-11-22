@@ -1,5 +1,52 @@
 # Reviewed release snapshots
 
+## Release 3.6
+
+`3.6.json` compares all four candidates with their same-major published `*.3.5`
+baseline. Candidates are the actual `19.3.6` / `20.3.6` / `21.3.6` / `22.3.6`
+tarballs built on Linux by the `publish-npm.yml` run `45010981672` for the first
+`v3.6` tag (source `969df63ca9fa020aa3e8e3211176d2ec12f667c5`, the squash of #160,
+exact Node `24.22.1` and npm `11.5.1`), downloaded from that run's retained
+artifacts. That run stopped at "Verify all four retained packages" and published
+nothing. Artifact SHA-256, npm SHA-512 integrity and SHA-1 shasum were checked
+before deriving the snapshot. The canonical surface fingerprint reader excludes
+only `version` and `frameworkMajor`. Every baseline fingerprint equals the
+candidate fingerprint recorded in `3.5.json`.
+
+The fingerprints were derived on a Windows workstation with Node `26.13.0`,
+because exact Node `24.22.1` was not installed there. They hash tarball content
+and do not depend on the Node version, but
+`release-package-contract.mjs --compile-consumers` was not run locally for this
+snapshot. The "Verify all four retained packages" job of the re-tagged run, on
+exact Node `24.22.1` and npm `11.5.1`, is the first check of this snapshot
+against the artifacts and the strict consumers.
+
+Dependencies, peers and engines are unchanged for each line. The export map
+adds `./components/calendar`, `./components/scheduler`,
+`./components/timeline` and `./services/query-params`, and removes
+`./components/history`. Angular 19 adds 126 packed files and removes 100;
+later lines add 89 and remove 96. Most of them are `modules/pattern` and
+`modules/generic` FESM chunks that come back under new content hashes. The
+rest are the four new entry points with their FESM bundles, the removed
+`components/history` bundle, the new `assets/scss/core/_popover-panel.scss`
+and the removed pattern source `features/category/entity.resolver.ts`.
+
+Angular 19 adds 41 declaration files, removes five (the four of
+`components/history` and the pattern `entity.resolver`) and changes 59. Later
+lines add the four bundled declarations of the new entry points, remove the
+`components/history` bundle and change 18. Each line adds 40 authored
+sourcemap sources, changes 88 and removes five.
+
+These changes cover `sd-calendar`, `sd-scheduler`, `sd-timeline` (which
+replaces `sd-history`) and `syncQueryParams` with the `query-params` service;
+the `sd-card` behaviors and layouts; the new `sd-kanban` API; the `sd-query-bar`
+panels and saved filters; `sd-tree` navigation mode and the selection bar; path-only
+tab identity in `sd-tab-router-outlet`; the confirm service; default table
+operators and table configurations by key; and the fixes listed under 3.6 in the
+changelog. The changelog documents the breaking changes and their migrations.
+They must be independently reviewed with this snapshot; CI never regenerates
+expectations.
+
 ## Release 3.5
 
 `3.5.json` compares all four candidates with their same-major published `*.3.4`
