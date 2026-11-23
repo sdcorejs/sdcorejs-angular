@@ -42,6 +42,23 @@ describe('sd-table grouped header layout', () => {
     expect(Math.abs(filters[0].getBoundingClientRect().bottom - filters[1].getBoundingClientRect().bottom)).toBeLessThan(1);
   }));
 
+  it('fills an unfilterable index header in flat and grouped tables only while inline filters are shown', fakeAsync(() => {
+    const value = { ...option(), index: { enabled: true } };
+    for (const grouped of [false, true]) {
+      const columns = grouped ? value.columns : value.columns.slice(0, 1);
+      render({ ...value, columns });
+      const cell = grouped ? 'th.mat-column-sdFilter-sdIndex' : 'th.mat-column-sdIndex';
+      const placeholder = fixture.nativeElement.querySelector(cell + ' input:disabled') as HTMLInputElement;
+      expect(placeholder).withContext(cell).toBeTruthy();
+      expect(placeholder.getBoundingClientRect().height).toBe(32);
+      placeholder.focus();
+      expect(document.activeElement).not.toBe(placeholder);
+      expect(fixture.nativeElement.querySelector('th.sd-filler-cell input')).toBeNull();
+      render({ ...value, columns, filter: { hideInlineFilter: true } });
+      expect(fixture.nativeElement.querySelector(cell + ' input')).toBeNull();
+    }
+  }));
+
   it('centers standalone titles across both title rows, independently from the filters', fakeAsync(() => {
     render(option());
     const cell = fixture.nativeElement.querySelector('th.mat-column-name') as HTMLElement;

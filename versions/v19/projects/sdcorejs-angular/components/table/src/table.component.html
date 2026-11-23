@@ -73,6 +73,14 @@
       }
     }
   </ng-template>
+  <ng-template #unavailableFilter>
+    <input class="sd-table-filter-placeholder" type="text" disabled aria-hidden="true" />
+  </ng-template>
+  <ng-template #utilityFilter>
+    @if (_showInlineFilter && !_configuration.multipleHeader) {
+      <div class="sd-utility-filter"><ng-container *ngTemplateOutlet="unavailableFilter" /></div>
+    }
+  </ng-template>
   <ng-template #inlineColumnFilter let-column>
     <column-filter
       [autoId]="_autoId"
@@ -356,7 +364,9 @@
             (cdkDropListDropped)="onReorderDrop($event)">
             @if (_tableOption.rowReorder?.enabled) {
               <ng-container matColumnDef="sdReorder">
-                <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+                <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+                  <ng-container *ngTemplateOutlet="utilityFilter" />
+                </th>
                 <td mat-cell *matCellDef="let row" class="sd-reorder-cell">
                   @if (!row.meta?.group?.items?.length) {
                     <sd-icon
@@ -392,7 +402,9 @@
                 mat-header-cell
                 *matHeaderCellDef
                 style="width: 1px"
-                [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+                [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+                <ng-container *ngTemplateOutlet="utilityFilter" />
+              </th>
               <td mat-cell *matCellDef="let element">
                 @if (!_tableOption.expand?.always) {
                   @let _expanding = !!element.meta.expand?.isExpanding;
@@ -424,6 +436,7 @@
                     (change)="onSelectAll()">
                   </mat-checkbox>
                 }
+                <ng-container *ngTemplateOutlet="utilityFilter" />
               </th>
 
               <td class="sd-selection-cell p-0" mat-cell *matCellDef="let item">
@@ -470,6 +483,7 @@
                   [style.max-width]="_treeIndex ? null : _indexWidth"
                   [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
                   {{ _tableOption.index?.title || '#' }}
+                  <ng-container *ngTemplateOutlet="utilityFilter" />
                 </th>
                 <td
                   [class.px-4]="!_treeIndex"
@@ -517,6 +531,7 @@
                     <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
                   </div>
                 }
+                <ng-container *ngTemplateOutlet="utilityFilter" />
               </th>
               <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
                  quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
@@ -721,11 +736,13 @@
                     *matHeaderCellDef
                     class="c-th sd-filter-header"
                     [class.px-8]="!!entry.column"
-                    [class.p-0]="!entry.column"
+                    [class.px-0]="!entry.column"
                     [class.sd-filler-cell]="entry.field === 'sdFiller'"
                     scope="col">
                     @if (_showInlineFilter && entry.column) {
                       <ng-container *ngTemplateOutlet="inlineColumnFilter; context: { $implicit: entry.column }"></ng-container>
+                    } @else if (_showInlineFilter && entry.field !== 'sdFiller') {
+                      <ng-container *ngTemplateOutlet="unavailableFilter" />
                     }
                   </th>
                 </ng-container>

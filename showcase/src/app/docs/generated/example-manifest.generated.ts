@@ -212,6 +212,8 @@ export type ShowcaseExampleSourceKey =
   | "components/section/example-basic-info-rows"
   | "components/section/example-collapsible-section"
   | "components/section/example-custom-header-left-right"
+  | "components/section/example-dividers-and-appearance"
+  | "components/section/example-drawer-and-nested-sections"
   | "components/section/example-footer-left-right"
   | "components/section/example-full-width-content-with-body-padding-0"
   | "components/section/example-headerless-card-with-manual-body-padding"
@@ -1992,6 +1994,20 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-basic-info-rows",
     title: "Basic info rows",
     description: "Existing “Basic info rows” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/section/example-dividers-and-appearance",
+    pageKey: "components/section",
+    sectionId: "example-dividers-and-appearance",
+    title: "Dividers and appearance",
+    description: "Existing “Dividers and appearance” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/section/example-drawer-and-nested-sections",
+    pageKey: "components/section",
+    sectionId: "example-drawer-and-nested-sections",
+    title: "Drawer and nested sections",
+    description: "Existing “Drawer and nested sections” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/section/example-custom-header-left-right",

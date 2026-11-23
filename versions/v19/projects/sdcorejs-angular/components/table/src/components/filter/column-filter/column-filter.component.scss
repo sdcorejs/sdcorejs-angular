@@ -1,3 +1,12 @@
+.sd-custom-filter {
+  display: contents;
+}
+
+// A conditional consumer template can become empty at runtime.
+.sd-custom-filter:not(:empty) + .sd-table-filter-placeholder {
+  display: none;
+}
+
 // Tô màu nền trắng cho filter
 :host ::ng-deep {
   .c-inline-column {

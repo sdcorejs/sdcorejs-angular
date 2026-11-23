@@ -114,7 +114,7 @@ test('QB-E-02 inline mode: click the bar, type "kh", Enter, pick a value, Backsp
   // A click on the empty part of the chip row opens the list and puts focus in the box.
   const main = bar.locator('.c-query-bar__main');
   const rect = (await main.boundingBox())!;
-  await page.mouse.click(rect.x + rect.width - 4, rect.y + rect.height / 2);
+  await main.click({ position: { x: rect.width - 4, y: rect.height / 2 } });
   const picker = panel(page, 'query-bar-inline-panel-field-picker');
   await expect(picker).toBeVisible();
   await expect(box).toBeFocused();
@@ -243,6 +243,28 @@ test('QB-E-04 keyboard only: Tab through the bar and its three panels', async ({
   await expect(searchButton).toBeFocused();
   await page.keyboard.press('Tab');
   await expect.poll(() => bar.evaluate(el => el.contains(document.activeElement))).toBeFalsy();
+});
+
+test('empty table values chip has a visible pointer target and commits the selected value', async ({ page }) => {
+  const root = await openExample(page, 'table', 'example-loc-bang-query-bar');
+  const chip = root.locator('sd-query-inline-chip', { hasText: 'Trạng thái' });
+  const trigger = chip.getByRole('button', { name: 'Chọn giá trị' });
+  const rows = root.locator('tbody tr.c-row');
+  await expect(rows.first()).toBeVisible();
+  await trigger.hover();
+  expect((await trigger.boundingBox())!.height).toBeGreaterThanOrEqual(24);
+  await trigger.click();
+  await page.getByRole('option', { name: 'Hoàn tất' }).click();
+  await page.keyboard.press('Escape');
+  await expect(chip).toContainText('Hoàn tất');
+  await expect(root.locator('.table-paging-req')).toContainText('"done"');
+  await expect(rows).toHaveCount(0);
+
+  // A new column chip uses the build editor before switching to the completed chip.
+  await root.locator('[data-autoid$="-filter-trigger-payment"]').click();
+  await page.getByRole('option', { name: 'Đã thanh toán', exact: true }).click();
+  await expect(root.locator('sd-query-inline-chip', { hasText: 'Trạng thái TT' })).toContainText('Đã thanh toán');
+  await expect(root.locator('.table-paging-req')).toContainText('"paid"');
 });
 
 test('QB-E-05 a narrow 700px table: the panel flips above when the bar is at the bottom of the page', async ({ page }) => {

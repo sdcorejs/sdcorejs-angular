@@ -31,6 +31,24 @@
     align-items: center;
   }
 
+  // Keep the utility action in the title band and reserve the same small-control row beneath it.
+  .sd-utility-filter {
+    height: 40px;
+  }
+
+  .sd-utility-filter .sd-table-filter-placeholder {
+    position: absolute;
+    bottom: 8px;
+    inset-inline: 4px;
+    width: calc(100% - 8px);
+  }
+
+  .sd-filter-header > .sd-table-filter-placeholder {
+    display: block;
+    width: calc(100% - 8px);
+    margin: 0 auto 2px;
+  }
+
   .sd-table-surface {
     display: flex;
     flex: 1;
@@ -370,6 +388,17 @@
 }
 
 :host ::ng-deep {
+  .sd-table-filter-placeholder {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    height: var(--sd-control-height-sm, 32px);
+    padding: 0;
+    border: 1px solid var(--sd-control-border-disabled);
+    border-radius: var(--sd-control-radius, 8px);
+    background: var(--sd-control-bg-disabled);
+  }
+
   .mat-select-arrow {
     color: var(--sd-table-select-arrow, #a6a6a6);
   }

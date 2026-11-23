@@ -20,6 +20,29 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
 | `collapsed` | `boolean` model | `false` | Two-way bindable through `[(collapsed)]`. |
 | `collapsible` | `boolean` | `false` | Enables header click collapse. Bare attribute = true. |
 | `hideHeader` | `boolean` | `false` | Hides the header row. Bare attribute = true. |
+| `dividers` | `SdSectionDividers` | `'all'` | Show both inner rules, only `'header'`, only `'footer'`, or `'none'`. |
+| `appearance` | `SdSectionAppearance` | `'elevated'` | `'outlined'` uses a flat inset stroke in `--sd-border`. `'flush'` provides a transparent, square-edged surface. |
+
+## Horizontal padding
+
+Set `--sd-section-padding-inline` on the host to change the horizontal padding of its header, footer and item rows. All appearances default to 16px. Nested sections inherit a custom value.
+
+```html
+<sd-section title="Shipment" dividers="none">…</sd-section>
+
+<sd-side-drawer title="Shipment">
+  <sd-section title="Delivery" appearance="flush" dividers="none" style="--sd-section-padding-inline: 0">
+    <sd-section-item label="Destination">Hà Nội</sd-section-item>
+  </sd-section>
+</sd-side-drawer>
+
+<sd-section title="Itinerary" class="itinerary">
+  <sd-section title="Origin" appearance="flush" dividers="none">…</sd-section>
+  <sd-section title="Destination" appearance="flush" dividers="none">…</sd-section>
+</sd-section>
+```
+
+The container can draw a rule between its children with `.itinerary sd-section + sd-section { border-top: 1px solid var(--sd-border); }`.
 
 ## `<sd-section>` Slots
 

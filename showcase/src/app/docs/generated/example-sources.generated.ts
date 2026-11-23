@@ -12982,12 +12982,14 @@ export class SchedulerVehiclesExampleComponent {
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
+import { FormsModule } from '@angular/forms';
+import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
+import { SdSection, SdSectionItem, type SdSectionAppearance, type SdSectionDividers } from '@sdcorejs/angular/components/section';
 
 @Component({
   selector: 'app-section-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdSection, SdSectionItem],
+  imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdSection, SdSectionItem, SdSideDrawer, FormsModule],
   template: \`
     <demo-page #demoPage
       title="Section"
@@ -13009,6 +13011,52 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </sd-section-item>
         </sd-section>
       </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dividers-and-appearance') {
+        <demo-section heading="Dividers and appearance">
+          <div class="section-controls">
+            <label>Dividers
+              <select [(ngModel)]="dividers">
+                @for (mode of dividerModes; track mode) { <option [value]="mode">{{ mode }}</option> }
+              </select>
+            </label>
+            <label>Appearance
+              <select [(ngModel)]="appearance">
+                @for (mode of appearances; track mode) { <option [value]="mode">{{ mode }}</option> }
+              </select>
+            </label>
+          </div>
+          <div class="section-surfaces">
+            @for (surface of ['muted', 'surface']; track surface) {
+              <div class="section-preview" [class.muted]="surface === 'muted'">
+                <sd-section title="Shipment" [appearance]="appearance()" [dividers]="dividers()">
+                  <sd-section-item label="Destination" labelWidth="100px">Hà Nội</sd-section-item>
+                  <span sdFooterRight>2 packages</span>
+                </sd-section>
+              </div>
+            }
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-drawer-and-nested-sections') {
+        <demo-section heading="Drawer and nested sections">
+          <sd-button type="outline" title="Open shipment" (click)="shipment.open()" />
+          <sd-side-drawer #shipment title="Shipment" width="460px">
+            <sd-section title="Delivery" appearance="flush" dividers="none" style="--sd-section-padding-inline: 0">
+              <sd-section-item label="Destination">Hà Nội</sd-section-item>
+            </sd-section>
+          </sd-side-drawer>
+          <sd-section title="Itinerary" class="nested-preview">
+            <sd-section title="Origin" appearance="flush" dividers="none">
+              <sd-section-item label="Warehouse">Đà Nẵng</sd-section-item>
+            </sd-section>
+            <sd-section title="Destination" appearance="flush" dividers="none">
+              <sd-section-item label="Warehouse">Hà Nội</sd-section-item>
+            </sd-section>
+          </sd-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
@@ -13168,6 +13216,20 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
       font-size: 12px;
     }
 
+    .section-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-block-end: 12px;
+    }
+
+    .section-controls select { font: inherit; color: inherit; background: var(--sd-surface); }
+    .section-surfaces { display: flex; flex-wrap: wrap; }
+    .section-preview { flex: 1 1 250px; min-width: 0; padding: 12px; background: var(--sd-surface); }
+    .section-preview.muted { background: var(--sd-page-bg, var(--sd-disabled-bg)); }
+    .nested-preview { margin-block-start: 12px; }
+    .nested-preview sd-section + sd-section { border-top: 1px solid var(--sd-border); }
+
     .section-padded-body {
       display: flex;
       flex-direction: column;
@@ -13216,6 +13278,10 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SectionDemoComponent {
+  readonly dividerModes: readonly SdSectionDividers[] = ['all', 'header', 'footer', 'none'];
+  readonly appearances: readonly SdSectionAppearance[] = ['elevated', 'outlined', 'flush'];
+  readonly dividers = signal<SdSectionDividers>('all');
+  readonly appearance = signal<SdSectionAppearance>('elevated');
   readonly filterCollapsed = signal(false);
 
   readonly transactions = [
@@ -13250,6 +13316,20 @@ export class SectionDemoComponent {
   color: #667085;
   font-size: 12px;
 }
+
+.section-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+
+.section-controls select { font: inherit; color: inherit; background: var(--sd-surface); }
+.section-surfaces { display: flex; flex-wrap: wrap; }
+.section-preview { flex: 1 1 250px; min-width: 0; padding: 12px; background: var(--sd-surface); }
+.section-preview.muted { background: var(--sd-page-bg, var(--sd-disabled-bg)); }
+.nested-preview { margin-block-start: 12px; }
+.nested-preview sd-section + sd-section { border-top: 1px solid var(--sd-border); }
 
 .section-padded-body {
   display: flex;
@@ -32923,6 +33003,52 @@ Bởi Nguyễn Văn A"></sd-badge>
       <sd-section-item label="Members">Le Minh Hoang, Pham Quynh Anh, Do Van Dat</sd-section-item>
     </sd-section>
   </demo-section>`,
+  },
+  "components/section/example-dividers-and-appearance": {
+    ...SHOWCASE_PAGE_SOURCES["components/section"],
+    html: `<demo-section heading="Dividers and appearance">
+      <div class="section-controls">
+        <label>Dividers
+          <select [(ngModel)]="dividers">
+            @for (mode of dividerModes; track mode) { <option [value]="mode">{{ mode }}</option> }
+          </select>
+        </label>
+        <label>Appearance
+          <select [(ngModel)]="appearance">
+            @for (mode of appearances; track mode) { <option [value]="mode">{{ mode }}</option> }
+          </select>
+        </label>
+      </div>
+      <div class="section-surfaces">
+        @for (surface of ['muted', 'surface']; track surface) {
+          <div class="section-preview" [class.muted]="surface === 'muted'">
+            <sd-section title="Shipment" [appearance]="appearance()" [dividers]="dividers()">
+              <sd-section-item label="Destination" labelWidth="100px">Hà Nội</sd-section-item>
+              <span sdFooterRight>2 packages</span>
+            </sd-section>
+          </div>
+        }
+      </div>
+    </demo-section>`,
+  },
+  "components/section/example-drawer-and-nested-sections": {
+    ...SHOWCASE_PAGE_SOURCES["components/section"],
+    html: `<demo-section heading="Drawer and nested sections">
+      <sd-button type="outline" title="Open shipment" (click)="shipment.open()" />
+      <sd-side-drawer #shipment title="Shipment" width="460px">
+        <sd-section title="Delivery" appearance="flush" dividers="none" style="--sd-section-padding-inline: 0">
+          <sd-section-item label="Destination">Hà Nội</sd-section-item>
+        </sd-section>
+      </sd-side-drawer>
+      <sd-section title="Itinerary" class="nested-preview">
+        <sd-section title="Origin" appearance="flush" dividers="none">
+          <sd-section-item label="Warehouse">Đà Nẵng</sd-section-item>
+        </sd-section>
+        <sd-section title="Destination" appearance="flush" dividers="none">
+          <sd-section-item label="Warehouse">Hà Nội</sd-section-item>
+        </sd-section>
+      </sd-section>
+    </demo-section>`,
   },
   "components/section/example-footer-left-right": {
     ...SHOWCASE_PAGE_SOURCES["components/section"],
