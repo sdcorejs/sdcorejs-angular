@@ -29,7 +29,10 @@
 
     <!-- Nếu filter nhận vào template -->
     @if (_templateRef) {
-      <ng-container *ngTemplateOutlet="_templateRef; context: _context"></ng-container>
+      <span class="sd-custom-filter"><ng-container *ngTemplateOutlet="_templateRef; context: _context"></ng-container></span>
+      @if (!isMobile()) {
+        <input class="sd-table-filter-placeholder" type="text" disabled aria-hidden="true" />
+      }
     }
     <!-- Mặc định theo type và giá trị values defined của column -->
     @else {
@@ -172,7 +175,7 @@
       }
     }
   } @else {
-    <sd-input [autoId]="_autoId" style="flex: 1 1 0%; min-width: 0" type="text" size="sm" disabled></sd-input>
+    <sd-input [autoId]="_autoId" style="flex: 1 1 0%; min-width: 0" type="text" size="sm" disabled hideInlineError></sd-input>
   }
 </div>
 

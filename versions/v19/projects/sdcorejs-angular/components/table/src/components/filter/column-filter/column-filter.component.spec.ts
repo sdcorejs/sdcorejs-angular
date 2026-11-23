@@ -1,14 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Component, TemplateRef, viewChild } from '@angular/core';
+import { Component, signal, TemplateRef, viewChild } from '@angular/core';
 import { SdOperator, ɵSdOperatorChip } from '@sdcorejs/angular/components/operator';
 import { ColumnFilterComponent } from './column-filter.component';
 import { SdTableColumn } from '../../../models/table-column.model';
 
 @Component({
-  template: '<ng-template #tpl><span class="custom-filter">custom</span></ng-template>',
+  template: '<ng-template #tpl>@if (visible()) { <span class="custom-filter">custom</span> }</ng-template>',
 })
 class FilterDefHost {
+  readonly visible = signal(true);
   readonly template = viewChild.required<TemplateRef<unknown>>('tpl');
 }
 
@@ -369,6 +370,20 @@ describe('ColumnFilterComponent', () => {
       op.triggerEventHandler('modelChange', 'CONTAIN');
       fixture.detectChanges();
       expect(component.operator()).toBe('CONTAIN');
+    });
+
+    it('shows a disabled placeholder while a desktop custom filter renders no content', () => {
+      const templateHost = TestBed.createComponent(FilterDefHost);
+      templateHost.detectChanges();
+      bootstrap({ field: 'name', type: 'string', title: 'Name', filter: { filterDef: templateHost.componentInstance.template() } });
+      const placeholder = fixture.nativeElement.querySelector('input:disabled') as HTMLInputElement;
+      expect(getComputedStyle(placeholder).display).toBe('none');
+      templateHost.componentInstance.visible.set(false);
+      fixture.detectChanges();
+      expect(placeholder.getBoundingClientRect().height).toBeGreaterThan(0);
+      templateHost.componentInstance.visible.set(true);
+      fixture.detectChanges();
+      expect(getComputedStyle(placeholder).display).toBe('none');
     });
 
     it('keeps the separate sd-operator next to a custom filterDef template', () => {

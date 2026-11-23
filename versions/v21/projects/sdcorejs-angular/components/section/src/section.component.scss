@@ -15,7 +15,7 @@
   justify-content: space-between;
   gap: 16px;
   width: 100%;
-  padding: 8px 16px;
+  padding: 8px var(--sd-section-padding-inline, 16px);
 }
 
 .sd-section-header-icon {
@@ -116,6 +116,30 @@
     0px 1px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
     0px -1px 0px 0px var(--sd-section-outline, #f2f2f2) inset,
     0px 1px 2px 0px var(--sd-section-shadow, rgba(47, 49, 54, 0.1019607843));
+}
+
+.sd-section[data-dividers='footer'] > .sd-section-body--with-header,
+.sd-section[data-dividers='none'] > .sd-section-body--with-header,
+.sd-section[data-dividers='header'] > .sd-section-footer,
+.sd-section[data-dividers='none'] > .sd-section-footer {
+  border-top: 0;
+}
+
+// why: an inset stroke preserves the dimensions when switching from elevated.
+.sd-section[data-appearance='outlined'] {
+  box-shadow: 0 0 0 1px var(--sd-border) inset;
+}
+
+.sd-section[data-appearance='flush'] {
+  border-radius: 0;
+  background: transparent;
+}
+
+@media (forced-colors: active) {
+  .sd-section:not([data-appearance='flush']) {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
 }
 
 .cursor-pointer {

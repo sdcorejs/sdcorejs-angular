@@ -1,9 +1,22 @@
-import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
-import { booleanAttribute, Component, computed, DestroyRef, effect, ElementRef, inject, input, model } from '@angular/core';
+import {
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  model,
+} from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { SD_ICON_CONFIGURATION, SdIcon, type SdIconShape } from '@sdcorejs/angular/modules/icon';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SD_SECTION_REGISTRY } from './section-registry';
+
+export type SdSectionDividers = 'all' | 'header' | 'footer' | 'none';
+export type SdSectionAppearance = 'elevated' | 'outlined' | 'flush';
 
 const SECTION_INTERACTIVE_SELECTOR =
   'a[href], button, input, select, textarea, [role="button"], [role="link"], [contenteditable="true"], [tabindex]';
@@ -12,8 +25,8 @@ const SECTION_INTERACTIVE_SELECTOR =
 let sectionBodyIdSeq = 0;
 
 @Component({
-  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
   selector: 'sd-section',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './section.component.html',
   styleUrl: './section.component.scss',
   imports: [SdIcon, SdTranslatePipe],
@@ -30,6 +43,9 @@ export class SdSection {
   iconColor = input<Color>('primary', { alias: 'iconColor' });
   /** Hình nền ô icon header; bỏ trống thì dùng `defaultShape` của `provideSdIcon` (mặc định `square`). */
   iconShape = input<SdIconShape | null | undefined>(undefined);
+
+  readonly dividers = input<SdSectionDividers>('all');
+  readonly appearance = input<SdSectionAppearance>('elevated');
 
   collapsed = model<boolean>(false, { alias: 'collapsed' });
   collapsible = input(false, { transform: booleanAttribute });

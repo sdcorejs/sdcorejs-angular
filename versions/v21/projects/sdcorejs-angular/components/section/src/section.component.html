@@ -5,7 +5,12 @@
 @let _subTitle = subTitle();
 @let _icon = icon();
 @let _iconColor = iconColor();
-<div class="sd-section c-shadow-section">
+@let _appearance = appearance();
+<div
+  class="sd-section"
+  [class.c-shadow-section]="_appearance !== 'outlined' && _appearance !== 'flush'"
+  [attr.data-appearance]="_appearance"
+  [attr.data-dividers]="dividers()">
   @if (!_hideHeader) {
     <div class="sd-section-header" [class.cursor-pointer]="_collapsible">
       <div class="sd-section-header-left">

@@ -46,6 +46,7 @@ export class SdQueryInlineChip {
 
   // why: nhãn mặc định của field boolean phải trùng với nhãn parent dựng cho chip (`chipValueText`)
   // và với build chip, nếu không cùng một field sẽ hiện hai ngôn ngữ tuỳ chỗ.
+  readonly selectValueLabel = computed(() => this.#i18n.t('core.component.query-bar.placeholder.select-value'));
   readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
   readonly booleanFalseLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.false'));
   /** `aria-label` of the × — names the field, in the current language. */

@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { Color } from '@sdcorejs/utils/models';
 import { resolveSdIconConfig, SD_ICON_CONFIGURATION, type SdIconShape } from '@sdcorejs/angular/modules/icon';
-import { SdSection } from './section.component';
+import { SdSection, type SdSectionAppearance, type SdSectionDividers } from './section.component';
 import { SdSectionItem } from './section-item/section-item.component';
 
 // ---------------------------------------------------------------------------
@@ -449,6 +449,107 @@ describe('SdSection', () => {
 // ---------------------------------------------------------------------------
 // Suite: SdSectionItem
 // ---------------------------------------------------------------------------
+
+@Component({
+  imports: [SdSection, SdSectionItem],
+  template: `
+    <sd-section [appearance]="appearance" [dividers]="dividers" [collapsed]="collapsed" [hideHeader]="hideHeader">
+      <sd-section-item label="Name">Example</sd-section-item>
+      <span sdFooterRight>Footer</span>
+    </sd-section>
+    <sd-section-item label="Standalone">Example</sd-section-item>
+  `,
+})
+class AppearanceHost {
+  appearance: SdSectionAppearance = 'elevated';
+  dividers: SdSectionDividers = 'all';
+  collapsed = false;
+  hideHeader = false;
+}
+
+describe('SdSection frame and dividers', () => {
+  let fixture: ComponentFixture<AppearanceHost>;
+  let host: AppearanceHost;
+  const element = (selector: string): HTMLElement => fixture.nativeElement.querySelector(selector);
+  const style = (selector: string) => getComputedStyle(element(selector));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AppearanceHost);
+    host = fixture.componentInstance;
+    fixture.nativeElement.style.setProperty('--sd-border', 'rgb(10, 20, 30)');
+    fixture.detectChanges();
+  });
+
+  it('SEC-D-01 defaults to the existing elevated frame, spacing and both rules', () => {
+    expect(style('.sd-section-header').padding).toBe('8px 16px');
+    expect(style('.sd-section-body').borderTopWidth).toBe('1px');
+    expect(style('.sd-section-footer').borderTopWidth).toBe('1px');
+    const plain = TestBed.createComponent(SdSection);
+    plain.detectChanges();
+    const frame = plain.nativeElement.querySelector('.sd-section') as HTMLElement;
+    expect(frame.dataset['appearance']).toBe('elevated');
+    expect(frame.dataset['dividers']).toBe('all');
+    expect(getComputedStyle(frame).boxShadow.match(/inset/g)?.length).toBe(4);
+    expect(getComputedStyle(plain.nativeElement.querySelector('.sd-section-footer')).display).toBe('none');
+  });
+
+  it('SEC-D-02/06 toggles just the requested rules at runtime', () => {
+    for (const mode of ['all', 'header', 'footer', 'none'] as const) {
+      host.dividers = mode;
+      fixture.detectChanges();
+      expect(style('.sd-section-body').borderTopWidth).toBe(['all', 'header'].includes(mode) ? '1px' : '0px');
+      expect(style('.sd-section-footer').borderTopWidth).toBe(['all', 'footer'].includes(mode) ? '1px' : '0px');
+    }
+  });
+
+  it('SEC-D-03/04 respects the footer setting with a collapsed body or a hidden header', () => {
+    host.dividers = 'footer';
+    host.collapsed = true;
+    fixture.detectChanges();
+    expect(element('.sd-section-body')).toBeNull();
+    expect(style('.sd-section-footer').borderTopWidth).toBe('1px');
+    host.dividers = 'header';
+    host.hideHeader = true;
+    fixture.detectChanges();
+    expect(element('.sd-section-header')).toBeNull();
+    expect(style('.sd-section-body').borderTopWidth).toBe('0px');
+    expect(style('.sd-section-footer').borderTopWidth).toBe('0px');
+  });
+
+  it('SEC-D-05/08 keeps flush spacing and inherits the local padding inside the host', () => {
+    host.appearance = 'flush';
+    fixture.detectChanges();
+    expect(style('.sd-section').boxShadow).toBe('none');
+    expect(style('.sd-section').borderRadius).toBe('0px');
+    expect(style('.sd-section').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    const parts = ['.sd-section-header', '.sd-section-footer', 'sd-section .c-item'];
+    for (const part of parts) expect(style(part).padding).toBe('8px 16px');
+    element('sd-section').style.setProperty('--sd-section-padding-inline', '0');
+    for (const part of parts) expect(style(part).padding).toBe('8px 0px');
+    expect(style('sd-section + sd-section-item .c-item').padding).toBe('8px 16px');
+  });
+
+  it('SEC-D-09 changes to one inset border without resizing', () => {
+    const before = element('.sd-section').getBoundingClientRect();
+    host.appearance = 'outlined';
+    fixture.detectChanges();
+    expect(style('.sd-section').boxShadow).toBe('rgb(10, 20, 30) 0px 0px 0px 1px inset');
+    const after = element('.sd-section').getBoundingClientRect();
+    expect([after.width, after.height]).toEqual([before.width, before.height]);
+  });
+
+  it('SEC-D-10/11 renders invalid runtime values with the default frame and rules', () => {
+    const shadow = style('.sd-section').boxShadow;
+    // @ts-expect-error Unsupported appearance from an untyped consumer.
+    host.appearance = 'shadow';
+    // @ts-expect-error Unsupported divider from an untyped consumer.
+    host.dividers = 'top';
+    fixture.detectChanges();
+    expect(style('.sd-section').boxShadow).toBe(shadow);
+    expect(style('.sd-section-body').borderTopWidth).toBe('1px');
+    expect(style('.sd-section-footer').borderTopWidth).toBe('1px');
+  });
+});
 
 describe('SdSection inside a focusable parent', () => {
   let parentFixture: ComponentFixture<HostInFocusableParentComponent>;

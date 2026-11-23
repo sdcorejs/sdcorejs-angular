@@ -358,6 +358,8 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 
 `useBadge` returns `SdBadgeData` (`@sdcorejs/angular/components/badge`): `{ title?, type?, color?, icon?, label?, tooltip? }`, rendered as a `<sd-badge>` in the cell. `type` defaults to `'round'`. `title` replaces the cell text. `label` is the left part of `type: 'pair'`. `tooltip` shows only when the column has no `tooltip`. The badge is a button (`role="button"`, focusable, hover) only when the column has `click`; otherwise it is a plain status. The cell tooltip goes to the badge's own `tooltip` input, so a badge whose text is cut still shows a single tooltip.
 
+When desktop inline filters are visible, utility headers and empty custom filter templates show a disabled placeholder aligned with the other filters. The filler column stays empty.
+
 **Grouped column headers:** `type: 'children'` uses a compact group title with a subtle background and divider above its child columns. Standalone titles are vertically centered across both title rows. Filters occupy a separate aligned sticky row; `filter.hideInlineFilter` (including `'auto'`) shows or hides that row consistently for all columns. No consumer CSS is required. Numeric child titles keep their configured alignment.
 
 **Rendering convention:** status/state columns should use `useBadge` or a projected `<sd-badge>`. Do not hand-roll `.status-*`, `.pill-*`, or badge-like CSS classes for plain state display.

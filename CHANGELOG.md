@@ -34,6 +34,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### Section
+
+- Choose header and footer rules with `dividers`, the frame with `appearance`, and horizontal padding with `--sd-section-padding-inline`.
+
+### Fixed
+
+#### Section
+
+- Elevated and outlined sections keep a visible frame in forced-colors mode.
+
+#### Table
+
+- Inline filters show disabled placeholders in headers without a filter control. Empty values chips in the query bar show a clickable value prompt.
+
 ## [3.6] - 2026-11-20
 
 Packages `19.3.6` · `20.3.6` · `21.3.6` · `22.3.6`, validated against `*.3.5`.
