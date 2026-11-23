@@ -325,6 +325,19 @@ describe('SdSection', () => {
       expect(body.id).toBe(component.bodyId);
     });
 
+    it('SEC-D-07 preserves a consumer-bound keyboard handler and leaves nested actions alone', () => {
+      host.collapsible = true;
+      fixture.detectChanges();
+      const header = getHeader();
+      header.addEventListener('keydown', component.onHeaderKeydown);
+      const space = () => new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+
+      expect(getTrigger()!.dispatchEvent(space())).toBeTrue();
+      expect(component.collapsed()).toBeFalse();
+      expect(header.dispatchEvent(space())).toBeFalse();
+      expect(component.collapsed()).toBeTrue();
+    });
+
     it('the native collapse button toggles the section exactly once', () => {
       host.collapsible = true;
       fixture.detectChanges();
@@ -473,6 +486,17 @@ class AppearanceHost {
   hideHeader = false;
 }
 
+@Component({
+  changeDetection: SdAngular22ChangeDetectionStrategy.Eager,
+  imports: [SdSection],
+  template: `
+    <sd-section title="Parent" collapsible>
+      <sd-section title="Child" appearance="flush" dividers="none" collapsible>Details</sd-section>
+    </sd-section>
+  `,
+})
+class NestedHost {}
+
 describe('SdSection frame and dividers', () => {
   let fixture: ComponentFixture<AppearanceHost>;
   let host: AppearanceHost;
@@ -533,6 +557,18 @@ describe('SdSection frame and dividers', () => {
     element('sd-section').style.setProperty('--sd-section-padding-inline', '0');
     for (const part of parts) expect(style(part).padding).toBe('8px 0px');
     expect(style('sd-section + sd-section-item .c-item').padding).toBe('8px 16px');
+  });
+
+  it('keeps the parent expanded when interacting with a flush child or the body', () => {
+    const nested = TestBed.createComponent(NestedHost);
+    nested.detectChanges();
+    const parent = nested.nativeElement.querySelector('sd-section') as HTMLElement;
+    const child = parent.querySelector('sd-section')!;
+    (child.querySelector('.sd-section-body') as HTMLElement).click();
+    (child.querySelector('.sd-section-header') as HTMLElement).click();
+    nested.detectChanges();
+    expect(child.querySelector('.sd-section-body')).toBeNull();
+    expect(parent.querySelector('.sd-section-body')).not.toBeNull();
   });
 
   it('SEC-D-09 changes to one inset border without resizing', () => {
