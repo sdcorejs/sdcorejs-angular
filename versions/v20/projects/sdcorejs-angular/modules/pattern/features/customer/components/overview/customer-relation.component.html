@@ -1,0 +1,44 @@
+@let rows = page();
+<relation-card
+  [title]="title() ?? definition().title"
+  [sectionId]="sectionId()"
+  [autoId]="autoId() ?? 'customer-360-card-' + kind()"
+  [total]="rows?.total ?? null"
+  [totalLabel]="overdue() > 0 ? overdue() + ' quá hạn' : null"
+  [totalColor]="overdue() > 0 ? 'error' : 'primary'"
+  [empty]="!rows?.items?.length"
+  [emptyText]="definition().empty"
+  [state]="state()"
+  [more]="more()"
+  (retry)="reload()">
+  @for (row of rows?.items; track row.id) {
+    <sd-section-item labelWidth="auto">
+      <div itemLeft class="relation-identity">
+        @if (row.icon) {
+          <sd-icon class="relation-icon" aria-hidden="true" size="18px" [attr.data-kind]="row.icon" [name]="row.icon" />
+        }
+        <div class="relation-label">
+          @if (row.orderId && canOpenOrder) {
+            <a class="T14M text-primary text-truncate" [routerLink]="['../../../order', row.orderId, 'detail']">{{ row.title }}</a>
+          } @else if (row.document) {
+            <button type="button" class="document-name T14M text-truncate" (click)="preview()?.open(row.document)">{{ row.title }}</button>
+          } @else {
+            <span class="T14M text-truncate">{{ row.title }}</span>
+          }
+          <span class="T12R text-secondary">{{ row.category ?? (row.datePrefix ?? '') + (row.date | sdFormatDate) }}</span>
+        </div>
+      </div>
+      @if (row.badge; as badge) {
+        <sd-badge type="round" [color]="badge.color" [title]="badge.title" />
+      }
+      @if (row.amount !== undefined) {
+        <span class="metric T14R">{{ row.amount | sdFormatNumber: 0 }}</span>
+      } @else if (!row.document) {
+        <span class="metric T13R text-secondary">{{ row.date | sdFormatDate: 'dd/MM' }}</span>
+      }
+    </sd-section-item>
+  }
+</relation-card>
+@if (kind() === 'documents') {
+  <document-preview />
+}

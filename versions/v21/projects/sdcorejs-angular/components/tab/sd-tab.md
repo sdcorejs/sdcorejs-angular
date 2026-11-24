@@ -254,6 +254,8 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 | `label`       | `string` (REQUIRED, signal input)       | —           | Tab label text. Caller is responsible for i18n — pass `i18n.t('core.tab.info')` directly.                                               |
 | `icon`        | `string \| null \| undefined`           | `undefined` | Material icon name shown left of the label.                                                                                             |
 | `badge`       | `string \| number \| null \| undefined` | `undefined` | Badge text shown right of the label. `0` renders (treated as meaningful); `null` / `undefined` hides.                                   |
+| `badgeColor` | `Color \| null \| undefined` | `undefined` | Color of this tab's badge in any variant. Omit to use the group color. |
+| `ariaLabel` | `string \| null \| undefined` | `undefined` | Accessible name for the tab when the visible label and badge need context, e.g. `ariaLabel="Debt, 2 overdue invoices"`. |
 | `disabled`    | `boolean`                               | `false`     | `booleanAttribute` transform. Disables the tab — `mat-mdc-tab-disabled` class + `aria-disabled="true"`, no click / keyboard activation. |
 | `closable`    | `boolean`                               | `false`     | `booleanAttribute` transform. Renders a close icon next to the label. Click emits `(close)` on the tab and `(tabClosed)` on the group.  |
 | `beforeClose` | `SdTabBeforeClose \| undefined`         | `undefined` | Optional sync/async close guard. Only `true` allows close; errors fail closed.                                                          |

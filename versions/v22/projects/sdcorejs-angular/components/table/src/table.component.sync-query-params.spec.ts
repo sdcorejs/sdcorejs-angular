@@ -9,6 +9,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableFilterRequest } from './services/table-filter/table-filter.model';
 import { SdTable } from './table.component';
+import { sdTableQueryParams } from '../index';
 
 interface Row {
   id: number;
@@ -101,6 +102,44 @@ describe('SdTable syncQueryParams', () => {
   };
 
   const tableParam = () => router.parseUrl(router.url).queryParamMap.get('table-customers');
+
+  it('reads a shared filter link into the first request and ignores unknown fields', async () => {
+    hostOption = () => ({
+      ...serverOption(),
+      columns: [
+        { field: 'name', title: 'Name', type: 'string', filter: { operator: { enable: true, list: ['CONTAIN', 'START_WITH'] } } },
+        { field: 'amount', title: 'Amount', type: 'number', sortable: true },
+      ],
+      filter: {
+        quickSearch: { containFields: ['name'] },
+        externalFilters: [{ title: 'Created since', field: 'since', type: 'datetime' }],
+      },
+    });
+    const since = new Date('2026-02-12T10:00:00.000Z');
+    const queryParams = sdTableQueryParams('customers', {
+      quickSearch: 'Acme',
+      columnFilter: { name: 'An', unknown: 'ignored' },
+      columnOperator: { name: 'START_WITH' },
+      externalFilter: { since },
+      sort: { field: 'amount', direction: 'desc' },
+      pageSize: 50,
+    });
+    expect(Object.keys(queryParams)).toEqual(['table-customers']);
+    expect(queryParams['table-customers']).toContain(since.toISOString());
+    await open(router.serializeUrl(router.createUrlTree(['/p'], { queryParams })));
+
+    expect(loader).toHaveBeenCalledTimes(1);
+    const request = firstArg(0);
+    expect(request.quickSearch?.term).toBe('Acme');
+    expect(request.rawColumnFilter['name']).toBe('An');
+    expect(request.rawColumnFilter['unknown']).toBeUndefined();
+    expect(request.columnOperator['name']).toBe('START_WITH');
+    expect(request.rawExternalFilter['since']).toEqual(since);
+    expect(request.rawExternalFilter['since'] instanceof Date).toBeTrue();
+    expect(request.orderBy).toBe('amount');
+    expect(request.orderDirection).toBe('DESC');
+    expect(request.pageSize).toBe(50);
+  });
 
   it('restores filter, sort, page and page size from the URL with a single read', async () => {
     await open(`/p?table-customers=${param({ c: { name: 'An' }, s: ['amount', 'desc'], p: 3, z: 50 })}`);

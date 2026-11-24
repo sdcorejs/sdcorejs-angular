@@ -36,9 +36,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Page
+
+- The table of contents links to a section by its host ID and restores that position when a link opens.
+
+#### Pattern
+
+- Open a customer's Record 360 overview, filter overdue invoices from a metric, or print the one-page customer sheet.
+
 #### Section
 
 - Choose header and footer rules with `dividers`, the frame with `appearance`, and horizontal padding with `--sd-section-padding-inline`.
+- Set `labelWidth="auto"` on a section item to give the label the remaining space and align its values to the end.
+
+#### Tab
+
+- Use `badgeColor` for an individual tab and `ariaLabel` to describe its count.
+
+#### Table
+
+- Use `sdTableQueryParams()` to link to a table with filters, sort and page size applied.
 
 ### Fixed
 

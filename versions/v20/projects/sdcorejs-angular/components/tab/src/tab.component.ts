@@ -1,4 +1,5 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, input, output, TemplateRef, viewChild } from '@angular/core';
+import type { Color } from '@sdcorejs/utils/models';
 
 export type SdTabBeforeClose = () => boolean | Promise<boolean>;
 
@@ -12,6 +13,9 @@ export class SdTab {
   label = input.required<string>();
   icon = input<string | null | undefined>(undefined);
   badge = input<string | number | null | undefined>(undefined);
+  readonly badgeColor = input<Color | null | undefined>(undefined);
+  /** Accessible name of the tab, including the meaning of a status count when needed. */
+  readonly ariaLabel = input<string | null | undefined>(undefined);
   disabled = input(false, { transform: booleanAttribute });
   closable = input(false, { transform: booleanAttribute });
   beforeClose = input<SdTabBeforeClose | undefined>(undefined);

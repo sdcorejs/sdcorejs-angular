@@ -1,0 +1,66 @@
+@let customer = entity();
+<sd-page-detail
+  toc
+  [title]="'Hồ sơ khách hàng #' + customer.code"
+  [description]="customer.name + ' · ' + typeName()"
+  [badges]="badges()"
+  [backLink]="['../..']">
+  <div headerRight class="customer-sheet-actions d-flex align-items-center gap-8">
+    <sd-button
+      title="In hồ sơ"
+      type="light"
+      color="primary"
+      prefixIcon="print"
+      autoId="customer-sheet-print"
+      [loading]="printing()"
+      (click)="printSheet()" />
+    <sd-button
+      *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
+      title="Cập nhật khách hàng"
+      type="fill"
+      color="primary"
+      prefixIcon="edit"
+      autoId="customer-sheet-update"
+      (click)="updating.set(true)" />
+  </div>
+  @if (printError()) {
+    <p role="alert">Chưa thể in vì một phần hồ sơ chưa tải được. Bấm In hồ sơ để thử lại.</p>
+  }
+  <div class="customer-sheet-sections d-flex flex-column gap-16">
+    <sd-section title="Thông tin chung" id="thong-tin" data-autoid="customer-sheet-section-thong-tin" dividers="header">
+      <sd-section-item label="Mã khách hàng">{{ customer.code }}</sd-section-item>
+      <sd-section-item label="Tên khách hàng">{{ customer.name }}</sd-section-item>
+      <sd-section-item label="Loại khách hàng">{{ typeName() }}{{ customer.tier === 'vip' ? ' · VIP' : '' }}</sd-section-item>
+      @if (customer.type === 'business') {
+        <sd-section-item label="Mã số thuế">{{ customer.taxCode | sdEmpty }}</sd-section-item>
+      }
+      <sd-section-item label="Ngày tạo">{{ customer.createdAt | sdFormatDate }}</sd-section-item>
+      <sd-section-item label="Ghi chú">{{ customer.note | sdEmpty }}</sd-section-item>
+    </sd-section>
+    <sd-section title="Liên hệ" id="lien-he" data-autoid="customer-sheet-section-lien-he" dividers="header">
+      <sd-section-item label="Email">{{ customer.email }}</sd-section-item>
+      <sd-section-item label="Điện thoại">{{ customer.phone }}</sd-section-item>
+      <sd-section-item label="Địa chỉ">{{ customer.address | sdEmpty }}</sd-section-item>
+    </sd-section>
+    @for (item of relations; track item.id) {
+      @defer (on viewport; when printing(); prefetch on idle) {
+        <customer-relation
+          #relation
+          [customerId]="customer.id"
+          [kind]="item.kind"
+          [title]="item.title"
+          [limit]="null"
+          [sectionId]="item.id"
+          [autoId]="'customer-sheet-section-' + item.id"
+          [more]="{ link: ['../360'], queryParams: { tab: item.kind } }" />
+      } @placeholder {
+        <sd-section [title]="item.title" [id]="item.id" [attr.data-autoid]="'customer-sheet-section-' + item.id" dividers="header">
+          <sd-data-state compact state="loading" />
+        </sd-section>
+      }
+    }
+  </div>
+</sd-page-detail>
+@if (updating()) {
+  <update-side-drawer [id]="customer.id" (saved)="saved($event)" (closed)="updating.set(false)" />
+}

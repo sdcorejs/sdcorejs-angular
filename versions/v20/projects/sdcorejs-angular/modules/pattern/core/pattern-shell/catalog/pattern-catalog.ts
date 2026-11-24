@@ -66,7 +66,7 @@ export const PATTERN_CATALOG: readonly PatternCatalogGroup[] = [
     key: 'customer',
     title: 'Khách hàng',
     summary: 'Thao tác trong drawer và hồ sơ 360°.',
-    docs: ['drawer', 'relation', 'detail', 'states'],
+    docs: ['record-360', 'drawer', 'relation', 'detail', 'states'],
     routes: [
       {
         link: ['customer'],
@@ -76,10 +76,16 @@ export const PATTERN_CATALOG: readonly PatternCatalogGroup[] = [
           'Score card lọc theo loại khách. Mã mở drawer chi tiết, Tạo khách hàng mở drawer tạo; drawer không đổi URL, tải bản ghi bằng detail(id). beforeClose chặn X, Esc, backdrop khi còn thay đổi.',
       },
       {
-        link: ['customer', '1', '360'],
+        link: ['customer', '12', '360'],
         path: 'customer/:id/360',
         layout: 'sd-page-detail + tab',
-        shows: 'Tab Thông tin, Đơn hàng, Công nợ, Tài liệu. Mở tab nào mới tải tab đó.',
+        shows: 'Tổng quan, số liệu và quan hệ gần đây. Mở thẻ Công nợ để xem hoá đơn quá hạn.',
+      },
+      {
+        link: ['customer', '12', 'sheet'],
+        path: 'customer/:id/sheet',
+        layout: 'sd-page-detail toc',
+        shows: 'Hồ sơ một trang. Mục lục có liên kết sâu và bản in chứa các phần đã tải.',
       },
     ],
   },

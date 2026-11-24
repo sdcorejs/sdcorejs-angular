@@ -1,5 +1,4 @@
-import { FilterUtilities } from '@sdcorejs/utils/fns';
-import type { Filter, Order } from '@sdcorejs/utils/models';
+import { pageMockRecords } from './mock-query';
 import { readSessionValue, writeSessionValue } from '../session-state';
 import {
   PatternMockError,
@@ -17,28 +16,6 @@ const notFound = (): PatternMockError => new PatternMockError(404, { message: 'K
 
 const asBody = (body: unknown): Record<string, unknown> =>
   body && typeof body === 'object' && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
-
-const parseJson = <T>(raw: string | null, fallback: T): T => {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    throw new PatternMockError(400, { message: 'Tham số truy vấn không hợp lệ.' });
-  }
-};
-
-const valueAt = (record: unknown, path: string): unknown =>
-  path
-    .split('.')
-    .reduce<unknown>((value, key) => (value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined), record);
-
-const compare = (left: unknown, right: unknown): number => {
-  if (left === right) return 0;
-  if (left === null || left === undefined || left === '') return 1;
-  if (right === null || right === undefined || right === '') return -1;
-  if (typeof left === 'number' && typeof right === 'number') return left - right;
-  return String(left).localeCompare(String(right), 'vi', { numeric: true });
-};
 
 /**
  * In-memory API behind the pattern screens: one collection per resource, seeded on first use and kept in
@@ -88,10 +65,13 @@ export class PatternMockBackend {
     const resource = name ? this.#resources.get(name) : undefined;
     if (!resource) throw notFound();
     const body = asBody(rawBody);
-    const custom = resource.route?.(method, rest, query, body, this.#context);
+    const custom = resource.route?.(method, rest, query, body, this.#context, limit);
     if (custom) return custom;
 
-    if (rest.length === 0 && method === 'GET') return { body: this.#search(resource, query, limit) };
+    if (rest.length === 0 && method === 'GET') {
+      const records = this.collection(name);
+      return { body: pageMockRecords(limit === undefined ? records : records.slice(0, limit), query, resource.fieldTypes) };
+    }
     if (rest.length === 0 && method === 'POST') return this.#create(resource, body);
     if (rest[0] === 'bulk' && rest.length === 2 && method === 'POST') return { body: this.#bulk(resource, rest[1], body) };
     if (rest.length === 1) {
@@ -116,25 +96,6 @@ export class PatternMockBackend {
     const record = this.collection(name).find(item => item.id === id);
     if (!record) throw notFound();
     return record;
-  }
-
-  #search(resource: PatternMockResource, query: PatternMockQuery, limit?: number): { items: PatternMockRecord[]; total: number } {
-    const filters = parseJson<Filter[]>(query.get('filters'), []);
-    const orders = parseJson<Order[]>(query.get('orders'), []);
-    const pageNumber = Math.max(0, Number(query.get('pageNumber') ?? 0) || 0);
-    const pageSize = Math.max(1, Number(query.get('pageSize') ?? 20) || 20);
-    const source = limit === undefined ? this.collection(resource.name) : this.collection(resource.name).slice(0, limit);
-    const matched = source.filter(record => FilterUtilities.match(filters, record, { fieldTypes: resource.fieldTypes }));
-    const sorted = orders.length
-      ? [...matched].sort((left, right) => {
-          for (const order of orders) {
-            const result = compare(valueAt(left, String(order.field)), valueAt(right, String(order.field)));
-            if (result) return order.direction === 'DESC' ? -result : result;
-          }
-          return 0;
-        })
-      : matched;
-    return { items: sorted.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize), total: matched.length };
   }
 
   #create(resource: PatternMockResource, body: Record<string, unknown>): PatternMockResult {

@@ -9,6 +9,7 @@ export * from './src/directives/sd-table-group-def.directive';
 export * from './src/directives/sd-table-title-def.directive';
 export * from './src/table.component';
 export * from './src/services/table-filter/table-filter.model';
+export { sdTableQueryParams } from './src/services/table-query-params/table-query-params.util';
 export type { ISdTableConfiguration } from './src/configurations';
 export { SD_TABLE_CONFIGURATION } from './src/configurations';
 export { SD_TABLE_LAYOUT } from './src/configurations';

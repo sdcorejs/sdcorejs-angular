@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.relation-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.relation-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.relation-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--sd-secondary-light);
+  color: var(--sd-secondary);
+  font-size: 18px;
+}
+a {
+  text-decoration: none;
+}
+.relation-icon[data-kind='picture_as_pdf'] {
+  color: var(--sd-error);
+  background: var(--sd-error-light);
+}
+.relation-icon[data-kind='table_chart'] {
+  color: var(--sd-success);
+  background: var(--sd-success-light);
+}
+.relation-icon[data-kind='description'] {
+  color: var(--sd-info);
+  background: var(--sd-info-light);
+}
+a:hover,
+.document-name:hover {
+  text-decoration: underline;
+}
+.document-name {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0;
+  text-align: start;
+  cursor: pointer;
+}
+.metric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

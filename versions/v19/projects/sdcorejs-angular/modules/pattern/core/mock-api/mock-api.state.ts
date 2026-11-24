@@ -9,12 +9,12 @@ import type { PatternMockBackend } from './mock-backend';
 /** Error the toolbar makes every mock request return. */
 export type PatternMockFailure = 'none' | '500' | 'timeout' | '404' | '403';
 
-/** Read state a screen setting forces on the list request of one resource (doc 08 "Dữ liệu và trạng thái"). */
+/** Read state for an exact GET path, e.g. "orders" or "customers/12/documents". */
 export interface PatternMockReadOverride {
   /** Serve only the first `limit` records of the collection. */
   readonly limit?: number;
-  /** `loading`: never answer; `error`: answer 500. */
-  readonly mode?: 'normal' | 'loading' | 'error';
+  /** `error-once` lets a retry succeed while other cards remain available. */
+  readonly mode?: 'normal' | 'loading' | 'error' | 'error-once';
 }
 
 /** How long a simulated timeout waits before the request fails. */
@@ -45,10 +45,14 @@ const FAILURES: Readonly<Record<Exclude<PatternMockFailure, 'none' | 'timeout'>,
 @Injectable()
 export class PatternMockApiState {
   readonly #configuration = inject(SD_PATTERN_CONFIGURATION);
-  readonly #stored = readSessionValue<{ latencyMs?: number; failure?: PatternMockFailure }>(STATE_KEY, {});
+  readonly #stored = readSessionValue<{
+    latencyMs?: number;
+    failure?: PatternMockFailure;
+    reads?: Record<string, PatternMockReadOverride>;
+  }>(STATE_KEY, {});
   readonly #latencyMs = signal(this.#stored.latencyMs ?? this.#configuration.latencyMs);
   readonly #failure = signal<PatternMockFailure>(this.#stored.failure ?? 'none');
-  readonly #reads = signal<Readonly<Record<string, PatternMockReadOverride>>>({});
+  readonly #reads = signal<Readonly<Record<string, PatternMockReadOverride>>>(this.#stored.reads ?? {});
   #backend?: Promise<PatternMockBackend>;
 
   readonly latencyMs = this.#latencyMs.asReadonly();
@@ -64,12 +68,13 @@ export class PatternMockApiState {
     this.#persist();
   }
 
-  /** Forces the list request of `resource`; `undefined` removes the override. */
+  /** Forces just the GET endpoint at this path; `undefined` removes the override. */
   setReadOverride(resource: string, override: PatternMockReadOverride | undefined): void {
     this.#reads.update(reads => {
       const { [resource]: _previous, ...others } = reads;
       return override ? { ...others, [resource]: override } : others;
     });
+    this.#persist();
   }
 
   /** The backend, loaded on the first request so the seeds stay out of the host's bundle. */
@@ -86,7 +91,8 @@ export class PatternMockApiState {
   /** Answers a request whose URL is under `apiBaseUrl`; `segments` is the path after it. */
   respond(request: HttpRequest<unknown>, segments: readonly string[]): Observable<HttpEvent<unknown>> {
     const failure = this.#failure();
-    const read = request.method === 'GET' && segments.length === 1 ? this.#reads()[segments[0]] : undefined;
+    const path = segments.join('/');
+    const read = request.method === 'GET' ? this.#reads()[path] : undefined;
     if (read?.mode === 'loading') return NEVER;
     if (failure === 'timeout') {
       return timer(PATTERN_MOCK_TIMEOUT_MS).pipe(
@@ -96,7 +102,9 @@ export class PatternMockApiState {
     return timer(this.#latencyMs()).pipe(
       switchMap(() => defer(() => this.backend())),
       map(backend => {
-        const simulated = read?.mode === 'error' ? FAILURES['500'] : failure === 'none' ? undefined : FAILURES[failure];
+        const failOnce = read?.mode === 'error-once' && this.#reads()[path] === read;
+        if (failOnce) this.setReadOverride(path, undefined);
+        const simulated = read?.mode === 'error' || failOnce ? FAILURES['500'] : failure === 'none' ? undefined : FAILURES[failure];
         try {
           if (simulated) throw simulated;
           const result = backend.handle(request.method, segments, request.params, request.body, read?.limit);
@@ -114,6 +122,11 @@ export class PatternMockApiState {
   }
 
   #persist(): void {
-    writeSessionValue(STATE_KEY, { latencyMs: this.#latencyMs(), failure: this.#failure() });
+    const reads = this.#reads();
+    writeSessionValue(STATE_KEY, {
+      latencyMs: this.#latencyMs(),
+      failure: this.#failure(),
+      ...(Object.keys(reads).length ? { reads } : {}),
+    });
   }
 }

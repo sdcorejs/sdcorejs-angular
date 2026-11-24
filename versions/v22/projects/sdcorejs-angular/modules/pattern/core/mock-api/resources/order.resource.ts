@@ -3,6 +3,7 @@ import type { Filter } from '@sdcorejs/utils/models';
 import { PatternMockError, type PatternMockContext, type PatternMockRecord, type PatternMockResource } from '../mock-api.model';
 import { createPrng, pickWith } from '../prng';
 import { INACTIVE_CUSTOMER_ID } from './customer.resource';
+import { PROFILE_CUSTOMER, PROFILE_ORDERS } from './customer-profile.seed';
 import { PERSON_NAMES } from './names';
 
 type OrderStatus = 'pending' | 'shipping' | 'done' | 'cancelled';
@@ -78,7 +79,8 @@ const fail = (message: string): never => {
 /**
  * 128 orders as doc 08: Park–Miller seed 20261024, codes ĐH-2400 down, four a day back from 24/10/2026. The random
  * calls happen in the order of the doc (status, customer, channel, total, warehouse, payment) so the list matches the
- * E1 screen; lines, approval and the other fields come from a second generator.
+ * E1 screen; lines, approval and the other fields come from a second generator. The account in the Record 360
+ * example owns 48 of the rows, with its dates, amounts and states taken from the same ledger as its detail links.
  */
 function seed(): MockOrder[] {
   const random = createPrng(20261024);
@@ -88,7 +90,7 @@ function seed(): MockOrder[] {
   const start = new Date(2026, 9, 24, 8, 0);
   return Array.from({ length: 128 }, (_, index) => {
     const roll = random();
-    const status: OrderStatus =
+    const seededStatus: OrderStatus =
       index < 3
         ? (['pending', 'shipping', 'done'] as const)[index]
         : roll < 0.1
@@ -100,23 +102,30 @@ function seed(): MockOrder[] {
               : 'cancelled';
     const customerIndex = PERSON_NAMES.indexOf(pick(PERSON_NAMES));
     const channel = pick(CHANNELS);
-    const total = Math.round((150_000 + random() * 14_850_000) / 1000) * 1000;
+    const seededTotal = Math.round((150_000 + random() * 14_850_000) / 1000) * 1000;
     const warehouse = pick(WAREHOUSES);
     const payment = pick(PAYMENTS);
-    const createdAt = new Date(start);
-    createdAt.setDate(start.getDate() - Math.floor(index / 4));
-    createdAt.setHours(8 + (index % 4) * 2);
+    const seededDate = new Date(start);
+    seededDate.setDate(start.getDate() - Math.floor(index / 4));
+    seededDate.setHours(8 + (index % 4) * 2);
+    const id = String(index === 127 ? 2408 : 2400 - index);
+    const profile = PROFILE_ORDERS.get(id);
+    const total = profile?.total ?? seededTotal;
+    const status = profile?.status ?? seededStatus;
+    const createdAt = profile ? new Date(profile.createdAt) : seededDate;
     // Order ĐH-2400 belongs to the inactive customer: its update shows a stopped customer loaded by ID.
-    const customerId = index === 0 ? INACTIVE_CUSTOMER_ID : String(customerIndex + 1);
+    // Individual #12 moved to #17 when the sample company took #12.
+    const individualId = customerIndex === 11 ? '17' : String(customerIndex + 1);
+    const customerId = profile ? PROFILE_CUSTOMER.id : index === 0 ? INACTIVE_CUSTOMER_ID : individualId;
     const approval: OrderApproval =
       status === 'pending' ? (index % 3 === 1 ? 'submitted' : 'draft') : status === 'cancelled' ? 'rejected' : 'approved';
     const lines = splitTotal(total, extra);
     const delivered = status === 'done' ? new Date(createdAt.getTime() + (1 + Math.floor(extra() * 4)) * 86_400_000).toISOString() : null;
     return {
-      id: String(2400 - index),
-      code: `ĐH-${2400 - index}`,
+      id,
+      code: profile?.code ?? `ĐH-${id}`,
       customerId,
-      customer: PERSON_NAMES[Number(customerId) - 1],
+      customer: profile ? PROFILE_CUSTOMER.name : PERSON_NAMES[index === 0 ? Number(INACTIVE_CUSTOMER_ID) - 1 : customerIndex],
       channel,
       warehouse,
       payment,

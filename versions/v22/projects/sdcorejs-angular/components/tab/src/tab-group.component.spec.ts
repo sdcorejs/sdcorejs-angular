@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core
 import { MatTabGroup } from '@angular/material/tabs';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import type { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
 import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
 
@@ -32,6 +33,8 @@ import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
           [label]="t.label"
           [icon]="t.icon"
           [badge]="t.badge"
+          [badgeColor]="t.badgeColor"
+          [ariaLabel]="t.ariaLabel"
           [disabled]="t.disabled"
           [closable]="t.closable"
           [beforeClose]="t.beforeClose"
@@ -51,6 +54,8 @@ class HostComponent {
       label: string;
       icon?: string;
       badge?: string | number | null;
+      badgeColor?: Color | null;
+      ariaLabel?: string;
       disabled?: boolean;
       closable?: boolean;
       beforeClose?: () => boolean | Promise<boolean>;
@@ -267,6 +272,7 @@ describe('SdTabGroup', () => {
       const badge = firstLabel.querySelector('.sd-tab__badge');
       expect(badge).not.toBeNull();
       expect(badge!.textContent?.trim()).toBe('5');
+      expect(badge!.hasAttribute('data-badge-color')).toBeFalse();
     });
 
     it('renders badge span when badge=0 (zero is meaningful)', () => {
@@ -279,10 +285,56 @@ describe('SdTabGroup', () => {
     });
 
     it('does NOT render badge span when badge is null', () => {
-      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, badge: null } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, badge: null, badgeColor: 'error' } : t)));
       fixture.detectChanges();
       const firstLabel = getTabLabels(fixture)[0];
       expect(firstLabel.querySelector('.sd-tab__badge')).toBeNull();
+    });
+
+    it('applies a badge color in line and segmented tabs and updates the accessible name', () => {
+      const groupElement = getHostEl(fixture);
+      groupElement.style.setProperty('--sd-error', '#880011');
+      groupElement.style.setProperty('--sd-error-light', '#ffdddd');
+      groupElement.style.setProperty('--sd-primary', '#123456');
+      groupElement.style.setProperty('--sd-primary-light', '#ddeeff');
+      host.tabs.update(arr =>
+        arr.map((t, i) => (i === 0 ? { ...t, badge: 2, badgeColor: 'error', ariaLabel: 'Debt, 2 overdue invoices' } : t))
+      );
+      for (const variant of ['line', 'segmented'] as const) {
+        host.variant = variant;
+        fixture.detectChanges();
+        const tab = getTabLabels(fixture)[0];
+        const badge = tab.querySelector('.sd-tab__badge')!;
+        expect(tab.getAttribute('aria-label')).toBe('Debt, 2 overdue invoices');
+        expect(badge.getAttribute('data-badge-color')).toBe('error');
+        expect(getComputedStyle(badge).color).toBe('rgb(136, 0, 17)');
+        expect(getComputedStyle(badge).backgroundColor).toBe('rgb(255, 221, 221)');
+      }
+      host.tabs.update(arr => arr.map(t => ({ ...t, badgeColor: null, ariaLabel: undefined })));
+      fixture.detectChanges();
+      const tab = getTabLabels(fixture)[0];
+      const badge = tab.querySelector('.sd-tab__badge')!;
+      expect(tab.hasAttribute('aria-label')).toBeFalse();
+      expect(badge.hasAttribute('data-badge-color')).toBeFalse();
+      expect(getComputedStyle(badge).backgroundColor).toBe('rgb(221, 238, 255)');
+      expect(getComputedStyle(badge).color).toBe('rgb(18, 52, 86)');
+    });
+
+    it('mixes a selected pill badge using its own color and keeps the inactive badge light', () => {
+      host.variant = 'pills';
+      const groupElement = getHostEl(fixture);
+      groupElement.style.setProperty('--sd-error', '#880011');
+      groupElement.style.setProperty('--sd-error-light', '#ffdddd');
+      host.tabs.update(arr => arr.map(t => ({ ...t, badge: 2, badgeColor: 'error' })));
+      fixture.detectChanges();
+      const [active, inactive] = getTabLabels(fixture).map(tab => tab.querySelector('.sd-tab__badge')!);
+      const expected = document.createElement('span');
+      expected.style.backgroundColor = 'color-mix(in srgb, #880011 12%, #ffdddd)';
+      groupElement.append(expected);
+      expect(getComputedStyle(active).backgroundColor).toBe(getComputedStyle(expected).backgroundColor);
+      expect(getComputedStyle(inactive).backgroundColor).toBe('rgb(255, 221, 221)');
+      expect(getComputedStyle(active).color).toBe('rgb(136, 0, 17)');
+      expect(getComputedStyle(inactive).color).toBe('rgb(136, 0, 17)');
     });
   });
 
@@ -485,6 +537,21 @@ describe('SdTabGroup', () => {
       close.click();
       fixture.detectChanges();
       expect(host.selectedIndex).toBe(2);
+    });
+
+    it('shares an in-flight close request between the close button and API callers', async () => {
+      const guard = jasmine.createSpy('beforeClose').and.resolveTo(true);
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, beforeClose: guard } : t)));
+      fixture.detectChanges();
+      const close = getTabLabels(fixture)[0].querySelector<HTMLElement>('.sd-tab__close')!;
+      const tab = group.tabs()[0];
+      close.click();
+      const pending = tab.requestClose();
+      expect(tab.requestClose()).toBe(pending);
+      close.click();
+      expect(await pending).toBeTrue();
+      expect(guard).toHaveBeenCalledTimes(1);
+      expect(host.closedEvents.length).toBe(1);
     });
 
     it('does not emit close events when beforeClose returns false', async () => {

@@ -179,6 +179,10 @@ async save(): Promise<void> {
 
 ### Form with a table of contents
 
+Set a stable `id` on each section you want to link to, for example `<sd-section title="Stock" id="stock">`. Selecting its entry replaces the current URL fragment with `#stock` and preserves the path, query and history entry. Entries without an ID still scroll.
+
+Opening a link scrolls the page body when the section renders, including a deferred section. As content above it loads, the page keeps the linked section in view until the reader scrolls or selects another entry. Scrolling by hand preserves the URL and keyboard focus.
+
 ```html
 <sd-page-form title="Cập nhật sản phẩm" backLink="../detail" toc>
   <div headerRight class="d-flex gap-8">

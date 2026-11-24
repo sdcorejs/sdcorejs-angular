@@ -14,7 +14,9 @@ describe('patternPermissionsOf', () => {
 
   it('lets a viewer read only', () => {
     const viewer = patternPermissionsOf('viewer');
-    expect(viewer.length).toBeGreaterThan(0);
+    expect(viewer).toContain('PATTERN_CUSTOMER_R_DETAIL');
+    expect(viewer).not.toContain('PATTERN_CUSTOMER_R_DEBTS');
+    expect(patternPermissionsOf('staff')).toContain('PATTERN_CUSTOMER_R_DEBTS');
     expect(viewer.every(code => code.includes('_R_'))).toBeTrue();
   });
 

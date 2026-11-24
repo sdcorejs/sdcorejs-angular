@@ -60,6 +60,41 @@ describe('SdSectionItem', () => {
       expect(label.style.width).toBe('200px');
     });
 
+    it('switches between a flexible label with an end-aligned value and a fixed-width label', () => {
+      const host: HTMLElement = fixture.nativeElement;
+      const label = host.querySelector<HTMLElement>('.c-item-label')!;
+      const content = host.querySelector<HTMLElement>('.c-item-content')!;
+      for (const width of ['auto', '200px', 'auto']) {
+        fixture.componentRef.setInput('labelWidth', width);
+        fixture.detectChanges();
+        expect(host.classList.contains('sd-section-item--auto')).toBe(width === 'auto');
+        expect(label.style.width).toBe(width === 'auto' ? '' : width);
+        if (width === 'auto') {
+          expect(getComputedStyle(label).flexGrow).toBe('1');
+          expect(getComputedStyle(label).minWidth).toBe('0px');
+          expect(getComputedStyle(content).justifyContent).toBe('flex-end');
+        }
+      }
+    });
+
+    it('keeps the value inside a 360px row with a 400-character label', () => {
+      const host: HTMLElement = fixture.nativeElement;
+      host.style.width = '360px';
+      fixture.componentRef.setInput('labelWidth', 'auto');
+      fixture.componentRef.setInput('label', 'a'.repeat(400));
+      fixture.detectChanges();
+      const content = host.querySelector<HTMLElement>('.c-item-content')!;
+      content.textContent = '1,250,000 ₫';
+      const bounds = host.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(content);
+      const value = range.getBoundingClientRect();
+      expect(value.width).toBeGreaterThan(0);
+      expect(value.left).toBeGreaterThan(host.querySelector('.c-item-label')!.getBoundingClientRect().right);
+      expect(value.right).toBeLessThanOrEqual(bounds.right);
+      expect(host.scrollWidth).toBe(host.clientWidth);
+    });
+
     it('transform: falsy ("", null, undefined) falls back to "150px"', () => {
       fixture.componentRef.setInput('labelWidth', '');
       fixture.detectChanges();

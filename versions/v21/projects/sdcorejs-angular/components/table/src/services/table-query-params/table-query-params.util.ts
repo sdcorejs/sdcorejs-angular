@@ -1,3 +1,4 @@
+import type { Params } from '@angular/router';
 import type { Operator } from '@sdcorejs/utils/models';
 import type { SdTableQuickSearchValue } from '../table-filter/table-quick-search.model';
 
@@ -94,27 +95,53 @@ const diff = (current: Record<string, unknown>, defaults: Record<string, unknown
   return changed.length ? Object.fromEntries(changed.map(key => [key, canonical(current[key])])) : undefined;
 };
 
-export const serializeTableQueryState = (state: SdTableUrlState, context: SdTableUrlStateContext): string | null => {
-  const { defaults } = context;
+export const serializeTableQueryState = (
+  state: Partial<SdTableUrlState>,
+  context?: Pick<SdTableUrlStateContext, 'defaults' | 'pageIndex'>
+): string | null => {
+  const defaults = context?.defaults;
   const encoded: Record<string, unknown> = {};
-  if (defaults.quickSearch && state.quickSearch) {
+  if (state.quickSearch && (!defaults || defaults.quickSearch)) {
     const quick: Record<string, unknown> = {};
-    if (!same(state.quickSearch.term, defaults.quickSearch.term)) quick['t'] = canonical(state.quickSearch.term);
-    const filters = diff(state.quickSearch.filters || {}, defaults.quickSearch.filters || {});
+    if (!same(state.quickSearch.term, defaults?.quickSearch?.term)) quick['t'] = canonical(state.quickSearch.term);
+    const filters = diff(state.quickSearch.filters || {}, defaults?.quickSearch?.filters || {});
     if (filters) quick['f'] = filters;
     if (Object.keys(quick).length) encoded['q'] = quick;
   }
-  const columnFilter = diff(state.columnFilter, defaults.columnFilter);
+  const columnFilter = diff(state.columnFilter ?? {}, defaults?.columnFilter ?? {});
   if (columnFilter) encoded['c'] = columnFilter;
-  const columnOperator = diff(state.columnOperator, defaults.columnOperator);
+  const columnOperator = diff(state.columnOperator ?? {}, defaults?.columnOperator ?? {});
   if (columnOperator) encoded['o'] = columnOperator;
-  const externalFilter = diff(state.externalFilter, defaults.externalFilter);
+  const externalFilter = diff(state.externalFilter ?? {}, defaults?.externalFilter ?? {});
   if (externalFilter) encoded['e'] = externalFilter;
-  if (state.sort.active && state.sort.direction) encoded['s'] = [state.sort.active, state.sort.direction];
-  if (context.pageIndex && state.pageIndex > 0) encoded['p'] = state.pageIndex + 1;
-  if (state.pageSize !== defaults.pageSize) encoded['z'] = state.pageSize;
+  if (state.sort?.active && state.sort.direction) encoded['s'] = [state.sort.active, state.sort.direction];
+  if (context?.pageIndex && state.pageIndex !== undefined && state.pageIndex > 0) encoded['p'] = state.pageIndex + 1;
+  if (state.pageSize !== undefined && state.pageSize !== defaults?.pageSize) encoded['z'] = state.pageSize;
   return Object.keys(encoded).length ? JSON.stringify(encoded) : null;
 };
+
+/** Builds Router query parameters for a destination sd-table with syncQueryParams and the same autoId. */
+export function sdTableQueryParams(
+  autoId: string,
+  state: {
+    quickSearch?: string;
+    columnFilter?: Record<string, unknown>;
+    columnOperator?: Record<string, Operator>;
+    externalFilter?: Record<string, unknown>;
+    sort?: { field: string; direction: 'asc' | 'desc' } | null;
+    pageSize?: number;
+  } = {}
+): Params {
+  const encoded = serializeTableQueryState({
+    quickSearch: state.quickSearch ? { term: state.quickSearch, filters: {} } : undefined,
+    columnFilter: state.columnFilter,
+    columnOperator: state.columnOperator,
+    externalFilter: state.externalFilter,
+    sort: state.sort ? { active: state.sort.field, direction: state.sort.direction } : undefined,
+    pageSize: state.pageSize,
+  });
+  return autoId && encoded ? { [`table-${autoId}`]: encoded } : {};
+}
 
 const isPrimitive = (value: unknown): boolean =>
   value === null || value instanceof Date || ['string', 'number', 'boolean'].includes(typeof value);

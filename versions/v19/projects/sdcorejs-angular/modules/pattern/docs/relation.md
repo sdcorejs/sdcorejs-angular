@@ -38,9 +38,10 @@ Service sở hữu cache và chia sẻ request theo ID; lỗi tra cứu không �
 import { HttpParams } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { shareReplay, tap, type Observable } from 'rxjs';
-import type { Filter, PagingRes } from '@sdcorejs/utils/models';
+import type { Filter, PagingReq, PagingRes } from '@sdcorejs/utils/models';
 import { BaseApiService } from '../../../services/base-api.service';
 import type {
+  CustomerActivityDto,
   CustomerCounts,
   CustomerDebtDto,
   CustomerDocumentDto,
@@ -49,6 +50,7 @@ import type {
   CustomerListRes,
   CustomerOrderDto,
   CustomerSaveReq,
+  CustomerSummaryDto,
 } from './customer.model';
 
 @Injectable()
@@ -97,16 +99,29 @@ export class CustomerService extends BaseApiService {
     return this.http.delete<void>(this.apiUrl('customers', id)).pipe(tap(() => this.#changed(id)));
   }
 
-  orders(id: string): Observable<PagingRes<CustomerOrderDto>> {
-    return this.http.get<PagingRes<CustomerOrderDto>>(this.apiUrl('customers', id, 'orders'));
+  summary(id: string): Observable<CustomerSummaryDto> {
+    return this.http.get<CustomerSummaryDto>(this.apiUrl('customers', id, 'summary'));
   }
 
-  debts(id: string): Observable<PagingRes<CustomerDebtDto>> {
-    return this.http.get<PagingRes<CustomerDebtDto>>(this.apiUrl('customers', id, 'debts'));
+  orders(id: string, query?: number | PagingReq<CustomerOrderDto>): Observable<PagingRes<CustomerOrderDto>> {
+    return this.#relation(id, 'orders', query);
   }
 
-  documents(id: string): Observable<PagingRes<CustomerDocumentDto>> {
-    return this.http.get<PagingRes<CustomerDocumentDto>>(this.apiUrl('customers', id, 'documents'));
+  debts(id: string, query?: number | PagingReq<CustomerDebtDto>): Observable<PagingRes<CustomerDebtDto>> {
+    return this.#relation(id, 'debts', query);
+  }
+
+  documents(id: string, query?: number | PagingReq<CustomerDocumentDto>): Observable<PagingRes<CustomerDocumentDto>> {
+    return this.#relation(id, 'documents', query);
+  }
+
+  activities(id: string, query?: number | PagingReq<CustomerActivityDto>): Observable<PagingRes<CustomerActivityDto>> {
+    return this.#relation(id, 'activities', query);
+  }
+
+  #relation<T>(id: string, relation: string, query?: number | PagingReq<T>): Observable<PagingRes<T>> {
+    const params = typeof query === 'number' ? new HttpParams().set('limit', query) : this.buildPagingReq(query ?? {});
+    return this.http.get<PagingRes<T>>(this.apiUrl('customers', id, relation), { params });
   }
 
   #changed(id?: string): void {

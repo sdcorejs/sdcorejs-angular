@@ -1,0 +1,67 @@
+@let customer = entity();
+@let totals = metrics();
+<sd-page-detail
+  width="wide"
+  [title]="'Hồ sơ khách hàng #' + customer.code"
+  [description]="customer.name + ' · ' + typeName()"
+  [badges]="badges()"
+  [backLink]="['../..']">
+  <sd-button
+    headerRight
+    *sdPermission="'PATTERN_CUSTOMER_U_UPDATE'"
+    title="Cập nhật khách hàng"
+    prefixIcon="edit"
+    type="fill"
+    color="primary"
+    autoId="customer-profile-update"
+    (click)="updating.set(true)" />
+  <sd-tab-group sdSubheader [selectedIndex]="tabIndex()" (selectedIndexChange)="selectTab($event)">
+    @for (tab of tabs; track tab.key) {
+      @let overdue = tab.key === 'debts' ? totals?.overdueCount : 0;
+      <sd-tab
+        [label]="tab.label"
+        [badge]="tab.key === 'orders' ? totals?.orderCount : tab.key === 'documents' ? totals?.documentCount : overdue || null"
+        [badgeColor]="overdue ? 'error' : null"
+        [ariaLabel]="overdue ? 'Công nợ, ' + overdue + ' hoá đơn quá hạn' : undefined" />
+    }
+  </sd-tab-group>
+  <!-- A table caches page, sorting and filters for this customer only. -->
+  @for (record of [customer]; track record.id) {
+    <div>
+      @for (tab of tabs; track tab.key) {
+        @if (opened().has(tab.key)) {
+          <div [hidden]="activeTab() !== tab.key" [attr.data-customer-tab]="tab.key">
+            @switch (tab.key) {
+              @case ('overview') {
+                <customer-overview
+                  [customerId]="record.id"
+                  [summary]="totals"
+                  [loading]="summary.isLoading()"
+                  [failed]="!!summary.error()"
+                  (retry)="summary.reload()" />
+              }
+              @case ('orders') {
+                <orders-view [customerId]="record.id" />
+              }
+              @case ('debts') {
+                <debts-view [customerId]="record.id" />
+              }
+              @case ('documents') {
+                <documents-view [customerId]="record.id" />
+              }
+              @case ('activity') {
+                <activity-view [customerId]="record.id" />
+              }
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+  @if (activeTab() === 'overview') {
+    <overview-aside sdAside [customer]="customer" />
+  }
+</sd-page-detail>
+@if (updating()) {
+  <update-side-drawer [id]="customer.id" (saved)="saved($event)" (closed)="updating.set(false)" />
+}

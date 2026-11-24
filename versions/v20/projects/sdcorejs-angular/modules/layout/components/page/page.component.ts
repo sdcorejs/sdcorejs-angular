@@ -1,3 +1,4 @@
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import {
   afterNextRender,
   booleanAttribute,
@@ -68,6 +69,7 @@ export class SdPageComponent implements SdSectionRegistry {
   readonly #zone = inject(NgZone);
   readonly #destroyRef = inject(DestroyRef);
   readonly #injector = inject(Injector);
+  readonly #hashRouting = inject(LocationStrategy, { optional: true }) instanceof HashLocationStrategy;
   readonly #defaultWidth = SD_PAGE_DEFAULT_WIDTH[(this.el.nativeElement as HTMLElement).tagName.toLowerCase()] ?? 'full';
 
   title = input<string>('', { alias: 'title' });
@@ -104,6 +106,10 @@ export class SdPageComponent implements SdSectionRegistry {
   #clickTarget: HTMLElement | null = null;
   #clickScrollTimer: ReturnType<typeof setTimeout> | undefined;
   #tocResize: ResizeObserver | null = null;
+  // Keep the deep link aligned as placeholder sections are replaced and data above it expands.
+  // An empty string releases the anchor when the reader scrolls or selects another entry.
+  #pendingFragment: string | undefined;
+  #fragmentScrollTop = 0;
 
   // why: fallback của slot headerLeft chỉ render khi không có headerLeft/sdHeaderLeft, nên vắng nó nghĩa là
   // vùng trái đã bị thay và backLink không có chỗ hiện.
@@ -131,9 +137,16 @@ export class SdPageComponent implements SdSectionRegistry {
       );
     });
 
+    // Restoring on the render after the list changes accounts for the width taken by the TOC itself.
+    effect(() => {
+      const items = this.tocItems();
+      if (items.length) afterNextRender(() => this.#restoreFragment(items), { injector: this.#injector });
+    });
+
     afterNextRender(() => {
       const wrapper = this.wrapper().nativeElement;
       const onScroll = (): void => {
+        if (this.#pendingFragment && wrapper.scrollTop !== this.#fragmentScrollTop) this.#releaseFragment();
         if (this.#clickTarget) this.#armClickScrollEnd();
         this.#syncActiveToc();
       };
@@ -186,11 +199,49 @@ export class SdPageComponent implements SdSectionRegistry {
   protected scrollToSection(index: number): void {
     const item = this.tocItems()[index];
     if (!item) return;
+    this.#releaseFragment();
     this.activeTocIndex.set(index);
     this.#clickTarget = item.el;
     this.#armClickScrollEnd();
     const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    item.el.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    this.#scrollWithinPage(item.el, reduceMotion ? 'instant' : 'smooth');
+    if (item.el.id) {
+      const routeHash = this.#hashRouting ? location.hash.split('#', 2).join('#') || '#/' : '';
+      const url = new URL(location.href);
+      url.hash = routeHash + '#' + encodeURIComponent(item.el.id);
+      history.replaceState(history.state, '', url);
+    }
+  }
+
+  #scrollWithinPage(section: HTMLElement, behavior: ScrollBehavior): void {
+    const wrapper = this.wrapper().nativeElement;
+    const top = wrapper.scrollTop + section.getBoundingClientRect().top - wrapper.getBoundingClientRect().top - wrapper.clientTop;
+    wrapper.scrollTo({ top, behavior });
+  }
+
+  #releaseFragment(): void {
+    this.#pendingFragment = '';
+    this.wrapper().nativeElement.classList.remove('c-page-wrapper--fragment');
+  }
+
+  #restoreFragment(items: readonly SdPageTocItem[]): void {
+    if (this.#pendingFragment === undefined) {
+      // HashLocationStrategy keeps the route in the first hash and the section id in the second.
+      const hash = location.hash.slice(1);
+      const fragment = this.#hashRouting ? (hash.split('#')[1] ?? '') : hash;
+      try {
+        this.#pendingFragment = decodeURIComponent(fragment);
+      } catch {
+        this.#pendingFragment = '';
+      }
+    }
+    if (!this.#pendingFragment) return;
+    const target = items.find(item => item.el.id === this.#pendingFragment);
+    if (!target) return;
+    const wrapper = this.wrapper().nativeElement;
+    wrapper.classList.add('c-page-wrapper--fragment');
+    this.#scrollWithinPage(target.el, 'instant');
+    this.#fragmentScrollTop = wrapper.scrollTop;
   }
 
   /** Thêm một section ngoài cùng của thân trang vào mục lục (gọi bởi `sd-section`). */
@@ -213,7 +264,13 @@ export class SdPageComponent implements SdSectionRegistry {
     this.#tocResize?.disconnect();
     const items = this.tocItems();
     if (!items.length || typeof ResizeObserver === 'undefined') return;
-    this.#tocResize ??= this.#zone.runOutsideAngular(() => new ResizeObserver(() => this.#syncActiveToc()));
+    this.#tocResize ??= this.#zone.runOutsideAngular(
+      () =>
+        new ResizeObserver(() => {
+          if (this.#pendingFragment) this.#restoreFragment(this.tocItems());
+          this.#syncActiveToc();
+        })
+    );
     this.#tocResize.observe(this.wrapper().nativeElement);
     for (const item of items) this.#tocResize.observe(item.el);
   }

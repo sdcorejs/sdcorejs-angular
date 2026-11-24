@@ -47,6 +47,23 @@
   margin-left: 2px;
 }
 
+@each $color, $foreground, $background in
+  (primary, #005cbb, #d7e3ff),
+  (secondary, #5c6270, #ebecee),
+  (info, #006a6a, #d4f7f6),
+  (success, #2e7d32, #d8f0d3),
+  (warning, #a66300, #ffddb0),
+  (error, #ba1a1a, #ffdad6) {
+  .sd-tab__badge[data-badge-color='#{$color}'] {
+    --sd-tab-badge-bg: var(--sd-#{$color}-light, #{$background});
+    --sd-tab-badge-color: var(--sd-#{$color}, #{$foreground});
+  }
+}
+
+@media (forced-colors: active) {
+  .sd-tab__badge { border: 1px solid CanvasText; }
+}
+
 // why: đổi từ <sd-icon> sang <button type="button"> để bàn phím đóng được tab → reset chrome mặc
 // định của button (nền/viền/padding) giữ nguyên diện mạo cũ, và thêm focus ring.
 .sd-tab__close {
@@ -183,6 +200,10 @@
   .sd-tab__label .sd-tab__badge {
     background: color-mix(in srgb, var(--sd-tab-label-active-color) 12%, var(--sd-tab-badge-bg));
     color: inherit;
+  }
+  .sd-tab__label .sd-tab__badge[data-badge-color] {
+    background: color-mix(in srgb, var(--sd-tab-badge-color) 12%, var(--sd-tab-badge-bg));
+    color: var(--sd-tab-badge-color);
   }
 
   // Restore badge appearance for non-active tab.

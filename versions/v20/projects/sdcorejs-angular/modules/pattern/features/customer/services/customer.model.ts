@@ -1,5 +1,6 @@
 import type { SdBadgeData } from '@sdcorejs/angular/components/badge';
 import type { PagingReq, PagingRes } from '@sdcorejs/utils/models';
+import type { OrderStatus } from '../../order/services/order.model';
 
 export type CustomerType = 'individual' | 'business';
 export type CustomerTier = 'standard' | 'vip';
@@ -59,15 +60,18 @@ export interface CustomerOrderDto {
   readonly code: string;
   readonly createdAt: string;
   readonly total: number;
-  readonly status: string;
+  readonly status: OrderStatus;
 }
 
 /** Dòng của tab Công nợ. */
 export interface CustomerDebtDto {
   readonly id: string;
+  readonly orderId: string;
   readonly orderCode: string;
   readonly dueDate: string;
   readonly amount: number;
+  readonly status: 'OVERDUE' | 'CURRENT';
+  readonly overdueDays: number;
 }
 
 /** Dòng của tab Tài liệu. */
@@ -75,6 +79,27 @@ export interface CustomerDocumentDto {
   readonly id: string;
   readonly name: string;
   readonly size: number;
+  readonly uploadedAt: string;
+  /** PDF rendition for the embedded viewer, including documents originally uploaded in Office formats. */
+  readonly previewUrl: string;
+}
+
+export interface CustomerActivityDto {
+  readonly id: string;
+  readonly title: string;
+  readonly category: string;
+  readonly date: string;
+}
+
+export interface CustomerSummaryDto {
+  readonly debtTotal: number;
+  readonly overdueTotal: number;
+  readonly overdueCount: number;
+  readonly revenue12m: number;
+  readonly orderCount: number;
+  readonly documentCount: number;
+  readonly lastOrder: { readonly id: string; readonly code: string; readonly date: string; readonly status: OrderStatus } | null;
+  readonly owner: { readonly name: string; readonly team: string };
 }
 
 export function customerStatusBadge(status: CustomerStatus): SdBadgeData {

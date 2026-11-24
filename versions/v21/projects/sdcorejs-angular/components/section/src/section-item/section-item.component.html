@@ -1,4 +1,6 @@
 <div class="c-item">
-  <div class="c-item-label sd-view-label T14R" [style.width]="labelWidth()"><ng-content select="[itemLeft]">{{ label() }}</ng-content></div>
+  <div class="c-item-label sd-view-label T14R" [style.width]="labelWidth() === 'auto' ? null : labelWidth()">
+    <ng-content select="[itemLeft]">{{ label() }}</ng-content>
+  </div>
   <div class="c-item-content"><ng-content></ng-content></div>
 </div>
