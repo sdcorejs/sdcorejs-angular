@@ -48,15 +48,15 @@
 }
 
 @each $color, $foreground, $background in
-  (primary, #005cbb, #d7e3ff),
-  (secondary, #5c6270, #ebecee),
-  (info, #006a6a, #d4f7f6),
-  (success, #2e7d32, #d8f0d3),
-  (warning, #a66300, #ffddb0),
-  (error, #ba1a1a, #ffdad6) {
+  (primary, var(--sd-primary, #005cbb), var(--sd-primary-light, #d7e3ff)),
+  (secondary, var(--sd-secondary, #5c6270), var(--sd-secondary-light, #ebecee)),
+  (info, var(--sd-info, #006a6a), var(--sd-info-light, #d4f7f6)),
+  (success, var(--sd-success, #2e7d32), var(--sd-success-light, #d8f0d3)),
+  (warning, var(--sd-warning, #a66300), var(--sd-warning-light, #ffddb0)),
+  (error, var(--sd-error, #ba1a1a), var(--sd-error-light, #ffdad6)) {
   .sd-tab__badge[data-badge-color='#{$color}'] {
-    --sd-tab-badge-bg: var(--sd-#{$color}-light, #{$background});
-    --sd-tab-badge-color: var(--sd-#{$color}, #{$foreground});
+    --sd-tab-badge-bg: #{$background};
+    --sd-tab-badge-color: #{$foreground};
   }
 }
 
