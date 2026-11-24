@@ -36,3 +36,5 @@ Lưới chọn năm [sáng](1280-light-date-years.png) và [tối](1280-dark-dat
 - Windows, Node 24.22.1, Angular 19, Chrome Headless 157. **694/694** test liên quan đạt trong cùng một lượt, seed `520990`. Coverage của lượt chạy chọn lọc đạt 81,90% statements, 69,04% branches, 81,66% functions và 83,95% lines.
 - **40/40** test Playwright chọn lọc đạt trên bản build Showcase, qua hai múi giờ Asia/Bangkok và UTC. Đã kiểm tra khung, kích thước, bàn phím, nhập tay, ngày chưa hoàn chỉnh, khoảng ngày, mở lại, high contrast và reduced motion. [Test panel](../../../showcase/e2e/forms/date-panels.e2e.ts) · [Test nhập tay](../../../showcase/e2e/forms/date-typing.e2e.ts).
 - Lint và build thư viện v19, build Showcase, `test:scripts`, `check:scss-hex` và `check:sync` đạt. DP-11 quét toàn bộ source của forms. CI theo từng phiên bản nằm trong mục Checks của PR.
+- Kiểm tra bổ sung trên cùng bản build: 14/14 test múi giờ qua hai cấu hình trình duyệt, gồm ngày 20/05/1960, khoảng ngày 25 giờ năm 1975 và thao tác Bây giờ. [Test múi giờ](../../../showcase/e2e/time-zone.e2e.ts).
+- Trên các workspace Angular 20, 21 và 22, bộ hồi quy chọn lọc của các control đạt 384/384 ở mỗi bản.
