@@ -147,9 +147,12 @@ export class CustomerRelationComponent {
   );
 
   readonly failed = computed(() => !!this.#page.error());
-  protected readonly state = computed(() =>
-    this.failed() ? 'error' : this.#page.isLoading() || !this.#page.hasValue() ? 'loading' : 'ready'
-  );
+  protected readonly state = computed(() => {
+    // Angular keeps the previous error during a reload. Printing waits for the new response.
+    if (this.#page.isLoading()) return 'loading';
+    if (this.failed()) return 'error';
+    return this.#page.hasValue() ? 'ready' : 'loading';
+  });
   readonly settled = computed(() => this.state() !== 'loading');
   protected readonly page = computed(() => (this.state() === 'ready' ? this.#page.value() : undefined));
   protected readonly overdue = computed(() => (this.kind() === 'debts' ? (this.overdueCount() ?? 0) : 0));
