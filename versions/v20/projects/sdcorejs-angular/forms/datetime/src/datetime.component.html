@@ -147,21 +147,13 @@
       </button>
     </mat-form-field>
 
-    <sd-datetime-picker
+    <sd-datetime-panel-picker
       [showSeconds]="showSeconds()"
+      [touchUi]="isMobileOrTablet"
       [disabled]="formControl.disabled"
       [minDate]="_resolvedMin"
       [maxDate]="_resolvedMax"
       [startAt]="_viewedDate"
-      (applied)="onPickerConfirm($event)">
-      <sd-datetime-picker-actions>
-        <button mat-button type="button" sdDatetimePickerNow>
-          <sd-icon name="schedule"></sd-icon>
-          <span>{{ 'core.form.datetime.now' | sdTranslate }}</span>
-        </button>
-        <button mat-button type="button" sdDatetimePickerCancel>{{ 'core.common.cancel' | sdTranslate }}</button>
-        <button mat-flat-button type="button" sdDatetimePickerApply>{{ 'core.form.datetime.confirm' | sdTranslate }}</button>
-      </sd-datetime-picker-actions>
-    </sd-datetime-picker>
+      (applied)="onPickerConfirm($event)" />
   </div>
 }

@@ -1,5 +1,21 @@
-// Thanh tháng của popup sd-chip-calendar (thiết kế 3 · 2): cao 40px, cách khối đếm 4px; nút 32×32 bo 8px, nhãn 14px / 600.
-.sd-chip-calendar-header {
+.sd-calendar-header__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+  color: var(--sd-text);
+  font-size: var(--sd-font-size-13, 13px);
+  font-weight: var(--sd-font-weight-semibold, 600);
+}
+
+.sd-calendar-header__count {
+  color: var(--sd-text-secondary);
+  font-size: var(--sd-font-size-12, 12px);
+  font-weight: normal;
+}
+
+.sd-calendar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7,8 +23,8 @@
   margin-top: 4px;
 }
 
-.sd-chip-calendar-header__nav,
-.sd-chip-calendar-header__period {
+.sd-calendar-header__nav,
+.sd-calendar-header__period {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -34,15 +50,16 @@
   }
 }
 
-.sd-chip-calendar-header__nav {
+.sd-calendar-header__nav {
   width: 32px;
   height: 32px;
   padding: 0;
   color: var(--sd-text-secondary);
 }
 
-.sd-chip-calendar-header__period {
+.sd-calendar-header__period {
   height: 32px;
+  gap: 2px;
   padding: 0 8px;
   color: var(--sd-text);
   font-size: var(--sd-font-size-14, 14px);
@@ -62,8 +79,8 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .sd-chip-calendar-header__nav,
-  .sd-chip-calendar-header__period {
+  .sd-calendar-header__nav,
+  .sd-calendar-header__period {
     transition: background-color var(--sd-duration-fast, 120ms) ease;
   }
 }

@@ -163,7 +163,12 @@
         <sd-icon name="today"></sd-icon>
       </button>
 
-      <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
+      <mat-date-range-picker
+        #picker
+        panelClass="sd-date-panel"
+        [calendarHeaderComponent]="calendarHeader"
+        [touchUi]="isMobileOrTablet"
+        (closed)="onClosePicker()"></mat-date-range-picker>
     </mat-form-field>
   </div>
 }

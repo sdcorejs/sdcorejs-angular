@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDateRange, SdDateRangeValue } from './date-range.component';
 
 // ---------------------------------------------------------------------------
@@ -117,6 +119,49 @@ describe('SdDateRange', () => {
 
   // -------------------------------------------------------------------------
   describe('creation & rendering', () => {
+    it('DP-05 counts a same-day range as one day', async () => {
+      TestBed.inject(I18nService).setLanguage('en', { reload: false });
+      host.model = { from: '2031/03/15', to: '2031/03/15' };
+      fixture.detectChanges();
+      comp.picker()!.open();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const count = TestBed.inject(OverlayContainer).getContainerElement().querySelector('.sd-calendar-header__count');
+      expect(count?.textContent?.trim()).toBe('1 day');
+    });
+
+    it('DP-05 announces the pending endpoint, closes on completion and summarizes the chosen range on reopen', async () => {
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const settle = async () => {
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+      };
+      const open = async () => {
+        fixture.nativeElement.querySelector('.sd-suffix-btn').click();
+        await settle();
+      };
+      const clickDay = async (day: number) => {
+        Array.from(overlay.querySelectorAll<HTMLButtonElement>('.mat-calendar-body-cell'))
+          .find(button => button.textContent?.trim() === String(day))!
+          .click();
+        await settle();
+      };
+      const summary = () => overlay.querySelector<HTMLElement>('.sd-calendar-header__summary[aria-live="polite"]')!;
+      comp.picker()!.startAt = new Date(2031, 2, 15);
+      await open();
+      expect(summary()?.textContent?.trim()).toBe('');
+      await clickDay(15);
+      expect(summary()?.textContent?.trim()).toBe('Chọn ngày kết thúc');
+      await clickDay(18);
+      expect(overlay.querySelector('mat-calendar')).toBeNull();
+      expect(host.model).toEqual({ from: '2031/03/15', to: '2031/03/18' });
+      await open();
+      expect(summary().textContent).toContain('15/03 – 18/03/2031');
+      expect(summary().textContent).toContain('4 ngày');
+      expect(overlay.querySelector('.mat-calendar-body-in-range')).not.toBeNull();
+    });
+
     it('creates the component', () => {
       expect(comp).toBeTruthy();
     });

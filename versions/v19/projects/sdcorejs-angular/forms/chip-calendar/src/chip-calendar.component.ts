@@ -1,5 +1,5 @@
 import { A11yModule } from '@angular/cdk/a11y';
-import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule, formatDate } from '@angular/common';
 import {
   AfterViewInit,
@@ -44,7 +44,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdView } from '@sdcorejs/angular/components/view';
-import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdLabelDefDirective, SdViewDefDirective, ɵSdCalendarHeader } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   SdFormControl,
@@ -64,12 +64,12 @@ import {
 import type { SdLabelPlacement } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
+import { ɵsdPanelPositions } from '@sdcorejs/angular/utilities';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { ɵSdChipCalendarHeader } from './chip-calendar-header.component';
 
 /** One date of the model: canonical `yyyy/MM/dd`, ISO / RFC-1123 string, `Date` or timestamp (read like `<sd-date>`). */
 export type SdChipCalendarValue = string | number | Date;
@@ -162,7 +162,7 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   // why: query signal không đặt được trên field ES private (#).
   private readonly field = viewChild(MatFormField);
   /** Header of the popup calendar (handoff 3 · 2). */
-  readonly calendarHeader = ɵSdChipCalendarHeader;
+  readonly calendarHeader = ɵSdCalendarHeader;
   readonly panelId = `sd-chip-calendar-panel-${Utilities.generateUuid()}`;
   /** Whether the popup is open. */
   readonly isOpen = signal(false);
@@ -173,13 +173,7 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
    * `MatFormField` is a view query, and read too early the origin falls back to the whole field with its subscript row.
    */
   readonly overlayOrigin = signal<ElementRef<HTMLElement> | undefined>(undefined);
-  // why: cách khung ô 6px như panel sd-select / menu operator / badge picker (quyết định 3 của PLAN); lật lên khi thiếu chỗ.
-  readonly positions: ConnectedPosition[] = [
-    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 6 },
-    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -6 },
-    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 6 },
-    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -6 },
-  ];
+  readonly positions = ɵsdPanelPositions('start');
 
   autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
     alias: 'autoId',

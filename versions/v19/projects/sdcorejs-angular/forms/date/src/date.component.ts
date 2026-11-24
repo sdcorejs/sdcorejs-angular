@@ -28,7 +28,7 @@ import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@ang
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
-import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdLabelDefDirective, SdViewDefDirective, ɵSdCalendarHeader } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   provideSdStrictDateFnsAdapter,
@@ -134,6 +134,7 @@ function dateControlToModel(value: Date | null): SdDateModelValue {
   ],
 })
 export class SdDate implements OnDestroy, OnInit {
+  protected readonly calendarHeader = ɵSdCalendarHeader;
   id = `I${Utilities.generateUuid()}`;
   /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
    *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */

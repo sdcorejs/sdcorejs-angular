@@ -20,9 +20,8 @@ import {
   contentChild,
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
-import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
+import { FloatLabelType, MatFormField, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -50,23 +49,14 @@ import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/dat
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdDateTimeService } from '@sdcorejs/angular/services/date-time';
 import { SdDatetimeTimeZoneAdapter } from './datetime-time-zone.adapter';
+import { SdDatetimePanelPicker } from './datetime-panel.component';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import {
-  SD_DATE_FORMATS,
-  SD_NATIVE_DATE_FORMATS,
-  SdDateAdapter,
-  SdDatetimePicker as SdMaterialDatetimePicker,
-  SdDatetimePickerActions,
-  SdDatetimePickerApply,
-  SdDatetimePickerCancel,
-  SdDatetimePickerNow,
-  SdNativeDateAdapter,
-} from '@sdcorejs/angular-material-datetime';
+import { SD_DATE_FORMATS, SD_NATIVE_DATE_FORMATS, SdDateAdapter, SdNativeDateAdapter } from '@sdcorejs/angular-material-datetime';
 
 type SdDatetimeModelValue = string | number | Date | undefined | null;
 
@@ -177,18 +167,13 @@ function isFinishedDatetimeDisplay(value: string): boolean {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
     MatInputModule,
     MatTooltipModule,
     MatFormFieldModule,
     SdLabel,
     SdView,
     SdTranslatePipe,
-    SdMaterialDatetimePicker,
-    SdDatetimePickerActions,
-    SdDatetimePickerApply,
-    SdDatetimePickerCancel,
-    SdDatetimePickerNow,
+    SdDatetimePanelPicker,
   ],
 })
 export class SdDatetime implements OnDestroy, OnInit {
@@ -204,7 +189,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   // 1. SIGNAL QUERIES
   // ==========================================
   inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
-  private readonly dateTimePicker = viewChild<SdMaterialDatetimePicker<Date>>(SdMaterialDatetimePicker);
+  private readonly dateTimePicker = viewChild(SdDatetimePanelPicker);
+  private readonly formField = viewChild(MatFormField);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -523,7 +509,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     if (this.formControl.disabled || this.pickerOpened()) return;
     const picker = this.dateTimePicker();
     if (!picker) return;
-    picker.setAnchor(this.inputRef()?.nativeElement ?? (this.elementRef.nativeElement as HTMLElement));
+    picker.setAnchor(this.formField()?.getConnectedOverlayOrigin().nativeElement ?? this.elementRef.nativeElement);
     // why: open() rebuilds the draft from committed state, so seed that state before opening.
     picker.setValue(this.#currentValueAsDate() ?? (this.#zoned ? this.#dateTime.now() : new Date()));
     picker.open();

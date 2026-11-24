@@ -1,10 +1,11 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDatetimePicker } from '@sdcorejs/angular-material-datetime';
+import { LayoutTestTheme } from '../../../testing/layout-theme.spec';
 import { SdDatetime } from './datetime.component';
 
 // ---------------------------------------------------------------------------
@@ -13,23 +14,27 @@ import { SdDatetime } from './datetime.component';
 
 @Component({
   standalone: true,
-  imports: [SdDatetime, FormsModule, ReactiveFormsModule],
-  template: `<sd-datetime
-    [label]="label"
-    [placeholder]="placeholder"
-    [required]="required"
-    [disabled]="disabled"
-    [viewed]="viewed"
-    [clearable]="clearable"
-    [min]="min"
-    [max]="max"
-    [showSeconds]="showSeconds"
-    [model]="model"
-    (modelChange)="model = $event"
-    (sdChange)="onSdChange($event)"
-    (sdFocus)="onSdFocus()"></sd-datetime>`,
+  imports: [SdDatetime, FormsModule, ReactiveFormsModule, LayoutTestTheme],
+  template: `@if (withTheme) {
+      <sd-layout-test-theme />
+    }
+    <sd-datetime
+      [label]="label"
+      [placeholder]="placeholder"
+      [required]="required"
+      [disabled]="disabled"
+      [viewed]="viewed"
+      [clearable]="clearable"
+      [min]="min"
+      [max]="max"
+      [showSeconds]="showSeconds"
+      [model]="model"
+      (modelChange)="model = $event"
+      (sdChange)="onSdChange($event)"
+      (sdFocus)="onSdFocus()"></sd-datetime>`,
 })
 class HostComponent {
+  withTheme = false;
   label?: string;
   placeholder?: string;
   required = false;
@@ -575,17 +580,78 @@ describe('SdDatetime', () => {
       expect(packagePicker()).toBeTruthy();
     });
 
-    it('renders the package calendar, time spinner, and localized projected actions', () => {
+    it('DP-06 renders a shared calendar header, a labeled time row and three localized sd-button actions', () => {
       comp.open();
       fixture.detectChanges();
 
-      const panel = document.querySelector<HTMLElement>('.sd-datetime-picker__panel');
+      const panel = document.querySelector<HTMLElement>('.sd-datetime-picker__panel.sd-date-panel');
       expect(panel).not.toBeNull();
-      expect(panel!.querySelector('mat-calendar')).not.toBeNull();
-      expect(panel!.querySelector('sd-time-spinner')).not.toBeNull();
-      expect(panel!.querySelector('button[sdDatetimePickerNow]')?.textContent).toContain('Bây giờ');
-      expect(panel!.querySelector('button[sdDatetimePickerCancel]')?.textContent).toContain('Hủy');
-      expect(panel!.querySelector('button[sdDatetimePickerApply]')?.textContent).toContain('Xác nhận');
+      expect(panel?.querySelector('mat-calendar sd-calendar-header button.sd-calendar-header__period')).toBeTruthy();
+      expect(panel?.querySelector('.sd-datetime-panel__time-label')?.textContent).toContain('Giờ');
+      expect(panel?.querySelector('.sd-datetime-panel__time-row sd-time-spinner')).toBeTruthy();
+      expect(panel?.querySelector('sd-button[sdDatetimePickerNow] button')?.textContent).toContain('Bây giờ');
+      expect(panel?.querySelector('sd-button[sdDatetimePickerCancel] button')?.textContent).toContain('Hủy');
+      expect(panel?.querySelector('sd-button[sdDatetimePickerApply] button')?.textContent).toContain('Xác nhận');
+      TestBed.inject(I18nService).setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(panel?.querySelector('.sd-datetime-panel__time-label')?.textContent).toContain('Time');
+    });
+
+    it('DP-06 uses a 296px themed panel, 6px connected offset and 48 × 36 time inputs', async () => {
+      host.withTheme = true;
+      Object.assign(fixture.nativeElement.style, { position: 'fixed', top: '20px', left: '20px', width: '240px' });
+      fixture.detectChanges();
+      comp.open();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const panel = document.querySelector<HTMLElement>('.sd-datetime-picker__panel')!;
+      await Promise.all(panel.getAnimations().map(animation => animation.finished));
+
+      const pane = panel.closest<HTMLElement>('.cdk-overlay-pane')!;
+      expect(Math.round(panel.getBoundingClientRect().width)).toBe(296);
+      // CDK can push the overlay into a short viewport. The connected offset and
+      // the margin on the facing edge determine the field gap where space allows.
+      const offset = new DOMMatrix(getComputedStyle(pane).transform).m42;
+      const margin = offset > 0 ? getComputedStyle(panel).marginTop : getComputedStyle(panel).marginBottom;
+      expect(Math.abs(offset) + parseFloat(margin)).toBe(6);
+      const spinner = panel.querySelector<HTMLInputElement>('[role="spinbutton"]')!;
+      expect(getComputedStyle(spinner).width).toBe('48px');
+      expect(getComputedStyle(spinner).height).toBe('36px');
+      expect(getComputedStyle(spinner).borderRadius).toBe('8px');
+      spinner.focus();
+      expect(getComputedStyle(spinner).boxShadow).not.toBe('none');
+    });
+
+    it('DP-06 disables Confirm while a draft time falls outside the date-time bounds', () => {
+      host.model = '2026/05/15 09:30:00';
+      host.max = new Date(2026, 4, 15, 10);
+      fixture.detectChanges();
+      comp.open();
+      const picker = packagePicker();
+      picker.selectTimePart(new Date(2026, 4, 15, 10, 1));
+      fixture.detectChanges();
+      const apply = document.querySelector<HTMLButtonElement>('sd-button[sdDatetimePickerApply] button')!;
+      expect(apply.disabled).toBeTrue();
+      apply.click();
+      expect(host.changes).toEqual([]);
+
+      picker.selectTimePart(new Date(2026, 4, 15, 10, 0));
+      fixture.detectChanges();
+      expect(apply.disabled).toBeFalse();
+      apply.click();
+      expect(host.changes).toEqual(['2026/05/15 10:00:00']);
+    });
+
+    it('DP-09 opens the touch dialog with the same calendar and time row', () => {
+      comp.isMobileOrTablet = true;
+      fixture.debugElement.query(By.directive(SdDatetime)).injector.get(ChangeDetectorRef).detectChanges();
+      comp.open();
+      fixture.detectChanges();
+
+      const dialog = document.querySelector('.sd-datetime-picker__overlay--touch [role="dialog"].sd-date-panel');
+      expect(dialog?.getAttribute('aria-modal')).toBe('true');
+      expect(dialog?.querySelector('mat-calendar')).toBeTruthy();
+      expect(dialog?.querySelector('sd-time-spinner')).toBeTruthy();
     });
 
     it('forwards showSeconds and min/max bounds to the package picker', () => {
@@ -619,7 +685,7 @@ describe('SdDatetime', () => {
       comp.open();
       picker.select(firstValue);
       fixture.detectChanges();
-      clickPickerAction('button[sdDatetimePickerApply]');
+      clickPickerAction('sd-button[sdDatetimePickerApply] button');
 
       host.model = '2026/06/20 16:45:00';
       fixture.detectChanges();
@@ -637,7 +703,7 @@ describe('SdDatetime', () => {
       comp.open();
       picker.select(new Date(2026, 4, 16, 10, 30, 0));
       fixture.detectChanges();
-      clickPickerAction('button[sdDatetimePickerCancel]');
+      clickPickerAction('sd-button[sdDatetimePickerCancel] button');
 
       expect(comp.pickerOpened()).toBe(false);
       expect(host.model).toBe('2026/05/15 09:00:00');
@@ -650,7 +716,7 @@ describe('SdDatetime', () => {
       fixture.detectChanges();
       const beforeClick = Date.now();
 
-      clickPickerAction('button[sdDatetimePickerNow]');
+      clickPickerAction('sd-button[sdDatetimePickerNow] button');
 
       const selected = picker.selected();
       const afterClick = Date.now();
@@ -669,7 +735,7 @@ describe('SdDatetime', () => {
       comp.open();
       picker.select(new Date(2026, 4, 15, 14, 30, 45));
       fixture.detectChanges();
-      clickPickerAction('button[sdDatetimePickerApply]');
+      clickPickerAction('sd-button[sdDatetimePickerApply] button');
 
       expect(comp.pickerOpened()).toBe(false);
       expect(host.model).toBe('2026/05/15 14:30:45');
@@ -682,7 +748,7 @@ describe('SdDatetime', () => {
       comp.open();
       picker.select(new Date(2026, 4, 15, 14, 30, 45));
       fixture.detectChanges();
-      clickPickerAction('button[sdDatetimePickerApply]');
+      clickPickerAction('sd-button[sdDatetimePickerApply] button');
 
       expect(host.model).toBe('2026/05/15 14:30:00');
       expect(host.changes).toEqual(['2026/05/15 14:30:00']);

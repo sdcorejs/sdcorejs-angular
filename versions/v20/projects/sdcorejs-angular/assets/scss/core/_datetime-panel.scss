@@ -1,0 +1,52 @@
+@use 'date-panel' as date;
+
+.sd-date-panel.sd-datetime-picker__panel {
+  // The package connects at ±4px. Two pixels of margin on both ends also
+  // work when the connected strategy flips the panel above its field.
+  margin-block: 2px;
+  max-height: calc(100dvh - 20px);
+  overflow: auto;
+
+  mat-calendar, .mat-calendar-content {
+    padding: 0;
+  }
+
+  .sd-datetime-panel__time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 8px 4px;
+    border-top: 1px solid var(--sd-select-panel-divider, var(--sd-border));
+  }
+
+  .sd-datetime-panel__time-label {
+    color: var(--sd-text-secondary);
+    font-size: var(--sd-font-size-13, 13px);
+  }
+
+  sd-time-spinner {
+    padding: 0;
+    border: 0;
+  }
+
+  .sd-datetime-panel__footer {
+    @include date.footer;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    sd-button:first-child {
+      margin-inline-end: auto;
+    }
+  }
+}
+
+.sd-datetime-picker__overlay--touch .sd-date-panel.sd-datetime-picker__panel {
+  width: auto;
+  max-width: calc(100vw - 16px);
+  margin: 0;
+
+  mat-calendar {
+    width: min(280px, calc(100vw - 34px));
+  }
+}

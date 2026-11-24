@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup } from '@angular/forms';
@@ -52,6 +53,18 @@ describe('SdDateRange with ISdCoreConfiguration.timeZone', () => {
   const fields = (value: Date | null) => value && [value.getFullYear(), value.getMonth() + 1, value.getDate()];
 
   afterEach(() => jasmine.clock().uninstall());
+
+  it('DP-05 counts the calendar days shown by the picker across the spring DST transition', async () => {
+    await setup('America/New_York', 'ISOString');
+    host.model = { from: '2026-03-07T05:00:00Z', to: '2026-03-10T01:00:00Z' }; // March 7–9 in New York.
+    fixture.detectChanges();
+    host.range.picker()!.open();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const summary = TestBed.inject(OverlayContainer).getContainerElement().querySelector('.sd-calendar-header__summary');
+    expect(summary?.textContent).toContain('07/03 – 09/03/2026');
+    expect(summary?.querySelector('.sd-calendar-header__count')?.textContent?.trim()).toMatch(/^3\D/);
+  });
 
   it('serializes each end as 00:00 in the zone with transform', async () => {
     await setup(VN);

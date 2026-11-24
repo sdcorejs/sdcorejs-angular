@@ -229,6 +229,9 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.invalid-max': '終了日が無効です（上限を超えています）',
   'core.form.date-range.from': '開始',
   'core.form.date-range.to': '～',
+  'core.form.date-range.pick-end': '終了日を選択',
+  'core.form.date-range.summary-day': '{count}日間',
+  'core.form.date-range.summary-days': '{count}日間',
 
   // ---- Forms: datetime ----
   'core.form.datetime.required': '入力してください',

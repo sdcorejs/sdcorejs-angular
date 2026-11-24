@@ -3,3 +3,4 @@ export * from '@sdcorejs/angular/utilities/models';
 export * from '@sdcorejs/angular/utilities/data-state';
 export * from '@sdcorejs/angular/utilities/read-state';
 export * from '@sdcorejs/angular/utilities/theme';
+export { ɵsdPanelPositions } from './src/panel-positions';

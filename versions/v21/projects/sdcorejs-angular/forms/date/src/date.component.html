@@ -128,7 +128,7 @@
         #input
         [maxLength]="10" />
 
-      <mat-datepicker #picker [touchUi]="isMobileOrTablet"></mat-datepicker>
+      <mat-datepicker #picker panelClass="sd-date-panel" [calendarHeaderComponent]="calendarHeader" [touchUi]="isMobileOrTablet"></mat-datepicker>
 
       @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>

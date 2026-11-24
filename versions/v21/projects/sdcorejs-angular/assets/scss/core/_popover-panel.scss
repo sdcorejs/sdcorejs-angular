@@ -1,29 +1,23 @@
-// Khung panel nổi dạng Action Popover — dùng chung cho panel hành động của sd-button và ba panel của sd-query-bar
-// (field picker, chip popover, bộ lọc đã lưu). Tách nguyên giá trị từ `components/button/src/action-popover.scss`
-// (handoff query bar, mục 2.1): đổi giá trị ở đây là đổi cả hai nơi.
-//
-// Mixin đặt lên phần tử gốc của nội dung panel (nằm trong template của component, nên style của component vẫn áp
-// khi nội dung được gắn vào overlay — không cần `::ng-deep`).
-
-/// Khung: giới hạn kích thước, viền, bo, nền, bóng. Không có padding — panel biểu mẫu tự lo phần đệm.
-@mixin panel {
+/// Theme surface shared by floating controls, calendars, action lists and query bar panels.
+/// List and form popovers also keep the original viewport limits and scroll behaviour.
+@mixin panel($constrained: false) {
   box-sizing: border-box;
-  min-width: min(160px, calc(100vw - 16px));
-  max-width: min(320px, calc(100vw - 16px));
-  max-height: min(360px, calc(100dvh - 16px));
-  overflow: auto;
-  border: 1px solid var(--sd-border, #dde0e5);
-  border-radius: var(--sd-radius-8, 8px);
-  background: var(--sd-surface, var(--sd-white, #fff));
-  color: var(--sd-text, #1a1b1f);
-  box-shadow:
-    0 4px 12px rgb(15 23 42 / 14%),
-    0 1px 3px rgb(15 23 42 / 10%);
+  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
+  border-radius: var(--sd-panel-radius, 10px);
+  background-color: var(--sd-select-panel-bg, var(--sd-surface));
+  box-shadow: var(--sd-shadow-md);
+  color: var(--sd-text);
+  @if $constrained {
+    min-width: min(160px, calc(100vw - 16px));
+    max-width: min(320px, calc(100vw - 16px));
+    max-height: min(360px, calc(100dvh - 16px));
+    overflow: auto;
+  }
 }
 
 /// Khung của panel danh sách (hàng `item`): khung + đệm 4px.
 @mixin panel-list {
-  @include panel;
+  @include panel($constrained: true);
   padding: 4px;
 }
 
@@ -38,7 +32,7 @@
   min-height: 40px;
   padding: 8px 12px;
   border: 0;
-  border-radius: var(--sd-radius-4, 4px);
+  border-radius: var(--sd-radius-6, 6px);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -85,6 +79,6 @@
 
 /// Đường kẻ giữa hai nhóm hàng.
 @mixin divider {
-  border-top: 1px solid var(--sd-border, #dde0e5);
+  border-top: 1px solid var(--sd-select-panel-divider, var(--sd-border));
   margin: 4px 8px;
 }

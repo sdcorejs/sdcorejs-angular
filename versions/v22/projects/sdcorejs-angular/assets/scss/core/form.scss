@@ -1,3 +1,5 @@
+@use './popover-panel' as popover;
+@use './datetime-panel';
 @use './color.scss' as color;
 @use 'sass:map';
 
@@ -362,6 +364,7 @@
 // dọc. Màu option đang chọn đặt trong phạm vi panel, token global ở themes/_material-tokens.scss giữ nguyên.
 .mat-mdc-select-panel.sd-select-panel,
 .mat-mdc-autocomplete-panel.sd-autocomplete-panel {
+  @include popover.panel;
   --mat-option-label-text-size: var(--sd-font-size-14, 14px);
   --mat-option-selected-state-label-text-color: var(--sd-primary-dark);
   --mat-option-selected-state-layer-color: var(--sd-primary-light);
@@ -373,13 +376,6 @@
   // why: Material làm phẳng góc ở phía sát trigger (v19/20 bằng rule `.cdk-overlay-pane:not(...)`, v21+
   // bằng `border-radius: 0 0 4px 4px`) với độ ưu tiên cao hơn class panel, nên cần !important.
   border-radius: var(--sd-panel-radius, 10px) !important;
-  // why: tách longhand — nếu theme thiếu token, chỉ màu rơi về mặc định chứ viền 1px không mất.
-  border-width: 1px;
-  border-style: solid;
-  border-color: color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
-  // Nền panel trắng như thiết kế (góp ý review): token panel sẵn có thay cho surface-container ánh tím của
-  // Material; ô lọc và footer sticky của sd-select cũng dùng token này nên không lộ mảng lệch màu.
-  background-color: var(--sd-select-panel-bg, var(--sd-surface));
   // 4px trên/dưới để option đầu và cuối không sát mép panel; option chỉ thụt ngang.
   padding-top: 4px;
   padding-bottom: 4px;

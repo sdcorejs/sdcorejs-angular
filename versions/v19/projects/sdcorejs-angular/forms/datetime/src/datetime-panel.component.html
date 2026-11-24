@@ -1,0 +1,38 @@
+<ng-template #panel>
+  <div
+    class="sd-date-panel sd-datetime-picker__panel"
+    role="dialog"
+    aria-modal="true"
+    [id]="panelId"
+    [attr.aria-label]="intl.dialogLabel"
+    tabindex="-1"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    cdkFocusInitial
+    (keydown.escape)="onEscape($event)">
+    <mat-calendar
+      [headerComponent]="calendarHeader"
+      [selected]="selected()"
+      [minDate]="minDate()"
+      [maxDate]="maxDate()"
+      [startAt]="startAt()"
+      (selectedChange)="selectDatePart($event)" />
+
+    <div class="sd-datetime-panel__time-row">
+      <span class="sd-datetime-panel__time-label">{{ i18n.t('core.data-type.time') }}</span>
+      <sd-time-spinner
+        [value]="selected()"
+        [baseValue]="spinnerBaseValue()"
+        [showSeconds]="showSeconds()"
+        [stepMinute]="stepMinute()"
+        [disabled]="disabledEffective()"
+        (valueChange)="selectTimePart($event)" />
+    </div>
+
+    <footer class="sd-datetime-panel__footer">
+      <sd-button sdDatetimePickerNow type="text" size="sm" prefixIcon="schedule" [title]="i18n.t('core.form.datetime.now')" />
+      <sd-button sdDatetimePickerCancel type="text" size="sm" color="secondary" [title]="i18n.t('core.common.cancel')" />
+      <sd-button sdDatetimePickerApply type="fill" size="sm" [disabled]="!canApply()" [title]="i18n.t('core.form.datetime.confirm')" />
+    </footer>
+  </div>
+</ng-template>

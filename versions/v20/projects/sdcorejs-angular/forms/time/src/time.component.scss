@@ -1,5 +1,7 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use '../../../assets/scss/core/inline-edit' as inline;
+@use '../../../assets/scss/core/date-panel' as date;
+@use '../../../assets/scss/core/popover-panel' as panel;
 
 :host {
   display: block;
@@ -39,6 +41,21 @@
 }
 
 @include inline.sd-inline-panel;
+
+.sd-time-panel {
+  @include panel.panel($constrained: true);
+  display: flex;
+  flex-direction: column;
+  min-width: min(200px, calc(100vw - 16px));
+  padding: 12px 8px 8px;
+  @include date.motion;
+}
+
+.sd-time-panel__footer {
+  @include date.footer;
+  justify-content: flex-end;
+  gap: 4px;
+}
 
 :host(.sd-bare) {
   display: inline-flex;

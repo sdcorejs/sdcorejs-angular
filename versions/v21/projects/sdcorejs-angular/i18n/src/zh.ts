@@ -228,6 +228,9 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.invalid-max': '结束日期无效（高于限制）',
   'core.form.date-range.from': '从',
   'core.form.date-range.to': '至',
+  'core.form.date-range.pick-end': '选择结束日期',
+  'core.form.date-range.summary-day': '{count} 天',
+  'core.form.date-range.summary-days': '{count} 天',
 
   // ---- Forms: datetime ----
   'core.form.datetime.required': '请输入内容',

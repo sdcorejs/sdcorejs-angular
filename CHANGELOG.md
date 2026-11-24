@@ -36,6 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Date Range
+
+- The calendar announces when to choose the end date and shows the selected period with its inclusive day count.
+
 #### Page
 
 - The table of contents links to a section by its host ID and restores that position when a link opens.
@@ -56,6 +60,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Table
 
 - Use `sdTableQueryParams()` to link to a table with filters, sort and page size applied.
+
+### Changed
+
+#### Button and Query Bar
+
+- Action Popover and query panels share the control panel's 10px corners, themed border and medium shadow. List rows have 6px corners.
+
+#### Date, Datetime and Time
+
+- Date and range pickers use the chip calendar's month navigation and day states, including in touch dialogs. Datetime adds the same navigation above its time controls and actions.
+- The time field opens an anchored dialog with its hour input focused. Press Alt+Down to open, Escape to cancel, or Confirm to apply.
 
 ### Fixed
 

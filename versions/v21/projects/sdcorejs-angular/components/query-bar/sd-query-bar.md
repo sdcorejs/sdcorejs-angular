@@ -280,9 +280,9 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 
 ## Panels
 
-The field picker (listbox), the chip popover (dialog) and saved filters (menu) open in a CDK Overlay with the frame of the `sd-button` Action Popover (`assets/scss/core/_popover-panel.scss`: border, 8px radius, shadow, 40px rows with 14px text, 12px headings). No Material menu is involved.
+The field picker (listbox), the chip popover (dialog) and saved filters (menu) open in a CDK Overlay with the frame of the `sd-button` Action Popover (`assets/scss/core/_popover-panel.scss`: theme border, 10px radius, medium shadow, 40px rows with 14px text, 12px headings). No Material menu is involved.
 
-- **Position:** below the trigger, 4px away, start-aligned (saved filters end-aligned); flips above when there is no room; follows scrolling. Widths: field picker 200–260px, chip popover 280–320px, saved filters 220–320px. Panels are at most 360px high (less on a short screen); the chip popover then scrolls its body and keeps its header.
+- **Position.** Panels follow their trigger when scrolling and sit 6px below it, flipping above when space is limited. Field picker and chip popover panels align to the start edge. Saved filters align to the end. Widths are 200–260px for the field picker, 280–320px for the chip popover and 220–320px for saved filters. Panels are at most 360px high (less on a short screen). The chip popover scrolls its body and keeps its header visible.
 - **Open:** click, Enter or Space on the trigger (`aria-haspopup`, `aria-expanded`, `aria-controls`). From the keyboard a list lands on its find box or first option and a form on its first value control; from the mouse a list without a find box keeps focus on the panel.
 - **Close:** Escape, a click outside, Tab out of the panel (a list on any Tab, a form past its first / last control), picking an item, `closeMenu()`. Focus returns to the trigger, or to `returnFocusTo` of `openField()`; a click outside on another focusable element keeps focus there. The chip popover commits its value on every one of these. Escape is left to a control whose own popup (sd-select panel, date picker, sd-operator menu) is open above the panel; a click or focus inside such a popup does not close the panel.
 - **One at a time:** opening a panel closes the other panel of the same bar.

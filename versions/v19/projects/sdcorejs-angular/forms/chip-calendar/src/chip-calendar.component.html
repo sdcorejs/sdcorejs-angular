@@ -177,9 +177,8 @@
         }
       </mat-form-field>
 
-      <!-- Popup (thiết kế 3): CDK overlay role="dialog" treo dưới khung ô. Chọn ngày không đóng; đóng bằng “Xong”, Esc
-           hoặc bấm ra ngoài. why: mat-menu cũ đóng khi Tab và không phải dialog (A3). Không aria-hidden ở đâu cả:
-           lưới ngày, nút chuyển tháng và ô đang chọn đều phải đọc được. -->
+      <!-- Chọn ngày giữ dialog mở. Phím Tab di chuyển giữa header, lưới ngày và footer.
+           “Xong”, Esc và bấm ra ngoài đóng dialog. -->
       <ng-template
         cdkConnectedOverlay
         [cdkConnectedOverlayOrigin]="overlayOrigin()!"

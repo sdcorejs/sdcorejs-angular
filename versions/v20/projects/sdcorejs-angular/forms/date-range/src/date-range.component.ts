@@ -24,7 +24,7 @@ import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerInputEvent, MatDatepickerModule, MatDateRangePicker } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdLabelDefDirective, ɵSdCalendarHeader } from '@sdcorejs/angular/forms/directives';
 import {
   provideSdStrictDateFnsAdapter,
   SD_FORM_CONFIGURATION,
@@ -142,6 +142,7 @@ function rangeIsComplete(value: unknown): boolean {
   ],
 })
 export class SdDateRange {
+  protected readonly calendarHeader = ɵSdCalendarHeader;
   id1 = `I${Utilities.generateUuid()}`;
   id2 = `I${Utilities.generateUuid()}`;
   /** why: id ổn định của <mat-error> để hai ô nhập trỏ `aria-describedby` sang — thông báo

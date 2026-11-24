@@ -174,7 +174,8 @@ The input writes its text into `formControl` after every keystroke (the editor c
 
 - An outlined input field with a single calendar+clock icon on the trailing side
 - The text inside reads as `dd/MM/yyyy HH:mm` (e.g. `09/05/2026 14:30`)
-- Clicking the icon opens a popup: a month-grid calendar on top, a time picker (hours + minutes spinner/slider) below
+- Clicking the icon opens a themed calendar panel next to the field. Mobile and tablet users see a centered dialog. The period button in the header switches calendar views.
+- The time row under the calendar contains hour and minute spinbuttons, plus seconds when `showSeconds` is enabled. **Now** stages the current date and time in the configured time zone. **Cancel** discards the draft. **Confirm** commits it when it satisfies the configured bounds.
 - An optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip contexts where the clear-× duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - In `[viewed]="true"` mode: no input chrome — just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
 

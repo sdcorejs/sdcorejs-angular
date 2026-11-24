@@ -122,12 +122,12 @@ describe('ɵSdQueryPanelDirective', () => {
       Object.assign(trigger.style, { position: 'fixed', top: '8px', [side]: '24px' });
     };
 
-    it('QB-P-03 opens below the trigger, start-aligned, 4px away', () => {
+    it('QB-P-03 opens below the trigger, start-aligned, 6px away', () => {
       pinTop(el('#list-trigger'), 'left');
       openList();
       const trigger = el('#list-trigger').getBoundingClientRect();
       const box = panel()!.getBoundingClientRect();
-      expect(Math.round(box.top - trigger.bottom)).toBe(4);
+      expect(Math.round(box.top - trigger.bottom)).toBe(6);
       expect(Math.round(box.left)).toBe(Math.round(trigger.left));
     });
 
@@ -137,7 +137,7 @@ describe('ɵSdQueryPanelDirective', () => {
       openList();
       const rect = trigger.getBoundingClientRect();
       const box = panel()!.getBoundingClientRect();
-      expect(Math.round(rect.top - box.bottom)).toBe(4);
+      expect(Math.round(rect.top - box.bottom)).toBe(6);
     });
 
     it('QB-P-03 aligns an end panel (saved filters) with the end of its trigger', () => {
@@ -147,7 +147,7 @@ describe('ɵSdQueryPanelDirective', () => {
       const trigger = el('#end-trigger').getBoundingClientRect();
       const box = panel('.probe-end')!.getBoundingClientRect();
       expect(Math.round(box.right)).toBe(Math.round(trigger.right));
-      expect(Math.round(box.top - trigger.bottom)).toBe(4);
+      expect(Math.round(box.top - trigger.bottom)).toBe(6);
     });
   });
 

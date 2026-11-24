@@ -153,6 +153,24 @@ describe('SdChipCalendar · design handoff step 2 · popup', () => {
   });
 
   describe('B4 · first month', () => {
+    it('DP-08 preserves paging and year selection through the shared header', async () => {
+      create({ model: ['2031/03/15'] });
+      await open();
+      const header = panel()!.querySelector('sd-calendar-header')!;
+      const [previous, period, next] = header.querySelectorAll<HTMLButtonElement>('button');
+      expect(period.querySelector('sd-icon[name="arrow_drop_down"]')).not.toBeNull();
+      expect(header.querySelector('.sd-calendar-header__summary')).toBeNull();
+      next.click();
+      await settle();
+      expect(calendar().activeDate.getMonth()).toBe(3);
+      previous.click();
+      await settle();
+      expect(calendar().activeDate.getMonth()).toBe(2);
+      period.click();
+      await settle();
+      expect(calendar().currentView).toBe('multi-year');
+    });
+
     it('opens at the chosen day nearest to today', async () => {
       create({ model: ['2035/01/01', '2031/03/15'] });
       await open();
