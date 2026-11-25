@@ -1,0 +1,1 @@
+var c=[{id:"active",name:"\u0110ang ho\u1EA1t \u0111\u1ED9ng",color:"success"},{id:"inactive",name:"Ng\u1EEBng ho\u1EA1t \u0111\u1ED9ng",color:"secondary"}];function e(o){let n=c.find(t=>t.id===o);return{type:"round",title:n?.name??o,color:n?.color}}export{c as a,e as b};

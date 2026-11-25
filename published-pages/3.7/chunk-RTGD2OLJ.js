@@ -1,0 +1,1 @@
+var a=[{id:"pending",name:"Ch\u1EDD duy\u1EC7t",color:"warning"},{id:"approved",name:"\u0110\xE3 duy\u1EC7t",color:"success"},{id:"rejected",name:"B\u1ECB t\u1EEB ch\u1ED1i",color:"error"}];function c(o){let e=a.find(r=>r.id===o);return{type:"round",title:e?.name??o,color:e?.color}}var n=class{};export{a,c as b,n as c};
