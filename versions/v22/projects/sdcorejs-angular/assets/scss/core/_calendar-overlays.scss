@@ -1,0 +1,67 @@
+@use './date-panel' as date;
+
+@keyframes sd-panel-in {
+  from { opacity: 0; transform: scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.sd-chip-calendar-panel {
+  --sd-date-panel-width: var(--sd-chip-calendar-panel-width, 296px);
+}
+
+.sd-chip-calendar-panel,
+.sd-date-panel.sd-datetime-picker__panel,
+.mat-datepicker-content:has(.mat-calendar.sd-date-panel) {
+  @include date.date-panel;
+}
+
+// When a month starts at the beginning of the week Material inserts a full row for the month name.
+// The shared period button already names the month. Keep the spacer cells in partial weeks.
+.mat-datepicker-content:has(.mat-calendar.sd-date-panel),
+.sd-date-panel.sd-datetime-picker__panel {
+  tr[aria-hidden='true']:has(> .mat-calendar-body-label:only-child) {
+    display: none;
+  }
+}
+
+// Material listens for its exit animation to dispose the overlay and restore focus.
+.sd-chip-calendar-panel,
+.sd-date-panel.sd-datetime-picker__panel,
+.mat-datepicker-content:has(.mat-calendar.sd-date-panel):not(.mat-datepicker-content-exit) {
+  @include date.motion;
+}
+
+// Material attaches panelClass to mat-calendar inside the surface on all supported majors.
+.mat-datepicker-content:has(.mat-calendar.sd-date-panel) {
+  @media (prefers-reduced-motion: reduce) {
+    &.mat-datepicker-content-exit { animation-duration: 1ms; }
+  }
+
+  .mat-calendar {
+    width: 100%;
+    height: auto;
+  }
+
+  &:not(.mat-datepicker-content-touch) {
+    margin-block: 6px;
+  }
+
+  &.mat-datepicker-content-touch {
+    width: auto;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+
+    .mat-datepicker-content-container {
+      width: min(80vw, 280px);
+      min-width: 0;
+      height: auto;
+      min-height: 0;
+      max-height: none;
+    }
+  }
+}
+
+.sd-date-panel.sd-datetime-picker__panel,
+.sd-time-panel {
+  @include date.spinner;
+}

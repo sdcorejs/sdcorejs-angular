@@ -15,3 +15,22 @@
   flex: 1;
   min-width: 0;
 }
+
+:host(.sd-section-item--auto) {
+  .c-item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    // Size the value first, even if the label contains a long unbroken identifier.
+    contain: inline-size;
+    overflow-wrap: anywhere;
+  }
+
+  .c-item-content {
+    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    text-align: end;
+  }
+}

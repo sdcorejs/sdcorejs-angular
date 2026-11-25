@@ -108,6 +108,8 @@ $column-gutter: max(24px, calc((100% - var(--sd-page-column-max)) / 2 + 24px));
   overflow-y: auto;
   max-height: 100vh;
   box-sizing: border-box;
+  // While restoring a deep link the page anchors to its requested section, including replacement placeholders.
+  &.c-page-wrapper--fragment { overflow-anchor: none; }
   .c-page-content {
     flex: 1;
     height: 100%;

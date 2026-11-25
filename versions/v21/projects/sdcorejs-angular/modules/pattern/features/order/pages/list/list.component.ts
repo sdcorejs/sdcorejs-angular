@@ -106,7 +106,8 @@ export class ListComponent {
     this.#router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       startWith(null),
-      map(() => this.#route.firstChild?.snapshot.data['detail'] as SdPageListDetail | undefined)
+      // During direct navigation into a child, the parent can be created before Angular assigns its child's snapshot.
+      map(() => this.#route.firstChild?.snapshot?.data['detail'] as SdPageListDetail | undefined)
     ),
     { requireSync: true }
   );

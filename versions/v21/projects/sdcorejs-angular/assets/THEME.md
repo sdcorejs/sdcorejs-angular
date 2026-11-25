@@ -473,6 +473,17 @@ every named preset and the dark palette:
 These are palette checks. Recheck real component states after changing colours, and keep labels or icons
 for status information.
 
+## Floating control panels
+
+Select, autocomplete, action menus, query controls and date/time panels use the same
+surface. The frame uses `--sd-panel-radius` (10px), `--sd-shadow-md`,
+`--sd-select-panel-bg` and a 60% mix of `--sd-border` with `--sd-surface`.
+Action and query list rows use `--sd-radius-6`. Calendar focus uses
+`--sd-focus-ring-color`; the selected days use `--sd-primary` and
+`--sd-primary-contrast`, with `--sd-primary-light` between range endpoints.
+The local `--sd-date-panel-width` defaults to 296px on desktop. Chip calendars
+also accept their existing `--sd-chip-calendar-panel-width` override.
+
 ## Keeping components on tokens
 
 Two checks run in CI:

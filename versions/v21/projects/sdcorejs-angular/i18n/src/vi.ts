@@ -228,6 +228,9 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.invalid-max': 'Ngày kết thúc không hợp lệ (lớn hơn giới hạn)',
   'core.form.date-range.from': 'Từ',
   'core.form.date-range.to': 'đến',
+  'core.form.date-range.pick-end': 'Chọn ngày kết thúc',
+  'core.form.date-range.summary-day': '{count} ngày',
+  'core.form.date-range.summary-days': '{count} ngày',
 
   // ---- Forms: datetime ----
   'core.form.datetime.required': 'Vui lòng nhập thông tin',

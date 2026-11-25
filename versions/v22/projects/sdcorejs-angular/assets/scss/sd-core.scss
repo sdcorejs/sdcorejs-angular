@@ -2,6 +2,7 @@
 @use './core/utilities/base';  // Reset / Reboot — phải load trước tất cả
 @use './core/utilities';
 @use './core/color.scss';
+@use './core/calendar-overlays';
 @use './core/form.scss';
 @use './core/image.scss';
 @use './core/menu.scss';

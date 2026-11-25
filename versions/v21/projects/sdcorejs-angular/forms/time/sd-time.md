@@ -52,4 +52,6 @@ The clear button is hover-gated (`.sd-clear-btn.sd-hover`) like `<sd-input>`: it
 
 The editor is a numeric-inputmode text field with an accessible label. The picker trigger has its own translated label. `data-autoId`, disabled/invalid/empty/value/required/error metadata follow the common form-control contract.
 
-The `<div>` wrapped around the spinner inside the picker `mat-menu` only exists to stop click bubbling from closing the menu; it is marked `role="presentation"`, never `aria-hidden="true"`. `aria-hidden` there would have hidden the hour/minute spinner and the Cancel/Confirm buttons from assistive tech while they stayed focusable.
+Click the clock or press **Alt+Down** in the field to open the time dialog. Its accessible name comes from the field, and focus starts on the hour. The popup sits 6px below the clock and flips above it when space is limited.
+
+**Confirm** writes the draft as `HH:mm`. **Cancel**, **Escape**, and clicking outside discard the draft. Closing returns focus to the clock. A disabled or readonly field keeps the picker closed.

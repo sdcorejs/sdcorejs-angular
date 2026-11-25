@@ -62,7 +62,7 @@ $qb-bg: var(--sd-query-bar-bg, #ffffff);
   display: flex;
   align-items: center;
   gap: 2px;
-  border-radius: var(--sd-radius-4, 4px);
+  border-radius: var(--sd-radius-6, 6px);
 
   &:hover,
   &:focus-within {
@@ -81,7 +81,7 @@ $qb-bg: var(--sd-query-bar-bg, #ffffff);
   min-height: 40px;
   padding: 8px 4px 8px 12px;
   border: 0;
-  border-radius: var(--sd-radius-4, 4px);
+  border-radius: var(--sd-radius-6, 6px);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -124,7 +124,7 @@ $qb-bg: var(--sd-query-bar-bg, #ffffff);
   margin-right: 4px;
   padding: 0;
   border: 0;
-  border-radius: var(--sd-radius-4, 4px);
+  border-radius: var(--sd-radius-6, 6px);
   background: transparent;
   color: var(--sd-text-secondary, #555);
   cursor: pointer;

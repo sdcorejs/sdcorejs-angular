@@ -47,7 +47,7 @@ const goToMonth = async (page: Page, year: number, month: string): Promise<void>
   const panel = calendar(page);
   await panel.getByRole('button', { name: 'Choose month and year' }).click();
   await expect(panel.locator('mat-multi-year-view')).toBeVisible();
-  const period = panel.locator('.mat-calendar-period-button');
+  const period = panel.locator('.sd-calendar-header__period');
   for (let step = 0; step < 6; step++) {
     const label = (await period.textContent()) ?? '';
     const start = Number(label.match(/\d{4}/)?.[0]);
@@ -143,7 +143,7 @@ test.describe('services/date-time demo with ?timeZone=Asia/Ho_Chi_Minh', () => {
     await reveal(page, FORM);
 
     await host(page, 'forms-date-tz-date', 'sd-date').getByRole('button', { name: 'Mở lịch' }).click();
-    await expect(calendar(page).getByRole('button', { name: 'Choose month and year' })).toHaveText(/AUG 2026/i);
+    await expect(calendar(page).getByRole('button', { name: 'Choose month and year' })).toContainText('Tháng 8 năm 2026');
     await expect(calendar(page).locator('.mat-calendar-body-today')).toHaveText('15');
 
     // why: with a fixed clock the close animation of the picker never ends, so its backdrop stays;

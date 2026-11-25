@@ -1,4 +1,10 @@
-import { SdTableUrlStateContext, SdTableUrlState, parseTableQueryState, serializeTableQueryState } from './table-query-params.util';
+import {
+  SdTableUrlStateContext,
+  SdTableUrlState,
+  parseTableQueryState,
+  sdTableQueryParams,
+  serializeTableQueryState,
+} from './table-query-params.util';
 
 const context = (overrides: Partial<SdTableUrlStateContext> = {}): SdTableUrlStateContext => ({
   defaults: {
@@ -35,6 +41,14 @@ const state = (overrides: Partial<SdTableUrlState> = {}): SdTableUrlState => ({
 });
 
 describe('table query params util', () => {
+  it('omits empty link parameters while retaining false and zero values', () => {
+    expect(sdTableQueryParams('orders')).toEqual({});
+    expect(sdTableQueryParams('orders', { quickSearch: '', columnFilter: { name: '', amount: null }, sort: null })).toEqual({});
+    expect(sdTableQueryParams('orders', { columnFilter: { paid: false, amount: 0 } })).toEqual({
+      'table-orders': '{"c":{"amount":0,"paid":false}}',
+    });
+  });
+
   it('serializes the default state to null', () => {
     expect(serializeTableQueryState(state(), context())).toBeNull();
     // Empty values equal the default: an emptied input does not dirty the URL.

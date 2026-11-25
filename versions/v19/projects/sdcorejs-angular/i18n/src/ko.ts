@@ -228,6 +228,9 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.date-range.invalid-max': '종료일이 올바르지 않습니다 (한도 초과)',
   'core.form.date-range.from': '시작',
   'core.form.date-range.to': '~',
+  'core.form.date-range.pick-end': '종료일을 선택하세요',
+  'core.form.date-range.summary-day': '{count}일',
+  'core.form.date-range.summary-days': '{count}일',
 
   // ---- Forms: datetime ----
   'core.form.datetime.required': '정보를 입력해 주세요',

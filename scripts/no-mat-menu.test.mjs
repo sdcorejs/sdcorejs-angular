@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const components = join(root, 'versions', 'v19', 'projects', 'sdcorejs-angular', 'components');
+const library = join(root, 'versions', 'v19', 'projects', 'sdcorejs-angular');
 const FORBIDDEN = /MatMenu|mat-menu|matMenuTriggerFor/;
 const SOURCE = /\.(ts|html|scss)$/;
 
@@ -19,10 +19,10 @@ function* walk(directory) {
   }
 }
 
-for (const component of ['table', 'tree']) {
-  test(`MM-03 components/${component} does not use mat-menu`, () => {
+for (const [id, directory] of [['MM-03', 'components/table'], ['MM-03', 'components/tree'], ['DP-11', 'forms']]) {
+  test(`${id} ${directory} does not use mat-menu`, () => {
     const hits = [];
-    for (const file of walk(join(components, component))) {
+    for (const file of walk(join(library, directory))) {
       readFileSync(file, 'utf8')
         .split(/\r?\n/)
         .forEach((line, index) => {

@@ -59,7 +59,8 @@ export interface PatternMockResource<T extends PatternMockRecord = PatternMockRe
     segments: readonly string[],
     query: PatternMockQuery,
     body: Record<string, unknown>,
-    context: PatternMockContext
+    context: PatternMockContext,
+    readLimit?: number
   ) => PatternMockResult | undefined;
 }
 

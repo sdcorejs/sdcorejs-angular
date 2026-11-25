@@ -176,6 +176,11 @@ describe('SdTab', () => {
       component.close.emit();
       expect(host.closeCount).toBe(1);
     });
+
+    it('closes immediately when a caller requests closure without a guard', async () => {
+      expect(await component.requestClose()).toBeTrue();
+      expect(host.closeCount).toBe(1);
+    });
   });
 
   describe('bodyTpl viewChild', () => {

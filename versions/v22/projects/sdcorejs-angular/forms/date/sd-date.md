@@ -179,7 +179,7 @@ Separators are inserted as you type: `2` → `2`, `22` → `22/`, `2208` → `22
 ## Visual cues (helps agent map screenshots → component)
 
 - Outlined input field showing `DD/MM/YYYY` formatted date
-- Trailing calendar icon button → opens Material datepicker popup
+- The calendar button opens the date panel. Page through months with the arrow buttons or press the month label to choose a year and month. Choosing an enabled day commits it and closes the panel. Phones and tablets use the Material touch dialog.
 - Optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`). **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip contexts where the clear-× duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - Min/max enforcement: dates outside the range are greyed-out and unselectable in the popup
 - Text error: red outline + "Sai định dạng" for text that does not match `dd/MM/yyyy`, "Ngày không hợp lệ" for a day that does not exist; the typed text stays in the field

@@ -9,7 +9,7 @@
 
 ## One-line purpose
 
-Two-date range picker — user picks a start date AND an end date through a single 2-month calendar popup. Wraps Material `mat-date-range-picker` with SDCoreJS label/validators/min-max boundary support.
+Pick a start and end date in a shared calendar. The component wraps Material `mat-date-range-picker` and supports labels, validation, and minimum and maximum dates.
 
 ## When to use
 
@@ -166,7 +166,8 @@ Both range fields are `matStartDate` / `matEndDate`, so Angular Material re-pars
 
 - A single Material outlined field with TWO date inputs side-by-side separated by an "→" / dash, each in `dd/MM/yyyy` format (e.g. `01/01/2025  →  31/12/2025`)
 - Trailing icons: an outlined calendar opens the picker. The shared `close` (×) clear button appears on hover or keyboard focus when a value is set, `clearable=true`, and the field is neither required nor disabled. It clears both endpoints without opening the picker. Inline mode uses the matching clear-× on its text face.
-- Clicking the calendar icon opens a 2-month side-by-side calendar popup; user clicks start date, then end date — the range fills in
+- The calendar button opens one month at a time. The arrows page through months and the month label opens year selection. Phones and tablets use the Material touch dialog.
+- Selecting the first day displays a polite prompt to choose the end date. Selecting the end date commits the range and closes the panel. On reopening, the summary shows both dates and the inclusive number of calendar days, for example `15/03 – 18/03/2031` and `4 days` in English.
 - When focused, both inputs share a single underline/outline (visually one field, not two)
 - Helper-text shows as an info icon next to the label
 

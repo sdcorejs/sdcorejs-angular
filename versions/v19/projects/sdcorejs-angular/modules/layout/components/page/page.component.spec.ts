@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HashLocationStrategy, LocationStrategy, PlatformLocation } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
+import { ComponentFixture, DeferBlockState, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { SdBadge, type SdBadgeData } from '@sdcorejs/angular/components/badge';
@@ -142,6 +143,24 @@ class ChildSectionHost {}
 @Component({
   imports: [SdPageComponent, SdSection],
   template: `
+    <div style="height: 360px; display: flex; flex-direction: column">
+      <sd-page toc>
+        <sd-section title="General"><div [style.height.px]="generalHeight()"></div></sd-section>
+        <sd-section title="Debt" id="công nợ"><div style="height: 400px"></div></sd-section>
+        @defer (when false) {
+          <sd-section title="Documents" id="documents"><div style="height: 400px"></div></sd-section>
+        }
+      </sd-page>
+    </div>
+  `,
+})
+class FragmentHost {
+  readonly generalHeight = signal(400);
+}
+
+@Component({
+  imports: [SdPageComponent, SdSection],
+  template: `
     <div style="width: 1600px; height: 360px; display: flex; flex-direction: column">
       <sd-page-form title="Cập nhật sản phẩm" [toc]="toc()" [width]="width()">
         <form>
@@ -170,8 +189,12 @@ class FormHost {
 
 describe('SdPageComponent', () => {
   let warn: jasmine.Spy;
+  let originalUrl: string;
+  let originalState: unknown;
 
   beforeEach(async () => {
+    originalUrl = location.href;
+    originalState = history.state;
     warn = spyOn(console, 'warn');
     await TestBed.configureTestingModule({
       imports: [
@@ -185,10 +208,13 @@ describe('SdPageComponent', () => {
         DetailHost,
         FormHost,
         ChildSectionHost,
+        FragmentHost,
       ],
       providers: [provideRouter([])],
     }).compileComponents();
   });
+
+  afterEach(() => history.replaceState(originalState, '', originalUrl));
 
   describe('without the new inputs and slots', () => {
     let fixture: ComponentFixture<PlainHost>;
@@ -493,6 +519,87 @@ describe('SdPageComponent', () => {
     });
   });
 
+  describe('section fragment links', () => {
+    async function open(fragment: string) {
+      history.replaceState({ record: 13 }, '', '?customer=example#' + fragment);
+      const fixture = TestBed.createComponent(FragmentHost);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const wrapper = page(fixture).querySelector<HTMLElement>('.c-page-wrapper')!;
+      const buttons = page(fixture).querySelectorAll<HTMLButtonElement>('.c-page-toc button');
+      return { fixture, wrapper, buttons };
+    }
+
+    it('replaces only the fragment and keeps the history state, length and query', async () => {
+      const { buttons } = await open('');
+      const { pathname, search } = location;
+      const length = history.length;
+      buttons[1].click();
+      expect(decodeURIComponent(location.hash)).toBe('#công nợ');
+      expect(location.pathname).toBe(pathname);
+      expect(location.search).toBe(search);
+      expect(history.length).toBe(length);
+      expect(history.state).toEqual({ record: 13 });
+      buttons[0].click();
+      expect(decodeURIComponent(location.hash)).toBe('#công nợ');
+    });
+
+    it('restores an encoded id after render, inside the page without moving focus', async () => {
+      const focus = document.activeElement;
+      const { fixture, wrapper } = await open(encodeURIComponent('công nợ'));
+      const debt = page(fixture).querySelector('[id="công nợ"]')!;
+      expect(wrapper.scrollTop).toBeGreaterThan(0);
+      expect(debt.getBoundingClientRect().top).toBeCloseTo(wrapper.getBoundingClientRect().top, 0);
+      expect(document.activeElement).toBe(focus);
+      wrapper.scrollTop = 0;
+      wrapper.dispatchEvent(new Event('scroll'));
+      expect(decodeURIComponent(location.hash)).toBe('#công nợ');
+    });
+
+    it('waits for a deferred section to register before restoring the fragment', async () => {
+      const { fixture, wrapper } = await open('documents');
+      expect(wrapper.scrollTop).toBe(0);
+      const [deferred] = await fixture.getDeferBlocks();
+      await deferred.render(DeferBlockState.Complete);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const target = page(fixture).querySelector('#documents')!;
+      expect(wrapper.scrollTop).toBeGreaterThan(0);
+      expect(target.getBoundingClientRect().top).toBeCloseTo(wrapper.getBoundingClientRect().top, 0);
+    });
+
+    it('keeps the scroll position for an unknown fragment', async () => {
+      const { wrapper } = await open('missing');
+      expect(wrapper.scrollTop).toBe(0);
+    });
+
+    it('keeps a deep link aligned as earlier sections grow, then leaves the reader at their own scroll position', async () => {
+      const { fixture, wrapper } = await open(encodeURIComponent('công nợ'));
+      const section = page(fixture).querySelector('[id="công nợ"]')!;
+      const afterResize = async (height: number) => {
+        fixture.componentInstance.generalHeight.set(height);
+        fixture.detectChanges();
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      };
+      await afterResize(1400);
+      expect(section.getBoundingClientRect().top).toBeCloseTo(wrapper.getBoundingClientRect().top, 0);
+      wrapper.scrollTop = 100;
+      wrapper.dispatchEvent(new Event('scroll'));
+      await afterResize(2400);
+      expect(wrapper.scrollTop).toBe(100);
+    });
+
+    it('preserves the hash-based route and its query when changing the section', async () => {
+      TestBed.overrideProvider(LocationStrategy, { useFactory: () => new HashLocationStrategy(inject(PlatformLocation)) });
+      const route = '/customer/example/sheet?view=full';
+      const { wrapper, buttons } = await open(route + '#' + encodeURIComponent('công nợ'));
+      expect(wrapper.scrollTop).toBeGreaterThan(0);
+      buttons[1].click();
+      expect(decodeURIComponent(location.hash)).toBe('#' + route + '#công nợ');
+    });
+  });
+
   describe('sd-page-form', () => {
     let fixture: ComponentFixture<FormHost>;
     const form = () => fixture.nativeElement.querySelector('sd-page-form') as HTMLElement;
@@ -528,9 +635,10 @@ describe('SdPageComponent', () => {
 
     it('scrolls to a section when its entry is clicked', () => {
       const stock = form().querySelector('#stock') as HTMLElement;
-      const scroll = spyOn(stock, 'scrollIntoView');
+      const top = wrapper().scrollTop + stock.getBoundingClientRect().top - wrapper().getBoundingClientRect().top;
+      const scroll = spyOn(wrapper(), 'scrollTo');
       items()[2].click();
-      expect(scroll).toHaveBeenCalledWith(jasmine.objectContaining({ block: 'start' }));
+      expect(scroll.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ top }));
     });
 
     it('marks the section at the top of the scroll area as current', () => {
@@ -595,9 +703,9 @@ describe('SdPageComponent', () => {
       });
 
       describe('after a click on an entry', () => {
-        // why: Karma không chờ cuộn mượt; chặn scrollIntoView rồi tự đặt scrollTop theo từng bước của cú cuộn.
+        // why: Karma không chờ cuộn mượt; tự đặt scrollTop theo từng bước của cú cuộn.
         beforeEach(() => {
-          spyOn(form().querySelector('#stock') as HTMLElement, 'scrollIntoView');
+          spyOn(wrapper(), 'scrollTo');
           items()[2].click();
           fixture.detectChanges();
         });

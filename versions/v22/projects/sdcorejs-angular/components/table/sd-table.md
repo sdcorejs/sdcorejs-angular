@@ -789,6 +789,25 @@ A copied link opens the table with the same filters, sort and page.
 - **Inside `sd-tab-router-outlet`:** the same path with another query is the same tab, so writing the param never opens a new router tab, and a table in a background tab does not write over the URL of the open one.
 - No effect without Angular routes (`provideRouter`). Long filter values make long URLs — keep it for list screens whose state is worth sharing.
 
+### Link tới danh sách có bộ lọc
+
+Use `sdTableQueryParams` to link to a table with a filter applied on its first read. Pass the destination's `autoId` and enable `syncQueryParams` on that table.
+
+```ts
+import { sdTableQueryParams } from '@sdcorejs/angular/components/table';
+
+readonly orderParams = sdTableQueryParams('orders', {
+  columnFilter: { customerId: 'C-102' },
+  sort: { field: 'createdAt', direction: 'desc' },
+});
+```
+
+```html
+<a routerLink="/orders" [queryParams]="orderParams">View customer orders</a>
+```
+
+The helper also accepts `quickSearch` (keyword), `columnOperator`, `externalFilter` and `pageSize`. Both filter modes use the same URL format. Empty values are omitted. The destination validates fields, operators and page size against its own options.
+
 ## Outputs
 
 None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `commands[].click`, `expand.onExpand`, `rowReorder.onChange`, `selector.actions[].click`, …). Use a `@ViewChild(SdTable)` ref for imperative API.

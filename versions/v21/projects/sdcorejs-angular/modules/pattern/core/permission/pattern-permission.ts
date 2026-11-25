@@ -13,6 +13,7 @@ export const PATTERN_PERMISSION_CODES = [
   'PATTERN_PRODUCT_R_MENU',
   'PATTERN_CUSTOMER_R_LIST',
   'PATTERN_CUSTOMER_R_DETAIL',
+  'PATTERN_CUSTOMER_R_DEBTS',
   'PATTERN_CUSTOMER_C_CREATE',
   'PATTERN_CUSTOMER_U_UPDATE',
   'PATTERN_CUSTOMER_D_DELETE',
@@ -61,6 +62,6 @@ export function patternPermissionsOf(role: PatternRole): string[] {
     case 'staff':
       return PATTERN_PERMISSION_CODES.filter(code => !code.includes('_D_') && !DECISIONS.test(code));
     case 'viewer':
-      return PATTERN_PERMISSION_CODES.filter(code => code.includes('_R_'));
+      return PATTERN_PERMISSION_CODES.filter(code => code.includes('_R_') && code !== 'PATTERN_CUSTOMER_R_DEBTS');
   }
 }

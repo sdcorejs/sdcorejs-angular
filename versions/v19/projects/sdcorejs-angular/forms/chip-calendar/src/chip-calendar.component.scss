@@ -1,3 +1,5 @@
+@use '../../../assets/scss/core/date-panel' as date;
+
 :host {
   display: block;
 }
@@ -45,56 +47,6 @@ mat-form-field {
   }
 }
 
-// ── Popup (thiết kế 3) ─────────────────────────────────────────────────────────────────────────────────────────────
-// Panel nằm trong template của component (overlay render ng-template này), nên style của nó scope theo component; phần
-// bên trong mat-calendar thuộc view của Material nên đi qua ::ng-deep, nhưng luôn dưới .sd-chip-calendar-panel (C1).
-.sd-chip-calendar-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  box-sizing: border-box;
-  width: var(--sd-chip-calendar-panel-width, 296px);
-  padding: 12px 8px 8px;
-  // Cùng bề mặt với panel sd-select / menu operator / badge picker (đợt 2 · D).
-  border: 1px solid color-mix(in srgb, var(--sd-border) 60%, var(--sd-surface));
-  border-radius: var(--sd-panel-radius, 10px);
-  background-color: var(--sd-select-panel-bg, var(--sd-surface));
-  box-shadow: var(--sd-shadow-md, none);
-  color: var(--sd-text);
-  animation: sd-chip-calendar-panel-in var(--sd-duration-fast, 120ms) var(--sd-ease-standard, ease-out);
-
-  // Token của mat-calendar đặt trên panel: không cần !important để ghi đè style mặc định.
-  --mat-datepicker-calendar-date-text-color: var(--sd-text);
-  --mat-datepicker-calendar-date-hover-state-background-color: color-mix(in srgb, var(--sd-text) 5%, transparent);
-  // why: focus là vòng outline chuẩn (bên dưới), không phải nền — để ô đã chọn vẫn thấy rõ focus.
-  --mat-datepicker-calendar-date-focus-state-background-color: transparent;
-  --mat-datepicker-calendar-date-today-outline-color: var(--sd-primary);
-  --mat-datepicker-calendar-date-disabled-state-text-color: var(--sd-disabled-text);
-  --mat-datepicker-calendar-date-today-disabled-state-outline-color: transparent;
-  --mat-datepicker-calendar-header-text-color: var(--sd-text-secondary);
-  --mat-datepicker-calendar-header-text-size: var(--sd-font-size-11, 11px);
-  --mat-datepicker-calendar-header-text-weight: var(--sd-font-weight-medium, 500);
-  --mat-datepicker-calendar-header-divider-color: transparent;
-  --mat-datepicker-calendar-text-size: var(--sd-font-size-13, 13px);
-}
-
-@keyframes sd-chip-calendar-panel-in {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sd-chip-calendar-panel {
-    animation: none;
-  }
-}
-
 .sd-chip-calendar-panel__head {
   padding: 0 8px;
 }
@@ -128,81 +80,7 @@ mat-form-field {
 }
 
 .sd-chip-calendar-panel__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 4px;
-  padding: 8px 4px 0;
-  border-top: 1px solid var(--sd-select-panel-divider, var(--sd-border));
-}
-
-.sd-chip-calendar-panel ::ng-deep {
-  // Lưới 7 × 40px vừa khít bề rộng nội dung (296 − 2 × 8); bỏ lề của Material.
-  .mat-calendar-content {
-    padding: 0;
-  }
-
-  .mat-calendar-table-header th {
-    padding: 0;
-    line-height: 24px;
-  }
-
-  .mat-calendar-body-label {
-    // Nhãn tháng trong lưới (“TH 10”) trùng với header riêng.
-    visibility: hidden;
-  }
-
-  .mat-calendar-body-cell-content {
-    font-variant-numeric: tabular-nums;
-  }
-
-  // Đã chọn: vòng primary đặc; hover đậm hơn; focus giữ nền (token focus của ô = nền này).
-  .mat-calendar-body-cell.sd-chip-calendar-selected {
-    --mat-datepicker-calendar-date-hover-state-background-color: var(--sd-primary-600, var(--sd-primary-dark));
-    --mat-datepicker-calendar-date-focus-state-background-color: var(--sd-primary);
-    --mat-datepicker-calendar-date-today-outline-color: transparent;
-
-    > .mat-calendar-body-cell-content {
-      background-color: var(--sd-primary);
-      color: var(--sd-primary-contrast);
-      font-weight: var(--sd-font-weight-semibold, 600);
-    }
-  }
-
-  // Đã chọn nhưng không bỏ được: ô bị Material coi là disabled — ghi đè màu disabled bằng token, nền primary-light.
-  .mat-calendar-body-cell.sd-chip-calendar-locked {
-    --mat-datepicker-calendar-date-disabled-state-text-color: var(--sd-primary-dark);
-    --mat-datepicker-calendar-date-hover-state-background-color: var(--sd-primary-light);
-    --mat-datepicker-calendar-date-focus-state-background-color: var(--sd-primary-light);
-
-    > .mat-calendar-body-cell-content {
-      background-color: var(--sd-primary-light);
-      color: var(--sd-primary-dark);
-    }
-  }
-
-  .mat-calendar-body-cell:focus-visible > .mat-calendar-body-cell-content {
-    outline: var(--sd-focus-ring-width, 2px) solid var(--sd-focus-ring-color);
-    outline-offset: 1px;
-  }
-
-  // why: forced colors bỏ nền primary của ô đã chọn, chỉ còn chữ đậm. Ô đã chọn dùng Highlight / HighlightText như lựa
-  // chọn hệ thống; ô khoá để trình duyệt ép màu (nền focus của ô active là màu tác giả), chữ và viền GrayText. Ô của
-  // Material không có viền sẵn nên khai đủ `border`.
-  @media (forced-colors: active) {
-    .mat-calendar-body-cell.sd-chip-calendar-selected > .mat-calendar-body-cell-content {
-      forced-color-adjust: none;
-      background-color: Highlight;
-      color: HighlightText;
-    }
-
-    .mat-calendar-body-cell.sd-chip-calendar-locked > .mat-calendar-body-cell-content {
-      forced-color-adjust: auto;
-      border: 1px solid GrayText;
-      background-color: Canvas;
-      color: GrayText;
-    }
-  }
+  @include date.footer;
 }
 
 // ── Field (thiết kế 2) ─────────────────────────────────────────────────────────────────────────────────────────────

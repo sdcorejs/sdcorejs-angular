@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -115,6 +116,35 @@ describe('SdDate', () => {
 
   // -------------------------------------------------------------------------
   describe('creation & rendering', () => {
+    it('DP-03 / DP-04 opens the shared header, respects the date limits and commits on selection', async () => {
+      host.model = '2031/03/15';
+      host.min = '2031/03/10';
+      host.max = '2031/04/03';
+      fixture.detectChanges();
+      fixture.nativeElement.querySelector('.sd-suffix-btn').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+      const calendar = overlay.querySelector<HTMLElement>('mat-calendar.sd-date-panel')!;
+      expect(calendar).withContext('Material calendar uses the scoped panel class').not.toBeNull();
+      const [previous, period, next] = calendar.querySelectorAll<HTMLButtonElement>('sd-calendar-header button');
+      expect(previous.disabled).toBeTrue();
+      expect(next.disabled).toBeFalse();
+      expect(period.querySelector('sd-icon[name="arrow_drop_down"]')).not.toBeNull();
+      expect(document.getElementById(period.getAttribute('aria-describedby')!)?.getAttribute('aria-live')).toBe('polite');
+      const cell = (day: number) =>
+        Array.from(calendar.querySelectorAll<HTMLButtonElement>('.mat-calendar-body-cell')).find(
+          button => button.textContent?.trim() === String(day)
+        )!;
+      expect(cell(9).getAttribute('aria-disabled')).toBe('true');
+      expect(cell(15).querySelector('.mat-calendar-body-selected')).not.toBeNull();
+      cell(17).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(host.model).toBe('2031/03/17');
+      expect(overlay.querySelector('mat-calendar')).toBeNull();
+    });
+
     it('creates the component', () => {
       expect(comp).toBeTruthy();
     });

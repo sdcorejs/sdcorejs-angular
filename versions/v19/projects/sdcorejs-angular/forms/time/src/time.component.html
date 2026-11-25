@@ -1,5 +1,7 @@
 @let _label = label();
 @let _appearance = appearance();
+@let _fieldName = ariaLabel() || _label || placeholder() || 'HH:mm';
+@let _useVisibleLabel = _appearance && _label && !ariaLabel();
 <!-- why: dùng bản đã gate theo tương tác của connector, KHÔNG dùng `errorMessage()` thô — field
      `[required]` trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
 @let _errorMessage = connectorState().validationError;
@@ -32,7 +34,7 @@
     [floatLabel]="floatLabel()">
     @if (_appearance && _label) {
       <mat-label class="sd-form-field-label">
-        <span>{{ _label }}</span>
+        <span [attr.id]="_useVisibleLabel ? id + '-label' : null">{{ _label }}</span>
         @if (_helperText) {
           <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
         }
@@ -52,7 +54,7 @@
       [placeholder]="placeholder() || _label || 'HH:mm'"
       [required]="_required"
       [readonly]="isReadonly()"
-      [attr.aria-label]="ariaLabel() || _label || placeholder() || 'HH:mm'"
+      [attr.aria-label]="_fieldName"
       [attr.aria-invalid]="dataInvalid()"
       [attr.data-autoId]="autoId()"
       [attr.data-disabled]="dataDisabled()"
@@ -64,6 +66,7 @@
       (focus)="onFocus()"
       (blur)="onBlur()"
       (keydown.arrowUp)="stepBy(1, $event)"
+      (keydown.alt.arrowDown)="$event.preventDefault(); open()"
       (keydown.arrowDown)="stepBy(-1, $event)" />
 
     @if (!hideInlineError() && _errorMessage) {
@@ -93,30 +96,43 @@
          đều đã dùng `.sd-suffix-icon.sd-suffix-btn` (20px, khớp gap 8px + padding 12px của
          `.mat-mdc-form-field-icon-suffix`); sd-time là control cuối còn lệch. -->
     <button
-      #menuTrigger="matMenuTrigger"
+      #pickerTrigger
       type="button"
       matSuffix
       data-time-picker-trigger
       class="cursor-pointer sd-suffix-icon sd-suffix-btn"
-      [matMenuTriggerFor]="timePickerMenu"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="pickerOpen()"
+      [attr.aria-controls]="pickerOpen() ? id + '-picker' : null"
       [disabled]="formControl.disabled || isReadonly()"
       [attr.aria-label]="'core.form.time.open-picker' | sdTranslate"
-      (menuOpened)="preparePicker()">
+      (click)="pickerOpen() ? cancelPicker() : open()">
       <sd-icon name="schedule"></sd-icon>
     </button>
   </mat-form-field>
 
-  <mat-menu #timePickerMenu="matMenu" class="sd-time-picker-menu">
-    <!-- why: div này chỉ tồn tại để chặn click nổi bọt làm đóng mat-menu — nó không phải một
-         "nút" và không cần focus. role="presentation" là tín hiệu đúng (khác aria-hidden ở chỗ
-         KHÔNG ẩn cây con: spinner giờ/phút và hai nút bên trong vẫn đọc được bình thường). -->
-    <div class="d-flex flex-column" role="presentation" (click)="$event.stopPropagation()">
+  <ng-template
+    cdkConnectedOverlay
+    #overlay="cdkConnectedOverlay"
+    [cdkConnectedOverlayOrigin]="pickerTrigger"
+    [cdkConnectedOverlayOpen]="pickerOpen()"
+    [cdkConnectedOverlayPositions]="pickerPositions"
+    [cdkConnectedOverlayViewportMargin]="8"
+    [cdkConnectedOverlayPush]="true"
+    [cdkConnectedOverlayDisableClose]="true"
+    (attach)="focusPickerHour(overlay)"
+    (overlayKeydown)="onPickerKeydown($event)"
+    (overlayOutsideClick)="cancelPicker()">
+    <div class="sd-time-panel" role="dialog" [id]="id + '-picker'" [attr.aria-labelledby]="id + '-label'" cdkTrapFocus>
+      @if (!_useVisibleLabel) {
+        <span hidden [id]="id + '-label'">{{ _fieldName }}</span>
+      }
       <sd-time-spinner [value]="pickerDraft()" [baseValue]="pickerDraft()" [stepMinute]="step()" (valueChange)="onPickerValue($event)">
       </sd-time-spinner>
-      <div class="d-flex justify-content-end gap-8 p-8">
-        <button type="button" mat-button (click)="cancelPicker()">{{ 'core.common.cancel' | sdTranslate }}</button>
-        <button type="button" mat-flat-button (click)="applyPicker()">{{ 'core.form.time.confirm' | sdTranslate }}</button>
+      <div class="sd-time-panel__footer">
+        <sd-button type="text" color="secondary" size="sm" [title]="'core.common.cancel' | sdTranslate" (click)="cancelPicker()" />
+        <sd-button type="fill" color="primary" size="sm" [title]="'core.form.time.confirm' | sdTranslate" (click)="applyPicker()" />
       </div>
     </div>
-  </mat-menu>
+  </ng-template>
 }

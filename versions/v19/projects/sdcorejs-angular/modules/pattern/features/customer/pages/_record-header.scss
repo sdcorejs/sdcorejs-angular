@@ -1,0 +1,15 @@
+// A full title and two labelled actions need separate rows on a phone.
+@mixin narrow-header {
+  @media screen and (max-width: 599px) {
+    .c-page-header > div:first-child {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .c-page-lead {
+      flex-basis: 100%;
+    }
+    .c-page-title {
+      white-space: normal;
+    }
+  }
+}

@@ -13,8 +13,8 @@ $qb-border-soft: var(--sd-query-bar-border-soft, #e2e4e7);
 }
 
 .c-chip-popover {
-  @include panel.panel;
-  // why: header có viền dưới chạm hai mép — cắt theo bo 8px của khung; màn hình thấp thì thân cuộn, header đứng yên
+  @include panel.panel($constrained: true);
+  // why: header có viền dưới chạm hai mép — cắt theo bo góc của khung; màn hình thấp thì thân cuộn, header đứng yên
   // (PD sau R1, G-9).
   overflow: hidden;
   display: flex;

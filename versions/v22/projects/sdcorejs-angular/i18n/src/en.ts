@@ -227,6 +227,9 @@ export const EN_MESSAGES = {
   'core.form.date-range.invalid-max': 'End date is invalid (above limit)',
   'core.form.date-range.from': 'From',
   'core.form.date-range.to': 'to',
+  'core.form.date-range.pick-end': 'Choose an end date',
+  'core.form.date-range.summary-day': '{count} day',
+  'core.form.date-range.summary-days': '{count} days',
 
   // ---- Forms: datetime ----
   'core.form.datetime.required': 'Please enter information',

@@ -1,6 +1,7 @@
 import type { PatternMockResource } from '../mock-api.model';
 import { APPROVAL_RESOURCE } from './approval.resource';
 import { CATEGORY_RESOURCE } from './category.resource';
+import { CUSTOMER_ACTIVITY_RESOURCE } from './customer-profile.resource';
 import { CUSTOMER_RESOURCE } from './customer.resource';
 import { ORDER_RESOURCE } from './order.resource';
 import { PARTNER_RESOURCE } from './partner.resource';
@@ -14,6 +15,7 @@ const erase = (resource: object): PatternMockResource => resource as PatternMock
 export const PATTERN_MOCK_RESOURCES: readonly PatternMockResource[] = [
   erase(PRODUCT_RESOURCE),
   erase(CUSTOMER_RESOURCE),
+  erase(CUSTOMER_ACTIVITY_RESOURCE),
   erase(ORDER_RESOURCE),
   erase(APPROVAL_RESOURCE),
   erase(CATEGORY_RESOURCE),

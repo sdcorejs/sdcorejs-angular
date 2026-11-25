@@ -104,7 +104,7 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 ## Popup and keyboard
 
 - The calendar button in the suffix, a click on the field, Enter / Space / ArrowDown on the chip input, or “+N” open the popup under the field (6px gap; it flips above when there is no room).
-- The popup is a `role="dialog"` with its own header (previous month, month label, next month), a count line (“Đã chọn 3 ngày · Tối đa 5”) and a footer with “Xoá hết” (`clearable`) and “Xong”. When `maxCount` is reached a polite live region says so.
+- The popup is a `role="dialog"` with the shared calendar header. Its buttons follow the order previous month, month label, next month. Press the month label to choose a year and month. A count line shows the selection and limit (“Đã chọn 3 ngày · Tối đa 5”). The footer offers “Xoá hết” (`clearable`) and “Xong”. A polite live region announces when the selection reaches `maxCount`.
 - Tab cycles inside the popup and does not close it. Esc and “Xong” close it and return focus to the chip input; a click outside closes it without moving focus.
 - On a chip, Backspace / Delete remove it when `removable` allows.
 

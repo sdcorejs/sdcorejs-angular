@@ -1,0 +1,5 @@
+@use '../record-header';
+
+:host ::ng-deep > sd-page-detail {
+  @include record-header.narrow-header;
+}

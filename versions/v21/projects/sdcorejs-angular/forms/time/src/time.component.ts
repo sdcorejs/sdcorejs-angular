@@ -1,27 +1,31 @@
 import { CommonModule } from '@angular/common';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { CdkConnectedOverlay } from '@angular/cdk/overlay';
 import { Platform } from '@angular/cdk/platform';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  Injector,
   TemplateRef,
+  afterNextRender,
   booleanAttribute,
   computed,
   contentChild,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
   viewChild,
 } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -39,6 +43,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { ɵsdPanelPositions } from '@sdcorejs/angular/utilities';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import {
   SD_DATE_FORMATS,
@@ -82,11 +87,12 @@ export type SdTimeModelValue = string | null | undefined;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule,
+    CdkConnectedOverlay,
+    CdkTrapFocus,
     MatFormFieldModule,
     MatInputModule,
-    MatMenuModule,
     MatTooltipModule,
+    SdButton,
     SdIcon,
     SdLabel,
     SdTimeSpinner,
@@ -97,13 +103,14 @@ export type SdTimeModelValue = string | null | undefined;
 export class SdTime {
   readonly id = `I${Utilities.generateUuid()}`;
   readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
-  readonly menuTrigger = viewChild(MatMenuTrigger);
+  private readonly triggerRef = viewChild<ElementRef<HTMLButtonElement>>('pickerTrigger');
   readonly sdLabelTemplate = contentChild<TemplateRef<unknown>>('sdLabel');
   readonly sdValueTemplate = contentChild<TemplateRef<unknown>>('sdValue');
   readonly sdViewDef = contentChild(SdViewDefDirective);
 
   readonly #formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  readonly #injector = inject(Injector);
   readonly #pickerAdapter = new SdDateTimePickerAdapter();
 
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
@@ -220,6 +227,9 @@ export class SdTime {
   });
 
   protected readonly pickerDraft = signal(this.#pickerAdapter.toPickerValue(null));
+  protected readonly pickerPositions = ɵsdPanelPositions('end');
+  protected readonly pickerUnavailable = computed(() => this.disabled() || this.#state().disabled || this.isReadonly() || this.isViewed());
+  protected readonly pickerOpen = linkedSignal({ source: this.pickerUnavailable, computation: () => false });
 
   preparePicker(): void {
     this.pickerDraft.set(this.#pickerAdapter.toPickerValue(sdNormalizeTime(this.formControl.value) ?? this.valueModel()));
@@ -230,23 +240,43 @@ export class SdTime {
   }
 
   applyPicker(): void {
+    if (this.pickerUnavailable() || this.formControl.disabled) return;
     const value = this.#pickerAdapter.fromPickerValue(this.pickerDraft());
     if (value) {
       this.formControl.setValue(value);
       this.formControl.markAsDirty();
       this.formControl.markAsTouched();
     }
-    this.menuTrigger()?.closeMenu();
+    this.cancelPicker();
   }
 
   cancelPicker(): void {
-    this.menuTrigger()?.closeMenu();
+    if (!this.pickerOpen()) return;
+    this.pickerOpen.set(false);
+    this.triggerRef()?.nativeElement.focus({ preventScroll: true });
   }
 
   open(): void {
-    if (this.formControl.disabled || this.isReadonly()) return;
+    if (this.pickerUnavailable() || this.formControl.disabled || this.pickerOpen() || !this.triggerRef()) return;
     this.preparePicker();
-    this.menuTrigger()?.openMenu();
+    this.pickerOpen.set(true);
+  }
+
+  protected focusPickerHour(overlay: CdkConnectedOverlay): void {
+    // The hour is the first spinbutton. Wait for the spinner's view and its bound value to render.
+    afterNextRender(
+      () => {
+        if (this.pickerOpen()) overlay.overlayRef.overlayElement.querySelector<HTMLInputElement>('input[role="spinbutton"]')?.focus();
+      },
+      { injector: this.#injector }
+    );
+  }
+
+  protected onPickerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelPicker();
+    }
   }
 
   focus(): void {

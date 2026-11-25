@@ -61,7 +61,7 @@ Section header/footer padding is `8px 16px`. Section body padding is `0`. Use `s
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `label` | `string` | `''` | Left label text. Optional when the left column is projected through `[itemLeft]`. |
-| `labelWidth` | `string` | `'150px'` | Width of the label column. |
+| `labelWidth` | `string` | `'150px'` | CSS width of the label column. With `labelWidth="auto"`, the label fills the available space and the value aligns to the end. |
 
 Each item row uses `8px 16px` padding and projects the value in the default slot.
 
@@ -77,6 +77,16 @@ Each item row uses `8px 16px` padding and projects the value in the default slot
 - `label` is optional (default `''`). Leaving out both `label` and `[itemLeft]` renders an empty left column that still takes `labelWidth`.
 
 ## Examples
+
+```html
+<sd-section title="Orders">
+  <sd-section-item labelWidth="auto">
+    <span itemLeft class="T14M">Order ORD-1042</span>
+    <sd-badge title="Approved" color="success"></sd-badge>
+    <span>1,250,000 ₫</span>
+  </sd-section-item>
+</sd-section>
+```
 
 ```html
 <sd-section icon="info" title="General info" subTitle="Basic employee profile">

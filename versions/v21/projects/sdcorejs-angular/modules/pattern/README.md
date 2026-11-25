@@ -10,6 +10,7 @@ Màn mẫu theo entity, chạy trên Core thật với mock API. Mỗi màn là 
 | --- | --- | --- | --- |
 | Danh sách có bảng | [list](docs/list.md) | `sd-page-list` + `sd-table` | `product`, `order`, `customer`, `category` |
 | Xem một bản ghi | [detail](docs/detail.md) | `sd-page-detail` | `product/:id/detail`, `order/:id/detail`, `customer/:id/360` |
+| Hồ sơ khách hàng, nhiều quan hệ | [record-360](docs/record-360.md) | Tab Tổng quan hoặc mục lục và bản in | `customer/:id/360`, `customer/:id/sheet` |
 | Tạo / cập nhật một bước | [form](docs/form.md) | `sd-page-form` (`toc` khi nhiều nhóm) | `product/create`, `order/create`, `settings` |
 | Quy trình nhiều bước | [flow](docs/flow.md) | `sd-page` hẹp + `sd-stepper`, nút bước ở footer | `import`, `partner/create` |
 | Xem / sửa ngay trên danh sách | [drawer](docs/drawer.md) | `sd-side-drawer` mở bằng `@if` trên danh sách, không đổi URL | `customer`, `category` |

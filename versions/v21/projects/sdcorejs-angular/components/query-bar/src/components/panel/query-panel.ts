@@ -1,7 +1,7 @@
 import { InteractivityChecker } from '@angular/cdk/a11y';
 import { Directionality } from '@angular/cdk/bidi';
 import { hasModifierKey } from '@angular/cdk/keycodes';
-import { ConnectedPosition, Overlay, OverlayContainer, OverlayRef } from '@angular/cdk/overlay';
+import { Overlay, OverlayContainer, OverlayRef } from '@angular/cdk/overlay';
 import { _getEventTarget } from '@angular/cdk/platform';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { DOCUMENT } from '@angular/common';
@@ -21,6 +21,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { ɵsdPanelPositions } from '@sdcorejs/angular/utilities';
 import { Subject } from 'rxjs';
 
 /** Popup type of a query bar panel; it is also the `aria-haspopup` value of its trigger. */
@@ -43,21 +44,6 @@ export interface ɵSdQueryPanelOpenOptions {
    */
   focus?: boolean;
 }
-
-// why: thứ tự vị trí như Action Popover của sd-button (`components/button/src/action-popover.ts`) — dưới trước, thiếu
-// chỗ thì lật lên, cách trigger 4px — nhưng mặc định canh trái (start); bộ lọc đã lưu canh phải như `xPosition="before"`.
-const START_POSITIONS: ConnectedPosition[] = [
-  { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
-  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
-  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
-  { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
-];
-const END_POSITIONS: ConnectedPosition[] = [
-  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
-  { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
-  { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
-  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
-];
 
 let nextPanelId = 0;
 
@@ -187,7 +173,7 @@ export class ɵSdQueryPanelDirective {
       positionStrategy: this.#overlay
         .position()
         .flexibleConnectedTo(origin)
-        .withPositions(this.align() === 'end' ? END_POSITIONS : START_POSITIONS)
+        .withPositions(ɵsdPanelPositions(this.align()))
         .withViewportMargin(8)
         .withPush(true)
         .withFlexibleDimensions(true),

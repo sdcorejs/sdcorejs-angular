@@ -12,7 +12,10 @@ import { SdTime } from './time.component';
   template: `<sd-time
     [form]="form"
     [name]="name"
-    [label]="'Start time'"
+    [label]="label"
+    [ariaLabel]="ariaLabel"
+    [disabled]="disabled"
+    [readonly]="readonly"
     [min]="min"
     [max]="max"
     [step]="step"
@@ -23,6 +26,10 @@ import { SdTime } from './time.component';
 })
 class TimeHostComponent {
   readonly form = new FormGroup({});
+  label: string | undefined = 'Start time';
+  ariaLabel: string | undefined;
+  disabled = false;
+  readonly = false;
   name = 'startTime';
   min: string | null = null;
   max: string | null = null;
@@ -258,38 +265,131 @@ describe('SdTime (validation message is interaction-gated)', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Accessibility — panel chọn giờ
-// why: div bọc bên trong mat-menu chỉ tồn tại để chặn click nổi bọt (không cho menu đóng).
-// Trước đây nó bị lint kêu vì có (click) mà không focus được; cách sửa SAI là gắn aria-hidden
-// (sẽ ẩn luôn spinner giờ/phút và 2 nút). role="presentation" mới là tín hiệu đúng: chỉ vô
-// hiệu hoá chính div, KHÔNG lan xuống con.
-// ---------------------------------------------------------------------------
-describe('SdTime (picker panel accessibility)', () => {
+describe('DP-07 SdTime picker', () => {
   let fixture: ComponentFixture<TimeHostComponent>;
+  let trigger: HTMLButtonElement;
+  let field: HTMLInputElement;
+
+  const panel = () => document.querySelector<HTMLElement>('.sd-time-panel[role="dialog"]');
+  const hour = () => panel()!.querySelector<HTMLInputElement>('[role="spinbutton"]')!;
+  const key = (target: Element, value: string, altKey = false) => {
+    const event = new KeyboardEvent('keydown', { key: value, altKey, bubbles: true, cancelable: true });
+    target.dispatchEvent(event);
+    fixture.detectChanges();
+    return event;
+  };
+
+  async function open(): Promise<void> {
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(panel()).not.toBeNull();
+  }
 
   beforeEach(async () => {
-    localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({ imports: [TimeHostComponent, NoopAnimationsModule] }).compileComponents();
     fixture = TestBed.createComponent(TimeHostComponent);
+    fixture.componentInstance.value = '09:30';
     fixture.detectChanges();
+    trigger = fixture.nativeElement.querySelector('button[data-time-picker-trigger]');
+    field = fixture.nativeElement.querySelector('input[matInput]');
   });
 
-  it('marks the menu content presentational without hiding the controls inside it', () => {
-    const trigger = fixture.nativeElement.querySelector('button[data-time-picker-trigger]') as HTMLButtonElement;
-    trigger.click();
-    fixture.detectChanges();
+  it('opens a dialog from Alt+Down with the field label and focuses the hour without stepping', async () => {
+    field.focus();
+    expect(key(field, 'ArrowDown', true).defaultPrevented).toBeTrue();
+    await fixture.whenStable();
 
-    const panel = document.querySelector('.sd-time-picker-menu') as HTMLElement;
-    expect(panel).not.toBeNull();
-    const wrapper = panel.querySelector('div[role="presentation"]') as HTMLElement;
-    expect(wrapper).not.toBeNull();
-    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
-    // Spinner + nút Hủy/Xác nhận vẫn nằm trong accessibility tree.
-    expect(wrapper.querySelectorAll('button').length).toBeGreaterThan(0);
-    expect(wrapper.closest('[aria-hidden="true"]')).toBeNull();
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(trigger.getAttribute('aria-controls')).toBe(panel()!.id);
+    const labelId = panel()!.getAttribute('aria-labelledby')!;
+    expect(document.getElementById(labelId)?.textContent?.trim()).toBe('Start time');
+    expect(document.activeElement).toBe(hour());
+    expect(hour().closest('[aria-hidden="true"]')).toBeNull();
+    expect(fixture.componentInstance.value).toBe('09:30');
+  });
 
-    trigger.click();
+  it('names a dialog from the explicit accessible field name when the visible label is omitted', async () => {
+    fixture.componentInstance.label = undefined;
+    fixture.componentInstance.ariaLabel = 'Collection time';
     fixture.detectChanges();
+    await open();
+
+    const labelId = panel()!.getAttribute('aria-labelledby')!;
+    expect(document.getElementById(labelId)?.textContent?.trim()).toBe('Collection time');
+  });
+
+  for (const edge of ['top', 'bottom'] as const) {
+    it(`opens 6px ${edge === 'top' ? 'below' : 'above'} the clock near the ${edge} of the viewport`, async () => {
+      Object.assign(trigger.style, { position: 'fixed', left: '50%', [edge]: '8px' });
+      await open();
+      const origin = trigger.getBoundingClientRect();
+      const popup = panel()!.closest('.cdk-overlay-pane')!.getBoundingClientRect();
+
+      expect(Math.round(edge === 'top' ? popup.top - origin.bottom : origin.top - popup.bottom)).toBe(6);
+    });
+  }
+
+  for (const action of ['Escape', 'outside', 'Cancel', 'Confirm']) {
+    it(`closes on ${action}, returns focus to the clock and ${action === 'Confirm' ? 'commits' : 'discards'} the draft`, async () => {
+      await open();
+      key(hour(), 'ArrowUp');
+      expect(hour().value).toBe('10');
+      expect(fixture.componentInstance.value).toBe('09:30');
+
+      if (action === 'Escape') {
+        key(hour(), 'Escape');
+      } else if (action === 'outside') {
+        document.body.click();
+      } else {
+        const selector = action === 'Confirm' ? 'sd-button[type="fill"] button' : 'sd-button[type="text"] button';
+        panel()!.querySelector<HTMLButtonElement>(selector)!.click();
+      }
+      fixture.detectChanges();
+
+      expect(panel()).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+      expect(trigger.hasAttribute('aria-controls')).toBeFalse();
+      expect(fixture.componentInstance.value).toBe(action === 'Confirm' ? '10:30' : '09:30');
+      await open();
+      expect(hour().value).toBe(action === 'Confirm' ? '10' : '09');
+    });
+  }
+
+  for (const mode of ['disabled', 'readonly'] as const) {
+    it(`discards an open draft when the field becomes ${mode} and ignores attempts to reopen it`, async () => {
+      await open();
+      key(hour(), 'ArrowUp');
+      fixture.componentInstance[mode] = true;
+      fixture.detectChanges();
+      expect(panel()).toBeNull();
+      expect(trigger.disabled).toBeTrue();
+      trigger.click();
+      key(field, 'ArrowDown', true);
+      expect(panel()).toBeNull();
+      expect(fixture.componentInstance.value).toBe('09:30');
+      fixture.componentInstance[mode] = false;
+      fixture.detectChanges();
+      await open();
+      expect(hour().value).toBe('09');
+    });
+  }
+
+  it('detaches its dialog when the field is destroyed', async () => {
+    await open();
+    fixture.destroy();
+    expect(panel()).toBeNull();
+  });
+
+  it('keeps unmodified arrows available for stepping the field', () => {
+    fixture.componentInstance.step = 15;
+    fixture.detectChanges();
+    key(field, 'ArrowDown');
+    expect(fixture.componentInstance.value).toBe('09:15');
+    key(field, 'ArrowUp');
+    expect(fixture.componentInstance.value).toBe('09:30');
+    expect(panel()).toBeNull();
   });
 });

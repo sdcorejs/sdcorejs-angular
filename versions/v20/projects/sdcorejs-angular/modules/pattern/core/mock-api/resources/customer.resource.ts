@@ -2,7 +2,10 @@ import { FilterUtilities } from '@sdcorejs/utils/fns';
 import type { Filter } from '@sdcorejs/utils/models';
 import { PatternMockError, type PatternMockRecord, type PatternMockResource } from '../mock-api.model';
 import { createPrng, pickWith } from '../prng';
+import { customerProfile, forgetCustomerActivity, recordCustomerUpdate } from './customer-profile.resource';
+import { PROFILE_CUSTOMER } from './customer-profile.seed';
 import { COMPANY_NAMES, PERSON_NAMES, slug } from './names';
+import type { MockOrder } from './order.resource';
 
 export interface MockCustomer extends PatternMockRecord {
   readonly code: string;
@@ -64,14 +67,6 @@ function validate(
   };
 }
 
-interface MockOrderLink extends PatternMockRecord {
-  readonly code: string;
-  readonly customerId: string;
-  readonly createdAt: string;
-  readonly total: number;
-  readonly status: string;
-}
-
 /** Card counts under the filters of the list, without the segment the cards choose. */
 function counts(records: readonly MockCustomer[], filters: Filter[]): Record<'all' | 'individual' | 'business' | 'vip', number> {
   const matched = records.filter(record => FilterUtilities.match(filters, record));
@@ -84,8 +79,8 @@ function counts(records: readonly MockCustomer[], filters: Filter[]): Record<'al
 }
 
 /**
- * `customers`: 16 individuals named like the order seed (ids 1–16), 8 businesses and 16 more individuals.
- * Extra endpoints: `GET customers/counts`, `GET customers/:id/orders|debts|documents` for the 360° tabs.
+ * `customers`: 32 people and 8 businesses, including the Record 360 account at ID 12.
+ * Extra endpoints: list segment counts, customer summary and paged profile relations.
  */
 export const CUSTOMER_RESOURCE: PatternMockResource<MockCustomer> = {
   name: 'customers',
@@ -94,7 +89,7 @@ export const CUSTOMER_RESOURCE: PatternMockResource<MockCustomer> = {
     const random = createPrng(20261102);
     const pick = pickWith(random);
     const names = [...PERSON_NAMES, ...COMPANY_NAMES, ...PERSON_NAMES.map(name => `${name} ${pick(['Anh', 'Thu', 'Hải', 'Linh'])}`)];
-    return names.map((name, index) => {
+    const rows = names.map<MockCustomer>((name, index) => {
       const id = index + 1;
       const business = index >= PERSON_NAMES.length && index < PERSON_NAMES.length + COMPANY_NAMES.length;
       const createdAt = new Date(2026, 9, 24 - index * 3, 9, 0);
@@ -114,18 +109,27 @@ export const CUSTOMER_RESOURCE: PatternMockResource<MockCustomer> = {
         note: id % 5 === 0 ? 'Ưu tiên giao buổi sáng.' : null,
       };
     });
+    // Keep the same catalogue of people and companies while reserving the handoff's #12 for Minh Phát.
+    rows[16] = { ...rows[11], id: '17', code: code(17) };
+    rows[11] = PROFILE_CUSTOMER;
+    return rows.map(row => (Number(row.id) > 17 ? { ...row, debt: 0 } : row));
   },
   create: (body, records, context) => {
     const id = context.nextId('customers');
     return { id, code: code(Number(id)), debt: 0, createdAt: context.now().toISOString(), ...validate(body, records) };
   },
-  update: (current, body, records) => ({ ...current, ...validate(body, records, current.id) }),
+  update: (current, body, records, context) => {
+    const updated = { ...current, ...validate(body, records, current.id) };
+    recordCustomerUpdate(current.id, context);
+    return updated;
+  },
   beforeDelete: (current, context) => {
-    if (context.collection<MockOrderLink>('orders').some(order => order.customerId === current.id)) {
+    if (context.collection<MockOrder>('orders').some(order => order.customerId === current.id)) {
       throw new PatternMockError(409, { message: `${current.name} còn đơn hàng, không xoá được.` });
     }
+    forgetCustomerActivity(current.id, context);
   },
-  route: (method, segments, query, _body, context) => {
+  route: (method, segments, query, _body, context, readLimit) => {
     if (method !== 'GET') return undefined;
     if (segments.length === 1 && segments[0] === 'counts') {
       const filters = JSON.parse(query.get('filters') ?? '[]') as Filter[];
@@ -135,38 +139,6 @@ export const CUSTOMER_RESOURCE: PatternMockResource<MockCustomer> = {
     const [id, tab] = segments;
     const customer = context.collection<MockCustomer>('customers').find(record => record.id === id);
     if (!customer) throw new PatternMockError(404, { message: 'Không tìm thấy khách hàng.' });
-    const orders = context.collection<MockOrderLink>('orders').filter(order => order.customerId === id);
-    if (tab === 'orders') {
-      const items = orders.map(order => ({
-        id: order.id,
-        code: order.code,
-        createdAt: order.createdAt,
-        total: order.total,
-        status: order.status,
-      }));
-      return { body: { items, total: items.length } };
-    }
-    if (tab === 'debts') {
-      const items = orders
-        .filter(order => order.status === 'done')
-        .slice(0, customer.debt ? 4 : 0)
-        .map((order, index) => ({
-          id: order.id,
-          orderCode: order.code,
-          dueDate: new Date(new Date(order.createdAt).getTime() + (15 + index * 15) * 86_400_000).toISOString(),
-          amount: Math.round(order.total / 2 / 1000) * 1000,
-        }));
-      return { body: { items, total: items.length } };
-    }
-    if (tab === 'documents') {
-      const kinds =
-        customer.type === 'business'
-          ? ['Hợp đồng nguyên tắc', 'Giấy phép kinh doanh', 'Biên bản đối chiếu công nợ']
-          : ['Hợp đồng mua bán', 'CCCD'];
-      const items =
-        Number(id) % 3 === 0 ? [] : kinds.map((name, index) => ({ id: `${id}-${index + 1}`, name, size: 120_000 + index * 48_000 }));
-      return { body: { items, total: items.length } };
-    }
-    return undefined;
+    return customerProfile(customer, tab, query, context, readLimit);
   },
 };

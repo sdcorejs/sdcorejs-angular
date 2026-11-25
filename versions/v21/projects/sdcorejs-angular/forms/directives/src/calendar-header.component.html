@@ -1,0 +1,44 @@
+@if (range; as selection) {
+  <div class="sd-calendar-header__summary" aria-live="polite" aria-atomic="true">
+    @if (selection.start && selection.end) {
+      @let summary = rangeSummary(selection.start, selection.end);
+      <span>{{ summary.dates }}</span>
+      <span class="sd-calendar-header__count">{{ summary.days }}</span>
+    } @else if (selection.start) {
+      <span>{{ 'core.form.date-range.pick-end' | sdTranslate }}</span>
+    }
+  </div>
+}
+<div class="sd-calendar-header">
+  <span [id]="_periodButtonLabelId" class="sd-visually-hidden" aria-live="polite">{{
+    calendar.currentView === 'month' ? periodText : periodButtonDescription
+  }}</span>
+  <button
+    type="button"
+    class="sd-calendar-header__nav"
+    data-chip-calendar-previous
+    [disabled]="!previousEnabled()"
+    [attr.aria-label]="prevButtonLabel"
+    (click)="previousClicked()">
+    <sd-icon name="chevron_left" size="20px" aria-hidden="true" />
+  </button>
+  <button
+    type="button"
+    class="sd-calendar-header__period"
+    data-chip-calendar-period
+    [attr.aria-label]="periodButtonLabel"
+    [attr.aria-describedby]="_periodButtonLabelId"
+    (click)="currentPeriodClicked()">
+    <span aria-hidden="true">{{ periodText }}</span>
+    <sd-icon name="arrow_drop_down" size="18px" aria-hidden="true" />
+  </button>
+  <button
+    type="button"
+    class="sd-calendar-header__nav"
+    data-chip-calendar-next
+    [disabled]="!nextEnabled()"
+    [attr.aria-label]="nextButtonLabel"
+    (click)="nextClicked()">
+    <sd-icon name="chevron_right" size="20px" aria-hidden="true" />
+  </button>
+</div>

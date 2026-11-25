@@ -1,0 +1,42 @@
+@use '../record-header';
+
+customer-sheet > sd-page-detail {
+  @include record-header.narrow-header;
+}
+
+customer-sheet .customer-sheet-sections {
+  padding-block-end: 16px;
+}
+customer-sheet sd-section-item {
+  overflow-wrap: anywhere;
+}
+
+// The application shell and page normally scroll independently. Let the printer paginate their content.
+@media print {
+  :is(html, body, body *):has(customer-sheet),
+  customer-sheet,
+  customer-sheet :is(sd-page-detail, .c-page-wrapper, .c-page-content) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  body :has(customer-sheet) > :not(:has(customer-sheet), customer-sheet),
+  customer-sheet :is(.customer-sheet-actions, .c-page-toc, .c-page-back, [sdHeaderRight], .c-page-footer) {
+    display: none !important;
+  }
+  customer-sheet :is(.c-page-header, .customer-sheet-sections, customer-relation) {
+    display: block;
+  }
+  customer-sheet sd-section {
+    display: block;
+    margin-block: 12pt;
+    box-shadow: none;
+  }
+  customer-sheet sd-section-item {
+    break-inside: avoid;
+  }
+}
