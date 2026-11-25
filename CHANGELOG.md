@@ -34,6 +34,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.7] - 2026-11-25
+
+Packages `19.3.7` · `20.3.7` · `21.3.7` · `22.3.7`, validated against `*.3.6`.
+
+**Highlights**
+
+- Configure section dividers and open a customer's Record 360 overview or printable sheet.
+- Date and time pickers share calendar navigation and themed panels. The range picker announces the end date and shows the inclusive day count.
+
 ### Added
 
 #### Date Range
@@ -3441,7 +3450,8 @@ Packages `19.0.0` · `20.0.0` · `21.0.0`.
 
 ---
 
-[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.6...HEAD
+[Unreleased]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.7...HEAD
+[3.7]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.6...v3.7
 [3.6]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.5...v3.6
 [3.5]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.4...v3.5
 [3.4]: https://github.com/sdcorejs/sdcorejs-angular/compare/v3.3...v3.4
