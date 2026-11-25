@@ -38,10 +38,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Packages `19.3.7` · `20.3.7` · `21.3.7` · `22.3.7`, validated against `*.3.6`.
 
+> [!IMPORTANT]
+> **Before upgrading:** Update integrations that access `SdTime.menuTrigger`, add the three date-range messages to custom `I18nCatalog` providers, and opt in to size limits if you use the popover panel Sass mixin directly.
+
 **Highlights**
 
 - Configure section dividers and open a customer's Record 360 overview or printable sheet.
 - Date and time pickers share calendar navigation and themed panels. The range picker announces the end date and shows the inclusive day count.
+
+### Changed (BREAKING for consumers)
+
+#### i18n
+
+- Add `core.form.date-range.pick-end`, `core.form.date-range.summary-day`, and `core.form.date-range.summary-days` to exhaustive custom catalogs. Translate the end-date prompt and keep the `{count}` placeholder in both day-count messages.
+
+#### Popover styles
+
+- If your Sass uses the exported popover panel mixin and relies on its width, height or scrolling limits, change `@include popover.panel;` to `@include popover.panel($constrained: true);`.
+
+#### Time
+
+- `sd-time` now uses a CDK connected overlay with `role="dialog"`. Replace direct calls to the removed Material menu trigger with the component methods below. Tests that inspect the open state can read `aria-expanded` on `[data-time-picker-trigger]` and find the picker through `.sd-time-panel[role="dialog"]`. The component exposes no equivalent to the Material menu's open and close event streams.
+
+  ```diff
+  - time.menuTrigger()?.openMenu();
+  + time.open();
+  - time.menuTrigger()?.closeMenu();
+  + time.cancelPicker();
+  ```
 
 ### Added
 
