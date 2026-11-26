@@ -1,5 +1,42 @@
 # Reviewed release snapshots
 
+## Release 3.7
+
+The [first Linux build](https://github.com/sdcorejs/sdcorejs-angular/actions/runs/45550147725)
+produced all four tarballs from `3e8a1db0b300d834d6f33d01ba9728fb7c327e6d`
+using Node `24.22.1` and npm `11.5.1`. Its package comparison detected the changed
+file inventory and stopped the workflow before publication. Each artifact's SHA-256,
+npm SHA-512 integrity, SHA-1 and file inventory were checked against its contents.
+The published same-major `*.3.6` baselines matched the registry checksums and
+all 16 candidate fingerprints from `3.6.json`.
+
+| Angular candidate | SHA-256 of first Linux tarball | Files added / removed | Declarations added / removed / changed |
+| --- | --- | --- | --- |
+| 19.3.7 | `f1c40c95ed6f0722c93c44671e8ae02a65c564eb3825d1c001ed986272de3210` | 118 / 81 | 14 / 1 / 27 |
+| 20.3.7 | `2e8371a5e9f7c92cb971c2cf36cdbe4d27cee371469825953ad2f36ce49def71` | 104 / 80 | 0 / 0 / 11 |
+| 21.3.7 | `d0e1cdd19a68a10f295e5b055a95fa26b5cf1aeac3ad4f7ee7f495255c8f7ca2` | 104 / 80 | 0 / 0 / 11 |
+| 22.3.7 | `535dc791861c4e5533752f520ce59f4ee0f786eae653cded299cc0097508a087` | 104 / 80 | 0 / 0 / 11 |
+
+All four lines have the same dependencies, peer ranges, engines and export map
+as their baselines. The 105 Angular Package Format entry points retain their
+named runtime exports and add the public `sdTableQueryParams` helper and the
+internal `ɵSdCalendarHeader` and `ɵsdPanelPositions` exports. Each line adds
+19 authored sourcemap sources, removes the two old chip-calendar header sources
+and changes 47 sources. The packed file changes include rebuilt lazy chunks,
+the Record 360 pages and styles, and the shared date panel styles.
+
+The [3.7 changelog](../../CHANGELOG.md#37---2026-11-25) documents migrations
+for the removed `SdTime.menuTrigger` member, the three required custom
+`I18nCatalog` messages, and explicit size limits on the shared Sass popover
+panel. The release snapshot compares the actual declarations and authored
+sources, including these member and stylesheet changes.
+
+A separate read-only review reproduced all 32 baseline and candidate fingerprints
+from the tarballs and checked their entry points. The unchanged strict Angular
+consumer fixture compiled against each candidate on Windows with Node `24.22.1`
+and npm `11.5.1` at the reviewed source commit. The tag workflow repeats the
+four builds and the consumer compilation on Linux before publishing.
+
 ## Release 3.6
 
 `3.6.json` compares all four candidates with their same-major published `*.3.5`

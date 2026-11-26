@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "suffix": "3.7",
+  "baselineSuffix": "3.6",
+  "reviewedSourceSha": "3e8a1db0b300d834d6f33d01ba9728fb7c327e6d",
+  "artifactSource": "Linux tarballs from publish-npm.yml run 45550147725 for the first v3.7 tag, built on Node 24.22.1 with npm 11.5.1. Candidate SHA-256, SHA-1 and npm integrity were checked against retained metadata. Same-major 3.6 baselines were downloaded from npm and verified against the registry. Surface fingerprints exclude version and frameworkMajor.",
+  "targets": {
+    "19.3.7": {
+      "version": "19.3.7",
+      "baselineVersion": "19.3.6",
+      "dependencies": {
+        "baseline": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "cf37a65c6f6f92c3706f13db822a7abd8b892ab6da1fb5728afd3fb37edceb76",
+        "candidate": "cf37a65c6f6f92c3706f13db822a7abd8b892ab6da1fb5728afd3fb37edceb76"
+      },
+      "files": {
+        "baseline": "01a7c0b7fa1429928a47c41872ed8ce18efa5db43676868a3446bb102432c504",
+        "candidate": "f704285f17a4114b63d6849822b572caf1bb1d90e908a08c65ea84daa46052e9"
+      },
+      "publicSurface": {
+        "baseline": "1a4346110e6cb5676d94730be9335ace411bea536bda5f9ff522ff16b7461f55",
+        "candidate": "8b410c83edfa7e7698552c9522cabde6c92c10b7daf13fc0c13246592d6dff7c"
+      }
+    },
+    "20.3.7": {
+      "version": "20.3.7",
+      "baselineVersion": "20.3.6",
+      "dependencies": {
+        "baseline": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "cf37a65c6f6f92c3706f13db822a7abd8b892ab6da1fb5728afd3fb37edceb76",
+        "candidate": "cf37a65c6f6f92c3706f13db822a7abd8b892ab6da1fb5728afd3fb37edceb76"
+      },
+      "files": {
+        "baseline": "9517855347717d56b050a2841da06d58f149e3d6d0f44e63c4e5a770e2fd0285",
+        "candidate": "7039da1acaaf2e0a137454681afb6d4d92f77ede8ef845cd36ab7aea8d648e26"
+      },
+      "publicSurface": {
+        "baseline": "32cef8a9ff3d30a793e6cf08eec7ed5d0f31e37a3911665405e5b4c188d0423d",
+        "candidate": "17c1215a9cb24287f3ab3733a6f31049fb0274c56b2b6a8afd68be6d31b2cc49"
+      }
+    },
+    "21.3.7": {
+      "version": "21.3.7",
+      "baselineVersion": "21.3.6",
+      "dependencies": {
+        "baseline": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "e376f714397c7b900ae37bcaefb6219cb66101e79326af079a385110caedaf05",
+        "candidate": "e376f714397c7b900ae37bcaefb6219cb66101e79326af079a385110caedaf05"
+      },
+      "files": {
+        "baseline": "9973182f97d759e3feeea8626e789a662591a1048db55abf139743ebda4bd60b",
+        "candidate": "94be5c8dcb08e6140963bf462ac8f1f7f3dbe7c4e97a434e61176f55b882cf10"
+      },
+      "publicSurface": {
+        "baseline": "7958dcd24a884cc01349bbd73a9de29436a45d19e11099f91b1ba8f1aa992a66",
+        "candidate": "7add56e3f9230e3651154ece64f508ee95b96ebac259214361e249ffa229ea19"
+      }
+    },
+    "22.3.7": {
+      "version": "22.3.7",
+      "baselineVersion": "22.3.6",
+      "dependencies": {
+        "baseline": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37",
+        "candidate": "d156c3f5a6580b305d5b81fc10c9eca9ab658aa044c863e8cb0484209e121e37"
+      },
+      "exports": {
+        "baseline": "e376f714397c7b900ae37bcaefb6219cb66101e79326af079a385110caedaf05",
+        "candidate": "e376f714397c7b900ae37bcaefb6219cb66101e79326af079a385110caedaf05"
+      },
+      "files": {
+        "baseline": "007142c79899a58f33c86bfc32a64e222d8d93838f06618c700134f24657b248",
+        "candidate": "0fa76d1626feeade27a6fa6001419fe434c2be51b5cd1a6f23906a24c4a5a3db"
+      },
+      "publicSurface": {
+        "baseline": "e4fb179cc116698a6b518a57b25bd7e84e9582ccf434f4198c7b0ed219cb15e9",
+        "candidate": "7bf3f4c753d8c76cbd7ff2268cd16a2d0e72a8fc49a5b6418f6133c2d56cc7cb"
+      }
+    }
+  }
+}
