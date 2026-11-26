@@ -83,6 +83,30 @@ function cellValue(sheet: import('exceljs').Worksheet, row: number, col: number)
 // ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdExcelService', () => {
+  it('writes and reads an extended conditional formatting rule in the browser workbook', async () => {
+    const Workbook = await loadWorkbookCtor();
+    const workbook = new Workbook();
+    const sheet = workbook.addWorksheet('Scores');
+    sheet.getCell('A1').value = 42;
+    sheet.addConditionalFormatting({
+      ref: 'A1:A5',
+      rules: [{ type: 'dataBar', priority: 1, gradient: false, cfvo: [{ type: 'min' }, { type: 'max' }] }],
+    });
+    const restored = new Workbook();
+    await restored.xlsx.load(await workbook.xlsx.writeBuffer());
+    expect(restored.worksheets[0].model).toEqual(
+      jasmine.objectContaining({
+        conditionalFormattings: [
+          jasmine.objectContaining({
+            ref: 'A1:A5',
+            rules: [jasmine.objectContaining({ type: 'dataBar', gradient: false })],
+          }),
+        ],
+      })
+    );
+    expect(restored.worksheets[0].getCell('A1').value).toBe(42);
+  });
+
   let service: SdExcelService;
   /** Chặn download thật; giữ lại Blob + fileName để verify. */
   let downloadSpy: jasmine.Spy<typeof BrowserUtilities.downloadBlob>;

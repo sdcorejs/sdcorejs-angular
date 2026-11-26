@@ -12,7 +12,7 @@ const { load } = require('js-yaml');
 const { findTests } = require(join(dirname(require.resolve('@angular/build/package.json')), 'src/builders/karma/find-tests.js'));
 const root = fileURLToPath(new URL('../', import.meta.url));
 const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
-const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable', 'components/editor-engine', 'components/editor', 'components/mini-editor'];
+const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable', 'components/editor-engine', 'components/editor', 'components/mini-editor', 'services/excel', 'i18n/src', 'components/tab-router/src/pipes'];
 const formPattern = 'projects/sdcorejs-angular/components/form-generic/**/*.spec.ts';
 
 function specFiles(directory) {

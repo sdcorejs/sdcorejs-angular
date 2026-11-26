@@ -141,6 +141,35 @@ jobs:
         run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
         working-directory: versions/${{ matrix.version }}
 
+      - name: Test packed locale consumers in Chromium
+        if: ${{ matrix.version == 'v22' }}
+        shell: bash
+        run: |
+          npm ci --prefix showcase --legacy-peer-deps
+          (cd showcase && npx playwright install --with-deps chromium)
+          export npm_execpath="$(npm root -g)/npm/bin/npm-cli.js"
+          fixture=scripts/fixtures/i18n-consumer
+          mkdir -p tmp/locale-pack
+          archive=$(npm pack ./versions/v22/dist/sdcorejs-angular --pack-destination tmp/locale-pack --silent)
+          package="file:$PWD/tmp/locale-pack/$archive"
+          node "$fixture/build.mjs" tmp/locale-before 22.3.7 legacy
+          for mode in legacy vi vi-en layout; do
+            node "$fixture/build.mjs" tmp/locale-after "$package" "$mode"
+          done
+          node "$fixture/verify.mjs" tmp/locale-before tmp/locale-after tmp/locale-evidence
+          node "$fixture/verify-excel.mjs" tmp/locale-before tmp/locale-after tmp/locale-evidence
+          node "$fixture/verify-layout.mjs" tmp/locale-after tmp/locale-evidence
+          node "$fixture/verify-ssr.mjs" tmp/locale-after tmp/locale-evidence
+
+      - name: Upload locale consumer measurements
+        if: ${{ matrix.version == 'v22' && always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: packed-locale-consumers
+          path: tmp/locale-evidence
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Run changed-component regressions on historical majors
         if: ${{ matrix.version != 'v22' }}
         run: >-
@@ -156,6 +185,9 @@ jobs:
           --include=projects/sdcorejs-angular/components/editor/**/*.spec.ts
           --include=projects/sdcorejs-angular/components/mini-editor/**/*.spec.ts
           --include=projects/sdcorejs-angular/services/confirm/**/*.spec.ts
+          --include=projects/sdcorejs-angular/services/excel/**/*.spec.ts
+          --include=projects/sdcorejs-angular/i18n/src/*.spec.ts
+          --include=projects/sdcorejs-angular/components/tab-router/src/pipes/tab-info.pipe.spec.ts
         working-directory: versions/${{ matrix.version }}
 
   e2e:

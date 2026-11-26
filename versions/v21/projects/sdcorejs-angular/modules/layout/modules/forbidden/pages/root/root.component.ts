@@ -6,7 +6,6 @@ import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
 import { SdLayoutService } from '../../../../services';
-import { resolveTabName } from '../../../../utils';
 // End
 
 @Component({
@@ -16,7 +15,8 @@ import { resolveTabName } from '../../../../utils';
 })
 @SdTabComponent({
   component: RootComponent,
-  name: () => resolveTabName('core.module.layout.forbidden.tab-name'),
+  name: 'core.module.layout.forbidden.tab-name',
+  translateName: true,
   icon: 'block',
   color: 'error',
 })

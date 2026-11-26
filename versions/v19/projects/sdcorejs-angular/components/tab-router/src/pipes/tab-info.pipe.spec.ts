@@ -36,6 +36,21 @@ describe('SdTabInfoPipe', () => {
     pipe = TestBed.inject(SdTabInfoPipe);
   });
 
+  it('translates tab keys through the same active catalog as the page', () => {
+    const storage = localStorage.getItem('sd-core.language');
+    try {
+      localStorage.setItem('sd-core.language', 'en');
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ providers: [SdTabInfoPipe, SdTabRouterService] });
+      const tabs = TestBed.inject(SdTabRouterService);
+      tabs.addBuilder({ component: DummyA, name: 'core.module.layout.home.tab-name', translateName: true });
+      expect(TestBed.inject(SdTabInfoPipe).transform(null, makeTab()).name).toBe('Home');
+    } finally {
+      if (storage === null) localStorage.removeItem('sd-core.language');
+      else localStorage.setItem('sd-core.language', storage);
+    }
+  });
+
   it('returns the provided tabInfo as-is when truthy', () => {
     const info: SdTabInfo = { name: 'fixed', icon: 'star' };
     const tab = makeTab();

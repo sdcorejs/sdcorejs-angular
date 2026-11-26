@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "name": "exceljs",
+    "version": "4.4.0",
+    "integrity": "sha512-XctvKaEMaj1Ii9oDOqbW/6e1gXknSY4g/aLCDicOXqBE4M0nRWkUu0PTp++UPNzoFY12BNHMfs/VadKIS6llvg==",
+    "browserSha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9",
+    "uuidSources": [
+      "node_modules/uuid/dist/index.js",
+      "node_modules/uuid/dist/md5-browser.js",
+      "node_modules/uuid/dist/nil.js",
+      "node_modules/uuid/dist/parse.js",
+      "node_modules/uuid/dist/regex.js",
+      "node_modules/uuid/dist/rng-browser.js",
+      "node_modules/uuid/dist/sha1-browser.js",
+      "node_modules/uuid/dist/stringify.js",
+      "node_modules/uuid/dist/v1.js",
+      "node_modules/uuid/dist/v3.js",
+      "node_modules/uuid/dist/v35.js",
+      "node_modules/uuid/dist/v4.js",
+      "node_modules/uuid/dist/v5.js",
+      "node_modules/uuid/dist/validate.js",
+      "node_modules/uuid/dist/version.js"
+    ],
+    "runtimeUuid": [
+      {
+        "path": "node_modules/uuid",
+        "version": "8.3.2"
+      }
+    ],
+    "localHelperMatchesSourceMap": false,
+    "tarSandboxInBrowserMap": false
+  },
+  "candidate": {
+    "name": "exceljs-lts",
+    "version": "4.5.6",
+    "integrity": "sha512-rRiXUu6A7TZr7lMsPvORP5QZApH8D24vjwxJTu0o6ph+9+IysO0LjxiqpaTLaeptv0Ig+Sh0LEDQygTwQ0unKw==",
+    "browserSha256": "4e4708c6f68c48c4a8661e474a02803354fe24b429a9abd67e49c7ffe911ad1f",
+    "uuidSources": [],
+    "runtimeUuid": [],
+    "localHelperMatchesSourceMap": true,
+    "tarSandboxInBrowserMap": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "attestationUrl": "https://registry.npmjs.org/-/npm/v1/attestations/exceljs-lts@4.5.6",
+  "sourceCommit": "4aa5e9b061f214654e3f3be408afb4fa71a02e01",
+  "verifiedSourceArchive": "https://codeload.github.com/exceljs/exceljs/tar.gz/4aa5e9b061f214654e3f3be408afb4fa71a02e01",
+  "matchingLibFiles": 180,
+  "signatureCheck": {
+    "scope": "isolated exceljs-lts installation",
+    "registrySignatures": 192,
+    "attestations": 3
+  },
+  "isolatedExcelAudit": {
+    "exceljs@4.4.0": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 0,
+      "critical": 0,
+      "total": 2
+    },
+    "exceljs-lts@4.5.6": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "devextreme-exceljs-fork@4.4.11": {
+      "info": 0,
+      "low": 0,
+      "moderate": 6,
+      "high": 0,
+      "critical": 0,
+      "total": 6
+    }
+  },
+  "consumerProductionAudit": {
+    "@angular/router": {
+      "range": "22.0.0 - 22.2.0",
+      "advisories": [
+        "https://github.com/advisories/GHSA-ff3f-86qr-9cv3",
+        "https://github.com/advisories/GHSA-62vg-58rm-qff7",
+        "https://github.com/advisories/GHSA-57xq-rjx2-v5xh"
+      ]
+    },
+    "zod": {
+      "range": "<4.6.6",
+      "advisories": [
+        "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+      ]
+    }
+  }
+}
