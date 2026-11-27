@@ -174,13 +174,10 @@ export class SdTabRouterOutletComponent implements OnDestroy {
         untracked(() => this.#restoreTitle());
         return;
       }
-      const subscription = untracked(() =>
-        active.tabInfoChanges
-          .pipe(startWith(null))
-          .subscribe(info =>
-            this.#showTitle(info ?? sdTabInfoFromBuilders(this.#tabRouterService.builders.getValue(), active, this.#i18n), active)
-          )
-      );
+      const subscription = active.tabInfoChanges.pipe(startWith(null)).subscribe(info => {
+        const title = info ?? sdTabInfoFromBuilders(this.#tabRouterService.builders.getValue(), active, this.#i18n);
+        untracked(() => this.#showTitle(title, active));
+      });
       onCleanup(() => subscription.unsubscribe());
     });
 

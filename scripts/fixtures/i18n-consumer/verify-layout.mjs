@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { extname, resolve, sep } from 'node:path';
+import { basename, extname, resolve, sep } from 'node:path';
 import { createRequire } from 'node:module';
 
 const [consumer, output] = process.argv.slice(2);
@@ -12,7 +12,13 @@ const paths = {
   403: { vi: 'Không có quyền', en: 'Access Denied' },
   404: { vi: 'Không tìm thấy trang', en: 'Page Not Found' },
 };
-const mime = { '.js': 'application/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.html': 'text/html; charset=utf-8' };
+const mime = {
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.woff2': 'font/woff2',
+  '.svg': 'image/svg+xml',
+  '.html': 'text/html; charset=utf-8',
+};
 const server = createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname.slice(1);
   const name = Object.hasOwn(paths, path) ? 'index.html' : path;
@@ -33,6 +39,18 @@ const server = createServer(async (req, res) => {
 });
 await new Promise(done => server.listen(0, '127.0.0.1', done));
 const browser = await chromium.launch({ ...(process.env.CHROME_BIN ? { executablePath: process.env.CHROME_BIN } : {}) });
+const stats = JSON.parse(await readFile(resolve(root, '../stats.json'), 'utf8'));
+const localeFiles = new Map();
+for (const [name, entry] of Object.entries(stats.outputs)) {
+  for (const [source, input] of Object.entries(entry.inputs)) {
+    const lang = source.match(/sdcorejs-angular-i18n-locales-([a-z]+)\.mjs$/)?.[1];
+    if (lang && input.bytesInOutput) {
+      assert.ok(!localeFiles.has(basename(name)));
+      localeFiles.set(basename(name), lang);
+    }
+  }
+}
+assert.deepEqual([...localeFiles.values()].sort(), ['en', 'ja', 'ko', 'vi', 'zh']);
 const runs = [];
 try {
   await mkdir(output, { recursive: true });
@@ -41,6 +59,11 @@ try {
       for (const width of [390, 900, 1280]) {
         const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
         const errors = [];
+        const requestedLocales = [];
+        page.on('request', request => {
+          const lang = localeFiles.get(basename(new URL(request.url()).pathname));
+          if (lang) requestedLocales.push(lang);
+        });
         page.on('pageerror', e => errors.push(e.message));
         page.on('console', m => {
           if (m.type() === 'error') errors.push(m.text());
@@ -64,8 +87,9 @@ try {
           await page.waitForLoadState('networkidle');
           await page.evaluate(() => document.fonts.ready);
           assert.deepEqual(errors, []);
+          assert.deepEqual(requestedLocales, [lang]);
           await page.screenshot({ path: resolve(output, image) });
-          runs.push({ path, lang, width, title: await page.title(), tab: name, image });
+          runs.push({ path, lang, width, title: await page.title(), tab: name, requestedLocales, image });
         } catch (error) {
           console.error({
             path,

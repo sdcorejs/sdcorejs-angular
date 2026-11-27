@@ -23,7 +23,6 @@ const bundle = await build({
   write: false,
   format: 'esm',
   platform: 'browser',
-  define: { SD_I18N_LAZY_ONLY: 'true' },
 });
 const labels = { vi: 'Trang chủ', en: 'Home' };
 const document =

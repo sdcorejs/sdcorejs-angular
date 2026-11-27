@@ -42,7 +42,7 @@ async function assertCompleteSelection(source, major) {
   const projectRoot = join(workspace, project.sourceRoot);
   const excluded = [...(project.architect.test.options.exclude ?? []), ...flags('exclude')];
   const actual = (await findTests(flags('include'), excluded, workspace, projectRoot)).map(path => resolve(path)).sort();
-  const expected = scopes.flatMap(scope => specFiles(join(projectRoot, scope))).sort();
+  const expected = [...scopes.flatMap(scope => specFiles(join(projectRoot, scope))), join(projectRoot, 'testing/global-test-setup.spec.ts')].sort();
   for (const scope of scopes) {
     assert.ok(specFiles(join(projectRoot, scope)).length > 0, `${major}: ${scope} must contain specs`);
   }

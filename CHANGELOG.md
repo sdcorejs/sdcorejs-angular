@@ -38,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### i18n
 
-- Load only the configured Core UI catalogs with `provideSdI18n` and the `SD_I18N_LAZY_ONLY` application build define. See [configuration and fallback behavior](versions/v19/projects/sdcorejs-angular/i18n/i18n.md#load-only-the-portal-languages).
+- Built-in languages now load on demand by default. Register `provideSdCore()` for translation before first render, or supply `provideSdI18n` to restrict languages. Migrate code that needs synchronously initialized catalogs using the [bootstrap or eager compatibility provider](versions/v19/projects/sdcorejs-angular/i18n/i18n.md#load-only-the-portal-languages).
 
 ### Security
 

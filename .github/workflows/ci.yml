@@ -153,7 +153,7 @@ jobs:
           archive=$(npm pack ./versions/v22/dist/sdcorejs-angular --pack-destination tmp/locale-pack --silent)
           package="file:$PWD/tmp/locale-pack/$archive"
           node "$fixture/build.mjs" tmp/locale-before 22.3.7 legacy
-          for mode in legacy vi vi-en layout; do
+          for mode in legacy core vi vi-en unpruned layout; do
             node "$fixture/build.mjs" tmp/locale-after "$package" "$mode"
           done
           node "$fixture/verify.mjs" tmp/locale-before tmp/locale-after tmp/locale-evidence
@@ -186,6 +186,7 @@ jobs:
           --include=projects/sdcorejs-angular/components/mini-editor/**/*.spec.ts
           --include=projects/sdcorejs-angular/services/confirm/**/*.spec.ts
           --include=projects/sdcorejs-angular/services/excel/**/*.spec.ts
+          --include=projects/sdcorejs-angular/testing/global-test-setup.spec.ts
           --include=projects/sdcorejs-angular/i18n/src/*.spec.ts
           --include=projects/sdcorejs-angular/components/tab-router/src/pipes/tab-info.pipe.spec.ts
         working-directory: versions/${{ matrix.version }}

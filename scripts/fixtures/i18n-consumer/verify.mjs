@@ -19,7 +19,9 @@ const result = {
 try {
   for (const [label, directory, mode] of [
     ['before', before, 'legacy'],
-    ['after-legacy', after, 'legacy'],
+    ['bare', after, 'legacy'],
+    ['core', after, 'core'],
+    ['unpruned', after, 'unpruned'],
     ['after-vi', after, 'vi'],
     ['after-vi-en', after, 'vi-en'],
   ]) {
@@ -40,8 +42,8 @@ try {
     result.builds[label] = Object.fromEntries(
       [...chunks].map(([n, c]) => [n, { raw: c.raw.length, gzip: c.gzip.length, locales: c.locales }])
     );
-    const scope = mode === 'vi-en' ? ['en', 'vi'] : mode === 'vi' ? ['vi'] : [];
-    if (mode !== 'legacy') {
+    const scope = mode === 'vi-en' ? ['en', 'vi'] : mode === 'vi' ? ['vi'] : ['en', 'ja', 'ko', 'vi', 'zh'];
+    if (label !== 'before') {
       assert.deepEqual([...chunks.values()].flatMap(c => c.locales).sort(), scope);
       for (const c of chunks.values()) {
         assert.equal(c.raw.toString().split('core.component.window.title').length - 1, c.locales.length);
@@ -69,19 +71,33 @@ try {
     await new Promise(done => server.listen(0, '127.0.0.1', done));
     const origin = 'http://127.0.0.1:' + server.address().port;
     try {
-      const cases =
-        mode === 'legacy'
-          ? [['en', 'en', []]]
-          : mode === 'vi'
-            ? [['ja', 'vi', []]]
-            : [
-                ['en', 'en', []],
-                ['vi', 'vi', []],
-                ['en', 'vi', ['en']],
-                ['en', null, ['en', 'vi']],
-              ];
+      const defaults = [
+        [null, 'vi', []],
+        ['en', 'en', []],
+        ['ja', 'ja', []],
+        ['ko', 'ko', []],
+        ['zh', 'zh', []],
+        ['unknown', 'vi', []],
+        ['en', 'vi', ['en']],
+      ];
+      const cases = {
+        before: [['en', 'en', []]],
+        bare: defaults,
+        core: [...defaults, ['en', null, ['en', 'vi']]],
+        unpruned: [
+          ['ja', 'vi', []],
+          ['en', 'en', []],
+        ],
+        'after-vi': [['ja', 'vi', []]],
+        'after-vi-en': [
+          ['en', 'en', []],
+          ['vi', 'vi', []],
+          ['en', 'vi', ['en']],
+          ['en', null, ['en', 'vi']],
+        ],
+      }[label];
       for (const [stored, expected, fail] of cases) {
-        for (const width of mode === 'vi-en' ? [390, 900, 1280] : [1280]) {
+        for (const width of ['vi-en', 'core', 'legacy'].includes(mode) && label !== 'before' ? [390, 900, 1280] : [1280]) {
           const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
           const requested = [];
           const failures = [];
@@ -92,7 +108,7 @@ try {
           page.on('pageerror', error => failures.push(error.message));
           await page.addInitScript(lang => {
             if (!sessionStorage.getItem('seeded')) {
-              localStorage.setItem('sd-core.language', lang);
+              if (lang !== null) localStorage.setItem('sd-core.language', lang);
               sessionStorage.setItem('seeded', '1');
             }
             new MutationObserver((_, observer) => {
@@ -108,16 +124,46 @@ try {
               const c = chunks.get(basename(new URL(route.request().url()).pathname));
               return c?.locales.some(lang => fail.includes(lang)) ? route.abort() : route.continue();
             });
-          await page.goto(origin);
+          const checkBootstrap = ['core', 'bare'].includes(label) && stored === 'en' && !fail.length && width === 1280;
+          let shellBeforeCatalog;
+          if (checkBootstrap) {
+            const localeChunk = [...chunks].find(([, chunk]) => chunk.locales.includes('en'))[0];
+            const requestedLocale = page.waitForRequest('**/' + localeChunk, { timeout: 10000 });
+            const release = Promise.withResolvers();
+            await page.route('**/' + localeChunk, async route => {
+              await release.promise;
+              await route.continue();
+            });
+            try {
+              await page.goto(origin, { waitUntil: 'commit' });
+              // A failed request must surface as a bounded Playwright failure.
+              await requestedLocale;
+              shellBeforeCatalog = await page.locator('main').count();
+              assert.equal(shellBeforeCatalog, label === 'core' ? 0 : 1);
+              if (shellBeforeCatalog) assert.equal(await page.locator('main h1').textContent(), '');
+            } finally {
+              release.resolve();
+            }
+          } else {
+            await page.goto(origin);
+          }
           if (expected) {
             await page.locator('main[lang="' + expected + '"]').waitFor();
-            assert.equal(await page.evaluate(() => window.firstHeading), expected === 'en' ? 'Home' : 'Trang chủ');
-            assert.equal(await page.locator('main p').textContent(), expected === 'en' ? 'Cancel' : 'Hủy');
+            const [heading, cancel] = {
+              vi: ['Trang chủ', 'Hủy'],
+              en: ['Home', 'Cancel'],
+              ja: ['ホーム', 'キャンセル'],
+              ko: ['홈', '취소'],
+              zh: ['首页', '取消'],
+            }[expected];
+            await page.getByRole('heading', { name: heading, exact: true }).waitFor();
+            assert.equal(await page.evaluate(() => window.firstHeading), heading);
+            assert.equal(await page.locator('main p').textContent(), cancel);
           } else {
             await page.getByText('Language unavailable. Reload to retry.').waitFor();
           }
           const observed = requested.flatMap(n => chunks.get(n).locales).sort();
-          if (mode !== 'legacy') assert.deepEqual(observed, [...new Set([...(expected ? [expected] : []), ...fail])].sort());
+          if (label !== 'before') assert.deepEqual(observed, [...new Set([...(expected ? [expected] : []), ...fail])].sort());
           const transferred = await page.evaluate(() =>
             performance
               .getEntriesByType('resource')
@@ -130,13 +176,14 @@ try {
           assert.equal(transferred, jsBytes);
           const state = fail.length ? 'failure-' + fail.join('-') : stored;
           const record = { build: label, width, stored, expected, fail, requested, gzipBytes: transferred };
-          if (mode === 'vi-en') {
+          if (checkBootstrap) record.shellBeforeCatalog = shellBeforeCatalog;
+          if (['bare', 'core', 'after-vi-en'].includes(label)) {
             record.image = label + '-' + state + '-' + width + '.png';
             await page.screenshot({ path: resolve(evidence, record.image) });
             if (stored === 'en' && !fail.length) {
               await Promise.all([page.waitForNavigation(), page.getByRole('button', { name: 'VI', exact: true }).click()]);
               await page.locator('main[lang="vi"]').waitFor();
-              assert.equal(await page.locator('main h1').textContent(), 'Trang chủ');
+              await page.getByRole('heading', { name: 'Trang chủ', exact: true }).waitFor();
               assert.equal(await page.evaluate(() => localStorage.getItem('sd-core.language')), 'vi');
               record.switchedTo = 'vi';
             }

@@ -1,7 +1,9 @@
 import '@angular/compiler';
 import { Component, inject } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
-import { I18nService, provideSdI18n } from '@sdcorejs/angular/i18n';
+import { provideSdCore } from '@sdcorejs/angular/core';
+import { provideAppInitializer } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 class LanguagePage {
   i18n = inject(I18nService);
@@ -16,23 +18,7 @@ export function bootstrapLocale(language, context, serverProviders = [], beforeL
   return bootstrapApplication(
     LanguagePage,
     {
-      providers: [
-        provideClientHydration(),
-        ...serverProviders,
-        provideSdI18n({
-          defaultLanguage: language,
-          loaders: {
-            vi: async () => {
-              await beforeLoad();
-              return (await import('@sdcorejs/angular/i18n/locales/vi')).VI_MESSAGES;
-            },
-            en: async () => {
-              await beforeLoad();
-              return (await import('@sdcorejs/angular/i18n/locales/en')).EN_MESSAGES;
-            },
-          },
-        }),
-      ],
+      providers: [provideClientHydration(), ...serverProviders, provideSdCore({ language }), provideAppInitializer(beforeLoad)],
     },
     context
   );

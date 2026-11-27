@@ -1,13 +1,16 @@
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { Pipe, PipeTransform, inject } from '@angular/core';
+import { computed, Pipe, PipeTransform, Signal, inject } from '@angular/core';
 import { SdTabComponentBuilder } from '../decorators/tab.decorator';
 import { SdTabRouterTab, SdTabInfo } from '../models/tab-router.model';
 import { SdTabRouterService } from '../services/tab-router.service';
 @Pipe({
   name: 'sdTabInfo',
+  pure: false,
   standalone: true,
 })
 export class SdTabInfoPipe implements PipeTransform {
+  #tab?: SdTabRouterTab;
+  #resolved?: Signal<SdTabInfo>;
   private readonly i18n = inject(I18nService);
   private tabRouterService = inject(SdTabRouterService);
 
@@ -19,7 +22,11 @@ export class SdTabInfoPipe implements PipeTransform {
     if (tabInfo) {
       return tabInfo;
     }
-    return sdTabInfoFromBuilders(this.tabRouterService.builders.getValue(), tab, this.i18n);
+    if (tab !== this.#tab || !this.#resolved) {
+      this.#tab = tab;
+      this.#resolved = computed(() => sdTabInfoFromBuilders(this.tabRouterService.builders.getValue(), tab, this.i18n));
+    }
+    return this.#resolved();
   }
 }
 

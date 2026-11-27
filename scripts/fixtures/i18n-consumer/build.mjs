@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const [directory, dependency, mode] = process.argv.slice(2);
-if (!directory || !dependency || !['legacy', 'vi', 'vi-en', 'layout'].includes(mode))
+if (!directory || !dependency || !['legacy', 'vi', 'vi-en', 'core', 'unpruned', 'layout'].includes(mode))
   throw new Error('Expected directory, package and fixture mode');
 const cwd = resolve(directory);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -50,7 +50,7 @@ const options = {
   optimization: true,
   statsJson: true,
   outputHashing: 'all',
-  ...(mode === 'legacy' ? {} : { define: { SD_I18N_LAZY_ONLY: 'true' } }),
+  ...(['vi', 'vi-en'].includes(mode) ? { define: { SD_I18N_LAZY_ONLY: 'true' } } : {}),
 };
 writeJson('angular.json', {
   version: 1,
@@ -92,9 +92,11 @@ const loaders = languages
   .join('\n');
 writeFileSync(
   resolve(cwd, 'providers.ts'),
-  mode === 'legacy'
+  ['legacy', 'layout'].includes(mode)
     ? "export const providers = []; export const languages = ['vi', 'en'] as const;"
-    : `import { provideSdI18n } from '@sdcorejs/angular/i18n';
+    : mode === 'core'
+      ? "import { provideSdCore } from '@sdcorejs/angular/core'; export const providers = [provideSdCore()]; export const languages = ['vi','en','ja','ko','zh'] as const;"
+      : `import { provideSdI18n } from '@sdcorejs/angular/i18n';
 export const languages = ${JSON.stringify(languages)} as const;
 export const providers = [provideSdI18n({ defaultLanguage: 'vi', loaders: {\n${loaders}\n} })];`
 );

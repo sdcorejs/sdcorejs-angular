@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy as SdAngular22ChangeDetectionStrategy } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
@@ -45,12 +46,13 @@ describe('SdTabInfoPipe', () => {
     pipe = TestBed.inject(SdTabInfoPipe);
   });
 
-  it('translates tab keys through the same active catalog as the page', () => {
+  it('translates tab keys through the same active catalog as the page', async () => {
     const storage = localStorage.getItem('sd-core.language');
     try {
       localStorage.setItem('sd-core.language', 'en');
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({ providers: [SdTabInfoPipe, SdTabRouterService] });
+      await TestBed.inject(I18nService).initialize();
       const tabs = TestBed.inject(SdTabRouterService);
       tabs.addBuilder({ component: DummyA, name: 'core.module.layout.home.tab-name', translateName: true });
       expect(TestBed.inject(SdTabInfoPipe).transform(null, makeTab()).name).toBe('Home');

@@ -19,6 +19,8 @@ Giữ [issue #168](https://github.com/sdcorejs/sdcorejs-angular/issues/168) mở
 
 ## #169 · Ngôn ngữ
 
+Số đo sau đây thuộc commit f0e8450 với lazy opt-in. PR #170 sau đó chuyển sang lazy mặc định. Xem [kiểm tra hiện tại với consumer không cấu hình](../lazy-default/README.md).
+
 | Consumer và trạng thái | JavaScript thực tải, byte gzip |
 | --- | ---: |
 | 22.3.7, mở bằng EN | 156.637 |
