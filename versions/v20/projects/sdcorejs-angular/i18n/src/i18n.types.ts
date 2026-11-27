@@ -20,10 +20,8 @@ export type I18nCatalog = Record<I18nKey, string>;
 /**
  * Custom language provider. Returns a complete I18nCatalog synchronously.
  *
- * Sync-only by design: keeping the resolution path synchronous lets `t()` return the
- * correct value on the very first call (no microtask flash of 'vi' fallback) and keeps
- * the pipe pure. If you need to load a catalog from an API, fetch it before
- * bootstrapping Angular and pass the already-resolved object here.
+ * The legacy configuration factory supplies its own messages immediately. Use
+ * provideSdI18n for asynchronous custom loaders and provideSdCore to await startup.
  *
  * Example:
  *   const config: ISdCoreConfiguration = { language: () => ({ ...myCatalog }) };

@@ -1,4 +1,5 @@
-import { I18N_STORAGE_KEY } from '@sdcorejs/angular/i18n';
+import { TestBed } from '@angular/core/testing';
+import { I18N_MESSAGES, I18N_STORAGE_KEY, SD_I18N_PRELOADED } from '@sdcorejs/angular/i18n';
 
 /**
  * Global test hygiene. Carries no specs of its own — a root-level `beforeEach` belongs to the
@@ -18,4 +19,8 @@ import { I18N_STORAGE_KEY } from '@sdcorejs/angular/i18n';
  * Specs that need another language keep working: they set `localStorage` or provide
  * `SD_CORE_CONFIGURATION` inside their own `beforeEach`/body, both of which run after this hook.
  */
-beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
+beforeEach(() => {
+  localStorage.removeItem(I18N_STORAGE_KEY);
+  // Synchronous component fixtures exercise already-initialized views. The packed consumer and lazy specs test startup.
+  TestBed.configureTestingModule({ providers: [{ provide: SD_I18N_PRELOADED, useValue: I18N_MESSAGES }] });
+});

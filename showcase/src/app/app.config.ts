@@ -24,8 +24,9 @@ import {
   LucideUpload,
   LucideX,
 } from '@lucide/angular';
-import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+import { ISdCoreConfiguration } from '@sdcorejs/angular/configurations';
 import { provideSdIcon, SD_DATA_TYPE_LUCIDE_ICONS } from '@sdcorejs/angular/modules/icon';
+import { provideSdCore } from '@sdcorejs/angular/core';
 import { routes } from './app.routes';
 import { patternNavigationError } from './pages/pattern/pattern-navigation-error';
 import { showcaseTimeZone } from './showcase-time-zone';
@@ -75,6 +76,6 @@ export const appConfig: ApplicationConfig = {
         ...SD_DATA_TYPE_LUCIDE_ICONS,
       ],
     }),
-    { provide: SD_CORE_CONFIGURATION, useValue: SHOWCASE_CORE_CONFIG },
+    provideSdCore(SHOWCASE_CORE_CONFIG),
   ],
 };

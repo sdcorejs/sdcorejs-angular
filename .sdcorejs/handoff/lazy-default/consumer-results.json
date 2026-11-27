@@ -1,0 +1,1091 @@
+{
+  "browser": "158.0.8127.38",
+  "compression": "gzip level 9, cold HTTP cache, JavaScript response bodies",
+  "builds": {
+    "before": {
+      "main-6REAFEH2.js": {
+        "raw": 763146,
+        "gzip": 156637,
+        "locales": []
+      }
+    },
+    "bare": {
+      "main-5FZIW7EX.js": {
+        "raw": 115842,
+        "gzip": 38787,
+        "locales": []
+      },
+      "chunk-BQbHYMc2.js": {
+        "raw": 109664,
+        "gzip": 23656,
+        "locales": [
+          "ko"
+        ]
+      },
+      "chunk-C7H30AAy.js": {
+        "raw": 100473,
+        "gzip": 20768,
+        "locales": [
+          "en"
+        ]
+      },
+      "chunk-Dqizg2-O.js": {
+        "raw": 99643,
+        "gzip": 22770,
+        "locales": [
+          "zh"
+        ]
+      },
+      "chunk-hEcp50jH.js": {
+        "raw": 115059,
+        "gzip": 24454,
+        "locales": [
+          "ja"
+        ]
+      },
+      "chunk-jhV4W9Zq.js": {
+        "raw": 110227,
+        "gzip": 22711,
+        "locales": [
+          "vi"
+        ]
+      }
+    },
+    "core": {
+      "main-C65QKLAR.js": {
+        "raw": 116048,
+        "gzip": 38829,
+        "locales": []
+      },
+      "chunk-BQbHYMc2.js": {
+        "raw": 109664,
+        "gzip": 23656,
+        "locales": [
+          "ko"
+        ]
+      },
+      "chunk-C7H30AAy.js": {
+        "raw": 100473,
+        "gzip": 20768,
+        "locales": [
+          "en"
+        ]
+      },
+      "chunk-Dqizg2-O.js": {
+        "raw": 99643,
+        "gzip": 22770,
+        "locales": [
+          "zh"
+        ]
+      },
+      "chunk-hEcp50jH.js": {
+        "raw": 115059,
+        "gzip": 24454,
+        "locales": [
+          "ja"
+        ]
+      },
+      "chunk-jhV4W9Zq.js": {
+        "raw": 110227,
+        "gzip": 22711,
+        "locales": [
+          "vi"
+        ]
+      }
+    },
+    "unpruned": {
+      "main-E2XGZCQ3.js": {
+        "raw": 116336,
+        "gzip": 38907,
+        "locales": []
+      },
+      "chunk-BQbHYMc2.js": {
+        "raw": 109664,
+        "gzip": 23656,
+        "locales": [
+          "ko"
+        ]
+      },
+      "chunk-C7H30AAy.js": {
+        "raw": 100473,
+        "gzip": 20768,
+        "locales": [
+          "en"
+        ]
+      },
+      "chunk-Dqizg2-O.js": {
+        "raw": 99643,
+        "gzip": 22770,
+        "locales": [
+          "zh"
+        ]
+      },
+      "chunk-hEcp50jH.js": {
+        "raw": 115059,
+        "gzip": 24454,
+        "locales": [
+          "ja"
+        ]
+      },
+      "chunk-jhV4W9Zq.js": {
+        "raw": 110227,
+        "gzip": 22711,
+        "locales": [
+          "vi"
+        ]
+      }
+    },
+    "after-vi": {
+      "main-5RR3DMVZ.js": {
+        "raw": 118281,
+        "gzip": 39438,
+        "locales": []
+      },
+      "chunk-KO25MD6J.js": {
+        "raw": 128023,
+        "gzip": 23449,
+        "locales": [
+          "vi"
+        ]
+      },
+      "chunk-2NFLSA4Y.js": {
+        "raw": 449,
+        "gzip": 265,
+        "locales": []
+      }
+    },
+    "after-vi-en": {
+      "main-CA4JHJO3.js": {
+        "raw": 118346,
+        "gzip": 39457,
+        "locales": []
+      },
+      "chunk-KO25MD6J.js": {
+        "raw": 128023,
+        "gzip": 23449,
+        "locales": [
+          "vi"
+        ]
+      },
+      "chunk-ZHSPCFWC.js": {
+        "raw": 100689,
+        "gzip": 20839,
+        "locales": [
+          "en"
+        ]
+      },
+      "chunk-2NFLSA4Y.js": {
+        "raw": 449,
+        "gzip": 265,
+        "locales": []
+      }
+    }
+  },
+  "runs": [
+    {
+      "build": "before",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-6REAFEH2.js"
+      ],
+      "gzipBytes": 156637
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-null-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-null-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-null-1280.png"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59555,
+      "image": "bare-en-390.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59555,
+      "image": "bare-en-900.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59555,
+      "shellBeforeCatalog": 1,
+      "image": "bare-en-1280.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63241,
+      "image": "bare-ja-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63241,
+      "image": "bare-ja-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63241,
+      "image": "bare-ja-1280.png"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62443,
+      "image": "bare-ko-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62443,
+      "image": "bare-ko-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62443,
+      "image": "bare-ko-1280.png"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61557,
+      "image": "bare-zh-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61557,
+      "image": "bare-zh-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61557,
+      "image": "bare-zh-1280.png"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-unknown-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-unknown-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-unknown-1280.png"
+    },
+    {
+      "build": "bare",
+      "width": 390,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-failure-en-390.png"
+    },
+    {
+      "build": "bare",
+      "width": 900,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-failure-en-900.png"
+    },
+    {
+      "build": "bare",
+      "width": 1280,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-5FZIW7EX.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61498,
+      "image": "bare-failure-en-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-null-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-null-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": null,
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-null-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59597,
+      "image": "core-en-390.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59597,
+      "image": "core-en-900.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 59597,
+      "shellBeforeCatalog": 0,
+      "image": "core-en-1280.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63283,
+      "image": "core-ja-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63283,
+      "image": "core-ja-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "ja",
+      "expected": "ja",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-hEcp50jH.js"
+      ],
+      "gzipBytes": 63283,
+      "image": "core-ja-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62485,
+      "image": "core-ko-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62485,
+      "image": "core-ko-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "ko",
+      "expected": "ko",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-BQbHYMc2.js"
+      ],
+      "gzipBytes": 62485,
+      "image": "core-ko-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61599,
+      "image": "core-zh-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61599,
+      "image": "core-zh-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "zh",
+      "expected": "zh",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-Dqizg2-O.js"
+      ],
+      "gzipBytes": 61599,
+      "image": "core-zh-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-unknown-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-unknown-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "unknown",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-unknown-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-failure-en-390.png"
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-failure-en-900.png"
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61540,
+      "image": "core-failure-en-1280.png"
+    },
+    {
+      "build": "core",
+      "width": 390,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js",
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js"
+      ],
+      "gzipBytes": 38829,
+      "image": "core-failure-en-vi-390.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "core",
+      "width": 900,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js",
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js"
+      ],
+      "gzipBytes": 38829,
+      "image": "core-failure-en-vi-900.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "core",
+      "width": 1280,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js",
+        "chunk-jhV4W9Zq.js",
+        "main-C65QKLAR.js",
+        "chunk-C7H30AAy.js"
+      ],
+      "gzipBytes": 38829,
+      "image": "core-failure-en-vi-1280.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "unpruned",
+      "width": 1280,
+      "stored": "ja",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "main-E2XGZCQ3.js",
+        "chunk-jhV4W9Zq.js"
+      ],
+      "gzipBytes": 61618
+    },
+    {
+      "build": "unpruned",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-E2XGZCQ3.js",
+        "chunk-C7H30AAy.js"
+      ],
+      "gzipBytes": 59675
+    },
+    {
+      "build": "after-vi",
+      "width": 1280,
+      "stored": "ja",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-5RR3DMVZ.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63152
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60561,
+      "image": "after-vi-en-en-390.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60561,
+      "image": "after-vi-en-en-900.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60561,
+      "image": "after-vi-en-en-1280.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-vi-390.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-vi-900.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-vi-1280.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-failure-en-390.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-failure-en-900.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 63171,
+      "image": "after-vi-en-failure-en-1280.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39722,
+      "image": "after-vi-en-failure-en-vi-390.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39722,
+      "image": "after-vi-en-failure-en-vi-900.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-CA4JHJO3.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39722,
+      "image": "after-vi-en-failure-en-vi-1280.png",
+      "recoveredAfterReload": true
+    }
+  ]
+}

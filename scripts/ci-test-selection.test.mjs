@@ -12,7 +12,7 @@ const { load } = require('js-yaml');
 const { findTests } = require(join(dirname(require.resolve('@angular/build/package.json')), 'src/builders/karma/find-tests.js'));
 const root = fileURLToPath(new URL('../', import.meta.url));
 const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
-const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable', 'components/editor-engine', 'components/editor', 'components/mini-editor'];
+const scopes = ['components/file-explorer', 'components/form-generic', 'components/button', 'services/confirm', 'components/tab', 'components/stepper', 'components/window', 'components/modal-resizable', 'components/editor-engine', 'components/editor', 'components/mini-editor', 'services/excel', 'i18n/src', 'components/tab-router/src/pipes'];
 const formPattern = 'projects/sdcorejs-angular/components/form-generic/**/*.spec.ts';
 
 function specFiles(directory) {
@@ -42,7 +42,7 @@ async function assertCompleteSelection(source, major) {
   const projectRoot = join(workspace, project.sourceRoot);
   const excluded = [...(project.architect.test.options.exclude ?? []), ...flags('exclude')];
   const actual = (await findTests(flags('include'), excluded, workspace, projectRoot)).map(path => resolve(path)).sort();
-  const expected = scopes.flatMap(scope => specFiles(join(projectRoot, scope))).sort();
+  const expected = [...scopes.flatMap(scope => specFiles(join(projectRoot, scope))), join(projectRoot, 'testing/global-test-setup.spec.ts')].sort();
   for (const scope of scopes) {
     assert.ok(specFiles(join(projectRoot, scope)).length > 0, `${major}: ${scope} must contain specs`);
   }

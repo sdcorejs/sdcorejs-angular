@@ -1,15 +1,21 @@
-import { inject, Pipe, PipeTransform } from '@angular/core';
+import { computed, inject, Pipe, PipeTransform, Signal } from '@angular/core';
 import { I18nService } from './i18n.service';
 import { I18nParams } from './i18n.types';
 
-// why: tên pipe cũ `translate` đụng trực diện với pipe cùng tên của `@ngx-translate/core`. Cả hai đều
-// standalone nên consumer dùng song song KHÔNG thể import chung vào một component (Angular báo lỗi
-// trùng tên pipe trong cùng scope). Đổi sang `sdTranslate` để tên pipe nằm trong namespace `sd` của lib.
-@Pipe({ name: 'sdTranslate', standalone: true })
+// Signal memoization refreshes an existing binding when an async catalog arrives.
+@Pipe({ name: 'sdTranslate', standalone: true, pure: false })
 export class SdTranslatePipe implements PipeTransform {
   readonly #i18n = inject(I18nService);
+  #key?: string;
+  #params?: I18nParams;
+  #translation?: Signal<string>;
 
   transform(key: string, params?: I18nParams): string {
-    return this.#i18n.t(key, params);
+    if (!this.#translation || key !== this.#key || params !== this.#params) {
+      this.#key = key;
+      this.#params = params;
+      this.#translation = computed(() => this.#i18n.t(key, params));
+    }
+    return this.#translation();
   }
 }

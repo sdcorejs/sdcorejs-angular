@@ -34,6 +34,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### i18n
+
+- Built-in languages now load on demand by default. Register `provideSdCore()` for translation before first render, or supply `provideSdI18n` to restrict languages. Migrate code that needs synchronously initialized catalogs using the [bootstrap or eager compatibility provider](versions/v19/projects/sdcorejs-angular/i18n/i18n.md#load-only-the-portal-languages).
+
+### Security
+
+#### Excel
+
+- Use the MIT-licensed `exceljs-lts@4.5.6` distribution under the existing `exceljs` import name. It removes the vulnerable UUID dependency from workbook metadata and the prebuilt browser bundle (CVE-2026-41907).
+
 ## [3.7] - 2026-11-25
 
 Packages `19.3.7` · `20.3.7` · `21.3.7` · `22.3.7`, validated against `*.3.6`.

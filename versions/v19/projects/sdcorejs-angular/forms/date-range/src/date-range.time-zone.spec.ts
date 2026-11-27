@@ -56,6 +56,7 @@ describe('SdDateRange with ISdCoreConfiguration.timeZone', () => {
 
   it('DP-05 counts the calendar days shown by the picker across the spring DST transition', async () => {
     await setup('America/New_York', 'ISOString');
+    await fixture.whenStable(); // Wait for the default catalog before opening the overlay in this manual fixture.
     host.model = { from: '2026-03-07T05:00:00Z', to: '2026-03-10T01:00:00Z' }; // March 7–9 in New York.
     fixture.detectChanges();
     host.range.picker()!.open();

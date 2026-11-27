@@ -1,0 +1,315 @@
+{
+  "browser": "158.0.8127.38",
+  "compression": "gzip level 9, cold HTTP cache, JavaScript response bodies",
+  "builds": {
+    "before": {
+      "main-6REAFEH2.js": {
+        "raw": 763146,
+        "gzip": 156637,
+        "locales": []
+      }
+    },
+    "after-legacy": {
+      "main-BYQCRDWI.js": {
+        "raw": 765573,
+        "gzip": 157560,
+        "locales": []
+      }
+    },
+    "after-vi": {
+      "main-S5IXA7NE.js": {
+        "raw": 117089,
+        "gzip": 39052,
+        "locales": []
+      },
+      "chunk-KO25MD6J.js": {
+        "raw": 128023,
+        "gzip": 23449,
+        "locales": [
+          "vi"
+        ]
+      },
+      "chunk-2NFLSA4Y.js": {
+        "raw": 449,
+        "gzip": 265,
+        "locales": []
+      }
+    },
+    "after-vi-en": {
+      "main-QV4I7MRC.js": {
+        "raw": 117154,
+        "gzip": 39072,
+        "locales": []
+      },
+      "chunk-KO25MD6J.js": {
+        "raw": 128023,
+        "gzip": 23449,
+        "locales": [
+          "vi"
+        ]
+      },
+      "chunk-ZHSPCFWC.js": {
+        "raw": 100689,
+        "gzip": 20839,
+        "locales": [
+          "en"
+        ]
+      },
+      "chunk-2NFLSA4Y.js": {
+        "raw": 449,
+        "gzip": 265,
+        "locales": []
+      }
+    }
+  },
+  "runs": [
+    {
+      "build": "before",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-6REAFEH2.js"
+      ],
+      "gzipBytes": 156637
+    },
+    {
+      "build": "after-legacy",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "main-BYQCRDWI.js"
+      ],
+      "gzipBytes": 157560
+    },
+    {
+      "build": "after-vi",
+      "width": 1280,
+      "stored": "ja",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-S5IXA7NE.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62766
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60176,
+      "image": "after-vi-en-en-390.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60176,
+      "image": "after-vi-en-en-900.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": "en",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 60176,
+      "image": "after-vi-en-en-1280.png",
+      "switchedTo": "vi"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-vi-390.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-vi-900.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "vi",
+      "expected": "vi",
+      "fail": [],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-vi-1280.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-failure-en-390.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-failure-en-900.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": "vi",
+      "fail": [
+        "en"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js"
+      ],
+      "gzipBytes": 62786,
+      "image": "after-vi-en-failure-en-1280.png"
+    },
+    {
+      "build": "after-vi-en",
+      "width": 390,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39337,
+      "image": "after-vi-en-failure-en-vi-390.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "after-vi-en",
+      "width": 900,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39337,
+      "image": "after-vi-en-failure-en-vi-900.png",
+      "recoveredAfterReload": true
+    },
+    {
+      "build": "after-vi-en",
+      "width": 1280,
+      "stored": "en",
+      "expected": null,
+      "fail": [
+        "en",
+        "vi"
+      ],
+      "requested": [
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js",
+        "chunk-KO25MD6J.js",
+        "chunk-2NFLSA4Y.js",
+        "main-QV4I7MRC.js",
+        "chunk-ZHSPCFWC.js"
+      ],
+      "gzipBytes": 39337,
+      "image": "after-vi-en-failure-en-vi-1280.png",
+      "recoveredAfterReload": true
+    }
+  ]
+}

@@ -71,7 +71,8 @@ describe('SdSectionItem', () => {
         if (width === 'auto') {
           expect(getComputedStyle(label).flexGrow).toBe('1');
           expect(getComputedStyle(label).minWidth).toBe('0px');
-          expect(getComputedStyle(content).justifyContent).toBe('flex-end');
+          // Chromium 158 serializes flex-end as flow-end in this flex context.
+          expect(['flex-end', 'flow-end']).toContain(getComputedStyle(content).justifyContent);
         }
       }
     });

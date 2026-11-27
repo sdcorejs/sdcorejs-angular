@@ -10,6 +10,8 @@ export interface SdTabComponentArgs {
 
 export declare interface SdTabComponentBuilder {
   component: Type<any>;
+  /** Treat the resolved name as a Core i18n key when rendering the tab and browser title. */
+  translateName?: boolean;
   name: string | ((args: SdTabComponentArgs) => string);
   icon?: string | ((args: SdTabComponentArgs) => string);
   tooltip?: string | ((args: SdTabComponentArgs) => string);

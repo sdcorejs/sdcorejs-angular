@@ -1,0 +1,146 @@
+[
+  {
+    "path": "403",
+    "lang": "vi",
+    "width": 390,
+    "title": "Không có quyền – Core UI",
+    "tab": "Không có quyền",
+    "image": "layout-403-vi-390.png"
+  },
+  {
+    "path": "403",
+    "lang": "vi",
+    "width": 900,
+    "title": "Không có quyền – Core UI",
+    "tab": "Không có quyền",
+    "image": "layout-403-vi-900.png"
+  },
+  {
+    "path": "403",
+    "lang": "vi",
+    "width": 1280,
+    "title": "Không có quyền – Core UI",
+    "tab": "Không có quyền",
+    "image": "layout-403-vi-1280.png"
+  },
+  {
+    "path": "403",
+    "lang": "en",
+    "width": 390,
+    "title": "Access Denied – Core UI",
+    "tab": "Access Denied",
+    "image": "layout-403-en-390.png"
+  },
+  {
+    "path": "403",
+    "lang": "en",
+    "width": 900,
+    "title": "Access Denied – Core UI",
+    "tab": "Access Denied",
+    "image": "layout-403-en-900.png"
+  },
+  {
+    "path": "403",
+    "lang": "en",
+    "width": 1280,
+    "title": "Access Denied – Core UI",
+    "tab": "Access Denied",
+    "image": "layout-403-en-1280.png"
+  },
+  {
+    "path": "404",
+    "lang": "vi",
+    "width": 390,
+    "title": "Không tìm thấy trang – Core UI",
+    "tab": "Không tìm thấy trang",
+    "image": "layout-404-vi-390.png"
+  },
+  {
+    "path": "404",
+    "lang": "vi",
+    "width": 900,
+    "title": "Không tìm thấy trang – Core UI",
+    "tab": "Không tìm thấy trang",
+    "image": "layout-404-vi-900.png"
+  },
+  {
+    "path": "404",
+    "lang": "vi",
+    "width": 1280,
+    "title": "Không tìm thấy trang – Core UI",
+    "tab": "Không tìm thấy trang",
+    "image": "layout-404-vi-1280.png"
+  },
+  {
+    "path": "404",
+    "lang": "en",
+    "width": 390,
+    "title": "Page Not Found – Core UI",
+    "tab": "Page Not Found",
+    "image": "layout-404-en-390.png"
+  },
+  {
+    "path": "404",
+    "lang": "en",
+    "width": 900,
+    "title": "Page Not Found – Core UI",
+    "tab": "Page Not Found",
+    "image": "layout-404-en-900.png"
+  },
+  {
+    "path": "404",
+    "lang": "en",
+    "width": 1280,
+    "title": "Page Not Found – Core UI",
+    "tab": "Page Not Found",
+    "image": "layout-404-en-1280.png"
+  },
+  {
+    "path": "home",
+    "lang": "vi",
+    "width": 390,
+    "title": "Trang chủ – Core UI",
+    "tab": "Trang chủ",
+    "image": "layout-home-vi-390.png"
+  },
+  {
+    "path": "home",
+    "lang": "vi",
+    "width": 900,
+    "title": "Trang chủ – Core UI",
+    "tab": "Trang chủ",
+    "image": "layout-home-vi-900.png"
+  },
+  {
+    "path": "home",
+    "lang": "vi",
+    "width": 1280,
+    "title": "Trang chủ – Core UI",
+    "tab": "Trang chủ",
+    "image": "layout-home-vi-1280.png"
+  },
+  {
+    "path": "home",
+    "lang": "en",
+    "width": 390,
+    "title": "Home – Core UI",
+    "tab": "Home",
+    "image": "layout-home-en-390.png"
+  },
+  {
+    "path": "home",
+    "lang": "en",
+    "width": 900,
+    "title": "Home – Core UI",
+    "tab": "Home",
+    "image": "layout-home-en-900.png"
+  },
+  {
+    "path": "home",
+    "lang": "en",
+    "width": 1280,
+    "title": "Home – Core UI",
+    "tab": "Home",
+    "image": "layout-home-en-1280.png"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "concurrentRequests": 2,
+  "results": [
+    {
+      "language": "vi",
+      "text": "Trang chủ",
+      "retainedServerNode": true
+    },
+    {
+      "language": "en",
+      "text": "Home",
+      "retainedServerNode": true
+    }
+  ]
+}

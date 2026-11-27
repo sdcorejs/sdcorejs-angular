@@ -5,7 +5,6 @@ import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
 import { SdLayoutService } from '../../../../services';
-import { resolveTabName } from '../../../../utils';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 // End
 
@@ -18,7 +17,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 })
 @SdTabComponent({
   component: HomePageComponent,
-  name: () => resolveTabName('core.module.layout.home.tab-name'),
+  name: 'core.module.layout.home.tab-name',
+  translateName: true,
   icon: 'home',
   color: 'primary',
 })
